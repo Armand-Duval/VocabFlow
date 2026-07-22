@@ -138,6 +138,23 @@ enum L10n {
         tf("library.nextReview", date)
     }
 
+    static var libraryEdit: String { tr("library.edit") }
+    static var libraryResetSRS: String { tr("library.resetSRS") }
+    static var libraryResetSRSMessage: String { tr("library.resetSRS.message") }
+    static var libraryDeleteCard: String { tr("library.deleteCard") }
+    static var libraryDeleteCardMessage: String { tr("library.deleteCard.message") }
+    static var libraryReviewThisCard: String { tr("library.reviewThisCard") }
+    static var libraryDetailContent: String { tr("library.detail.content") }
+    static var libraryDetailSRS: String { tr("library.detail.srs") }
+    static var librarySRSStatus: String { tr("library.srs.status") }
+    static var librarySRSNextReview: String { tr("library.srs.nextReview") }
+    static var librarySRSReviewCount: String { tr("library.srs.reviewCount") }
+    static var librarySRSInterval: String { tr("library.srs.interval") }
+    static var librarySRSEase: String { tr("library.srs.ease") }
+    static var librarySRSNew: String { tr("library.srs.new") }
+    static var librarySRSScheduled: String { tr("library.srs.scheduled") }
+    static var libraryContextNote: String { tr("library.contextNote") }
+
     // MARK: - Review quota
 
     static var reviewQuotaNew: String { tr("review.quota.newLabel") }
@@ -149,6 +166,16 @@ enum L10n {
     static func reviewQuotaReachedMessage(_ count: Int) -> String {
         tf("review.quota.reached.message", count)
     }
+    static var reviewQuotaDetailTitle: String { tr("review.quota.detail.title") }
+    static var reviewQuotaDetailToday: String { tr("review.quota.detail.today") }
+    static func reviewQuotaDetailDeferred(_ count: Int) -> String {
+        tf("review.quota.detail.deferred", count)
+    }
+    static func reviewQuotaDetailDeferredMessage(_ count: Int) -> String {
+        tf("review.quota.detail.deferredMessage", count)
+    }
+    static var reviewQuotaDetailHint: String { tr("review.quota.detail.hint") }
+    static var reviewRatingHint: String { tr("review.rating.hint") }
     private static func limitDisplay(_ limit: Int) -> String {
         limit == 0 ? tr("review.quota.unlimited") : "\(limit)"
     }
@@ -169,6 +196,20 @@ enum L10n {
 
     static var settingsTitle: String { tr("settings.title") }
     static var settingsSavedTitle: String { tr("settings.saved.title") }
+    static var settingsAISection: String { tr("settings.ai.section") }
+    static var settingsImportSection: String { tr("settings.import.section") }
+    static var settingsDataSection: String { tr("settings.data.section") }
+    static var settingsAboutSection: String { tr("settings.about.section") }
+    static func settingsDataFooter(_ count: Int) -> String { tf("settings.data.footer", count) }
+    static var exportApkg: String { tr("settings.apkg.export") }
+    static var settingsResetAllSRS: String { tr("settings.resetAllSRS") }
+    static var settingsResetAllSRSMessage: String { tr("settings.resetAllSRS.message") }
+    static var settingsResetAllSRSDone: String { tr("settings.resetAllSRS.done") }
+    static var settingsResetAllSRSDoneMessage: String { tr("settings.resetAllSRS.doneMessage") }
+    static var settingsDeleteAllCards: String { tr("settings.deleteAllCards") }
+    static var settingsDeleteAllCardsMessage: String { tr("settings.deleteAllCards.message") }
+    static var settingsDeleteAllDone: String { tr("settings.deleteAllCards.done") }
+    static var settingsDeleteAllDoneMessage: String { tr("settings.deleteAllCards.doneMessage") }
     static var apiKeySection: String { tr("settings.apiKey") }
     static var apiKeyPlaceholder: String { tr("settings.apiKey.placeholder") }
     static var apiKeyFooter: String { tr("settings.apiKey.footer") }
@@ -210,6 +251,139 @@ enum L10n {
     static func importReplaceResult(_ count: Int) -> String {
         tf("settings.import.replaceResult", count)
     }
+
+    // MARK: - Privacy
+
+    static var privacyTitle: String { tr("privacy.title") }
+    static var privacyIntro: String { tr("privacy.intro") }
+    static var privacyDataCollectionTitle: String { tr("privacy.data.title") }
+    static var privacyDataCollectionBody: String { tr("privacy.data.body") }
+    static var privacyAITitle: String { tr("privacy.ai.title") }
+    static var privacyAIBody: String { tr("privacy.ai.body") }
+    static var privacyOCRTitle: String { tr("privacy.ocr.title") }
+    static var privacyOCRBody: String { tr("privacy.ocr.body") }
+    static var privacyStorageTitle: String { tr("privacy.storage.title") }
+    static var privacyStorageBody: String { tr("privacy.storage.body") }
+    static var privacyContactTitle: String { tr("privacy.contact.title") }
+    static var privacyContactBody: String { tr("privacy.contact.body") }
+
+    // MARK: - Apkg
+
+    static var apkgExportEmpty: String { tr("apkg.export.empty") }
+    static func apkgExportFailed(_ message: String) -> String { tf("apkg.export.failed", message) }
+    static var apkgExportZipFailed: String { tr("apkg.export.zipFailed") }
+
+    // MARK: - Decks
+
+    static var deckDefaultName: String { tr("deck.default.name") }
+    static var deckDefaultDetail: String { tr("deck.default.detail") }
+    static var deckSection: String { tr("deck.section") }
+    static var deckSectionFooter: String { tr("deck.section.footer") }
+    static var deckTarget: String { tr("deck.target") }
+    static var deckManage: String { tr("deck.manage") }
+    static var deckLoading: String { tr("deck.loading") }
+    static func deckLabelWithCount(_ name: String, count: Int) -> String {
+        tf("deck.labelWithCount", name, count)
+    }
+    static var deckStoreTitle: String { tr("deck.store.title") }
+    static var deckMyDecks: String { tr("deck.myDecks") }
+    static var deckEmpty: String { tr("deck.empty") }
+    static var deckPresetSection: String { tr("deck.preset.section") }
+    static var deckPresetFooter: String { tr("deck.preset.footer") }
+    static var deckImportSection: String { tr("deck.import.section") }
+    static var deckImportPack: String { tr("deck.import.pack") }
+    static var deckImportApkg: String { tr("deck.import.apkg") }
+    static var deckAddPreset: String { tr("deck.preset.add") }
+    static var deckInstalled: String { tr("deck.preset.installed") }
+    static var deckInstalling: String { tr("deck.installing") }
+    static var deckInstallComplete: String { tr("deck.install.complete") }
+    static func deckInstallWithCards(_ name: String, count: Int) -> String {
+        tf("deck.install.withCards", name, count)
+    }
+    static func deckInstallEmpty(_ name: String) -> String {
+        tf("deck.install.empty", name)
+    }
+    static var deckInstallFailed: String { tr("deck.install.failed") }
+    static var deckCreateTitle: String { tr("deck.create.title") }
+    static var deckNamePlaceholder: String { tr("deck.name.placeholder") }
+    static var deckDetailPlaceholder: String { tr("deck.detail.placeholder") }
+    static var deckUntitled: String { tr("deck.untitled") }
+    static var deckDelete: String { tr("deck.delete") }
+    static var deckDeleteFailed: String { tr("deck.delete.failed") }
+    static var deckImportComplete: String { tr("deck.import.complete") }
+    static var deckImportFailed: String { tr("deck.import.failed") }
+    static func deckImportPackResult(_ name: String, count: Int) -> String {
+        tf("deck.import.packResult", name, count)
+    }
+    static func deckImportApkgResult(_ name: String, count: Int) -> String {
+        tf("deck.import.apkgResult", name, count)
+    }
+    static var deckFilterAll: String { tr("deck.filter.all") }
+    static var deckBrowsePresets: String { tr("deck.browsePresets") }
+    static func libraryReviewDeck(_ name: String, count: Int) -> String {
+        tf("library.reviewDeck", name, count)
+    }
+    static var deckDownloadStarter: String { tr("deck.download.starter") }
+    static func deckPresetStarterCount(_ count: Int) -> String {
+        tf("deck.preset.starterCount", count)
+    }
+    static var deckPresetPoorCharliesName: String { tr("deck.preset.poorCharlies.name") }
+    static var deckPresetPoorCharliesDetail: String { tr("deck.preset.poorCharlies.detail") }
+    static var deckPresetEconomistName: String { tr("deck.preset.economist.name") }
+    static var deckPresetEconomistDetail: String { tr("deck.preset.economist.detail") }
+    static var deckPresetIELTSName: String { tr("deck.preset.ielts.name") }
+    static var deckPresetIELTSDetail: String { tr("deck.preset.ielts.detail") }
+    static var deckPresetGREName: String { tr("deck.preset.gre.name") }
+    static var deckPresetGREDetail: String { tr("deck.preset.gre.detail") }
+    static var deckErrorUnknownPreset: String { tr("deck.error.unknownPreset") }
+    static var deckErrorCannotDeleteDefault: String { tr("deck.error.cannotDeleteDefault") }
+    static var deckErrorMissingStarterPack: String { tr("deck.error.missingStarterPack") }
+    static var deckOpenSourceSection: String { tr("deck.openSource.section") }
+    static var deckOpenSourceFooter: String { tr("deck.openSource.footer") }
+    static var deckCommunitySection: String { tr("deck.community.section") }
+    static var deckCommunityFooter: String { tr("deck.community.footer") }
+    static var deckCommunityOpenAnkiWeb: String { tr("deck.community.openAnkiWeb") }
+    static var deckCommunityImportGuide: String { tr("deck.community.importGuide") }
+    static var deckCommunityImportGuideTitle: String { tr("deck.community.importGuide.title") }
+    static var deckCommunityImportGuideBody: String { tr("deck.community.importGuide.body") }
+    static var deckCommunityImportNow: String { tr("deck.community.importNow") }
+    static func deckCommunityEstimatedCards(_ count: Int) -> String {
+        tf("deck.community.estimatedCards", count)
+    }
+    static func deckRemoteLicense(_ license: String) -> String {
+        tf("deck.remote.license", license)
+    }
+    static var deckRemoteViewSource: String { tr("deck.remote.viewSource") }
+    static var deckRemoteNGSLName: String { tr("deck.remote.ngsl.name") }
+    static var deckRemoteNGSLDetail: String { tr("deck.remote.ngsl.detail") }
+    static var deckRemoteNAWLName: String { tr("deck.remote.nawl.name") }
+    static var deckRemoteNAWLDetail: String { tr("deck.remote.nawl.detail") }
+    static var deckRemoteTOEFLName: String { tr("deck.remote.toefl.name") }
+    static var deckRemoteTOEFLDetail: String { tr("deck.remote.toefl.detail") }
+    static var deckCommunityIELTS4000Name: String { tr("deck.community.ielts4000.name") }
+    static var deckCommunityIELTS4000Detail: String { tr("deck.community.ielts4000.detail") }
+    static var deckCommunityEnglish60kName: String { tr("deck.community.english60k.name") }
+    static var deckCommunityEnglish60kDetail: String { tr("deck.community.english60k.detail") }
+    static var deckCommunityAdvancedVocabName: String { tr("deck.community.advancedVocab.name") }
+    static var deckCommunityAdvancedVocabDetail: String { tr("deck.community.advancedVocab.detail") }
+    static var deckCommunityGRESearchName: String { tr("deck.community.greSearch.name") }
+    static var deckCommunityGRESearchDetail: String { tr("deck.community.greSearch.detail") }
+    static var deckCommunityTOEFLSearchName: String { tr("deck.community.toeflSearch.name") }
+    static var deckCommunityTOEFLSearchDetail: String { tr("deck.community.toeflSearch.detail") }
+    static var deckDownloading: String { tr("deck.downloading") }
+    static var deckDownloadFailed: String { tr("deck.download.failed") }
+    static var deckDownloadInvalidResponse: String { tr("deck.download.invalidResponse") }
+    static var deckDownloadEmptyPack: String { tr("deck.download.emptyPack") }
+    static func deckDownloadNetworkFailed(_ message: String) -> String {
+        tf("deck.download.networkFailed", message)
+    }
+    static var apkgImportInvalid: String { tr("apkg.import.invalid") }
+    static var apkgImportMissingCollection: String { tr("apkg.import.missingCollection") }
+    static func apkgImportFailed(_ message: String) -> String { tf("apkg.import.failed", message) }
+    static var apkgImportEmpty: String { tr("apkg.import.empty") }
+    static var deckExtensionFooter: String { tr("deck.extension.footer") }
+    static var deckExtensionEmptyCatalog: String { tr("deck.extension.emptyCatalog") }
+    static var deckExtensionEmptyCatalogHint: String { tr("deck.extension.emptyCatalogHint") }
 
     // MARK: - Notifications
 

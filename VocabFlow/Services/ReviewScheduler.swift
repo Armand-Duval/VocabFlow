@@ -64,6 +64,15 @@ enum ReviewScheduler {
             && snapshot.nextReviewDate.timeIntervalSince(now) < 24 * 60 * 60
     }
 
+    static func resetProgress(for card: FlashCard, now: Date = .now) {
+        card.repetitions = 0
+        card.intervalDays = 0
+        card.easeFactor = 2.5
+        card.reviewCount = 0
+        card.learningStep = 0
+        card.nextReviewDate = now
+    }
+
     static func apply(rating: ReviewRating, to card: FlashCard, now: Date = .now) {
         let wasNewCard = card.isNewCard
         var snapshot = ReviewSnapshot(from: card)

@@ -18,6 +18,7 @@ final class FlashCard {
     var repetitions: Int
     var reviewCount: Int
     var learningStep: Int
+    var deck: Deck?
 
     var cardType: CardType {
         get { CardType(rawValue: cardTypeRaw) ?? .definition }
@@ -36,7 +37,8 @@ final class FlashCard {
         front: String,
         back: String,
         contextNote: String? = nil,
-        phonetic: String? = nil
+        phonetic: String? = nil,
+        deck: Deck? = nil
     ) {
         self.id = UUID()
         self.word = word
@@ -46,6 +48,7 @@ final class FlashCard {
         self.front = front
         self.back = back
         self.contextNote = contextNote
+        self.deck = deck
         self.createdAt = Date()
         self.nextReviewDate = Date()
         self.intervalDays = 0

@@ -30,6 +30,7 @@ struct SelectableTextEditor: UIViewRepresentable {
         textView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         textView.text = text
         context.coordinator.textView = textView
+        textView.inputAccessoryView = context.coordinator.makeInputAccessoryView()
 
         let dismissPan = UIPanGestureRecognizer(
             target: context.coordinator,
@@ -91,6 +92,28 @@ struct SelectableTextEditor: UIViewRepresentable {
             publishSelection(from: textView)
         }
 
+        func textViewDidBeginEditing(_ textView: UITextView) {
+            configureAncestorScrollViews(for: textView)
+        }
+
+        func makeInputAccessoryView() -> UIToolbar {
+            let toolbar = UIToolbar()
+            toolbar.sizeToFit()
+            let flex = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+            let done = UIBarButtonItem(
+                title: L10n.done,
+                style: .done,
+                target: self,
+                action: #selector(doneTapped)
+            )
+            toolbar.items = [flex, done]
+            return toolbar
+        }
+
+        @objc func doneTapped() {
+            textView?.resignFirstResponder()
+        }
+
         @objc func handleKeyboardDismissPan(_ gesture: UIPanGestureRecognizer) {
             guard let textView, textView.isFirstResponder else { return }
 
@@ -100,7 +123,7 @@ struct SelectableTextEditor: UIViewRepresentable {
             case .changed:
                 guard !dismissPanStartedWithSelection else { return }
                 let translation = gesture.translation(in: textView)
-                if translation.y > 24, abs(translation.y) > abs(translation.x) * 1.2 {
+                if translation.y > 12, abs(translation.y) > abs(translation.x) {
                     textView.resignFirstResponder()
                 }
             default:
@@ -112,12 +135,24 @@ struct SelectableTextEditor: UIViewRepresentable {
             _ gestureRecognizer: UIGestureRecognizer,
             shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
         ) -> Bool {
-            gestureRecognizer === dismissPanRecognizer || otherGestureRecognizer.view is UIScrollView
+            gestureRecognizer === dismissPanRecognizer && otherGestureRecognizer.view is UIScrollView
         }
 
         func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-            guard gestureRecognizer === dismissPanRecognizer else { return true }
-            return textView?.isFirstResponder == true
+            if gestureRecognizer === dismissPanRecognizer {
+                return textView?.isFirstResponder == true
+            }
+            return true
+        }
+
+        private func configureAncestorScrollViews(for view: UIView) {
+            var ancestor: UIView? = view.superview
+            while let current = ancestor {
+                if let scrollView = current as? UIScrollView, scrollView !== view {
+                    scrollView.keyboardDismissMode = .interactive
+                }
+                ancestor = current.superview
+            }
         }
 
         @available(iOS 16.0, *)
@@ -179,6 +214,14 @@ private final class AutoSizingTextView: UITextView {
         configureAncestorScrollViews()
     }
 
+    override func becomeFirstResponder() -> Bool {
+        let became = super.becomeFirstResponder()
+        if became {
+            configureAncestorScrollViews()
+        }
+        return became
+    }
+
     override var intrinsicContentSize: CGSize {
         let width = bounds.width > 0 ? bounds.width : UIScreen.main.bounds.width - 64
         let fittingSize = sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude))
@@ -194,7 +237,7 @@ private final class AutoSizingTextView: UITextView {
     private func configureAncestorScrollViews() {
         var view: UIView? = superview
         while let ancestor = view {
-            if let scrollView = ancestor as? UIScrollView {
+            if let scrollView = ancestor as? UIScrollView, scrollView !== self {
                 scrollView.keyboardDismissMode = .interactive
             }
             view = ancestor.superview

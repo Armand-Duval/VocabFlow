@@ -1,0 +1,188 @@
+{
+  "version": 1,
+  "name": "雅思核心词汇",
+  "detailText": "雅思阅读/写作高频学术词（内置 starter，可继续补充）。",
+  "slug": "ielts-core",
+  "cards": [
+    {
+      "word": "significant",
+      "phonetic": "/sɪɡˈnɪfɪkənt/",
+      "sentence": "The study found a significant improvement in reading scores.",
+      "cardType": "definition",
+      "front": "significant",
+      "back": "significant / 显著的\n\n程度足够大、值得注意；学术写作常用。",
+      "contextNote": null
+    },
+    {
+      "word": "establish",
+      "phonetic": "/ɪˈstæblɪʃ/",
+      "sentence": "Researchers established a clear link between sleep and memory.",
+      "cardType": "definition",
+      "front": "establish a link",
+      "back": "establish / 建立、证实\n\nestablish that... 表示确定某事实或关系。",
+      "contextNote": null
+    },
+    {
+      "word": "indicate",
+      "phonetic": "/ˈɪndɪkeɪt/",
+      "sentence": "The data indicate that urban populations are ageing rapidly.",
+      "cardType": "definition",
+      "front": "The data indicate that...",
+      "back": "indicate / 表明\n\ndata 作复数时动词用 indicate；写作中比 show 更正式。",
+      "contextNote": null
+    },
+    {
+      "word": "approach",
+      "phonetic": "/əˈproʊtʃ/",
+      "sentence": "A new approach to language teaching has gained popularity.",
+      "cardType": "definition",
+      "front": "approach",
+      "back": "approach / 方法、途径\n\n既可作名词（方法），也可作动词（接近）。",
+      "contextNote": null
+    },
+    {
+      "word": "factor",
+      "phonetic": "/ˈfæktər/",
+      "sentence": "Cost remains a key factor in students' choice of university.",
+      "cardType": "definition",
+      "front": "a key factor",
+      "back": "factor / 因素\n\nkey/critical factor 关键影响因素。",
+      "contextNote": null
+    },
+    {
+      "word": "environment",
+      "phonetic": "/ɪnˈvaɪrənmənt/",
+      "sentence": "Children thrive in a supportive learning environment.",
+      "cardType": "definition",
+      "front": "learning environment",
+      "back": "environment / 环境\n\n可指自然环境或抽象环境（学习/工作）。",
+      "contextNote": null
+    },
+    {
+      "word": "policy",
+      "phonetic": "/ˈpɒləsi/",
+      "sentence": "The government introduced a new policy on renewable energy.",
+      "cardType": "definition",
+      "front": "policy",
+      "back": "policy / 政策\n\npublic policy 公共政策；company policy 公司规定。",
+      "contextNote": null
+    },
+    {
+      "word": "trend",
+      "phonetic": "/trend/",
+      "sentence": "There is a growing trend towards remote work.",
+      "cardType": "definition",
+      "front": "a growing trend",
+      "back": "trend / 趋势\n\ntrend towards... 朝向某方向的变化趋势。",
+      "contextNote": null
+    },
+    {
+      "word": "impact",
+      "phonetic": "/ˈɪmpækt/",
+      "sentence": "Tourism has a major impact on local economies.",
+      "cardType": "definition",
+      "front": "have an impact on",
+      "back": "impact / 影响\n\nhave an impact on / 对…产生影响；写作高频搭配。",
+      "contextNote": null
+    },
+    {
+      "word": "issue",
+      "phonetic": "/ˈɪʃuː/",
+      "sentence": "Climate change is one of the most pressing issues of our time.",
+      "cardType": "definition",
+      "front": "pressing issue",
+      "back": "issue / 议题、问题\n\npressing issue 紧迫议题；social issue 社会问题。",
+      "contextNote": null
+    },
+    {
+      "word": "resource",
+      "phonetic": "/rɪˈsɔːrs/",
+      "sentence": "Schools need more resources to support disadvantaged students.",
+      "cardType": "definition",
+      "front": "resources",
+      "back": "resource / 资源\n\n常复数 resources；natural/human/financial resources。",
+      "contextNote": null
+    },
+    {
+      "word": "community",
+      "phonetic": "/kəˈmjuːnəti/",
+      "sentence": "Volunteers play a vital role in the local community.",
+      "cardType": "definition",
+      "front": "local community",
+      "back": "community / 社区、群体\n\nlocal community 当地社区；scientific community 学界。",
+      "contextNote": null
+    },
+    {
+      "word": "despite",
+      "phonetic": "/dɪˈspaɪt/",
+      "sentence": "Despite the rain, the event attracted a large crowd.",
+      "cardType": "cloze",
+      "front": "______ the rain, the event attracted a large crowd.",
+      "back": "Despite\n\ndespite + 名词/动名词，表示让步「尽管」。",
+      "contextNote": null
+    },
+    {
+      "word": "whereas",
+      "phonetic": "/weərˈæz/",
+      "sentence": "Urban areas are expanding rapidly, whereas rural populations are shrinking.",
+      "cardType": "definition",
+      "front": "whereas",
+      "back": "whereas / 然而、而\n\n连接对比分句，比 while 更书面。",
+      "contextNote": null
+    },
+    {
+      "word": "Nevertheless",
+      "phonetic": "/ˌnevərðəˈles/",
+      "sentence": "The plan faced criticism; nevertheless, it was approved.",
+      "cardType": "definition",
+      "front": "nevertheless",
+      "back": "nevertheless / 尽管如此\n\n句首或句中连接，表示转折，写作高分连接词。",
+      "contextNote": null
+    },
+    {
+      "word": "Furthermore",
+      "phonetic": "/ˌfɜːrðərˈmɔːr/",
+      "sentence": "The device is affordable. Furthermore, it is easy to use.",
+      "cardType": "definition",
+      "front": "Furthermore",
+      "back": "furthermore / 此外\n\n递进关系，比 also 更正式。",
+      "contextNote": null
+    },
+    {
+      "word": "allocate",
+      "phonetic": "/ˈæləkeɪt/",
+      "sentence": "The budget allocates more funds to public health.",
+      "cardType": "definition",
+      "front": "allocate funds",
+      "back": "allocate / 分配\n\nallocate resources/funds/time to... 分配资源给…",
+      "contextNote": null
+    },
+    {
+      "word": "demonstrate",
+      "phonetic": "/ˈdemənstreɪt/",
+      "sentence": "The experiment demonstrates how heat affects chemical reactions.",
+      "cardType": "definition",
+      "front": "demonstrate",
+      "back": "demonstrate / 证明、展示\n\n学术语境「表明、论证」；口语可指示范。",
+      "contextNote": null
+    },
+    {
+      "word": "consequence",
+      "phonetic": "/ˈkɒnsɪkwəns/",
+      "sentence": "Pollution has serious consequences for public health.",
+      "cardType": "definition",
+      "front": "consequences",
+      "back": "consequence / 后果\n\nserious/long-term consequences；as a consequence 因此。",
+      "contextNote": null
+    },
+    {
+      "word": "alternative",
+      "phonetic": "/ɔːlˈtɜːrnətɪv/",
+      "sentence": "Solar power offers a cleaner alternative to fossil fuels.",
+      "cardType": "definition",
+      "front": "alternative to",
+      "back": "alternative / 替代方案\n\nalternative to... …的替代品/备选方案。",
+      "contextNote": null
+    }
+  ]
+}

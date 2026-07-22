@@ -11,6 +11,7 @@ struct ImportCardsFormView: View {
     @State private var wordFeedbackMessage: String?
     @State private var wordFeedbackIsError = false
     @State private var errorMessage: String?
+    @State private var selectedDeckID = UUID()
 
     init(
         sentence: String,
@@ -56,6 +57,8 @@ struct ImportCardsFormView: View {
                         feedbackIsError: $wordFeedbackIsError
                     )
                 }
+
+                SharedDeckPickerSection(selectedDeckID: $selectedDeckID)
             }
             .navigationTitle(L10n.createTitle)
             .navigationBarTitleDisplayMode(.inline)
@@ -116,9 +119,15 @@ struct ImportCardsFormView: View {
             return
         }
 
+        guard !SharedDeckStore.loadCatalog().isEmpty else {
+            errorMessage = L10n.deckExtensionEmptyCatalogHint
+            return
+        }
+
         ShareCardGenerationRunner.submitFromShareExtension(
             sentence: trimmedSentence,
             words: words,
+            targetDeckID: selectedDeckID,
             exitExtension: onSubmit
         )
     }

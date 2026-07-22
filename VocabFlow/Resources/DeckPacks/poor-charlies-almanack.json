@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "name": "穷查理宝典",
+  "detailText": "阅读《穷查理宝典》时的核心概念与生词。可继续从书中摘录加入本词库。",
+  "slug": "poor-charlies-almanack",
+  "cards": [
+    {
+      "word": "latticework",
+      "phonetic": "/ˈlætɪswɜːrk/",
+      "sentence": "You've got to have models in your head and array your experience on this latticework of mental models.",
+      "cardType": "definition",
+      "front": "latticework of mental models",
+      "back": "思维模型格栅\n\n把多个学科的核心模型组合起来，用于理解现实与做决策。",
+      "contextNote": null
+    },
+    {
+      "word": "inversion",
+      "phonetic": "/ɪnˈvɜːrʒn/",
+      "sentence": "Invert, always invert.",
+      "cardType": "definition",
+      "front": "Invert, always invert.",
+      "back": "逆向思考\n\n先想如何失败，再反推如何避免；比只追求成功路径更有效。",
+      "contextNote": null
+    },
+    {
+      "word": "circle of competence",
+      "phonetic": null,
+      "sentence": "You have to figure out what your own aptitudes are and play games where you have an edge.",
+      "cardType": "definition",
+      "front": "circle of competence",
+      "back": "能力圈\n\n知道自己真正懂什么，只在能力圈内下注；圈外要更谨慎或不去。",
+      "contextNote": null
+    },
+    {
+      "word": "margin of safety",
+      "phonetic": null,
+      "sentence": "The margin of safety is always dependent on the price paid.",
+      "cardType": "definition",
+      "front": "margin of safety",
+      "back": "安全边际\n\n留出容错空间：即使判断有误，也不至于伤筋动骨。",
+      "contextNote": null
+    },
+    {
+      "word": "misjudgment",
+      "phonetic": "/mɪsˈdʒʌdʒmənt/",
+      "sentence": "Psychology of human misjudgment",
+      "cardType": "definition",
+      "front": "psychology of human misjudgment",
+      "back": "人类误判心理学\n\n系统认识认知偏差（激励、从众、锚定等），减少重复犯错。",
+      "contextNote": null
+    },
+    {
+      "word": "compound interest",
+      "phonetic": null,
+      "sentence": "Understanding both the power of compound interest and the difficulty of getting it is the heart of understanding a lot of things.",
+      "cardType": "cloze",
+      "front": "Understanding both the power of ______ and the difficulty of getting it is the heart of understanding a lot of things.",
+      "back": "compound interest\n\n复利：长期积累的小优势，会随时间放大。",
+      "contextNote": null
+    },
+    {
+      "word": "worldly wisdom",
+      "phonetic": null,
+      "sentence": "What is elementary, worldly wisdom?",
+      "cardType": "definition",
+      "front": "elementary worldly wisdom",
+      "back": "基本世俗智慧\n\n来自多学科的基础模型 + 常出现的行为模式，构成实用判断力。",
+      "contextNote": null
+    },
+    {
+      "word": "consistency",
+      "phonetic": null,
+      "sentence": "The iron rule of nature is: you get what you reward for.",
+      "cardType": "definition",
+      "front": "You get what you reward for.",
+      "back": "激励决定行为\n\n人们会走向被奖励的方向；设计制度时先看激励结构。",
+      "contextNote": null
+    }
+  ]
+}

@@ -1,6 +1,121 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%lld" : {
+
+    },
+    "apkg.export.empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No cards to export"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有可导出的卡片"
+          }
+        }
+      }
+    },
+    "apkg.export.failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export failed: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出失败：%@"
+          }
+        }
+      }
+    },
+    "apkg.export.zipFailed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not create archive"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法创建压缩包"
+          }
+        }
+      }
+    },
+    "apkg.import.empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No importable cards found"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未找到可导入的卡片"
+          }
+        }
+      }
+    },
+    "apkg.import.failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import failed: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入失败：%@"
+          }
+        }
+      }
+    },
+    "apkg.import.invalid" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid Anki package"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无效的 Anki 包"
+          }
+        }
+      }
+    },
+    "apkg.import.missingCollection" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not find Anki collection in package"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "包内找不到 Anki 数据库"
+          }
+        }
+      }
+    },
     "cardType.cloze" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -392,6 +507,1054 @@
         }
       }
     },
+    "deck.browsePresets" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Browse Decks"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "浏览词库"
+          }
+        }
+      }
+    },
+    "deck.create.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Deck"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新建词库"
+          }
+        }
+      }
+    },
+    "deck.default.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cards not assigned to another deck"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未指定其他词库的卡片会放在这里"
+          }
+        }
+      }
+    },
+    "deck.default.name" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "General"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "默认词库"
+          }
+        }
+      }
+    },
+    "deck.delete" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除"
+          }
+        }
+      }
+    },
+    "deck.delete.failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could Not Delete Deck"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除词库失败"
+          }
+        }
+      }
+    },
+    "deck.detail.placeholder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Description (optional)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "简介（可选）"
+          }
+        }
+      }
+    },
+    "deck.download.starter" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载"
+          }
+        }
+      }
+    },
+    "deck.empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No decks yet"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有词库"
+          }
+        }
+      }
+    },
+    "deck.error.cannotDeleteDefault" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The default deck cannot be deleted"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "默认词库不能删除"
+          }
+        }
+      }
+    },
+    "deck.error.missingStarterPack" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starter pack not found in the app bundle."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未找到内置 starter 词库包。"
+          }
+        }
+      }
+    },
+    "deck.error.unknownPreset" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown preset deck"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未知推荐词库"
+          }
+        }
+      }
+    },
+    "deck.extension.emptyCatalog" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deck list not synced yet"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "词库列表尚未同步"
+          }
+        }
+      }
+    },
+    "deck.extension.emptyCatalogHint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open VocabFlow once, then try Share again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请先打开 VocabFlow 主 App 一次，再使用共享制卡。"
+          }
+        }
+      }
+    },
+    "deck.extension.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Matches the deck selected in the main app. Open VocabFlow to manage decks."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "与主 App 制卡页的目标词库同步。可在 VocabFlow 中管理词库。"
+          }
+        }
+      }
+    },
+    "deck.filter.all" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部"
+          }
+        }
+      }
+    },
+    "deck.import.apkg" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import Anki Package (.apkg)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入 Anki 包 (.apkg)"
+          }
+        }
+      }
+    },
+    "deck.import.apkgResult" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imported %2$d Anki cards into %1$@."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已向「%1$@」导入 %2$d 张 Anki 卡片。"
+          }
+        }
+      }
+    },
+    "deck.import.complete" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import Complete"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入完成"
+          }
+        }
+      }
+    },
+    "deck.import.failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import Failed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入失败"
+          }
+        }
+      }
+    },
+    "deck.import.pack" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import Deck Pack (.json)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入词库包 (.json)"
+          }
+        }
+      }
+    },
+    "deck.import.packResult" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imported %2$d cards into %1$@."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已向「%1$@」导入 %2$d 张卡片。"
+          }
+        }
+      }
+    },
+    "deck.import.section" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入"
+          }
+        }
+      }
+    },
+    "deck.install.complete" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deck Added"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "词库已添加"
+          }
+        }
+      }
+    },
+    "deck.install.empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ is ready. Start adding cards while you read."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」已就绪，阅读时可随时加入新卡片。"
+          }
+        }
+      }
+    },
+    "deck.install.failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could Not Add Deck"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加词库失败"
+          }
+        }
+      }
+    },
+    "deck.install.withCards" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ added with %2$d starter cards."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已添加「%1$@」，含 %2$d 张示例卡片。"
+          }
+        }
+      }
+    },
+    "deck.installing" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installing…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在添加…"
+          }
+        }
+      }
+    },
+    "deck.labelWithCount" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ (%2$d)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@（%2$d）"
+          }
+        }
+      }
+    },
+    "deck.loading" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading decks…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在加载词库…"
+          }
+        }
+      }
+    },
+    "deck.manage" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manage Decks"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "管理词库"
+          }
+        }
+      }
+    },
+    "deck.myDecks" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "My Decks"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我的词库"
+          }
+        }
+      }
+    },
+    "deck.name.placeholder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deck name"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "词库名称"
+          }
+        }
+      }
+    },
+    "deck.preset.add" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加"
+          }
+        }
+      }
+    },
+    "deck.preset.customReading.detail" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A flexible deck for anything you are reading."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任意阅读材料的通用收集词库。"
+          }
+        }
+      }
+    },
+    "deck.preset.customReading.name" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Free Reading"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "泛读收集"
+          }
+        }
+      }
+    },
+    "deck.preset.economist.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "18 Economist-style words and phrases to get started. Add more while reading."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "内置 18 个经济学人风格高频词 starter，阅读时可继续添加。"
+          }
+        }
+      }
+    },
+    "deck.preset.economist.name" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Economist Reading"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "经济学人阅读"
+          }
+        }
+      }
+    },
+    "deck.preset.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Small starter packs built into the app. For full lists, use Open Source or Community sections below."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "内置少量 starter 词快速上手。完整词库请见下方「开源词库」或「社区词库」。"
+          }
+        }
+      }
+    },
+    "deck.openSource.section" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Source Decks" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "开源词库" } }
+      }
+    },
+    "deck.openSource.footer" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Downloaded from GitHub. Requires network. NGSL/NAWL are CC BY-SA 4.0; TOEFL dataset is MIT." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "从 GitHub 在线下载，需联网。NGSL/NAWL 为 CC BY-SA 4.0；TOEFL 数据集为 MIT。" } }
+      }
+    },
+    "deck.community.section" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Community Decks (AnkiWeb)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "社区词库（AnkiWeb）" } }
+      }
+    },
+    "deck.community.footer" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Opens AnkiWeb in Safari. Download the .apkg, then import it in VocabFlow. Community decks are shared by users; check each deck's license." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 Safari 打开 AnkiWeb 下载 .apkg，再回到 VocabFlow 导入。社区词库由用户分享，请注意各 deck 的使用条款。" } }
+      }
+    },
+    "deck.community.openAnkiWeb" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开" } }
+      }
+    },
+    "deck.community.importGuide" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "How to import .apkg" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "如何导入 .apkg" } }
+      }
+    },
+    "deck.community.importGuide.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Import Anki Package" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "导入 Anki 包" } }
+      }
+    },
+    "deck.community.importGuide.body" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "1. Tap Open on a community deck and download the .apkg on AnkiWeb.\n2. Save it to Files on your iPhone.\n3. Return here and tap Import Anki Package, or use the button below." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "1. 点击「打开」在 AnkiWeb 下载 .apkg。\n2. 保存到 iPhone「文件」App。\n3. 回到此处点击「导入 Anki 包」，或点下方按钮直接选择文件。" } }
+      }
+    },
+    "deck.community.importNow" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Import Now" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "立即导入" } }
+      }
+    },
+    "deck.community.estimatedCards" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "~%lld cards" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "约 %lld 张" } }
+      }
+    },
+    "deck.community.ielts4000.name" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "4000 IELTS Words" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "4000 雅思词汇" } }
+      }
+    },
+    "deck.community.ielts4000.detail" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Popular IELTS deck with IPA on AnkiWeb." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "AnkiWeb 热门雅思 deck，含音标。" } }
+      }
+    },
+    "deck.community.english60k.name" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "English 60K High Frequency" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "英语 6 万高频词" } }
+      }
+    },
+    "deck.community.english60k.detail" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Large frequency-sorted deck with definitions and audio." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "按词频排序的大型词库，含释义与发音。" } }
+      }
+    },
+    "deck.community.advancedVocab.name" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Advanced English Vocabulary" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "进阶英语词汇" } }
+      }
+    },
+    "deck.community.advancedVocab.detail" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Words, phrasal verbs, and idioms for upper-intermediate learners." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "中高级词汇、短语动词与习语。" } }
+      }
+    },
+    "deck.community.greSearch.name" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Browse GRE Decks" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "浏览 GRE 词库" } }
+      }
+    },
+    "deck.community.greSearch.detail" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Search AnkiWeb for GRE 3000 and other GRE decks." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 AnkiWeb 搜索 GRE 3000 等 GRE 词库。" } }
+      }
+    },
+    "deck.community.toeflSearch.name" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Browse TOEFL Decks" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "浏览 TOEFL 词库" } }
+      }
+    },
+    "deck.community.toeflSearch.detail" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Search AnkiWeb for TOEFL vocabulary decks." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 AnkiWeb 搜索托福词汇 deck。" } }
+      }
+    },
+    "deck.remote.license" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "License: %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "协议：%@" } }
+      }
+    },
+    "deck.remote.viewSource" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "View source & attribution" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "查看来源与署名" } }
+      }
+    },
+    "deck.remote.ngsl.name" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "NGSL General English" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "NGSL 通用英语" } }
+      }
+    },
+    "deck.remote.ngsl.detail" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "2,809 core words covering ~92% of general English texts." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "2809 个核心词，覆盖约 92% 通用英语文本。" } }
+      }
+    },
+    "deck.remote.nawl.name" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "NAWL Academic English" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "NAWL 学术英语" } }
+      }
+    },
+    "deck.remote.nawl.detail" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "963 academic words for textbooks and papers (pairs with NGSL)." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "963 个学术词汇，适合论文与教材（与 NGSL 配套）。" } }
+      }
+    },
+    "deck.remote.toefl.name" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "TOEFL / IELTS Academic 1000" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "托福/雅思学术 1000 词" } }
+      }
+    },
+    "deck.remote.toefl.detail" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "MIT-licensed dataset with definitions and example sentences." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "MIT 协议数据集，含英文释义与例句。" } }
+      }
+    },
+    "deck.downloading" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Downloading…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "下载中…" } }
+      }
+    },
+    "deck.download.failed" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Download Failed" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "下载失败" } }
+      }
+    },
+    "deck.download.invalidResponse" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Invalid response from the download server." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "下载服务器返回无效响应。" } }
+      }
+    },
+    "deck.download.emptyPack" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Downloaded pack contains no cards." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "下载的词库包没有卡片。" } }
+      }
+    },
+    "deck.download.networkFailed" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Network error: %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "网络错误：%@" } }
+      }
+    },
+    "deck.preset.gre.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "20 high-frequency GRE words (starter, not the full Red Book). Import .apkg for the full list."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "20 个 GRE 高频词 starter（非完整红宝书）。完整词表请导入 .apkg。"
+          }
+        }
+      }
+    },
+    "deck.preset.gre.name" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GRE High Frequency"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GRE 高频词"
+          }
+        }
+      }
+    },
+    "deck.preset.ielts.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "20 core IELTS vocabulary words to get started. Import .apkg for the full list."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "20 个雅思核心词汇 starter。完整词表请导入 .apkg。"
+          }
+        }
+      }
+    },
+    "deck.preset.ielts.name" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IELTS Core"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "雅思核心词汇"
+          }
+        }
+      }
+    },
+    "deck.preset.installed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Added"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已添加"
+          }
+        }
+      }
+    },
+    "deck.preset.poorCharlies.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Core Munger concepts and vocabulary while reading the book."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "阅读《穷查理宝典》时的核心概念与生词。"
+          }
+        }
+      }
+    },
+    "deck.preset.poorCharlies.name" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Poor Charlie's Almanack"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "穷查理宝典"
+          }
+        }
+      }
+    },
+    "deck.preset.section" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recommended Decks"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "推荐词库"
+          }
+        }
+      }
+    },
+    "deck.preset.starterCount" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld words"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 词"
+          }
+        }
+      }
+    },
+    "deck.section" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Target Deck"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目标词库"
+          }
+        }
+      }
+    },
+    "deck.section.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New cards will be saved to this deck. Manage or download more decks anytime."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新生成的卡片会保存到此词库。可随时管理或下载更多词库。"
+          }
+        }
+      }
+    },
+    "deck.store.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decks"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "词库"
+          }
+        }
+      }
+    },
+    "deck.target" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deck"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "词库"
+          }
+        }
+      }
+    },
+    "deck.untitled" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Untitled Deck"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未命名词库"
+          }
+        }
+      }
+    },
     "error.invalidResponse" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -758,6 +1921,86 @@
         }
       }
     },
+    "library.contextNote" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Context Note"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "语境备注"
+          }
+        }
+      }
+    },
+    "library.deleteCard" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Card"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除卡片"
+          }
+        }
+      }
+    },
+    "library.deleteCard.message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This action cannot be undone."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此操作无法撤销。"
+          }
+        }
+      }
+    },
+    "library.detail.content" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Content"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "内容"
+          }
+        }
+      }
+    },
+    "library.detail.srs" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review Stats"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复习数据"
+          }
+        }
+      }
+    },
     "library.due" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -771,6 +2014,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "待复习"
+          }
+        }
+      }
+    },
+    "library.edit" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编辑"
           }
         }
       }
@@ -860,6 +2119,38 @@
         }
       }
     },
+    "library.resetSRS" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset Review Progress"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置复习进度"
+          }
+        }
+      }
+    },
+    "library.resetSRS.message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This card will be treated as new. Review history for this card will be cleared."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "该卡片将恢复为新卡状态，复习记录会被清除。"
+          }
+        }
+      }
+    },
     "library.reviewAll" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -877,6 +2168,38 @@
         }
       }
     },
+    "library.reviewDeck" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review %1$@ (%2$d due)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复习「%1$@」（%2$d 张到期）"
+          }
+        }
+      }
+    },
+    "library.reviewThisCard" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review This Card"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复习此卡"
+          }
+        }
+      }
+    },
     "library.search" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -890,6 +2213,118 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "搜索生词、原句、卡片内容"
+          }
+        }
+      }
+    },
+    "library.srs.ease" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ease"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "难度系数"
+          }
+        }
+      }
+    },
+    "library.srs.interval" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Interval"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "间隔"
+          }
+        }
+      }
+    },
+    "library.srs.new" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新卡"
+          }
+        }
+      }
+    },
+    "library.srs.nextReview" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next Review"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下次复习"
+          }
+        }
+      }
+    },
+    "library.srs.reviewCount" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reviews"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复习次数"
+          }
+        }
+      }
+    },
+    "library.srs.scheduled" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scheduled"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已排期"
+          }
+        }
+      }
+    },
+    "library.srs.status" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Status"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "状态"
           }
         }
       }
@@ -1215,6 +2650,198 @@
         }
       }
     },
+    "privacy.ai.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When you generate cards, source text and vocabulary are sent to the AI provider using your API key. We do not operate a backend that stores your content."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "生成卡片时，原文与生词会通过你的 API Key 发送至 AI 服务商。应用不提供存储内容的后端服务。"
+          }
+        }
+      }
+    },
+    "privacy.ai.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI Generation (BYOK)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI 制卡（自带 Key）"
+          }
+        }
+      }
+    },
+    "privacy.contact.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This policy may be updated as features change. Continued use after updates means you accept the revised policy."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "随功能迭代，本政策可能更新。继续使用即表示接受修订后的政策。"
+          }
+        }
+      }
+    },
+    "privacy.contact.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updates"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "政策更新"
+          }
+        }
+      }
+    },
+    "privacy.data.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cards, review schedules, and settings are stored locally on your iPhone. JSON backups you export are under your control."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "卡片、复习计划与设置均保存在 iPhone 本地。导出的 JSON 备份由你自行管理。"
+          }
+        }
+      }
+    },
+    "privacy.data.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data We Store"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本地存储"
+          }
+        }
+      }
+    },
+    "privacy.intro" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VocabFlow stores your flashcards on device. This summary explains how data is handled."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VocabFlow 将闪卡数据保存在本机。以下为数据处理方式摘要。"
+          }
+        }
+      }
+    },
+    "privacy.ocr.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Photo and share-image OCR runs on device with Apple Vision. Images are not uploaded for recognition."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "相册与分享图片的文字识别在设备本地通过 Apple Vision 完成，图片不会上传识别。"
+          }
+        }
+      }
+    },
+    "privacy.ocr.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OCR"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文字识别"
+          }
+        }
+      }
+    },
+    "privacy.storage.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your API key is stored in the App Group shared container so extensions can generate cards. Treat your device passcode and backups accordingly."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API Key 保存在 App Group 共享容器中，以便扩展制卡。请妥善保护设备密码与备份。"
+          }
+        }
+      }
+    },
+    "privacy.storage.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API Keys"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API Key"
+          }
+        }
+      }
+    },
+    "privacy.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privacy Policy"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐私政策"
+          }
+        }
+      }
+    },
     "rating.again" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1501,6 +3128,86 @@
         }
       }
     },
+    "review.quota.detail.deferred" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d cards deferred by quota"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "另有 %d 张因配额未排入"
+          }
+        }
+      }
+    },
+    "review.quota.detail.deferredMessage" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d due cards are waiting. Raise limits in Settings or continue tomorrow."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还有 %d 张到期卡片在排队。可在设置中提高配额，或明天继续。"
+          }
+        }
+      }
+    },
+    "review.quota.detail.hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily counts reset at midnight. A limit of 0 means unlimited."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每日计数在零点重置。配额设为 0 表示不限。"
+          }
+        }
+      }
+    },
+    "review.quota.detail.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily Quota"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今日配额"
+          }
+        }
+      }
+    },
+    "review.quota.detail.today" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today's Progress"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今日进度"
+          }
+        }
+      }
+    },
     "review.quota.newLabel" : {
       "localizations" : {
         "en" : {
@@ -1593,6 +3300,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "不限"
+          }
+        }
+      }
+    },
+    "review.rating.hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Numbers show when this card will appear again"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "数字表示选择后该卡再次出现的时间"
           }
         }
       }
@@ -1701,6 +3424,38 @@
         }
       }
     },
+    "settings.about.section" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关于"
+          }
+        }
+      }
+    },
+    "settings.ai.section" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI Card Generation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI 制卡"
+          }
+        }
+      }
+    },
     "settings.apiKey" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1748,6 +3503,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "留空则使用默认 Key"
+          }
+        }
+      }
+    },
+    "settings.apkg.export" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export Anki Package (.apkg)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出 Anki 包 (.apkg)"
           }
         }
       }
@@ -1816,6 +3587,102 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "数据备份"
+          }
+        }
+      }
+    },
+    "settings.data.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d cards in library. JSON backup keeps full SRS data; .apkg exports for Anki (Basic note type)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "词库共 %d 张卡。JSON 备份保留完整复习数据；.apkg 可导入 Anki（Basic 模板）。"
+          }
+        }
+      }
+    },
+    "settings.data.section" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "数据"
+          }
+        }
+      }
+    },
+    "settings.deleteAllCards" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete All Cards"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除全部卡片"
+          }
+        }
+      }
+    },
+    "settings.deleteAllCards.done" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Library Cleared"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "词库已清空"
+          }
+        }
+      }
+    },
+    "settings.deleteAllCards.doneMessage" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All cards have been deleted."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部卡片已删除。"
+          }
+        }
+      }
+    },
+    "settings.deleteAllCards.message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This permanently removes every card in your library."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将永久删除词库中的全部卡片。"
           }
         }
       }
@@ -2002,6 +3869,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已替换为 %lld 张卡片。"
+          }
+        }
+      }
+    },
+    "settings.import.section" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import Methods"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入方式"
           }
         }
       }
@@ -2206,6 +4089,70 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "读取失败"
+          }
+        }
+      }
+    },
+    "settings.resetAllSRS" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset All Review Progress"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置全部复习进度"
+          }
+        }
+      }
+    },
+    "settings.resetAllSRS.done" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Progress Reset"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已重置进度"
+          }
+        }
+      }
+    },
+    "settings.resetAllSRS.doneMessage" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All cards are now treated as new."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部卡片已恢复为新卡状态。"
+          }
+        }
+      }
+    },
+    "settings.resetAllSRS.message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All cards will become new. Card content is kept."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所有卡片将恢复为新卡，内容不会删除。"
           }
         }
       }

@@ -4,7 +4,7 @@ import SwiftData
 enum FlashCardSaver {
     @MainActor
     @discardableResult
-    static func save(drafts: [GeneratedCardDraft], to context: ModelContext) -> Int {
+    static func save(drafts: [GeneratedCardDraft], to context: ModelContext, deck: Deck) -> Int {
         let selected = drafts.filter(\.isSelected)
         guard !selected.isEmpty else { return 0 }
 
@@ -16,7 +16,8 @@ enum FlashCardSaver {
                 front: draft.front,
                 back: CardContentFormatter.mergedBack(back: draft.back, contextNote: draft.contextNote),
                 contextNote: nil,
-                phonetic: draft.phonetic
+                phonetic: draft.phonetic,
+                deck: deck
             )
             context.insert(card)
         }
@@ -27,6 +28,7 @@ enum FlashCardSaver {
             // SwiftData 通常会自动持久化；显式 save 失败时不阻断流程
         }
 
+        DeckSettings.lastSelectedDeckID = deck.id
         return selected.count
     }
 }

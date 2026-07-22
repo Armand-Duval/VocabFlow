@@ -150,6 +150,11 @@ struct CardReviewSessionView: View {
                     .tint(ratingTint(rating))
                 }
             }
+
+            Text(L10n.reviewRatingHint)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
         }
         .padding(.horizontal)
         .padding(.bottom, 8)

@@ -3,10 +3,12 @@ import PhotosUI
 import UIKit
 
 struct CreateCardsView: View {
+    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var shareImport: ShareImportCoordinator
     @State private var sentence = ""
     @State private var words: [String] = []
     @State private var drafts: [GeneratedCardDraft] = []
+    @State private var selectedDeckID: UUID?
     @State private var isGenerating = false
     @State private var showPreview = false
     @State private var errorMessage: String?
@@ -73,6 +75,8 @@ struct CreateCardsView: View {
                         feedbackIsError: $wordFeedbackIsError
                     )
                 }
+
+                DeckPickerSection(selectedDeckID: $selectedDeckID)
             }
             .navigationTitle(L10n.createTitle)
             .navigationBarTitleDisplayMode(.large)
@@ -94,7 +98,7 @@ struct CreateCardsView: View {
                 }
             }
             .navigationDestination(isPresented: $showPreview) {
-                CardPreviewView(drafts: drafts) {
+                CardPreviewView(drafts: drafts, selectedDeckID: $selectedDeckID) {
                     showPreview = false
                 }
             }

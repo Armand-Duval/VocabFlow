@@ -4,10 +4,12 @@ import SwiftData
 #endif
 
 struct ContentView: View {
+    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var shareImport: ShareImportCoordinator
     @Query(sort: \FlashCard.nextReviewDate) private var allCards: [FlashCard]
     @State private var selectedTab = 0
     @State private var sharePreviewDrafts: [GeneratedCardDraft]?
+    @State private var shareSelectedDeckID: UUID?
 
     private var dueCount: Int {
         allCards.filter { ReviewScheduler.isDue($0) }.count
@@ -56,10 +58,14 @@ struct ContentView: View {
             presentSharePreviewIfNeeded()
         }
         .onAppear {
+            DeckService.bootstrap(in: modelContext)
             shareImport.refreshAll()
             presentSharePreviewIfNeeded()
             ReviewReminderService.reschedule(dueCount: dueCount)
             ReviewStatusStore.updateDueCount(dueCount)
+            if shareSelectedDeckID == nil {
+                shareSelectedDeckID = DeckSettings.lastSelectedDeckID
+            }
         }
         .onChange(of: dueCount) { _, count in
             ReviewReminderService.reschedule(dueCount: count)
@@ -72,6 +78,7 @@ struct ContentView: View {
             NavigationStack {
                 CardPreviewView(
                     drafts: sharePreviewDrafts ?? [],
+                    selectedDeckID: $shareSelectedDeckID,
                     onComplete: {
                         sharePreviewDrafts = nil
                     }
@@ -90,6 +97,11 @@ struct ContentView: View {
     private func presentSharePreviewIfNeeded() {
         guard let drafts = shareImport.pendingDrafts, !drafts.isEmpty else { return }
         sharePreviewDrafts = drafts
+        if let pendingDeckID = SharedDeckStore.consumePendingTargetDeckID() {
+            shareSelectedDeckID = pendingDeckID
+        } else {
+            shareSelectedDeckID = SharedDeckStore.resolvedSelectedDeckID()
+        }
         shareImport.acknowledgeDrafts()
         selectedTab = 0
     }
@@ -98,5 +110,5 @@ struct ContentView: View {
 #Preview {
     ContentView()
         .environmentObject(ShareImportCoordinator())
-        .modelContainer(for: FlashCard.self, inMemory: true)
+        .modelContainer(for: [FlashCard.self, Deck.self], inMemory: true)
 }

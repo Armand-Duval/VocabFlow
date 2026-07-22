@@ -3,13 +3,15 @@ import SwiftData
 
 struct CardPreviewView: View {
     @Environment(\.modelContext) private var modelContext
+    @Binding var selectedDeckID: UUID?
     @State private var drafts: [GeneratedCardDraft]
     var onComplete: () -> Void
 
     @State private var didSave = false
 
-    init(drafts: [GeneratedCardDraft], onComplete: @escaping () -> Void) {
+    init(drafts: [GeneratedCardDraft], selectedDeckID: Binding<UUID?>, onComplete: @escaping () -> Void) {
         _drafts = State(initialValue: drafts)
+        _selectedDeckID = selectedDeckID
         self.onComplete = onComplete
     }
 
@@ -18,15 +20,17 @@ struct CardPreviewView: View {
     }
 
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 16) {
+        Form {
+            DeckPickerSection(selectedDeckID: $selectedDeckID)
+
+            Section {
                 ForEach($drafts) { $draft in
                     DraftPreviewCard(draft: $draft)
                 }
+            } header: {
+                Text(L10n.previewIntro)
             }
-            .padding()
         }
-        .background(Color(.systemGroupedBackground))
         .navigationTitle(L10n.previewTitle)
         .navigationBarTitleDisplayMode(.inline)
         .dismissKeyboardOnScroll()
@@ -48,25 +52,30 @@ struct CardPreviewView: View {
     }
 
     private func saveSelectedCards() {
-        let count = FlashCardSaver.save(drafts: drafts, to: modelContext)
+        let deck = DeckService.resolvedDeck(id: selectedDeckID, in: modelContext)
+        let count = FlashCardSaver.save(drafts: drafts, to: modelContext, deck: deck)
         guard count > 0 else { return }
+        selectedDeckID = deck.id
         didSave = true
     }
 }
 
 #Preview {
     NavigationStack {
-        CardPreviewView(drafts: [
-            GeneratedCardDraft(
-                word: "mitigate",
-                phonetic: "/ˈmɪtɪɡeɪt/",
-                sentence: "Sample sentence.",
-                cardType: .cloze,
-                front: "The govt tried to ______ the impact.",
-                back: "mitigate v. 减轻\n\n在此句中表示减轻、缓解影响。",
-                contextNote: nil
-            )
-        ]) {}
+        CardPreviewView(
+            drafts: [
+                GeneratedCardDraft(
+                    word: "mitigate",
+                    phonetic: "/ˈmɪtɪɡeɪt/",
+                    sentence: "Sample sentence.",
+                    cardType: .cloze,
+                    front: "The govt tried to ______ the impact.",
+                    back: "mitigate v. 减轻\n\n在此句中表示减轻、缓解影响。",
+                    contextNote: nil
+                )
+            ],
+            selectedDeckID: .constant(nil)
+        ) {}
     }
-    .modelContainer(for: FlashCard.self, inMemory: true)
+    .modelContainer(for: [Deck.self, FlashCard.self], inMemory: true)
 }

@@ -1,0 +1,188 @@
+{
+  "version": 1,
+  "name": "GRE 高频词",
+  "detailText": "精选开源 GRE 高频词 starter（非完整红宝书，可导入 .apkg 扩充）。",
+  "slug": "gre-high-frequency",
+  "cards": [
+    {
+      "word": "ephemeral",
+      "phonetic": "/ɪˈfemərəl/",
+      "sentence": "Social media fame can be ephemeral.",
+      "cardType": "definition",
+      "front": "ephemeral",
+      "back": "ephemeral / 短暂的\n\n lasting a very short time；GRE 高频形容词。",
+      "contextNote": null
+    },
+    {
+      "word": "equivocate",
+      "phonetic": "/ɪˈkwɪvəkeɪt/",
+      "sentence": "Politicians often equivocate when asked direct questions.",
+      "cardType": "definition",
+      "front": "equivocate",
+      "back": "equivocate / 含糊其辞\n\n故意说模棱两可的话以回避立场。",
+      "contextNote": null
+    },
+    {
+      "word": "laconic",
+      "phonetic": "/ləˈkɒnɪk/",
+      "sentence": "His laconic reply ended the conversation.",
+      "cardType": "definition",
+      "front": "laconic",
+      "back": "laconic / 简洁的、惜字如金的\n\n用很少的词表达意思。",
+      "contextNote": null
+    },
+    {
+      "word": "prodigal",
+      "phonetic": "/ˈprɒdɪɡl/",
+      "sentence": "The prodigal spending left the company nearly bankrupt.",
+      "cardType": "definition",
+      "front": "prodigal",
+      "back": "prodigal / 挥霍的\n\n浪费资源或金钱；the prodigal son 败家子典故。",
+      "contextNote": null
+    },
+    {
+      "word": "mitigate",
+      "phonetic": "/ˈmɪtɪɡeɪt/",
+      "sentence": "Trees can mitigate the effects of urban heat islands.",
+      "cardType": "cloze",
+      "front": "Trees can ______ the effects of urban heat islands.",
+      "back": "mitigate\n\nmitigate / 减轻、缓解\n\n使坏事的影响变小。",
+      "contextNote": null
+    },
+    {
+      "word": "ubiquitous",
+      "phonetic": "/juːˈbɪkwɪtəs/",
+      "sentence": "Smartphones have become ubiquitous in modern life.",
+      "cardType": "definition",
+      "front": "ubiquitous",
+      "back": "ubiquitous / 无处不在的\n\nseeming to be everywhere at once。",
+      "contextNote": null
+    },
+    {
+      "word": "pragmatic",
+      "phonetic": "/præɡˈmætɪk/",
+      "sentence": "She took a pragmatic approach to solving the budget crisis.",
+      "cardType": "definition",
+      "front": "pragmatic approach",
+      "back": "pragmatic / 务实的\n\n重实际效果而非理论或理想。",
+      "contextNote": null
+    },
+    {
+      "word": "superfluous",
+      "phonetic": "/suːˈpɜːrfluəs/",
+      "sentence": "Remove any superfluous details from your essay.",
+      "cardType": "definition",
+      "front": "superfluous",
+      "back": "superfluous / 多余的\n\n超出所需；GRE 写作可用于精简论证。",
+      "contextNote": null
+    },
+    {
+      "word": "benevolent",
+      "phonetic": "/bəˈnevələnt/",
+      "sentence": "A benevolent donor funded the new library.",
+      "cardType": "definition",
+      "front": "benevolent",
+      "back": "benevolent / 仁慈的、乐善好施的\n\n对比 malevolent（恶意的）。",
+      "contextNote": null
+    },
+    {
+      "word": "capricious",
+      "phonetic": "/kəˈprɪʃəs/",
+      "sentence": "The capricious weather made planning difficult.",
+      "cardType": "definition",
+      "front": "capricious",
+      "back": "capricious / 反复无常的\n\n变化莫测、难以预测。",
+      "contextNote": null
+    },
+    {
+      "word": "diligent",
+      "phonetic": "/ˈdɪlɪdʒənt/",
+      "sentence": "Diligent preparation is essential for a high GRE score.",
+      "cardType": "definition",
+      "front": "diligent",
+      "back": "diligent / 勤奋的\n\nsteady and careful effort。",
+      "contextNote": null
+    },
+    {
+      "word": "enervate",
+      "phonetic": "/ˈenərveɪt/",
+      "sentence": "The humid heat enervated the hikers within an hour.",
+      "cardType": "definition",
+      "front": "enervate",
+      "back": "enervate / 使衰弱\n\n drain energy or strength；易与 energize 混淆。",
+      "contextNote": null
+    },
+    {
+      "word": "fastidious",
+      "phonetic": "/fæˈstɪdiəs/",
+      "sentence": "She is fastidious about grammar and punctuation.",
+      "cardType": "definition",
+      "front": "fastidious",
+      "back": "fastidious / 挑剔的、一丝不苟的\n\nvery attentive to accuracy and detail。",
+      "contextNote": null
+    },
+    {
+      "word": "garrulous",
+      "phonetic": "/ˈɡærələs/",
+      "sentence": "The garrulous tour guide talked throughout the entire bus ride.",
+      "cardType": "definition",
+      "front": "garrulous",
+      "back": "garrulous / 话多的\n\n excessively talkative。",
+      "contextNote": null
+    },
+    {
+      "word": "iconoclast",
+      "phonetic": "/aɪˈkɒnəklæst/",
+      "sentence": "As an iconoclast, she challenged established theories in her field.",
+      "cardType": "definition",
+      "front": "iconoclast",
+      "back": "iconoclast / 反传统者\n\n攻击或否定普遍信念的人。",
+      "contextNote": null
+    },
+    {
+      "word": "juxtapose",
+      "phonetic": "/ˌdʒʌkstəˈpoʊz/",
+      "sentence": "The film juxtaposes wealth and poverty in the same city.",
+      "cardType": "definition",
+      "front": "juxtapose",
+      "back": "juxtapose / 并置、对照\n\n把 contrasting 事物放在一起以突出差异。",
+      "contextNote": null
+    },
+    {
+      "word": "laudable",
+      "phonetic": "/ˈlɔːdəbl/",
+      "sentence": "Her laudable efforts improved literacy rates in the region.",
+      "cardType": "definition",
+      "front": "laudable",
+      "back": "laudable / 值得赞扬的\n\n deserving praise and commendation。",
+      "contextNote": null
+    },
+    {
+      "word": "meticulous",
+      "phonetic": "/məˈtɪkjələs/",
+      "sentence": "Meticulous note-taking helped him retain new vocabulary.",
+      "cardType": "definition",
+      "front": "meticulous",
+      "back": "meticulous / 一丝不苟的\n\n showing great attention to detail。",
+      "contextNote": null
+    },
+    {
+      "word": "obsolete",
+      "phonetic": "/ˌɒbsəˈliːt/",
+      "sentence": "Some argue that memorising word lists is obsolete in the AI era.",
+      "cardType": "definition",
+      "front": "obsolete",
+      "back": "obsolete / 过时的\n\n no longer produced or used。",
+      "contextNote": null
+    },
+    {
+      "word": "recalcitrant",
+      "phonetic": "/rɪˈkælsɪtrənt/",
+      "sentence": "Recalcitrant members blocked every compromise.",
+      "cardType": "definition",
+      "front": "recalcitrant",
+      "back": "recalcitrant / 顽固抗命的\n\n stubbornly resistant to authority。",
+      "contextNote": null
+    }
+  ]
+}

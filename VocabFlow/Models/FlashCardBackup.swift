@@ -3,6 +3,7 @@ import Foundation
 struct FlashCardBackupFile: Codable {
     let version: Int
     let exportedAt: Date
+    let decks: [DeckBackup]?
     let cards: [FlashCardBackup]
 }
 
@@ -22,10 +23,12 @@ struct FlashCardBackup: Codable {
     let repetitions: Int
     let reviewCount: Int
     let learningStep: Int
+    let deckId: UUID?
 
     enum CodingKeys: String, CodingKey {
         case id, word, phonetic, sentence, cardTypeRaw, front, back, contextNote
         case createdAt, nextReviewDate, intervalDays, easeFactor, repetitions, reviewCount, learningStep
+        case deckId
     }
 
     init(from card: FlashCard) {
@@ -44,6 +47,7 @@ struct FlashCardBackup: Codable {
         repetitions = card.repetitions
         reviewCount = card.reviewCount
         learningStep = card.learningStep
+        deckId = card.deck?.id
     }
 
     init(from decoder: Decoder) throws {
@@ -63,6 +67,7 @@ struct FlashCardBackup: Codable {
         repetitions = try container.decode(Int.self, forKey: .repetitions)
         reviewCount = try container.decodeIfPresent(Int.self, forKey: .reviewCount) ?? 0
         learningStep = try container.decodeIfPresent(Int.self, forKey: .learningStep) ?? 0
+        deckId = try container.decodeIfPresent(UUID.self, forKey: .deckId)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -82,9 +87,10 @@ struct FlashCardBackup: Codable {
         try container.encode(repetitions, forKey: .repetitions)
         try container.encode(reviewCount, forKey: .reviewCount)
         try container.encode(learningStep, forKey: .learningStep)
+        try container.encode(deckId, forKey: .deckId)
     }
 
-    func apply(to card: FlashCard) {
+    func apply(to card: FlashCard, deckLookup: [UUID: Deck], defaultDeck: Deck) {
         card.word = word
         card.phonetic = phonetic
         card.sentence = sentence
@@ -99,9 +105,14 @@ struct FlashCardBackup: Codable {
         card.repetitions = repetitions
         card.reviewCount = reviewCount
         card.learningStep = learningStep
+        if let deckId, let deck = deckLookup[deckId] {
+            card.deck = deck
+        } else {
+            card.deck = defaultDeck
+        }
     }
 
-    func makeFlashCard() -> FlashCard {
+    func makeFlashCard(deckLookup: [UUID: Deck], defaultDeck: Deck) -> FlashCard {
         let card = FlashCard(
             word: word,
             sentence: sentence,
@@ -119,6 +130,11 @@ struct FlashCardBackup: Codable {
         card.repetitions = repetitions
         card.reviewCount = reviewCount
         card.learningStep = learningStep
+        if let deckId, let deck = deckLookup[deckId] {
+            card.deck = deck
+        } else {
+            card.deck = defaultDeck
+        }
         return card
     }
 }

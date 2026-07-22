@@ -7,8 +7,11 @@ enum ShareCardGenerationRunner {
     static func submitFromShareExtension(
         sentence: String,
         words: [String],
+        targetDeckID: UUID,
         exitExtension: @escaping () -> Void
     ) {
+        SharedDeckStore.lastSelectedDeckID = targetDeckID
+        SharedDeckStore.pendingTargetDeckID = targetDeckID
         ShareImportStore.savePendingGenerationJob(sentence: sentence, words: words)
         UIPasteboard.general.string = sentence
         ShareExtensionNotifier.scheduleGeneratingNotification()
