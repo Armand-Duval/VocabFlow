@@ -2,6 +2,7 @@ import SwiftUI
 
 struct CreateCardsView: View {
     @EnvironmentObject private var shareImport: ShareImportCoordinator
+    @AppStorage("createCards.tipDismissed") private var tipDismissed = false
     @State private var sentence = ""
     @State private var words: [String] = []
     @State private var drafts: [GeneratedCardDraft] = []
@@ -18,12 +19,22 @@ struct CreateCardsView: View {
     var body: some View {
         NavigationStack {
             Form {
+                if !tipDismissed && !didApplyShareImport {
+                    Section {
+                        CreateCardsTipView {
+                            tipDismissed = true
+                        }
+                    }
+                }
+
                 if didApplyShareImport, let importBannerMessage {
                     Section {
-                        Label(importBannerMessage, systemImage: "doc.on.clipboard")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                        ImportBannerView(
+                            message: importBannerMessage,
+                            systemImage: "doc.on.clipboard"
+                        )
                     }
+                    .listRowBackground(Color.accentColor.opacity(0.08))
                 }
 
                 Section {
@@ -36,7 +47,7 @@ struct CreateCardsView: View {
                         )
 
                         if sentence.isEmpty {
-                            Text("粘贴原文句子")
+                            Text(L10n.sourcePlaceholder)
                                 .foregroundStyle(.tertiary)
                                 .padding(.top, 8)
                                 .allowsHitTesting(false)
@@ -44,17 +55,12 @@ struct CreateCardsView: View {
                     }
 
                     if !selectedText.isEmpty {
-                        Button {
-                            appendSelectionToWords()
-                        } label: {
-                            Label("加入生词：\(selectedText)", systemImage: "plus.circle.fill")
-                                .font(.subheadline)
-                        }
+                        AddSelectionButton(selectedText: selectedText, action: appendSelectionToWords)
                     }
                 } header: {
-                    Text("原文")
+                    Label(L10n.sourceText, systemImage: "doc.text")
                 } footer: {
-                    Text("拖选文字后点「加入生词」，或长按选区菜单选择。Safari 可分享导入；Apple Books、番茄小说等请复制文字后打开 App，会自动填入。")
+                    Text(L10n.sourceFooter)
                 }
 
                 Section {
@@ -64,9 +70,9 @@ struct CreateCardsView: View {
                         feedbackIsError: $wordFeedbackIsError
                     )
                 } header: {
-                    Text("生词")
+                    Label(L10n.wordsSection, systemImage: "character.book.closed")
                 } footer: {
-                    Text("点击标签上的 × 可移除生词。")
+                    Text(L10n.wordsFooter)
                 }
 
                 Section {
@@ -79,7 +85,7 @@ struct CreateCardsView: View {
                                 ProgressView()
                                     .padding(.trailing, 8)
                             }
-                            Text(isGenerating ? "生成中..." : "AI 生成卡片")
+                            Text(isGenerating ? L10n.generating : L10n.generateCards)
                                 .fontWeight(.semibold)
                             Spacer()
                         }
@@ -87,14 +93,14 @@ struct CreateCardsView: View {
                     .disabled(isGenerating || sentence.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || words.isEmpty)
 
                     if APISettings.isUsingDefaultKey {
-                        Text("当前使用内置默认 API Key")
+                        Text(L10n.usingDefaultKey)
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity)
                     }
                 }
             }
-            .navigationTitle("制卡")
+            .navigationTitle(L10n.createTitle)
             .dismissKeyboardOnScroll()
             .keyboardDoneButton()
             .navigationDestination(isPresented: $showPreview) {
@@ -107,11 +113,11 @@ struct CreateCardsView: View {
                     drafts.removeAll()
                 }
             }
-            .alert("无法生成", isPresented: Binding(
+            .alert(L10n.generateFailedTitle, isPresented: Binding(
                 get: { errorMessage != nil },
                 set: { if !$0 { errorMessage = nil } }
             )) {
-                Button("好", role: .cancel) {}
+                Button(L10n.ok, role: .cancel) {}
             } message: {
                 Text(errorMessage ?? "")
             }
@@ -127,26 +133,22 @@ struct CreateCardsView: View {
     private func appendSelectionToWords() {
         let trimmed = selectedText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
-            wordFeedbackMessage = "选区为空"
+            wordFeedbackMessage = L10n.selectionEmpty
             wordFeedbackIsError = true
             return
         }
 
         let result = VocabularyWords.append(trimmed, to: &words)
-        switch result {
-        case .added:
+        if case .added = result {
             selectionClearNonce += 1
-            wordFeedbackMessage = "已加入「\(trimmed)」"
-            wordFeedbackIsError = false
-        case .duplicate:
+        } else if case .duplicate = result {
             selectionClearNonce += 1
-            wordFeedbackMessage = "「\(trimmed)」已在生词列表中"
-            wordFeedbackIsError = true
-        case .empty:
-            wordFeedbackMessage = "选区为空"
-            wordFeedbackIsError = true
         }
+        VocabularyWordFeedback.apply(result, message: &wordFeedbackMessage, isError: &wordFeedbackIsError)
+        clearFeedbackLater()
+    }
 
+    private func clearFeedbackLater() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             wordFeedbackMessage = nil
         }
@@ -158,9 +160,7 @@ struct CreateCardsView: View {
         if let word = payload.selectedWord {
             words = VocabularyWords.parse(from: word)
         }
-        importBannerMessage = payload.source == .clipboard
-            ? "已从剪贴板填入原文，请补充生词后生成卡片"
-            : "已填入分享内容，请补充生词后生成卡片"
+        importBannerMessage = payload.bannerMessage
         didApplyShareImport = true
         shareImport.acknowledgeImport()
     }
@@ -176,7 +176,7 @@ struct CreateCardsView: View {
                 await MainActor.run {
                     isGenerating = false
                     if generated.isEmpty {
-                        errorMessage = "请填写原句，并至少输入一个生词。"
+                        errorMessage = L10n.generateEmptyError
                     } else {
                         drafts = generated
                         showPreview = true

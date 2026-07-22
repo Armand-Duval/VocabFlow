@@ -11,15 +11,15 @@ struct LibraryView: View {
             Group {
                 if cards.isEmpty {
                     ContentUnavailableView {
-                        Label("词库为空", systemImage: "tray")
+                        Label(L10n.libraryEmptyTitle, systemImage: "tray")
                     } description: {
-                        Text("保存卡片后会显示在这里。")
+                        Text(L10n.libraryEmptyMessage)
                     }
                 } else if groupedEntries.isEmpty {
                     ContentUnavailableView {
-                        Label("未找到结果", systemImage: "magnifyingglass")
+                        Label(L10n.libraryNoResultsTitle, systemImage: "magnifyingglass")
                     } description: {
-                        Text("试试搜索其他生词、原句或卡片内容。")
+                        Text(L10n.libraryNoResultsMessage)
                     }
                 } else {
                     List {
@@ -44,8 +44,11 @@ struct LibraryView: View {
                                             .navigationTitle(entry.word)
                                             .navigationBarTitleDisplayMode(.inline)
                                     } label: {
-                                        Label("复习「\(entry.word)」全部 \(entry.cards.count) 张", systemImage: "brain.head.profile")
-                                            .font(.subheadline)
+                                        Label(
+                                            L10n.reviewAll(entry.word, count: entry.cards.count),
+                                            systemImage: "brain.head.profile"
+                                        )
+                                        .font(.subheadline)
                                     }
                                 }
                             } header: {
@@ -55,8 +58,8 @@ struct LibraryView: View {
                     }
                 }
             }
-            .navigationTitle("词库")
-            .searchable(text: $searchText, prompt: "搜索生词、原句、卡片内容")
+            .navigationTitle(L10n.libraryTitle)
+            .searchable(text: $searchText, prompt: L10n.librarySearchPrompt)
         }
     }
 
@@ -71,11 +74,11 @@ struct LibraryView: View {
                     .clipShape(Capsule())
                 Spacer()
                 if ReviewScheduler.isDue(card) {
-                    Text("待复习")
+                    Text(L10n.dueForReview)
                         .font(.caption2)
                         .foregroundStyle(.orange)
                 } else {
-                    Text("下次：\(card.nextReviewDate.formatted(date: .abbreviated, time: .shortened))")
+                    Text(L10n.nextReview(card.nextReviewDate.formatted(date: .abbreviated, time: .shortened)))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }

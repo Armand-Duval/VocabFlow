@@ -35,7 +35,7 @@ enum ShareCardGenerationRunner {
             guard !drafts.isEmpty else {
                 ShareImportStore.clearGenerationJob()
                 ShareExtensionNotifier.scheduleFailureNotification(
-                    message: "请填写原句，并至少输入一个生词。"
+                    message: L10n.generateEmptyError
                 )
                 return
             }

@@ -9,13 +9,13 @@ enum KimiCardGeneratorError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .missingAPIKey:
-            "请先在「设置」中填写 Kimi API Key，或配置内置默认 Key。"
+            L10n.missingAPIKeyError
         case .invalidResponse:
-            "Kimi 返回了无效响应。"
+            String(localized: "error.invalidResponse")
         case .apiError(let message):
             message
         case .parseError(let message):
-            "解析卡片失败：\(message)"
+            L10n.parseError(message)
         }
     }
 }

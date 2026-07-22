@@ -17,7 +17,7 @@ extension View {
         toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
-                Button("完成") {
+                Button(L10n.done) {
                     KeyboardDismiss.dismiss()
                 }
             }

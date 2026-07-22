@@ -17,15 +17,15 @@ struct ReviewView: View {
                     CardReviewSessionView(cards: dueCards)
                 }
             }
-            .navigationTitle("复习")
+            .navigationTitle(L10n.reviewTitle)
         }
     }
 
     private var emptyState: some View {
         ContentUnavailableView {
-            Label("暂无待复习", systemImage: "checkmark.circle")
+            Label(L10n.reviewEmptyTitle, systemImage: "checkmark.circle")
         } description: {
-            Text(allCards.isEmpty ? "先去「制卡」生成并保存卡片。" : "今天的卡片都复习完了。可以去「词库」点卡片继续学习。")
+            Text(allCards.isEmpty ? L10n.reviewEmptyNoCards : L10n.reviewEmptyDone)
         }
     }
 }

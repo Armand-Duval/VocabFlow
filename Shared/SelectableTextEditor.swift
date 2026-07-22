@@ -93,7 +93,7 @@ struct SelectableTextEditor: UIViewRepresentable {
             }
 
             let addAction = UIAction(
-                title: "加入生词",
+                title: L10n.addToVocabulary,
                 image: UIImage(systemName: "plus.circle")
             ) { [weak self] _ in
                 self?.parent.onAddToVocabulary?()

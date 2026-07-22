@@ -43,9 +43,9 @@ enum APISettings {
     }
 
     static var keySourceDescription: String {
-        if hasUserAPIKey { return "使用你的 API Key" }
-        if hasDefaultAPIKey { return "使用内置默认 Key" }
-        return "未配置 API Key"
+        if hasUserAPIKey { return L10n.keySourceUser }
+        if hasDefaultAPIKey { return L10n.keySourceDefault }
+        return L10n.keySourceMissing
     }
 
     static let baseURL = "https://api.moonshot.cn/v1"

@@ -18,6 +18,23 @@ enum ImportSource: Equatable {
     case clipboard
 }
 
+extension ShareImportPayload {
+    var bannerMessage: String {
+        let hasSentence = !sentence.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let hasWords = selectedWord?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+
+        switch source {
+        case .clipboard:
+            if hasSentence && hasWords { return L10n.importClipboardBoth }
+            if hasWords { return L10n.importClipboardWord }
+            return L10n.importClipboardSentence
+        case .shareExtension:
+            if hasWords { return L10n.importShareBoth }
+            return L10n.importShareSentence
+        }
+    }
+}
+
 enum ShareImportStore {
     static let appGroupID = "group.com.vocabflow.app1"
     static let createURLString = "vocabflow://create"
@@ -249,7 +266,7 @@ enum ShareExtensionNotifier {
     static func scheduleGeneratingNotification(completion: ((Bool) -> Void)? = nil) {
         scheduleNotification(
             identifier: "\(notificationPrefix).generating",
-            body: "正在后台生成卡片，完成后会通知你",
+            body: L10n.notificationGenerating,
             completion: completion
         )
     }
@@ -260,9 +277,9 @@ enum ShareExtensionNotifier {
     ) {
         let body: String
         if let cardCount, cardCount > 0 {
-            body = "已生成 \(cardCount) 张卡片，打开 VocabFlow 预览并保存"
+            body = L10n.notificationReady(cardCount)
         } else {
-            body = "分享内容已保存，点击继续制卡"
+            body = L10n.notificationReadyGeneric
         }
 
         scheduleNotification(
@@ -278,7 +295,7 @@ enum ShareExtensionNotifier {
     ) {
         scheduleNotification(
             identifier: "\(notificationPrefix).saved",
-            body: "已保存 \(cardCount) 张卡片到词库，可以开始复习",
+            body: L10n.notificationSaved(cardCount),
             completion: completion
         )
     }
@@ -289,7 +306,7 @@ enum ShareExtensionNotifier {
     ) {
         scheduleNotification(
             identifier: "\(notificationPrefix).failure",
-            body: "生成失败：\(message)",
+            body: L10n.notificationFailed(message),
             completion: completion
         )
     }

@@ -12,27 +12,31 @@ class ExtensionImportViewController: UIViewController {
 
     private func extractSharedText() {
         guard let inputItems = extensionContext?.inputItems as? [NSExtensionItem], !inputItems.isEmpty else {
-            finishWithError("没有收到分享内容")
+            finishWithError(L10n.extensionNoContent)
             return
         }
 
         if let text = ShareTextExtractor.attributedText(from: inputItems) {
-            presentImportForm(sentence: text)
+            presentImportForm(for: text)
             return
         }
 
         Task { @MainActor in
             if let text = await ShareTextExtractor.loadText(from: inputItems) {
-                presentImportForm(sentence: text)
+                presentImportForm(for: text)
             } else {
-                finishWithError("未读到文字内容，请用「拷贝」后打开 VocabFlow")
+                finishWithError(L10n.extensionNoText)
             }
         }
     }
 
-    private func presentImportForm(sentence: String) {
+    private func presentImportForm(for text: String) {
+        let parsed = ImportTextAnalyzer.parse(text)
         let formView = ImportCardsFormView(
-            sentence: sentence,
+            sentence: parsed.sentence,
+            selectedWord: parsed.prefilledWords.isEmpty
+                ? nil
+                : VocabularyWords.join(parsed.prefilledWords),
             onSubmit: { [weak self] in
                 self?.extensionContext?.completeRequest(returningItems: nil)
             },

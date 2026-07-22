@@ -30,8 +30,15 @@ final class ClipboardImportCoordinator {
             return
         }
 
+        let parsed = ImportTextAnalyzer.parse(text)
         shareImport.importPayload(
-            ShareImportPayload(sentence: text, source: .clipboard)
+            ShareImportPayload(
+                sentence: parsed.sentence,
+                selectedWord: parsed.prefilledWords.isEmpty
+                    ? nil
+                    : VocabularyWords.join(parsed.prefilledWords),
+                source: .clipboard
+            )
         )
         lastImportedChangeCount = newChangeCount
     }

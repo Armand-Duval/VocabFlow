@@ -29,7 +29,7 @@ struct ImportCardsFormView: View {
             Form {
                 Section {
                     Label {
-                        Text("拖选生词后点「AI 生成卡片」，将立即返回并后台制卡")
+                        Text(L10n.extensionHint)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     } icon: {
@@ -47,7 +47,7 @@ struct ImportCardsFormView: View {
                         )
 
                         if sentence.isEmpty {
-                            Text("粘贴原文句子")
+                            Text(L10n.sourcePlaceholder)
                                 .foregroundStyle(.tertiary)
                                 .padding(.top, 8)
                                 .allowsHitTesting(false)
@@ -55,17 +55,12 @@ struct ImportCardsFormView: View {
                     }
 
                     if !selectedText.isEmpty {
-                        Button {
-                            appendSelectionToWords()
-                        } label: {
-                            Label("加入生词：\(selectedText)", systemImage: "plus.circle.fill")
-                                .font(.subheadline)
-                        }
+                        AddSelectionButton(selectedText: selectedText, action: appendSelectionToWords)
                     }
                 } header: {
-                    Text("原文")
+                    Label(L10n.sourceText, systemImage: "doc.text")
                 } footer: {
-                    Text("拖选文字后点「加入生词」，或长按选区菜单选择。")
+                    Text(L10n.sourceFooter)
                 }
 
                 Section {
@@ -75,33 +70,33 @@ struct ImportCardsFormView: View {
                         feedbackIsError: $wordFeedbackIsError
                     )
                 } header: {
-                    Text("生词")
+                    Label(L10n.wordsSection, systemImage: "character.book.closed")
                 } footer: {
-                    Text("至少填写一个生词。生成结果将通过通知告知。")
+                    Text(L10n.extensionWordsFooter)
                 }
             }
-            .navigationTitle("制卡")
+            .navigationTitle(L10n.createTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") {
+                    Button(L10n.cancel) {
                         onCancel()
                     }
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("AI 生成卡片") {
+                    Button(L10n.generateCards) {
                         submitGeneration()
                     }
                     .fontWeight(.semibold)
                     .disabled(trimmedSentence.isEmpty || words.isEmpty)
                 }
             }
-            .alert("无法提交", isPresented: Binding(
+            .alert(L10n.extensionSubmitFailedTitle, isPresented: Binding(
                 get: { errorMessage != nil },
                 set: { if !$0 { errorMessage = nil } }
             )) {
-                Button("好", role: .cancel) {}
+                Button(L10n.ok, role: .cancel) {}
             } message: {
                 Text(errorMessage ?? "")
             }
@@ -115,26 +110,22 @@ struct ImportCardsFormView: View {
     private func appendSelectionToWords() {
         let trimmed = selectedText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
-            wordFeedbackMessage = "选区为空"
+            wordFeedbackMessage = L10n.selectionEmpty
             wordFeedbackIsError = true
             return
         }
 
         let result = VocabularyWords.append(trimmed, to: &words)
-        switch result {
-        case .added:
+        if case .added = result {
             selectionClearNonce += 1
-            wordFeedbackMessage = "已加入「\(trimmed)」"
-            wordFeedbackIsError = false
-        case .duplicate:
+        } else if case .duplicate = result {
             selectionClearNonce += 1
-            wordFeedbackMessage = "「\(trimmed)」已在生词列表中"
-            wordFeedbackIsError = true
-        case .empty:
-            wordFeedbackMessage = "选区为空"
-            wordFeedbackIsError = true
         }
+        VocabularyWordFeedback.apply(result, message: &wordFeedbackMessage, isError: &wordFeedbackIsError)
+        clearFeedbackLater()
+    }
 
+    private func clearFeedbackLater() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             wordFeedbackMessage = nil
         }
@@ -142,7 +133,7 @@ struct ImportCardsFormView: View {
 
     private func submitGeneration() {
         guard APISettings.canUseKimi else {
-            errorMessage = "未配置 Kimi API Key"
+            errorMessage = L10n.extensionMissingKey
             return
         }
 

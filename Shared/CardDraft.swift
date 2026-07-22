@@ -6,8 +6,8 @@ enum CardType: String, Codable, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .cloze: "挖空"
-        case .definition: "释义"
+        case .cloze: L10n.cardTypeCloze
+        case .definition: L10n.cardTypeDefinition
         }
     }
 }

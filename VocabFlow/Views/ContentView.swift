@@ -12,25 +12,25 @@ struct ContentView: View {
         TabView(selection: $selectedTab) {
             CreateCardsView()
                 .tabItem {
-                    Label("制卡", systemImage: "plus.rectangle.on.rectangle")
+                    Label(L10n.tabCreate, systemImage: "plus.rectangle.on.rectangle")
                 }
                 .tag(0)
 
             ReviewView()
                 .tabItem {
-                    Label("复习", systemImage: "brain.head.profile")
+                    Label(L10n.tabReview, systemImage: "brain.head.profile")
                 }
                 .tag(1)
 
             LibraryView()
                 .tabItem {
-                    Label("词库", systemImage: "books.vertical")
+                    Label(L10n.tabLibrary, systemImage: "books.vertical")
                 }
                 .tag(2)
 
             SettingsView()
                 .tabItem {
-                    Label("设置", systemImage: "gearshape")
+                    Label(L10n.tabSettings, systemImage: "gearshape")
                 }
                 .tag(3)
         }
@@ -69,7 +69,7 @@ struct ContentView: View {
                 )
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("关闭") {
+                        Button(L10n.close) {
                             sharePreviewDrafts = nil
                         }
                     }

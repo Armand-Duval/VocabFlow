@@ -14,7 +14,7 @@ struct CardReviewSessionView: View {
         Group {
             if cards.isEmpty {
                 ContentUnavailableView {
-                    Label("没有可复习的卡片", systemImage: "tray")
+                    Label(L10n.noCardsToReview, systemImage: "tray")
                 }
             } else {
                 reviewContent
@@ -48,7 +48,7 @@ struct CardReviewSessionView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
-                    Text(showBack ? "背面" : "正面")
+                    Text(showBack ? L10n.cardBack : L10n.cardFront)
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
@@ -73,7 +73,7 @@ struct CardReviewSessionView: View {
                 }
             }
 
-            Text(showBack ? "点击卡片可翻回正面 · 内容过长可上下滑动" : "点击卡片查看答案")
+            Text(showBack ? L10n.tapToFlipBack : L10n.tapToReveal)
                 .font(.footnote)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -82,7 +82,7 @@ struct CardReviewSessionView: View {
             if showBack {
                 ratingButtons(for: card)
             } else {
-                Button("显示答案") {
+                Button(L10n.showAnswer) {
                     withAnimation(.easeInOut(duration: 0.2)) {
                         showBack = true
                     }
@@ -144,7 +144,7 @@ struct CardReviewSessionView: View {
 #Preview {
     NavigationStack {
         CardReviewSessionView(cards: [])
-            .navigationTitle("学习")
+            .navigationTitle(L10n.studyTitle)
     }
     .modelContainer(for: FlashCard.self, inMemory: true)
 }

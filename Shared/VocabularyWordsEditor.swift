@@ -43,9 +43,17 @@ struct VocabularyWordsEditor: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             if words.isEmpty {
-                Text("拖选原文加入，或在下方手动输入")
+                Text(L10n.wordsEmptyHint)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [6]))
+                            .foregroundStyle(.quaternary)
+                    )
             } else {
                 VocabularyWordFlowLayout(spacing: 8) {
                     ForEach(Array(words.enumerated()), id: \.offset) { index, word in
@@ -57,7 +65,7 @@ struct VocabularyWordsEditor: View {
             }
 
             HStack(spacing: 8) {
-                TextField("手动输入生词", text: $manualInput)
+                TextField(L10n.wordsManualPlaceholder, text: $manualInput)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .submitLabel(.done)
@@ -65,7 +73,7 @@ struct VocabularyWordsEditor: View {
                     .onSubmit(addManualWord)
 
                 if !manualInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    Button("添加") {
+                    Button(L10n.add) {
                         addManualWord()
                     }
                     .font(.subheadline.weight(.semibold))
@@ -82,7 +90,8 @@ struct VocabularyWordsEditor: View {
 
     func addWord(_ word: String) -> VocabularyWordAddResult {
         let result = VocabularyWords.append(word, to: &words)
-        publishFeedback(for: result)
+        VocabularyWordFeedback.apply(result, message: &feedbackMessage, isError: &feedbackIsError)
+        clearFeedbackLater()
         return result
     }
 
@@ -94,33 +103,10 @@ struct VocabularyWordsEditor: View {
         isManualInputFocused = false
     }
 
-    private func publishFeedback(for result: VocabularyWordAddResult) {
-        switch result {
-        case let .added(word):
-            feedbackMessage = "已加入「\(word)」"
-            feedbackIsError = false
-            haptic(.light)
-        case let .duplicate(word):
-            feedbackMessage = "「\(word)」已在生词列表中"
-            feedbackIsError = true
-            haptic(.medium)
-        case .empty:
-            feedbackMessage = "选区为空"
-            feedbackIsError = true
-            haptic(.medium)
-        }
-
+    private func clearFeedbackLater() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            if feedbackMessage != nil {
-                feedbackMessage = nil
-            }
+            feedbackMessage = nil
         }
-    }
-
-    private func haptic(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
-        #if canImport(UIKit)
-        UIImpactFeedbackGenerator(style: style).impactOccurred()
-        #endif
     }
 }
 
@@ -129,7 +115,7 @@ private struct VocabularyWordChip: View {
     let onRemove: () -> Void
 
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 6) {
             Text(word)
                 .font(.subheadline)
                 .lineLimit(1)
@@ -142,10 +128,11 @@ private struct VocabularyWordChip: View {
                     .foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(Text(L10n.cancel))
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .background(Color.accentColor.opacity(0.12), in: Capsule())
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(Color.accentColor.opacity(0.14), in: Capsule())
     }
 }
 
@@ -153,8 +140,7 @@ private struct VocabularyWordFlowLayout: Layout {
     var spacing: CGFloat = 8
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let result = arrange(proposal: proposal, subviews: subviews)
-        return result.size
+        arrange(proposal: proposal, subviews: subviews).size
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {

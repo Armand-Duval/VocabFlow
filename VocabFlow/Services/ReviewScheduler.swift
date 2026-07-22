@@ -8,19 +8,19 @@ enum ReviewRating: Int, CaseIterable {
 
     var title: String {
         switch self {
-        case .again: "重来"
-        case .hard: "困难"
-        case .good: "良好"
-        case .easy: "简单"
+        case .again: L10n.ratingAgain
+        case .hard: L10n.ratingHard
+        case .good: L10n.ratingGood
+        case .easy: L10n.ratingEasy
         }
     }
 
     var subtitle: String {
         switch self {
-        case .again: "<1 天"
-        case .hard: "约 1 天"
-        case .good: "约 3 天"
-        case .easy: "约 7 天"
+        case .again: L10n.ratingAgainInterval
+        case .hard: L10n.ratingHardInterval
+        case .good: L10n.ratingGoodInterval
+        case .easy: L10n.ratingEasyInterval
         }
     }
 }
