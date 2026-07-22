@@ -3,59 +3,30 @@ import SwiftData
 
 struct CardPreviewView: View {
     @Environment(\.modelContext) private var modelContext
-    @Binding var drafts: [GeneratedCardDraft]
+    @State private var drafts: [GeneratedCardDraft]
     var onComplete: () -> Void
 
     @State private var didSave = false
+
+    init(drafts: [GeneratedCardDraft], onComplete: @escaping () -> Void) {
+        _drafts = State(initialValue: drafts)
+        self.onComplete = onComplete
+    }
 
     private var selectedCount: Int {
         drafts.filter(\.isSelected).count
     }
 
     var body: some View {
-        List {
-            Section {
-                Text(L10n.previewIntro)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-
-            ForEach($drafts) { $draft in
-                Section {
-                    Toggle(L10n.includeInLibrary, isOn: $draft.isSelected)
-
-                    LabeledContent(L10n.wordLabel) {
-                        TextField(L10n.wordLabel, text: $draft.word)
-                            .multilineTextAlignment(.trailing)
-                            .submitLabel(.done)
-                    }
-
-                    Picker(L10n.typeLabel, selection: $draft.cardType) {
-                        ForEach(CardType.allCases, id: \.self) { type in
-                            Text(type.displayName).tag(type)
-                        }
-                    }
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(L10n.frontLabel)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        TextField(L10n.frontLabel, text: $draft.front, axis: .vertical)
-                            .lineLimit(4...30)
-                    }
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(L10n.backLabel)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        TextField(L10n.backPlaceholder, text: $draft.back, axis: .vertical)
-                            .lineLimit(4...30)
-                    }
-                } header: {
-                    Text("\(draft.word) · \(draft.cardType.displayName)")
+        ScrollView {
+            LazyVStack(spacing: 16) {
+                ForEach($drafts) { $draft in
+                    DraftPreviewCard(draft: $draft)
                 }
             }
+            .padding()
         }
+        .background(Color(.systemGroupedBackground))
         .navigationTitle(L10n.previewTitle)
         .navigationBarTitleDisplayMode(.inline)
         .dismissKeyboardOnScroll()
@@ -65,6 +36,7 @@ struct CardPreviewView: View {
                 Button(L10n.saveCount(selectedCount)) {
                     saveSelectedCards()
                 }
+                .fontWeight(.semibold)
                 .disabled(selectedCount == 0)
             }
         }
@@ -72,8 +44,6 @@ struct CardPreviewView: View {
             Button(L10n.done) {
                 onComplete()
             }
-        } message: {
-            Text(L10n.savedMessage)
         }
     }
 
@@ -86,7 +56,7 @@ struct CardPreviewView: View {
 
 #Preview {
     NavigationStack {
-        CardPreviewView(drafts: .constant([
+        CardPreviewView(drafts: [
             GeneratedCardDraft(
                 word: "mitigate",
                 sentence: "Sample sentence.",
@@ -95,7 +65,7 @@ struct CardPreviewView: View {
                 back: "mitigate v. 减轻\n\n在此句中表示减轻、缓解影响。",
                 contextNote: nil
             )
-        ])) {}
+        ]) {}
     }
     .modelContainer(for: FlashCard.self, inMemory: true)
 }

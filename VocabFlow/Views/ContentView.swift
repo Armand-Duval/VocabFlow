@@ -59,10 +59,7 @@ struct ContentView: View {
         )) {
             NavigationStack {
                 CardPreviewView(
-                    drafts: Binding(
-                        get: { sharePreviewDrafts ?? [] },
-                        set: { sharePreviewDrafts = $0 }
-                    ),
+                    drafts: sharePreviewDrafts ?? [],
                     onComplete: {
                         sharePreviewDrafts = nil
                     }

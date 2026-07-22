@@ -1,7 +1,4 @@
 import SwiftUI
-#if canImport(UIKit)
-import UIKit
-#endif
 
 enum VocabularyWordAddResult: Equatable {
     case added(String)
@@ -42,19 +39,7 @@ struct VocabularyWordsEditor: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if words.isEmpty {
-                Text(L10n.wordsEmptyHint)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [6]))
-                            .foregroundStyle(.quaternary)
-                    )
-            } else {
+            if !words.isEmpty {
                 VocabularyWordFlowLayout(spacing: 8) {
                     ForEach(Array(words.enumerated()), id: \.offset) { index, word in
                         VocabularyWordChip(word: word) {
@@ -65,6 +50,10 @@ struct VocabularyWordsEditor: View {
             }
 
             HStack(spacing: 8) {
+                Image(systemName: "plus")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+
                 TextField(L10n.wordsManualPlaceholder, text: $manualInput)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
@@ -73,17 +62,15 @@ struct VocabularyWordsEditor: View {
                     .onSubmit(addManualWord)
 
                 if !manualInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    Button(L10n.add) {
-                        addManualWord()
-                    }
-                    .font(.subheadline.weight(.semibold))
+                    Button(L10n.add, action: addManualWord)
+                        .font(.subheadline.weight(.semibold))
                 }
             }
 
             if let feedbackMessage {
                 Text(feedbackMessage)
-                    .font(.footnote)
-                    .foregroundStyle(feedbackIsError ? .orange : .secondary)
+                    .font(.caption)
+                    .foregroundStyle(.orange)
             }
         }
     }
@@ -120,11 +107,9 @@ private struct VocabularyWordChip: View {
                 .font(.subheadline)
                 .lineLimit(1)
 
-            Button {
-                onRemove()
-            } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.caption)
+            Button(action: onRemove) {
+                Image(systemName: "xmark")
+                    .font(.caption2.weight(.bold))
                     .foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
@@ -132,7 +117,7 @@ private struct VocabularyWordChip: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(Color.accentColor.opacity(0.14), in: Capsule())
+        .background(Color.accentColor.opacity(0.12), in: Capsule())
     }
 }
 

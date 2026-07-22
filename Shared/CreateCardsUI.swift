@@ -5,68 +5,81 @@ struct ImportBannerView: View {
     let systemImage: String
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: systemImage)
-                .font(.title3)
-                .foregroundStyle(.tint)
-                .frame(width: 28)
-
-            Text(message)
-                .font(.subheadline)
-                .foregroundStyle(.primary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(.vertical, 4)
+        Label(message, systemImage: systemImage)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .symbolRenderingMode(.hierarchical)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
-struct CreateCardsTipView: View {
-    let onDismiss: () -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .top) {
-                Image(systemName: "hand.tap")
-                    .font(.title3)
-                    .foregroundStyle(.tint)
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(L10n.createTipTitle)
-                        .font(.subheadline.weight(.semibold))
-                    Text(L10n.createTipBody)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
-
-                Spacer(minLength: 0)
-
-                Button {
-                    onDismiss()
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.tertiary)
-                }
-                .buttonStyle(.plain)
-            }
-
-            Button(L10n.createTipDismiss, action: onDismiss)
-                .font(.footnote.weight(.semibold))
-        }
-        .padding(.vertical, 4)
-    }
-}
-
-struct AddSelectionButton: View {
+struct SelectionActionBar: View {
     let selectedText: String
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            Label(L10n.addSelectionWord(selectedText), systemImage: "plus.circle.fill")
+        HStack(spacing: 10) {
+            Text(selectedText)
                 .font(.subheadline)
+                .lineLimit(2)
                 .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button(L10n.add, action: action)
+                .buttonStyle(.borderedProminent)
+                .controlSize(.small)
         }
-        .buttonStyle(.borderedProminent)
-        .controlSize(.small)
+        .padding(12)
+        .background(Color.accentColor.opacity(0.1), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+}
+
+struct DraftPreviewCard: View {
+    @Binding var draft: GeneratedCardDraft
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text(draft.word)
+                    .font(.headline)
+                Spacer()
+                Text(draft.cardType.displayName)
+                    .font(.caption.weight(.medium))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(.quaternary, in: Capsule())
+            }
+
+            Toggle(L10n.includeInLibrary, isOn: $draft.isSelected)
+                .toggleStyle(.switch)
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(L10n.frontLabel)
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                TextField(L10n.frontLabel, text: $draft.front, axis: .vertical)
+                    .lineLimit(3...12)
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(L10n.backLabel)
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                TextField(L10n.backPlaceholder, text: $draft.back, axis: .vertical)
+                    .lineLimit(3...12)
+            }
+
+            Picker(L10n.typeLabel, selection: $draft.cardType) {
+                ForEach(CardType.allCases, id: \.self) { type in
+                    Text(type.displayName).tag(type)
+                }
+            }
+            .pickerStyle(.segmented)
+        }
+        .padding(16)
+        .background(.background, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(.quaternary, lineWidth: 0.5)
+        }
     }
 }

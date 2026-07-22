@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(UIKit)
+import UIKit
+#endif
 
 enum L10n {
     // MARK: - Tabs
@@ -144,6 +147,7 @@ enum L10n {
     static var importCopyStep2: String { tr("settings.import.copy.step2") }
     static var importCopyStep3: String { tr("settings.import.copy.step3") }
     static var importCopyFooter: String { tr("settings.import.copy.footer") }
+    static var importHelpTitle: String { tr("settings.import.help") }
 
     static var backupSection: String { tr("settings.backup.section") }
     static var exportBackup: String { tr("settings.backup.export") }
@@ -196,12 +200,18 @@ enum VocabularyWordFeedback {
         isError: inout Bool
     ) {
         switch result {
-        case let .added(word):
-            message = L10n.wordAdded(word)
+        case .added:
+            message = nil
             isError = false
+            #if canImport(UIKit)
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            #endif
         case let .duplicate(word):
             message = L10n.wordDuplicate(word)
             isError = true
+            #if canImport(UIKit)
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            #endif
         case .empty:
             message = L10n.selectionEmpty
             isError = true

@@ -39,6 +39,9 @@
 		HH000001000000000000000B /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = HH0000010000000000000013 /* Localizable.xcstrings */; };
 		HH000001000000000000000C /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = HH0000010000000000000013 /* Localizable.xcstrings */; };
 		FF0000010000000000000003 /* SelectableTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000010000000000000010 /* SelectableTextEditor.swift */; };
+		JJ0000010000000000000001 /* ScrollKeyboardDismiss.swift in Sources */ = {isa = PBXBuildFile; fileRef = JJ0000010000000000000010 /* ScrollKeyboardDismiss.swift */; };
+		JJ0000010000000000000002 /* ScrollKeyboardDismiss.swift in Sources */ = {isa = PBXBuildFile; fileRef = JJ0000010000000000000010 /* ScrollKeyboardDismiss.swift */; };
+		JJ0000010000000000000003 /* ScrollKeyboardDismiss.swift in Sources */ = {isa = PBXBuildFile; fileRef = JJ0000010000000000000010 /* ScrollKeyboardDismiss.swift */; };
 		AA0000010000000000000050 /* FlashCardBackup.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000051 /* FlashCardBackup.swift */; };
 		AA0000010000000000000052 /* BackupDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000053 /* BackupDocument.swift */; };
 		AA0000010000000000000054 /* BackupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000055 /* BackupService.swift */; };
@@ -91,6 +94,7 @@
 		AA0000010000000000000047 /* DefaultAPIKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultAPIKey.swift; sourceTree = "<group>"; };
 		AA0000010000000000000049 /* KeyboardDismiss.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardDismiss.swift; sourceTree = "<group>"; };
 		FF0000010000000000000010 /* SelectableTextEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectableTextEditor.swift; sourceTree = "<group>"; };
+		JJ0000010000000000000010 /* ScrollKeyboardDismiss.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollKeyboardDismiss.swift; sourceTree = "<group>"; };
 		GG0000010000000000000010 /* VocabularyWordsEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VocabularyWordsEditor.swift; sourceTree = "<group>"; };
 		HH0000010000000000000010 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
 		HH0000010000000000000011 /* ImportTextAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportTextAnalyzer.swift; sourceTree = "<group>"; };
@@ -265,6 +269,7 @@
 				BB0000010000000000000011 /* ShareImportStore.swift */,
 				BB0000010000000000000018 /* ImportCardsFormView.swift */,
 				FF0000010000000000000010 /* SelectableTextEditor.swift */,
+				JJ0000010000000000000010 /* ScrollKeyboardDismiss.swift */,
 				GG0000010000000000000010 /* VocabularyWordsEditor.swift */,
 				HH0000010000000000000010 /* L10n.swift */,
 				HH0000010000000000000011 /* ImportTextAnalyzer.swift */,
@@ -411,6 +416,7 @@
 				BB0000010000000000000004 /* ShareImportStore.swift in Sources */,
 				BB0000010000000000000007 /* ImportCardsFormView.swift in Sources */,
 				FF0000010000000000000002 /* SelectableTextEditor.swift in Sources */,
+				JJ0000010000000000000002 /* ScrollKeyboardDismiss.swift in Sources */,
 				GG0000010000000000000002 /* VocabularyWordsEditor.swift in Sources */,
 				HH0000010000000000000002 /* L10n.swift in Sources */,
 				HH0000010000000000000005 /* ImportTextAnalyzer.swift in Sources */,
@@ -433,6 +439,7 @@
 				DD0000010000000000000004 /* ShareImportStore.swift in Sources */,
 				DD0000010000000000000006 /* ImportCardsFormView.swift in Sources */,
 				FF0000010000000000000003 /* SelectableTextEditor.swift in Sources */,
+				JJ0000010000000000000003 /* ScrollKeyboardDismiss.swift in Sources */,
 				GG0000010000000000000003 /* VocabularyWordsEditor.swift in Sources */,
 				HH0000010000000000000003 /* L10n.swift in Sources */,
 				HH0000010000000000000006 /* ImportTextAnalyzer.swift in Sources */,
@@ -504,6 +511,7 @@
 				AA0000010000000000000046 /* DefaultAPIKey.swift in Sources */,
 				AA0000010000000000000048 /* KeyboardDismiss.swift in Sources */,
 				FF0000010000000000000001 /* SelectableTextEditor.swift in Sources */,
+				JJ0000010000000000000001 /* ScrollKeyboardDismiss.swift in Sources */,
 				GG0000010000000000000001 /* VocabularyWordsEditor.swift in Sources */,
 				HH0000010000000000000001 /* L10n.swift in Sources */,
 				HH0000010000000000000004 /* ImportTextAnalyzer.swift in Sources */,

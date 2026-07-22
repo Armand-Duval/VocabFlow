@@ -2,14 +2,12 @@ import SwiftUI
 
 struct CreateCardsView: View {
     @EnvironmentObject private var shareImport: ShareImportCoordinator
-    @AppStorage("createCards.tipDismissed") private var tipDismissed = false
     @State private var sentence = ""
     @State private var words: [String] = []
     @State private var drafts: [GeneratedCardDraft] = []
     @State private var isGenerating = false
     @State private var showPreview = false
     @State private var errorMessage: String?
-    @State private var didApplyShareImport = false
     @State private var importBannerMessage: String?
     @State private var selectedText = ""
     @State private var selectionClearNonce = 0
@@ -19,25 +17,16 @@ struct CreateCardsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                if !tipDismissed && !didApplyShareImport {
-                    Section {
-                        CreateCardsTipView {
-                            tipDismissed = true
-                        }
-                    }
-                }
-
-                if didApplyShareImport, let importBannerMessage {
+                if let importBannerMessage {
                     Section {
                         ImportBannerView(
                             message: importBannerMessage,
-                            systemImage: "doc.on.clipboard"
+                            systemImage: "arrow.down.doc"
                         )
                     }
-                    .listRowBackground(Color.accentColor.opacity(0.08))
                 }
 
-                Section {
+                Section(L10n.sourceText) {
                     ZStack(alignment: .topLeading) {
                         SelectableTextEditor(
                             text: $sentence,
@@ -55,61 +44,45 @@ struct CreateCardsView: View {
                     }
 
                     if !selectedText.isEmpty {
-                        AddSelectionButton(selectedText: selectedText, action: appendSelectionToWords)
+                        SelectionActionBar(selectedText: selectedText, action: appendSelectionToWords)
                     }
-                } header: {
-                    Label(L10n.sourceText, systemImage: "doc.text")
-                } footer: {
-                    Text(L10n.sourceFooter)
                 }
 
-                Section {
+                Section(L10n.wordsSection) {
                     VocabularyWordsEditor(
                         words: $words,
                         feedbackMessage: $wordFeedbackMessage,
                         feedbackIsError: $wordFeedbackIsError
                     )
-                } header: {
-                    Label(L10n.wordsSection, systemImage: "character.book.closed")
-                } footer: {
-                    Text(L10n.wordsFooter)
-                }
-
-                Section {
-                    Button {
-                        generateCards()
-                    } label: {
-                        HStack {
-                            Spacer()
-                            if isGenerating {
-                                ProgressView()
-                                    .padding(.trailing, 8)
-                            }
-                            Text(isGenerating ? L10n.generating : L10n.generateCards)
-                                .fontWeight(.semibold)
-                            Spacer()
-                        }
-                    }
-                    .disabled(isGenerating || sentence.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || words.isEmpty)
-
-                    if APISettings.isUsingDefaultKey {
-                        Text(L10n.usingDefaultKey)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                            .frame(maxWidth: .infinity)
-                    }
                 }
             }
             .navigationTitle(L10n.createTitle)
+            .navigationBarTitleDisplayMode(.large)
             .dismissKeyboardOnScroll()
             .keyboardDoneButton()
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        generateCards()
+                    } label: {
+                        if isGenerating {
+                            ProgressView()
+                        } else {
+                            Image(systemName: "sparkles")
+                        }
+                    }
+                    .disabled(isGenerating || sentence.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || words.isEmpty)
+                    .accessibilityLabel(L10n.generateCards)
+                }
+            }
             .navigationDestination(isPresented: $showPreview) {
-                CardPreviewView(drafts: $drafts) {
+                CardPreviewView(drafts: drafts) {
                     showPreview = false
                 }
             }
             .onChange(of: showPreview) { _, isShowing in
-                if !isShowing {
+                guard !isShowing else { return }
+                DispatchQueue.main.async {
                     drafts.removeAll()
                 }
             }
@@ -161,7 +134,6 @@ struct CreateCardsView: View {
             words = VocabularyWords.parse(from: word)
         }
         importBannerMessage = payload.bannerMessage
-        didApplyShareImport = true
         shareImport.acknowledgeImport()
     }
 

@@ -47,21 +47,15 @@ struct CardReviewSessionView: View {
             .padding(.horizontal)
 
             ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(showBack ? L10n.cardBack : L10n.cardFront)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-
-                    Text(showBack ? card.displayBack : card.front)
-                        .font(.body)
-                        .lineSpacing(6)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .textSelection(.enabled)
-                        .contentTransition(.opacity)
-                }
-                .padding(20)
-                .frame(maxWidth: .infinity, alignment: .topLeading)
+                Text(showBack ? card.displayBack : card.front)
+                    .font(.body)
+                    .lineSpacing(6)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .textSelection(.enabled)
+                    .contentTransition(.opacity)
+                    .padding(20)
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(.regularMaterial)
@@ -72,12 +66,6 @@ struct CardReviewSessionView: View {
                     showBack.toggle()
                 }
             }
-
-            Text(showBack ? L10n.tapToFlipBack : L10n.tapToReveal)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
 
             if showBack {
                 ratingButtons(for: card)

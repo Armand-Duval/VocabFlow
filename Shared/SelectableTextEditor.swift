@@ -31,6 +31,15 @@ struct SelectableTextEditor: UIViewRepresentable {
         textView.text = text
         context.coordinator.textView = textView
 
+        let dismissPan = UIPanGestureRecognizer(
+            target: context.coordinator,
+            action: #selector(Coordinator.handleKeyboardDismissPan(_:))
+        )
+        dismissPan.delegate = context.coordinator
+        dismissPan.cancelsTouchesInView = false
+        textView.addGestureRecognizer(dismissPan)
+        context.coordinator.dismissPanRecognizer = dismissPan
+
         if #available(iOS 16.0, *) {
             let interaction = UIEditMenuInteraction(delegate: context.coordinator)
             textView.addInteraction(interaction)
@@ -60,11 +69,13 @@ struct SelectableTextEditor: UIViewRepresentable {
         }
     }
 
-    final class Coordinator: NSObject, UITextViewDelegate, UIEditMenuInteractionDelegate {
+    final class Coordinator: NSObject, UITextViewDelegate, UIEditMenuInteractionDelegate, UIGestureRecognizerDelegate {
         var parent: SelectableTextEditor
         weak var textView: UITextView?
+        weak var dismissPanRecognizer: UIPanGestureRecognizer?
         var lastClearNonce = 0
         weak var editMenuInteraction: UIEditMenuInteraction?
+        private var dismissPanStartedWithSelection = false
 
         init(parent: SelectableTextEditor) {
             self.parent = parent
@@ -78,6 +89,35 @@ struct SelectableTextEditor: UIViewRepresentable {
 
         func textViewDidChangeSelection(_ textView: UITextView) {
             publishSelection(from: textView)
+        }
+
+        @objc func handleKeyboardDismissPan(_ gesture: UIPanGestureRecognizer) {
+            guard let textView, textView.isFirstResponder else { return }
+
+            switch gesture.state {
+            case .began:
+                dismissPanStartedWithSelection = textView.selectedRange.length > 0
+            case .changed:
+                guard !dismissPanStartedWithSelection else { return }
+                let translation = gesture.translation(in: textView)
+                if translation.y > 24, abs(translation.y) > abs(translation.x) * 1.2 {
+                    textView.resignFirstResponder()
+                }
+            default:
+                break
+            }
+        }
+
+        func gestureRecognizer(
+            _ gestureRecognizer: UIGestureRecognizer,
+            shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
+        ) -> Bool {
+            gestureRecognizer === dismissPanRecognizer || otherGestureRecognizer.view is UIScrollView
+        }
+
+        func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+            guard gestureRecognizer === dismissPanRecognizer else { return true }
+            return textView?.isFirstResponder == true
         }
 
         @available(iOS 16.0, *)
@@ -134,6 +174,11 @@ private final class AutoSizingTextView: UITextView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        configureAncestorScrollViews()
+    }
+
     override var intrinsicContentSize: CGSize {
         let width = bounds.width > 0 ? bounds.width : UIScreen.main.bounds.width - 64
         let fittingSize = sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude))
@@ -143,5 +188,16 @@ private final class AutoSizingTextView: UITextView {
     override func layoutSubviews() {
         super.layoutSubviews()
         invalidateIntrinsicContentSize()
+        configureAncestorScrollViews()
+    }
+
+    private func configureAncestorScrollViews() {
+        var view: UIView? = superview
+        while let ancestor = view {
+            if let scrollView = ancestor as? UIScrollView {
+                scrollView.keyboardDismissMode = .interactive
+            }
+            view = ancestor.superview
+        }
     }
 }

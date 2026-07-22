@@ -27,17 +27,7 @@ struct ImportCardsFormView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section {
-                    Label {
-                        Text(L10n.extensionHint)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    } icon: {
-                        Image(systemName: "sparkles")
-                    }
-                }
-
-                Section {
+                Section(L10n.sourceText) {
                     ZStack(alignment: .topLeading) {
                         SelectableTextEditor(
                             text: $sentence,
@@ -55,41 +45,30 @@ struct ImportCardsFormView: View {
                     }
 
                     if !selectedText.isEmpty {
-                        AddSelectionButton(selectedText: selectedText, action: appendSelectionToWords)
+                        SelectionActionBar(selectedText: selectedText, action: appendSelectionToWords)
                     }
-                } header: {
-                    Label(L10n.sourceText, systemImage: "doc.text")
-                } footer: {
-                    Text(L10n.sourceFooter)
                 }
 
-                Section {
+                Section(L10n.wordsSection) {
                     VocabularyWordsEditor(
                         words: $words,
                         feedbackMessage: $wordFeedbackMessage,
                         feedbackIsError: $wordFeedbackIsError
                     )
-                } header: {
-                    Label(L10n.wordsSection, systemImage: "character.book.closed")
-                } footer: {
-                    Text(L10n.extensionWordsFooter)
                 }
             }
             .navigationTitle(L10n.createTitle)
             .navigationBarTitleDisplayMode(.inline)
+            .dismissKeyboardOnScroll()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(L10n.cancel) {
-                        onCancel()
-                    }
+                    Button(L10n.cancel, action: onCancel)
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(L10n.generateCards) {
-                        submitGeneration()
-                    }
-                    .fontWeight(.semibold)
-                    .disabled(trimmedSentence.isEmpty || words.isEmpty)
+                    Button(L10n.generateCards, action: submitGeneration)
+                        .fontWeight(.semibold)
+                        .disabled(trimmedSentence.isEmpty || words.isEmpty)
                 }
             }
             .alert(L10n.extensionSubmitFailedTitle, isPresented: Binding(

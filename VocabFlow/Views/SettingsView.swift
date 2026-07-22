@@ -20,6 +20,8 @@ struct SettingsView: View {
     @State private var backupAlertMessage = ""
     @State private var showBackupAlert = false
 
+    @State private var showImportHelp = false
+
     var body: some View {
         NavigationStack {
             Form {
@@ -27,7 +29,7 @@ struct SettingsView: View {
                 modelSection
                 saveSection
                 statusSection
-                importGuideSection
+                importHelpSection
                 backupSection
             }
             .navigationTitle(L10n.settingsTitle)
@@ -96,8 +98,6 @@ struct SettingsView: View {
             }
         } header: {
             Text(L10n.apiKeySection)
-        } footer: {
-            Text(L10n.apiKeyFooter)
         }
     }
 
@@ -125,40 +125,25 @@ struct SettingsView: View {
         Section(L10n.statusSection) {
             Label {
                 Text(APISettings.keySourceDescription)
+                    .foregroundStyle(APISettings.canUseKimi ? Color.primary : Color.orange)
             } icon: {
                 Image(systemName: statusIcon)
                     .foregroundStyle(statusColor)
             }
-
-            if APISettings.canUseKimi {
-                Text(L10n.statusReady)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            } else {
-                Text(L10n.statusMissingKey)
-                    .font(.footnote)
-                    .foregroundStyle(.orange)
-            }
         }
     }
 
-    private var importGuideSection: some View {
-        Group {
-            Section {
+    private var importHelpSection: some View {
+        Section {
+            DisclosureGroup(isExpanded: $showImportHelp) {
                 Label(L10n.importShareStep1, systemImage: "square.and.arrow.up")
                 Label(L10n.importShareStep2, systemImage: "checkmark.circle")
-            } header: {
-                Text(L10n.importShareSection)
-            }
 
-            Section {
                 Label(L10n.importCopyStep1, systemImage: "book.closed")
                 Label(L10n.importCopyStep2, systemImage: "doc.on.doc")
                 Label(L10n.importCopyStep3, systemImage: "arrow.right.circle")
-            } header: {
-                Text(L10n.importCopySection)
-            } footer: {
-                Text(L10n.importCopyFooter)
+            } label: {
+                Label(L10n.importHelpTitle, systemImage: "arrow.down.doc")
             }
         }
     }
@@ -178,8 +163,6 @@ struct SettingsView: View {
             }
         } header: {
             Text(L10n.backupSection)
-        } footer: {
-            Text(L10n.backupFooter(allCards.count))
         }
     }
 

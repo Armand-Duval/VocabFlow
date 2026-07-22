@@ -2,12 +2,14 @@ import SwiftUI
 
 enum KeyboardDismiss {
     static func dismiss() {
+        #if canImport(UIKit)
         UIApplication.shared.sendAction(
             #selector(UIResponder.resignFirstResponder),
             to: nil,
             from: nil,
             for: nil
         )
+        #endif
     }
 }
 
@@ -22,10 +24,5 @@ extension View {
                 }
             }
         }
-    }
-
-    /// 滚动时收起键盘。
-    func dismissKeyboardOnScroll() -> some View {
-        scrollDismissesKeyboard(.interactively)
     }
 }
