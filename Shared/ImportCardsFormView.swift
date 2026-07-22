@@ -5,9 +5,11 @@ struct ImportCardsFormView: View {
     let onCancel: () -> Void
 
     @State private var sentence: String
-    @State private var wordsText: String
+    @State private var words: [String]
     @State private var selectedText = ""
     @State private var selectionClearNonce = 0
+    @State private var wordFeedbackMessage: String?
+    @State private var wordFeedbackIsError = false
     @State private var errorMessage: String?
 
     init(
@@ -19,7 +21,7 @@ struct ImportCardsFormView: View {
         self.onSubmit = onSubmit
         self.onCancel = onCancel
         _sentence = State(initialValue: sentence)
-        _wordsText = State(initialValue: selectedWord ?? "")
+        _words = State(initialValue: selectedWord.map { VocabularyWords.parse(from: $0) } ?? [])
     }
 
     var body: some View {
@@ -67,9 +69,11 @@ struct ImportCardsFormView: View {
                 }
 
                 Section {
-                    TextField("生词或短语，用逗号分隔", text: $wordsText)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
+                    VocabularyWordsEditor(
+                        words: $words,
+                        feedbackMessage: $wordFeedbackMessage,
+                        feedbackIsError: $wordFeedbackIsError
+                    )
                 } header: {
                     Text("生词")
                 } footer: {
@@ -90,7 +94,7 @@ struct ImportCardsFormView: View {
                         submitGeneration()
                     }
                     .fontWeight(.semibold)
-                    .disabled(trimmedSentence.isEmpty || parsedWords.isEmpty)
+                    .disabled(trimmedSentence.isEmpty || words.isEmpty)
                 }
             }
             .alert("无法提交", isPresented: Binding(
@@ -108,26 +112,32 @@ struct ImportCardsFormView: View {
         sentence.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    private var parsedWords: [String] {
-        wordsText
-            .split(separator: ",")
-            .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-    }
-
     private func appendSelectionToWords() {
         let trimmed = selectedText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
-
-        var words = parsedWords
-        guard !words.contains(where: { $0.caseInsensitiveCompare(trimmed) == .orderedSame }) else {
-            selectionClearNonce += 1
+        guard !trimmed.isEmpty else {
+            wordFeedbackMessage = "选区为空"
+            wordFeedbackIsError = true
             return
         }
 
-        words.append(trimmed)
-        wordsText = words.joined(separator: ", ")
-        selectionClearNonce += 1
+        let result = VocabularyWords.append(trimmed, to: &words)
+        switch result {
+        case .added:
+            selectionClearNonce += 1
+            wordFeedbackMessage = "已加入「\(trimmed)」"
+            wordFeedbackIsError = false
+        case .duplicate:
+            selectionClearNonce += 1
+            wordFeedbackMessage = "「\(trimmed)」已在生词列表中"
+            wordFeedbackIsError = true
+        case .empty:
+            wordFeedbackMessage = "选区为空"
+            wordFeedbackIsError = true
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            wordFeedbackMessage = nil
+        }
     }
 
     private func submitGeneration() {
@@ -138,7 +148,7 @@ struct ImportCardsFormView: View {
 
         ShareCardGenerationRunner.submitFromShareExtension(
             sentence: trimmedSentence,
-            words: parsedWords,
+            words: words,
             exitExtension: onSubmit
         )
     }

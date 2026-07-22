@@ -260,7 +260,7 @@ enum ShareExtensionNotifier {
     ) {
         let body: String
         if let cardCount, cardCount > 0 {
-            body = "已生成 \(cardCount) 张卡片，打开 VocabFlow 将自动保存到词库"
+            body = "已生成 \(cardCount) 张卡片，打开 VocabFlow 预览并保存"
         } else {
             body = "分享内容已保存，点击继续制卡"
         }

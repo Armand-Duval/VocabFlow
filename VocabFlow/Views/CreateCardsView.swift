@@ -3,7 +3,7 @@ import SwiftUI
 struct CreateCardsView: View {
     @EnvironmentObject private var shareImport: ShareImportCoordinator
     @State private var sentence = ""
-    @State private var wordsText = ""
+    @State private var words: [String] = []
     @State private var drafts: [GeneratedCardDraft] = []
     @State private var isGenerating = false
     @State private var showPreview = false
@@ -12,11 +12,8 @@ struct CreateCardsView: View {
     @State private var importBannerMessage: String?
     @State private var selectedText = ""
     @State private var selectionClearNonce = 0
-    @FocusState private var focusedField: Field?
-
-    private enum Field: Hashable {
-        case words
-    }
+    @State private var wordFeedbackMessage: String?
+    @State private var wordFeedbackIsError = false
 
     var body: some View {
         NavigationStack {
@@ -61,23 +58,19 @@ struct CreateCardsView: View {
                 }
 
                 Section {
-                    TextField("生词或短语，用逗号分隔", text: $wordsText)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .submitLabel(.done)
-                        .focused($focusedField, equals: .words)
-                        .onSubmit {
-                            focusedField = nil
-                        }
+                    VocabularyWordsEditor(
+                        words: $words,
+                        feedbackMessage: $wordFeedbackMessage,
+                        feedbackIsError: $wordFeedbackIsError
+                    )
                 } header: {
                     Text("生词")
                 } footer: {
-                    Text("例如：mitigate, 勉強, élégance（多个词用逗号分隔）")
+                    Text("点击标签上的 × 可移除生词。")
                 }
 
                 Section {
                     Button {
-                        focusedField = nil
                         generateCards()
                     } label: {
                         HStack {
@@ -91,7 +84,7 @@ struct CreateCardsView: View {
                             Spacer()
                         }
                     }
-                    .disabled(isGenerating || sentence.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .disabled(isGenerating || sentence.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || words.isEmpty)
 
                     if APISettings.isUsingDefaultKey {
                         Text("当前使用内置默认 API Key")
@@ -133,31 +126,37 @@ struct CreateCardsView: View {
 
     private func appendSelectionToWords() {
         let trimmed = selectedText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
-
-        var words = parsedWords(from: wordsText)
-        guard !words.contains(where: { $0.caseInsensitiveCompare(trimmed) == .orderedSame }) else {
-            selectionClearNonce += 1
+        guard !trimmed.isEmpty else {
+            wordFeedbackMessage = "选区为空"
+            wordFeedbackIsError = true
             return
         }
 
-        words.append(trimmed)
-        wordsText = words.joined(separator: ", ")
-        selectionClearNonce += 1
-    }
+        let result = VocabularyWords.append(trimmed, to: &words)
+        switch result {
+        case .added:
+            selectionClearNonce += 1
+            wordFeedbackMessage = "已加入「\(trimmed)」"
+            wordFeedbackIsError = false
+        case .duplicate:
+            selectionClearNonce += 1
+            wordFeedbackMessage = "「\(trimmed)」已在生词列表中"
+            wordFeedbackIsError = true
+        case .empty:
+            wordFeedbackMessage = "选区为空"
+            wordFeedbackIsError = true
+        }
 
-    private func parsedWords(from text: String) -> [String] {
-        text
-            .split(separator: ",")
-            .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            wordFeedbackMessage = nil
+        }
     }
 
     private func applyShareImportIfNeeded() {
         guard let payload = shareImport.pendingPayload else { return }
         sentence = payload.sentence
         if let word = payload.selectedWord {
-            wordsText = word
+            words = VocabularyWords.parse(from: word)
         }
         importBannerMessage = payload.source == .clipboard
             ? "已从剪贴板填入原文，请补充生词后生成卡片"
@@ -171,8 +170,6 @@ struct CreateCardsView: View {
         isGenerating = true
 
         Task {
-            let words = parsedWords(from: wordsText)
-
             do {
                 let generated = try await KimiCardGenerator.generate(sentence: sentence, words: words)
 

@@ -1,12 +1,12 @@
 import SwiftUI
+#if canImport(SwiftData)
 import SwiftData
+#endif
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var shareImport: ShareImportCoordinator
     @State private var selectedTab = 0
-    @State private var showShareSavedAlert = false
-    @State private var shareSavedCount = 0
+    @State private var sharePreviewDrafts: [GeneratedCardDraft]?
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -38,7 +38,7 @@ struct ContentView: View {
             shareImport.refreshAll()
         }
         .onReceive(NotificationCenter.default.publisher(for: .shareDraftsReceived)) { _ in
-            autoSaveShareDraftsIfNeeded()
+            presentSharePreviewIfNeeded()
         }
         .onChange(of: shareImport.pendingPayload) { _, payload in
             if payload != nil {
@@ -47,32 +47,42 @@ struct ContentView: View {
         }
         .onChange(of: shareImport.pendingDrafts) { _, drafts in
             guard drafts != nil else { return }
-            autoSaveShareDraftsIfNeeded()
+            presentSharePreviewIfNeeded()
         }
         .onAppear {
-            autoSaveShareDraftsIfNeeded()
+            shareImport.refreshAll()
+            presentSharePreviewIfNeeded()
         }
-        .alert("已保存到词库", isPresented: $showShareSavedAlert) {
-            Button("去复习") {
-                selectedTab = 1
+        .fullScreenCover(isPresented: Binding(
+            get: { sharePreviewDrafts != nil },
+            set: { if !$0 { sharePreviewDrafts = nil } }
+        )) {
+            NavigationStack {
+                CardPreviewView(
+                    drafts: Binding(
+                        get: { sharePreviewDrafts ?? [] },
+                        set: { sharePreviewDrafts = $0 }
+                    ),
+                    onComplete: {
+                        sharePreviewDrafts = nil
+                    }
+                )
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("关闭") {
+                            sharePreviewDrafts = nil
+                        }
+                    }
+                }
             }
-            Button("好", role: .cancel) {}
-        } message: {
-            Text("分享生成的 \(shareSavedCount) 张卡片已加入词库。")
         }
     }
 
-    private func autoSaveShareDraftsIfNeeded() {
+    private func presentSharePreviewIfNeeded() {
         guard let drafts = shareImport.pendingDrafts, !drafts.isEmpty else { return }
-
-        let count = FlashCardSaver.save(drafts: drafts, to: modelContext)
+        sharePreviewDrafts = drafts
         shareImport.acknowledgeDrafts()
-
-        guard count > 0 else { return }
-
-        shareSavedCount = count
-        showShareSavedAlert = true
-        ShareExtensionNotifier.scheduleCardsSavedNotification(cardCount: count)
+        selectedTab = 0
     }
 }
 
