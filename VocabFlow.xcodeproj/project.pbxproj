@@ -1,0 +1,750 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AA0000010000000000000020 /* VocabFlowApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000010 /* VocabFlowApp.swift */; };
+		AA0000010000000000000021 /* FlashCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000011 /* FlashCard.swift */; };
+		AA0000010000000000000023 /* ReviewScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000013 /* ReviewScheduler.swift */; };
+		AA0000010000000000000024 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000014 /* ContentView.swift */; };
+		AA0000010000000000000025 /* CreateCardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000015 /* CreateCardsView.swift */; };
+		AA0000010000000000000026 /* CardPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000016 /* CardPreviewView.swift */; };
+		AA0000010000000000000027 /* ReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000017 /* ReviewView.swift */; };
+		AA0000010000000000000028 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000018 /* LibraryView.swift */; };
+		AA0000010000000000000029 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000019 /* Assets.xcassets */; };
+		AA0000010000000000000034 /* APISettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000035 /* APISettings.swift */; };
+		AA0000010000000000000036 /* KimiCardGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000037 /* KimiCardGenerator.swift */; };
+		AA0000010000000000000038 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000045 /* SettingsView.swift */; };
+		AA0000010000000000000046 /* DefaultAPIKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000047 /* DefaultAPIKey.swift */; };
+		AA0000010000000000000048 /* KeyboardDismiss.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000049 /* KeyboardDismiss.swift */; };
+		FF0000010000000000000001 /* SelectableTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000010000000000000010 /* SelectableTextEditor.swift */; };
+		FF0000010000000000000002 /* SelectableTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000010000000000000010 /* SelectableTextEditor.swift */; };
+		FF0000010000000000000003 /* SelectableTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000010000000000000010 /* SelectableTextEditor.swift */; };
+		AA0000010000000000000050 /* FlashCardBackup.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000051 /* FlashCardBackup.swift */; };
+		AA0000010000000000000052 /* BackupDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000053 /* BackupDocument.swift */; };
+		AA0000010000000000000054 /* BackupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000055 /* BackupService.swift */; };
+		AA0000010000000000000057 /* CardReviewSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000058 /* CardReviewSessionView.swift */; };
+		BB0000010000000000000001 /* ShareImportStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000010000000000000011 /* ShareImportStore.swift */; };
+		BB0000010000000000000002 /* ShareImportCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000010000000000000012 /* ShareImportCoordinator.swift */; };
+		BB0000010000000000000003 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000010000000000000013 /* ShareViewController.swift */; };
+		BB0000010000000000000004 /* ShareImportStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000010000000000000011 /* ShareImportStore.swift */; };
+		BB0000010000000000000005 /* VocabFlowShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BB0000010000000000000010 /* VocabFlowShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		BB0000010000000000000006 /* ImportCardsFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000010000000000000018 /* ImportCardsFormView.swift */; };
+		BB0000010000000000000007 /* ImportCardsFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000010000000000000018 /* ImportCardsFormView.swift */; };
+		CC0000010000000000000001 /* ClipboardImportCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000010000000000000010 /* ClipboardImportCoordinator.swift */; };
+		CC0000010000000000000009 /* FlashCardSaver.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000010000000000000013 /* FlashCardSaver.swift */; };
+		CC0000010000000000000002 /* CardDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000010000000000000011 /* CardDraft.swift */; };
+		CC0000010000000000000003 /* CardDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000010000000000000011 /* CardDraft.swift */; };
+		CC0000010000000000000004 /* KimiCardGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000037 /* KimiCardGenerator.swift */; };
+		CC0000010000000000000005 /* APISettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000035 /* APISettings.swift */; };
+		CC0000010000000000000006 /* DefaultAPIKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000047 /* DefaultAPIKey.swift */; };
+		CC0000010000000000000007 /* ShareCardGenerationRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000010000000000000012 /* ShareCardGenerationRunner.swift */; };
+		CC0000010000000000000008 /* ShareCardGenerationRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000010000000000000012 /* ShareCardGenerationRunner.swift */; };
+		CC0000010000000000000014 /* ShareTextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000010000000000000015 /* ShareTextExtractor.swift */; };
+		DD0000010000000000000003 /* ActionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000010000000000000013 /* ActionViewController.swift */; };
+		DD0000010000000000000004 /* ShareImportStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000010000000000000011 /* ShareImportStore.swift */; };
+		DD0000010000000000000005 /* VocabFlowAction.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DD0000010000000000000010 /* VocabFlowAction.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		DD0000010000000000000006 /* ImportCardsFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000010000000000000018 /* ImportCardsFormView.swift */; };
+		DD0000010000000000000007 /* CardDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000010000000000000011 /* CardDraft.swift */; };
+		DD0000010000000000000008 /* KimiCardGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000037 /* KimiCardGenerator.swift */; };
+		DD0000010000000000000009 /* APISettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000035 /* APISettings.swift */; };
+		DD000001000000000000000A /* DefaultAPIKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000047 /* DefaultAPIKey.swift */; };
+		DD000001000000000000000B /* ShareCardGenerationRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000010000000000000012 /* ShareCardGenerationRunner.swift */; };
+		DD000001000000000000000C /* ShareTextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000010000000000000015 /* ShareTextExtractor.swift */; };
+		DD000001000000000000000D /* ExtensionImportViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000010000000000000016 /* ExtensionImportViewController.swift */; };
+		EE0000010000000000000001 /* ExtensionImportViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000010000000000000016 /* ExtensionImportViewController.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		AA0000010000000000000005 /* VocabFlow.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VocabFlow.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA0000010000000000000010 /* VocabFlowApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VocabFlowApp.swift; sourceTree = "<group>"; };
+		AA0000010000000000000011 /* FlashCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashCard.swift; sourceTree = "<group>"; };
+		AA0000010000000000000013 /* ReviewScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewScheduler.swift; sourceTree = "<group>"; };
+		AA0000010000000000000014 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		AA0000010000000000000015 /* CreateCardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateCardsView.swift; sourceTree = "<group>"; };
+		AA0000010000000000000016 /* CardPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardPreviewView.swift; sourceTree = "<group>"; };
+		AA0000010000000000000017 /* ReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewView.swift; sourceTree = "<group>"; };
+		AA0000010000000000000018 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
+		AA0000010000000000000019 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AA0000010000000000000035 /* APISettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APISettings.swift; sourceTree = "<group>"; };
+		AA0000010000000000000037 /* KimiCardGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KimiCardGenerator.swift; sourceTree = "<group>"; };
+		AA0000010000000000000045 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		AA0000010000000000000047 /* DefaultAPIKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultAPIKey.swift; sourceTree = "<group>"; };
+		AA0000010000000000000049 /* KeyboardDismiss.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardDismiss.swift; sourceTree = "<group>"; };
+		FF0000010000000000000010 /* SelectableTextEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectableTextEditor.swift; sourceTree = "<group>"; };
+		AA0000010000000000000051 /* FlashCardBackup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashCardBackup.swift; sourceTree = "<group>"; };
+		AA0000010000000000000053 /* BackupDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupDocument.swift; sourceTree = "<group>"; };
+		AA0000010000000000000055 /* BackupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupService.swift; sourceTree = "<group>"; };
+		AA0000010000000000000058 /* CardReviewSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardReviewSessionView.swift; sourceTree = "<group>"; };
+		BB0000010000000000000010 /* VocabFlowShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = VocabFlowShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		BB0000010000000000000011 /* ShareImportStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareImportStore.swift; sourceTree = "<group>"; };
+		BB0000010000000000000012 /* ShareImportCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareImportCoordinator.swift; sourceTree = "<group>"; };
+		BB0000010000000000000013 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		BB0000010000000000000014 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BB0000010000000000000015 /* VocabFlowShare.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = VocabFlowShare.entitlements; sourceTree = "<group>"; };
+		BB0000010000000000000016 /* VocabFlow.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = VocabFlow.entitlements; sourceTree = "<group>"; };
+		BB0000010000000000000017 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BB0000010000000000000018 /* ImportCardsFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportCardsFormView.swift; sourceTree = "<group>"; };
+		CC0000010000000000000010 /* ClipboardImportCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardImportCoordinator.swift; sourceTree = "<group>"; };
+		CC0000010000000000000011 /* CardDraft.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardDraft.swift; sourceTree = "<group>"; };
+		CC0000010000000000000012 /* ShareCardGenerationRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCardGenerationRunner.swift; sourceTree = "<group>"; };
+		CC0000010000000000000013 /* FlashCardSaver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashCardSaver.swift; sourceTree = "<group>"; };
+		CC0000010000000000000015 /* ShareTextExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareTextExtractor.swift; sourceTree = "<group>"; };
+		DD0000010000000000000010 /* VocabFlowAction.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = VocabFlowAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		DD0000010000000000000013 /* ActionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionViewController.swift; sourceTree = "<group>"; };
+		DD0000010000000000000014 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		DD0000010000000000000015 /* VocabFlowAction.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = VocabFlowAction.entitlements; sourceTree = "<group>"; };
+		DD0000010000000000000016 /* ExtensionImportViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionImportViewController.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AA0000010000000000000030 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXContainerItemProxy section */
+		BB0000010000000000000020 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA0000010000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BB0000010000000000000021;
+			remoteInfo = VocabFlowShare;
+		};
+		DD0000010000000000000020 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA0000010000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DD0000010000000000000021;
+			remoteInfo = VocabFlowAction;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		BB0000010000000000000030 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				BB0000010000000000000005 /* VocabFlowShare.appex in Embed Foundation Extensions */,
+				DD0000010000000000000005 /* VocabFlowAction.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXGroup section */
+		AA0000010000000000000002 = {
+			isa = PBXGroup;
+			children = (
+				AA0000010000000000000003 /* VocabFlow */,
+				BB0000010000000000000040 /* VocabFlowShare */,
+				DD0000010000000000000040 /* VocabFlowAction */,
+				BB0000010000000000000041 /* Shared */,
+				AA0000010000000000000004 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AA0000010000000000000003 /* VocabFlow */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000010000000000000010 /* VocabFlowApp.swift */,
+				BB0000010000000000000016 /* VocabFlow.entitlements */,
+				BB0000010000000000000017 /* Info.plist */,
+				AA0000010000000000000031 /* Models */,
+				AA0000010000000000000032 /* Services */,
+				AA0000010000000000000033 /* Views */,
+				AA0000010000000000000019 /* Assets.xcassets */,
+			);
+			path = VocabFlow;
+			sourceTree = "<group>";
+		};
+		AA0000010000000000000004 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000010000000000000005 /* VocabFlow.app */,
+				BB0000010000000000000010 /* VocabFlowShare.appex */,
+				DD0000010000000000000010 /* VocabFlowAction.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AA0000010000000000000031 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000010000000000000011 /* FlashCard.swift */,
+				AA0000010000000000000051 /* FlashCardBackup.swift */,
+				AA0000010000000000000053 /* BackupDocument.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		AA0000010000000000000032 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000010000000000000013 /* ReviewScheduler.swift */,
+				AA0000010000000000000035 /* APISettings.swift */,
+				AA0000010000000000000037 /* KimiCardGenerator.swift */,
+				AA0000010000000000000047 /* DefaultAPIKey.swift */,
+				AA0000010000000000000055 /* BackupService.swift */,
+				BB0000010000000000000012 /* ShareImportCoordinator.swift */,
+				CC0000010000000000000010 /* ClipboardImportCoordinator.swift */,
+				CC0000010000000000000013 /* FlashCardSaver.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		AA0000010000000000000033 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000010000000000000014 /* ContentView.swift */,
+				AA0000010000000000000015 /* CreateCardsView.swift */,
+				AA0000010000000000000016 /* CardPreviewView.swift */,
+				AA0000010000000000000017 /* ReviewView.swift */,
+				AA0000010000000000000018 /* LibraryView.swift */,
+				AA0000010000000000000045 /* SettingsView.swift */,
+				AA0000010000000000000049 /* KeyboardDismiss.swift */,
+				AA0000010000000000000058 /* CardReviewSessionView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		BB0000010000000000000040 /* VocabFlowShare */ = {
+			isa = PBXGroup;
+			children = (
+				BB0000010000000000000013 /* ShareViewController.swift */,
+				BB0000010000000000000014 /* Info.plist */,
+				BB0000010000000000000015 /* VocabFlowShare.entitlements */,
+			);
+			path = VocabFlowShare;
+			sourceTree = "<group>";
+		};
+		DD0000010000000000000040 /* VocabFlowAction */ = {
+			isa = PBXGroup;
+			children = (
+				DD0000010000000000000013 /* ActionViewController.swift */,
+				DD0000010000000000000014 /* Info.plist */,
+				DD0000010000000000000015 /* VocabFlowAction.entitlements */,
+			);
+			path = VocabFlowAction;
+			sourceTree = "<group>";
+		};
+		BB0000010000000000000041 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				BB0000010000000000000011 /* ShareImportStore.swift */,
+				BB0000010000000000000018 /* ImportCardsFormView.swift */,
+				FF0000010000000000000010 /* SelectableTextEditor.swift */,
+				CC0000010000000000000011 /* CardDraft.swift */,
+				CC0000010000000000000012 /* ShareCardGenerationRunner.swift */,
+				CC0000010000000000000015 /* ShareTextExtractor.swift */,
+				DD0000010000000000000016 /* ExtensionImportViewController.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXTargetDependency section */
+		BB0000010000000000000031 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BB0000010000000000000021 /* VocabFlowShare */;
+			targetProxy = BB0000010000000000000020 /* PBXContainerItemProxy */;
+		};
+		DD0000010000000000000031 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DD0000010000000000000021 /* VocabFlowAction */;
+			targetProxy = DD0000010000000000000020 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXNativeTarget section */
+		AA0000010000000000000006 /* VocabFlow */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA0000010000000000000040 /* Build configuration list for PBXNativeTarget "VocabFlow" */;
+			buildPhases = (
+				AA0000010000000000000007 /* Sources */,
+				AA0000010000000000000030 /* Frameworks */,
+				AA0000010000000000000008 /* Resources */,
+				BB0000010000000000000030 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				BB0000010000000000000031 /* PBXTargetDependency */,
+				DD0000010000000000000031 /* PBXTargetDependency */,
+			);
+			name = VocabFlow;
+			productName = VocabFlow;
+			productReference = AA0000010000000000000005 /* VocabFlow.app */;
+			productType = "com.apple.product-type.application";
+		};
+		BB0000010000000000000021 /* VocabFlowShare */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BB0000010000000000000050 /* Build configuration list for PBXNativeTarget "VocabFlowShare" */;
+			buildPhases = (
+				BB0000010000000000000042 /* Sources */,
+				BB0000010000000000000043 /* Frameworks */,
+				BB0000010000000000000044 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = VocabFlowShare;
+			productName = VocabFlowShare;
+			productReference = BB0000010000000000000010 /* VocabFlowShare.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		DD0000010000000000000021 /* VocabFlowAction */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DD0000010000000000000050 /* Build configuration list for PBXNativeTarget "VocabFlowAction" */;
+			buildPhases = (
+				DD0000010000000000000042 /* Sources */,
+				DD0000010000000000000043 /* Frameworks */,
+				DD0000010000000000000044 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = VocabFlowAction;
+			productName = VocabFlowAction;
+			productReference = DD0000010000000000000010 /* VocabFlowAction.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AA0000010000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2600;
+				LastUpgradeCheck = 2600;
+				TargetAttributes = {
+					AA0000010000000000000006 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					BB0000010000000000000021 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					DD0000010000000000000021 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+				};
+			};
+			buildConfigurationList = AA0000010000000000000039 /* Build configuration list for PBXProject "VocabFlow" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+				"zh-Hans",
+			);
+			mainGroup = AA0000010000000000000002;
+			productRefGroup = AA0000010000000000000004 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AA0000010000000000000006 /* VocabFlow */,
+				BB0000010000000000000021 /* VocabFlowShare */,
+				DD0000010000000000000021 /* VocabFlowAction */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AA0000010000000000000008 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA0000010000000000000029 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		BB0000010000000000000042 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BB0000010000000000000003 /* ShareViewController.swift in Sources */,
+				BB0000010000000000000004 /* ShareImportStore.swift in Sources */,
+				BB0000010000000000000007 /* ImportCardsFormView.swift in Sources */,
+				FF0000010000000000000002 /* SelectableTextEditor.swift in Sources */,
+				CC0000010000000000000003 /* CardDraft.swift in Sources */,
+				CC0000010000000000000004 /* KimiCardGenerator.swift in Sources */,
+				CC0000010000000000000005 /* APISettings.swift in Sources */,
+				CC0000010000000000000006 /* DefaultAPIKey.swift in Sources */,
+				CC0000010000000000000007 /* ShareCardGenerationRunner.swift in Sources */,
+				CC0000010000000000000014 /* ShareTextExtractor.swift in Sources */,
+				EE0000010000000000000001 /* ExtensionImportViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DD0000010000000000000042 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DD0000010000000000000003 /* ActionViewController.swift in Sources */,
+				DD0000010000000000000004 /* ShareImportStore.swift in Sources */,
+				DD0000010000000000000006 /* ImportCardsFormView.swift in Sources */,
+				FF0000010000000000000003 /* SelectableTextEditor.swift in Sources */,
+				DD0000010000000000000007 /* CardDraft.swift in Sources */,
+				DD0000010000000000000008 /* KimiCardGenerator.swift in Sources */,
+				DD0000010000000000000009 /* APISettings.swift in Sources */,
+				DD000001000000000000000A /* DefaultAPIKey.swift in Sources */,
+				DD000001000000000000000B /* ShareCardGenerationRunner.swift in Sources */,
+				DD000001000000000000000C /* ShareTextExtractor.swift in Sources */,
+				DD000001000000000000000D /* ExtensionImportViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		BB0000010000000000000043 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DD0000010000000000000043 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXResourcesBuildPhase section */
+		BB0000010000000000000044 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DD0000010000000000000044 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AA0000010000000000000007 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA0000010000000000000020 /* VocabFlowApp.swift in Sources */,
+				AA0000010000000000000021 /* FlashCard.swift in Sources */,
+				AA0000010000000000000023 /* ReviewScheduler.swift in Sources */,
+				AA0000010000000000000024 /* ContentView.swift in Sources */,
+				AA0000010000000000000025 /* CreateCardsView.swift in Sources */,
+				AA0000010000000000000026 /* CardPreviewView.swift in Sources */,
+				AA0000010000000000000027 /* ReviewView.swift in Sources */,
+				AA0000010000000000000028 /* LibraryView.swift in Sources */,
+				AA0000010000000000000034 /* APISettings.swift in Sources */,
+				AA0000010000000000000036 /* KimiCardGenerator.swift in Sources */,
+				AA0000010000000000000038 /* SettingsView.swift in Sources */,
+				AA0000010000000000000046 /* DefaultAPIKey.swift in Sources */,
+				AA0000010000000000000048 /* KeyboardDismiss.swift in Sources */,
+				FF0000010000000000000001 /* SelectableTextEditor.swift in Sources */,
+				AA0000010000000000000050 /* FlashCardBackup.swift in Sources */,
+				AA0000010000000000000052 /* BackupDocument.swift in Sources */,
+				AA0000010000000000000054 /* BackupService.swift in Sources */,
+				AA0000010000000000000057 /* CardReviewSessionView.swift in Sources */,
+				BB0000010000000000000001 /* ShareImportStore.swift in Sources */,
+				BB0000010000000000000002 /* ShareImportCoordinator.swift in Sources */,
+				BB0000010000000000000006 /* ImportCardsFormView.swift in Sources */,
+				CC0000010000000000000001 /* ClipboardImportCoordinator.swift in Sources */,
+				CC0000010000000000000009 /* FlashCardSaver.swift in Sources */,
+				CC0000010000000000000002 /* CardDraft.swift in Sources */,
+				CC0000010000000000000008 /* ShareCardGenerationRunner.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		AA0000010000000000000041 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		AA0000010000000000000042 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_OPTIMIZATION_LEVEL = s;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		AA0000010000000000000043 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = VocabFlow/VocabFlow.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ALYZC7B762;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = VocabFlow/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = VocabFlow;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vocabflow.app1;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		AA0000010000000000000044 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = VocabFlow/VocabFlow.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ALYZC7B762;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = VocabFlow/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = VocabFlow;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vocabflow.app1;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		BB0000010000000000000051 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = VocabFlowShare/VocabFlowShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ALYZC7B762;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = VocabFlowShare/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = VocabFlow;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vocabflow.app1.share;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		BB0000010000000000000052 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = VocabFlowShare/VocabFlowShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ALYZC7B762;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = VocabFlowShare/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = VocabFlow;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vocabflow.app1.share;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		DD0000010000000000000051 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = VocabFlowAction/VocabFlowAction.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ALYZC7B762;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = VocabFlowAction/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "VocabFlow 制卡";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vocabflow.app1.action;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		DD0000010000000000000052 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = VocabFlowAction/VocabFlowAction.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ALYZC7B762;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = VocabFlowAction/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "VocabFlow 制卡";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vocabflow.app1.action;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AA0000010000000000000039 /* Build configuration list for PBXProject "VocabFlow" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000010000000000000041 /* Debug */,
+				AA0000010000000000000042 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA0000010000000000000040 /* Build configuration list for PBXNativeTarget "VocabFlow" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000010000000000000043 /* Debug */,
+				AA0000010000000000000044 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BB0000010000000000000050 /* Build configuration list for PBXNativeTarget "VocabFlowShare" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BB0000010000000000000051 /* Debug */,
+				BB0000010000000000000052 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DD0000010000000000000050 /* Build configuration list for PBXNativeTarget "VocabFlowAction" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DD0000010000000000000051 /* Debug */,
+				DD0000010000000000000052 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = AA0000010000000000000001 /* Project object */;
+}
