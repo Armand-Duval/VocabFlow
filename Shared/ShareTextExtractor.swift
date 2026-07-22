@@ -1,5 +1,8 @@
 import Foundation
 import UniformTypeIdentifiers
+#if canImport(UIKit)
+import UIKit
+#endif
 
 enum ShareTextExtractor {
     private static let loadTypePriority: [String] = [
@@ -140,4 +143,57 @@ enum ShareTextExtractor {
         }
         return html
     }
+
+    #if canImport(UIKit)
+    private static let imageTypePriority: [String] = [
+        UTType.image.identifier,
+        UTType.png.identifier,
+        UTType.jpeg.identifier,
+        "public.image"
+    ]
+
+    static func loadTextFromImages(from extensionItems: [NSExtensionItem]) async -> String? {
+        let providers = extensionItems.flatMap { $0.attachments ?? [] }
+        for provider in providers {
+            guard let image = await loadUIImage(from: provider) else { continue }
+            guard let text = try? await ImageOCRService.recognizeText(in: image) else { continue }
+            if let cleaned = cleaned(text) {
+                return cleaned
+            }
+        }
+        return nil
+    }
+
+    static func loadUIImage(from provider: NSItemProvider) async -> UIImage? {
+        for typeIdentifier in imageTypePriority where provider.hasItemConformingToTypeIdentifier(typeIdentifier) {
+            if let image = await loadUIImage(from: provider, typeIdentifier: typeIdentifier) {
+                return image
+            }
+        }
+        return nil
+    }
+
+    private static func loadUIImage(from provider: NSItemProvider, typeIdentifier: String) async -> UIImage? {
+        await withCheckedContinuation { continuation in
+            provider.loadItem(forTypeIdentifier: typeIdentifier, options: nil) { item, _ in
+                if let image = item as? UIImage {
+                    continuation.resume(returning: image)
+                    return
+                }
+                if let url = item as? URL,
+                   let data = try? Data(contentsOf: url),
+                   let image = UIImage(data: data) {
+                    continuation.resume(returning: image)
+                    return
+                }
+                if let data = item as? Data,
+                   let image = UIImage(data: data) {
+                    continuation.resume(returning: image)
+                    return
+                }
+                continuation.resume(returning: nil)
+            }
+        }
+    }
+    #endif
 }

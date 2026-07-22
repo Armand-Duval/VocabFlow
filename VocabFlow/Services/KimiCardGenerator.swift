@@ -60,9 +60,10 @@ enum KimiCardGenerator {
           "cards": [
             {
               "word": "生词",
+              "phonetic": "IPA 音标或读法，无则空字符串",
               "type": "cloze 或 definition",
               "front": "卡片正面",
-              "back": "卡片背面（含释义、词性、音标/读法、语境说明）",
+              "back": "卡片背面（含释义、词性、语境说明，音标已在 phonetic 字段则 back 不必重复）",
               "context_note": ""
             }
           ]
@@ -70,7 +71,7 @@ enum KimiCardGenerator {
         规则：
         1. 每个生词生成 2 张卡：一张 cloze（在原句中把该词替换为 ______，保持原文语言），一张 definition（问该词/短语在此句中的意思）
         2. 释义必须结合原句语境，不要只给词典通用释义
-        3. 所有中文解释和语境说明都写在 back 里；back 用中文解释；如有音标/罗马音/读法可附上；注明词性
+        3. 所有中文解释和语境说明都写在 back 里；back 用中文解释；phonetic 字段单独输出 IPA/罗马音/读法；注明词性
         4. 原文是什么语言，front 中的句子就保持什么语言，不要擅自翻译原句
         5. context_note 留空字符串，不要把语境说明单独输出
         """
@@ -127,6 +128,7 @@ enum KimiCardGenerator {
             guard let type = CardType(rawValue: item.type.lowercased()) else { return nil }
             return GeneratedCardDraft(
                 word: item.word,
+                phonetic: item.phonetic?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty,
                 sentence: sentence,
                 cardType: type,
                 front: item.front,
@@ -177,14 +179,21 @@ private struct KimiCardsResponse: Decodable {
 
 private struct KimiCardItem: Decodable {
     let word: String
+    let phonetic: String?
     let type: String
     let front: String
     let back: String
     let contextNote: String?
 
     enum CodingKeys: String, CodingKey {
-        case word, type, front, back
+        case word, phonetic, type, front, back
         case contextNote = "context_note"
+    }
+}
+
+private extension String {
+    var nilIfEmpty: String? {
+        isEmpty ? nil : self
     }
 }
 

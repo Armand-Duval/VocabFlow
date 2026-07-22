@@ -39,8 +39,15 @@ struct DraftPreviewCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Text(draft.word)
-                    .font(.headline)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(draft.word)
+                        .font(.headline)
+                    if let phonetic = draft.phonetic, !phonetic.isEmpty {
+                        Text(phonetic)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
                 Spacer()
                 Text(draft.cardType.displayName)
                     .font(.caption.weight(.medium))
@@ -51,6 +58,16 @@ struct DraftPreviewCard: View {
 
             Toggle(L10n.includeInLibrary, isOn: $draft.isSelected)
                 .toggleStyle(.switch)
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(L10n.phoneticLabel)
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                TextField(L10n.phoneticPlaceholder, text: Binding(
+                    get: { draft.phonetic ?? "" },
+                    set: { draft.phonetic = $0.nilIfEmpty }
+                ))
+            }
 
             VStack(alignment: .leading, spacing: 6) {
                 Text(L10n.frontLabel)
@@ -81,5 +98,11 @@ struct DraftPreviewCard: View {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .strokeBorder(.quaternary, lineWidth: 0.5)
         }
+    }
+}
+
+private extension String {
+    var nilIfEmpty: String? {
+        trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : self
     }
 }

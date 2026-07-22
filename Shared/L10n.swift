@@ -78,6 +78,15 @@ enum L10n {
     static func saveCount(_ count: Int) -> String { tf("preview.save", count) }
     static var savedTitle: String { tr("preview.saved.title") }
     static var savedMessage: String { tr("preview.saved.message") }
+    static var phoneticLabel: String { tr("preview.phonetic") }
+    static var phoneticPlaceholder: String { tr("preview.phonetic.placeholder") }
+    static var speakWord: String { tr("speech.word") }
+    static var speakSentence: String { tr("speech.sentence") }
+    static var importFromPhoto: String { tr("import.photo") }
+    static var importFromPhotoSuccess: String { tr("import.photo.success") }
+    static var recognizingPhoto: String { tr("import.photo.recognizing") }
+    static var ocrEmpty: String { tr("import.ocr.empty") }
+    static var ocrFailed: String { tr("import.ocr.failed") }
 
     // MARK: - Card types
 

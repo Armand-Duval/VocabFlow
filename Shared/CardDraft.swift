@@ -15,6 +15,7 @@ enum CardType: String, Codable, CaseIterable {
 struct GeneratedCardDraft: Identifiable, Equatable {
     let id = UUID()
     var word: String
+    var phonetic: String?
     var sentence: String
     var cardType: CardType
     var front: String

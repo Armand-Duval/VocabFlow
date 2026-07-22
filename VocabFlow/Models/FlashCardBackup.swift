@@ -9,6 +9,7 @@ struct FlashCardBackupFile: Codable {
 struct FlashCardBackup: Codable {
     let id: UUID
     let word: String
+    let phonetic: String?
     let sentence: String
     let cardTypeRaw: String
     let front: String
@@ -23,13 +24,14 @@ struct FlashCardBackup: Codable {
     let learningStep: Int
 
     enum CodingKeys: String, CodingKey {
-        case id, word, sentence, cardTypeRaw, front, back, contextNote
+        case id, word, phonetic, sentence, cardTypeRaw, front, back, contextNote
         case createdAt, nextReviewDate, intervalDays, easeFactor, repetitions, reviewCount, learningStep
     }
 
     init(from card: FlashCard) {
         id = card.id
         word = card.word
+        phonetic = card.phonetic
         sentence = card.sentence
         cardTypeRaw = card.cardTypeRaw
         front = card.front
@@ -48,6 +50,7 @@ struct FlashCardBackup: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
         word = try container.decode(String.self, forKey: .word)
+        phonetic = try container.decodeIfPresent(String.self, forKey: .phonetic)
         sentence = try container.decode(String.self, forKey: .sentence)
         cardTypeRaw = try container.decode(String.self, forKey: .cardTypeRaw)
         front = try container.decode(String.self, forKey: .front)
@@ -66,6 +69,7 @@ struct FlashCardBackup: Codable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(id, forKey: .id)
         try container.encode(word, forKey: .word)
+        try container.encode(phonetic, forKey: .phonetic)
         try container.encode(sentence, forKey: .sentence)
         try container.encode(cardTypeRaw, forKey: .cardTypeRaw)
         try container.encode(front, forKey: .front)
@@ -82,6 +86,7 @@ struct FlashCardBackup: Codable {
 
     func apply(to card: FlashCard) {
         card.word = word
+        card.phonetic = phonetic
         card.sentence = sentence
         card.cardTypeRaw = cardTypeRaw
         card.front = front
@@ -103,7 +108,8 @@ struct FlashCardBackup: Codable {
             cardType: CardType(rawValue: cardTypeRaw) ?? .definition,
             front: front,
             back: back,
-            contextNote: contextNote
+            contextNote: contextNote,
+            phonetic: phonetic
         )
         card.id = id
         card.createdAt = createdAt

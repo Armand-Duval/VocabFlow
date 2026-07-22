@@ -15,7 +15,8 @@ enum FlashCardSaver {
                 cardType: draft.cardType,
                 front: draft.front,
                 back: CardContentFormatter.mergedBack(back: draft.back, contextNote: draft.contextNote),
-                contextNote: nil
+                contextNote: nil,
+                phonetic: draft.phonetic
             )
             context.insert(card)
         }

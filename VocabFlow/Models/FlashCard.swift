@@ -5,6 +5,7 @@ import SwiftData
 final class FlashCard {
     var id: UUID
     var word: String
+    var phonetic: String?
     var sentence: String
     var cardTypeRaw: String
     var front: String
@@ -34,10 +35,12 @@ final class FlashCard {
         cardType: CardType,
         front: String,
         back: String,
-        contextNote: String? = nil
+        contextNote: String? = nil,
+        phonetic: String? = nil
     ) {
         self.id = UUID()
         self.word = word
+        self.phonetic = phonetic
         self.sentence = sentence
         self.cardTypeRaw = cardType.rawValue
         self.front = front

@@ -50,10 +50,44 @@ enum ShareImportStore {
 
     private struct StoredCardDraft: Codable {
         let word: String
+        let phonetic: String?
         let sentence: String
         let cardTypeRaw: String
         let front: String
         let back: String
+
+        init(from draft: GeneratedCardDraft) {
+            word = draft.word
+            phonetic = draft.phonetic
+            sentence = draft.sentence
+            cardTypeRaw = draft.cardType.rawValue
+            front = draft.front
+            back = draft.back
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case word, phonetic, sentence, cardTypeRaw, front, back
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            word = try container.decode(String.self, forKey: .word)
+            phonetic = try container.decodeIfPresent(String.self, forKey: .phonetic)
+            sentence = try container.decode(String.self, forKey: .sentence)
+            cardTypeRaw = try container.decode(String.self, forKey: .cardTypeRaw)
+            front = try container.decode(String.self, forKey: .front)
+            back = try container.decode(String.self, forKey: .back)
+        }
+
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(word, forKey: .word)
+            try container.encode(phonetic, forKey: .phonetic)
+            try container.encode(sentence, forKey: .sentence)
+            try container.encode(cardTypeRaw, forKey: .cardTypeRaw)
+            try container.encode(front, forKey: .front)
+            try container.encode(back, forKey: .back)
+        }
     }
 
     private struct StoredDraftsPayload: Codable {
@@ -130,15 +164,7 @@ enum ShareImportStore {
     }
 
     static func saveGeneratedDrafts(_ drafts: [GeneratedCardDraft]) {
-        let stored = drafts.map {
-            StoredCardDraft(
-                word: $0.word,
-                sentence: $0.sentence,
-                cardTypeRaw: $0.cardType.rawValue,
-                front: $0.front,
-                back: $0.back
-            )
-        }
+        let stored = drafts.map { StoredCardDraft(from: $0) }
         let payload = StoredDraftsPayload(drafts: stored, pending: true)
         guard let url = draftsURL,
               let data = try? JSONEncoder().encode(payload) else {
@@ -161,6 +187,7 @@ enum ShareImportStore {
             guard let type = CardType(rawValue: stored.cardTypeRaw) else { return nil }
             return GeneratedCardDraft(
                 word: stored.word,
+                phonetic: stored.phonetic,
                 sentence: stored.sentence,
                 cardType: type,
                 front: stored.front,

@@ -1,4 +1,6 @@
 import SwiftUI
+import PhotosUI
+import UIKit
 
 struct CreateCardsView: View {
     @EnvironmentObject private var shareImport: ShareImportCoordinator
@@ -13,6 +15,8 @@ struct CreateCardsView: View {
     @State private var selectionClearNonce = 0
     @State private var wordFeedbackMessage: String?
     @State private var wordFeedbackIsError = false
+    @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var isRecognizingPhoto = false
 
     var body: some View {
         NavigationStack {
@@ -45,6 +49,20 @@ struct CreateCardsView: View {
 
                     if !selectedText.isEmpty {
                         SelectionActionBar(selectedText: selectedText, action: appendSelectionToWords)
+                    }
+
+                    PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                        Label(L10n.importFromPhoto, systemImage: "photo.on.rectangle")
+                    }
+                    .disabled(isRecognizingPhoto)
+
+                    if isRecognizingPhoto {
+                        HStack(spacing: 8) {
+                            ProgressView()
+                            Text(L10n.recognizingPhoto)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
 
@@ -100,6 +118,39 @@ struct CreateCardsView: View {
             .onChange(of: shareImport.pendingPayload) { _, _ in
                 applyShareImportIfNeeded()
             }
+            .onChange(of: selectedPhotoItem) { _, item in
+                guard let item else { return }
+                Task {
+                    await importPhoto(item)
+                }
+            }
+        }
+    }
+
+    private func importPhoto(_ item: PhotosPickerItem) async {
+        isRecognizingPhoto = true
+        defer {
+            isRecognizingPhoto = false
+            selectedPhotoItem = nil
+        }
+
+        guard let data = try? await item.loadTransferable(type: Data.self),
+              let image = UIImage(data: data) else {
+            errorMessage = L10n.ocrFailed
+            return
+        }
+
+        do {
+            let text = try await ImageOCRService.recognizeText(in: image)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !text.isEmpty else {
+                errorMessage = L10n.ocrEmpty
+                return
+            }
+            sentence = text
+            importBannerMessage = L10n.importFromPhotoSuccess
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 

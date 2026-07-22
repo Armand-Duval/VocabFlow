@@ -14,6 +14,11 @@
 		KK0000010000000000000002 /* ReviewQueueBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = KK0000010000000000000011 /* ReviewQueueBuilder.swift */; };
 		LL0000010000000000000001 /* ReviewReminderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = LL0000010000000000000010 /* ReviewReminderService.swift */; };
 		LL0000010000000000000002 /* ReviewStatusStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = LL0000010000000000000011 /* ReviewStatusStore.swift */; };
+		MM0000010000000000000001 /* SpeechService.swift in Sources */ = {isa = PBXBuildFile; fileRef = MM0000010000000000000010 /* SpeechService.swift */; };
+		MM0000010000000000000002 /* SpeakButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = MM0000010000000000000011 /* SpeakButton.swift */; };
+		NN0000010000000000000001 /* ImageOCRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = NN0000010000000000000010 /* ImageOCRService.swift */; };
+		NN0000010000000000000002 /* ImageOCRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = NN0000010000000000000010 /* ImageOCRService.swift */; };
+		NN0000010000000000000003 /* ImageOCRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = NN0000010000000000000010 /* ImageOCRService.swift */; };
 		AA0000010000000000000024 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000014 /* ContentView.swift */; };
 		AA0000010000000000000025 /* CreateCardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000015 /* CreateCardsView.swift */; };
 		AA0000010000000000000026 /* CardPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000016 /* CardPreviewView.swift */; };
@@ -90,6 +95,9 @@
 		KK0000010000000000000011 /* ReviewQueueBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewQueueBuilder.swift; sourceTree = "<group>"; };
 		LL0000010000000000000010 /* ReviewReminderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewReminderService.swift; sourceTree = "<group>"; };
 		LL0000010000000000000011 /* ReviewStatusStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewStatusStore.swift; sourceTree = "<group>"; };
+		MM0000010000000000000010 /* SpeechService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechService.swift; sourceTree = "<group>"; };
+		MM0000010000000000000011 /* SpeakButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeakButton.swift; sourceTree = "<group>"; };
+		NN0000010000000000000010 /* ImageOCRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageOCRService.swift; sourceTree = "<group>"; };
 		AA0000010000000000000014 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		AA0000010000000000000015 /* CreateCardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateCardsView.swift; sourceTree = "<group>"; };
 		AA0000010000000000000016 /* CardPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardPreviewView.swift; sourceTree = "<group>"; };
@@ -229,6 +237,7 @@
 				KK0000010000000000000011 /* ReviewQueueBuilder.swift */,
 				LL0000010000000000000010 /* ReviewReminderService.swift */,
 				LL0000010000000000000011 /* ReviewStatusStore.swift */,
+				MM0000010000000000000010 /* SpeechService.swift */,
 				AA0000010000000000000035 /* APISettings.swift */,
 				AA0000010000000000000037 /* KimiCardGenerator.swift */,
 				AA0000010000000000000047 /* DefaultAPIKey.swift */,
@@ -251,6 +260,7 @@
 				AA0000010000000000000045 /* SettingsView.swift */,
 				AA0000010000000000000049 /* KeyboardDismiss.swift */,
 				AA0000010000000000000058 /* CardReviewSessionView.swift */,
+				MM0000010000000000000011 /* SpeakButton.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -287,6 +297,7 @@
 				HH0000010000000000000011 /* ImportTextAnalyzer.swift */,
 				HH0000010000000000000012 /* CreateCardsUI.swift */,
 				HH0000010000000000000013 /* Localizable.xcstrings */,
+				NN0000010000000000000010 /* ImageOCRService.swift */,
 				CC0000010000000000000011 /* CardDraft.swift */,
 				CC0000010000000000000012 /* ShareCardGenerationRunner.swift */,
 				CC0000010000000000000015 /* ShareTextExtractor.swift */,
@@ -433,6 +444,7 @@
 				HH0000010000000000000002 /* L10n.swift in Sources */,
 				HH0000010000000000000005 /* ImportTextAnalyzer.swift in Sources */,
 				HH0000010000000000000008 /* CreateCardsUI.swift in Sources */,
+				NN0000010000000000000002 /* ImageOCRService.swift in Sources */,
 				CC0000010000000000000003 /* CardDraft.swift in Sources */,
 				CC0000010000000000000004 /* KimiCardGenerator.swift in Sources */,
 				CC0000010000000000000005 /* APISettings.swift in Sources */,
@@ -456,6 +468,7 @@
 				HH0000010000000000000003 /* L10n.swift in Sources */,
 				HH0000010000000000000006 /* ImportTextAnalyzer.swift in Sources */,
 				HH0000010000000000000009 /* CreateCardsUI.swift in Sources */,
+				NN0000010000000000000003 /* ImageOCRService.swift in Sources */,
 				DD0000010000000000000007 /* CardDraft.swift in Sources */,
 				DD0000010000000000000008 /* KimiCardGenerator.swift in Sources */,
 				DD0000010000000000000009 /* APISettings.swift in Sources */,
@@ -516,6 +529,9 @@
 				KK0000010000000000000002 /* ReviewQueueBuilder.swift in Sources */,
 				LL0000010000000000000001 /* ReviewReminderService.swift in Sources */,
 				LL0000010000000000000002 /* ReviewStatusStore.swift in Sources */,
+				MM0000010000000000000001 /* SpeechService.swift in Sources */,
+				MM0000010000000000000002 /* SpeakButton.swift in Sources */,
+				NN0000010000000000000001 /* ImageOCRService.swift in Sources */,
 				AA0000010000000000000024 /* ContentView.swift in Sources */,
 				AA0000010000000000000025 /* CreateCardsView.swift in Sources */,
 				AA0000010000000000000026 /* CardPreviewView.swift in Sources */,

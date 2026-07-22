@@ -59,6 +59,7 @@ struct CardPreviewView: View {
         CardPreviewView(drafts: [
             GeneratedCardDraft(
                 word: "mitigate",
+                phonetic: "/ˈmɪtɪɡeɪt/",
                 sentence: "Sample sentence.",
                 cardType: .cloze,
                 front: "The govt tried to ______ the impact.",

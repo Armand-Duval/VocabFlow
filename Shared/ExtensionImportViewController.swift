@@ -24,6 +24,8 @@ class ExtensionImportViewController: UIViewController {
         Task { @MainActor in
             if let text = await ShareTextExtractor.loadText(from: inputItems) {
                 presentImportForm(for: text)
+            } else if let text = await ShareTextExtractor.loadTextFromImages(from: inputItems) {
+                presentImportForm(for: text)
             } else {
                 finishWithError(L10n.extensionNoText)
             }

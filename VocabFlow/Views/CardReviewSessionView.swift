@@ -61,6 +61,32 @@ struct CardReviewSessionView: View {
             }
             .padding(.horizontal)
 
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Text(card.word)
+                    .font(.title3.weight(.semibold))
+
+                if let phonetic = card.phonetic, !phonetic.isEmpty {
+                    Text(phonetic)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer(minLength: 0)
+
+                Menu {
+                    Button(L10n.speakWord) {
+                        SpeechService.speak(card.word)
+                    }
+                    Button(L10n.speakSentence) {
+                        SpeechService.speak(card.sentence)
+                    }
+                } label: {
+                    Image(systemName: "speaker.wave.2.fill")
+                        .foregroundStyle(.tint)
+                }
+            }
+            .padding(.horizontal)
+
             ScrollView {
                 Text(showBack ? card.displayBack : card.front)
                     .font(.body)
