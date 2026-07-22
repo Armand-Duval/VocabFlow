@@ -5,8 +5,13 @@ import SwiftData
 
 struct ContentView: View {
     @EnvironmentObject private var shareImport: ShareImportCoordinator
+    @Query(sort: \FlashCard.nextReviewDate) private var allCards: [FlashCard]
     @State private var selectedTab = 0
     @State private var sharePreviewDrafts: [GeneratedCardDraft]?
+
+    private var dueCount: Int {
+        allCards.filter { ReviewScheduler.isDue($0) }.count
+    }
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -20,6 +25,7 @@ struct ContentView: View {
                 .tabItem {
                     Label(L10n.tabReview, systemImage: "brain.head.profile")
                 }
+                .badge(dueCount > 0 ? dueCount : 0)
                 .tag(1)
 
             LibraryView()
@@ -52,6 +58,12 @@ struct ContentView: View {
         .onAppear {
             shareImport.refreshAll()
             presentSharePreviewIfNeeded()
+            ReviewReminderService.reschedule(dueCount: dueCount)
+            ReviewStatusStore.updateDueCount(dueCount)
+        }
+        .onChange(of: dueCount) { _, count in
+            ReviewReminderService.reschedule(dueCount: count)
+            ReviewStatusStore.updateDueCount(count)
         }
         .fullScreenCover(isPresented: Binding(
             get: { sharePreviewDrafts != nil },

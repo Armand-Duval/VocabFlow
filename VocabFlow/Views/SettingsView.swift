@@ -21,6 +21,10 @@ struct SettingsView: View {
     @State private var showBackupAlert = false
 
     @State private var showImportHelp = false
+    @State private var dailyNewLimit = ReviewSettings.dailyNewLimit
+    @State private var dailyReviewLimit = ReviewSettings.dailyReviewLimit
+    @State private var reminderEnabled = ReviewReminderService.isEnabled
+    @State private var reminderTime = ReviewReminderService.reminderDate
 
     var body: some View {
         NavigationStack {
@@ -28,6 +32,7 @@ struct SettingsView: View {
                 apiSection
                 modelSection
                 saveSection
+                reviewLimitsSection
                 statusSection
                 importHelpSection
                 backupSection
@@ -116,8 +121,44 @@ struct SettingsView: View {
             Button(L10n.saveSettings) {
                 APISettings.kimiAPIKey = apiKey
                 APISettings.kimiModel = selectedModel
+                ReviewSettings.dailyNewLimit = dailyNewLimit
+                ReviewSettings.dailyReviewLimit = dailyReviewLimit
+                ReviewReminderService.isEnabled = reminderEnabled
+                ReviewReminderService.applyReminderTime(reminderTime)
+                ReviewReminderService.reschedule(dueCount: allCards.filter { ReviewScheduler.isDue($0) }.count)
                 saved = true
             }
+        }
+    }
+
+    private var reviewLimitsSection: some View {
+        Section {
+            Stepper(value: $dailyNewLimit, in: 0...999) {
+                Text(L10n.settingsReviewNewLimit(dailyNewLimit))
+            }
+            Stepper(value: $dailyReviewLimit, in: 0...999) {
+                Text(L10n.settingsReviewReviewLimit(dailyReviewLimit))
+            }
+
+            Toggle(L10n.settingsReviewReminderEnabled, isOn: $reminderEnabled)
+                .onChange(of: reminderEnabled) { _, enabled in
+                    guard enabled else { return }
+                    Task {
+                        _ = await ShareExtensionNotifier.requestAuthorizationIfNeeded()
+                    }
+                }
+
+            if reminderEnabled {
+                DatePicker(
+                    L10n.settingsReviewReminderTime,
+                    selection: $reminderTime,
+                    displayedComponents: .hourAndMinute
+                )
+            }
+        } header: {
+            Text(L10n.settingsReviewSection)
+        } footer: {
+            Text(L10n.settingsReviewFooter)
         }
     }
 

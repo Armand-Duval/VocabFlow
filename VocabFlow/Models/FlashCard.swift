@@ -15,6 +15,8 @@ final class FlashCard {
     var intervalDays: Double
     var easeFactor: Double
     var repetitions: Int
+    var reviewCount: Int
+    var learningStep: Int
 
     var cardType: CardType {
         get { CardType(rawValue: cardTypeRaw) ?? .definition }
@@ -46,5 +48,7 @@ final class FlashCard {
         self.intervalDays = 0
         self.easeFactor = 2.5
         self.repetitions = 0
+        self.reviewCount = 0
+        self.learningStep = 0
     }
 }

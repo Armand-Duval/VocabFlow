@@ -102,10 +102,16 @@ enum L10n {
     static var ratingHard: String { tr("rating.hard") }
     static var ratingGood: String { tr("rating.good") }
     static var ratingEasy: String { tr("rating.easy") }
-    static var ratingAgainInterval: String { tr("rating.again.interval") }
-    static var ratingHardInterval: String { tr("rating.hard.interval") }
-    static var ratingGoodInterval: String { tr("rating.good.interval") }
-    static var ratingEasyInterval: String { tr("rating.easy.interval") }
+    static func intervalMinutes(_ count: Int) -> String { tf("interval.minutes", count) }
+    static func intervalHours(_ count: Int) -> String { tf("interval.hours", count) }
+    static func intervalDays(_ count: Int) -> String { tf("interval.days", count) }
+    static func reviewProgress(_ current: Int, _ total: Int) -> String {
+        tf("review.progress", current, total)
+    }
+    static var reviewLearningWaitTitle: String { tr("review.learning.wait.title") }
+    static func reviewLearningWaitMessage(_ interval: String) -> String {
+        tf("review.learning.wait.message", interval)
+    }
 
     // MARK: - Library
 
@@ -122,6 +128,33 @@ enum L10n {
     static func nextReview(_ date: String) -> String {
         tf("library.nextReview", date)
     }
+
+    // MARK: - Review quota
+
+    static var reviewQuotaNew: String { tr("review.quota.newLabel") }
+    static var reviewQuotaReview: String { tr("review.quota.reviewLabel") }
+    static func reviewQuotaProgress(_ title: String, studied: Int, limit: Int) -> String {
+        tf("review.quota.progress", title, studied, limitDisplay(limit))
+    }
+    static var reviewQuotaReachedTitle: String { tr("review.quota.reached.title") }
+    static func reviewQuotaReachedMessage(_ count: Int) -> String {
+        tf("review.quota.reached.message", count)
+    }
+    private static func limitDisplay(_ limit: Int) -> String {
+        limit == 0 ? tr("review.quota.unlimited") : "\(limit)"
+    }
+
+    static var settingsReviewSection: String { tr("settings.review.section") }
+    static func settingsReviewNewLimit(_ limit: Int) -> String {
+        tf("settings.review.newLimit", limitDisplay(limit))
+    }
+    static func settingsReviewReviewLimit(_ limit: Int) -> String {
+        tf("settings.review.reviewLimit", limitDisplay(limit))
+    }
+    static var settingsReviewFooter: String { tr("settings.review.footer") }
+    static var settingsReviewReminderEnabled: String { tr("settings.review.reminder.enabled") }
+    static var settingsReviewReminderTime: String { tr("settings.review.reminder.time") }
+    static func reviewReminderBody(_ count: Int) -> String { tf("review.reminder.body", count) }
 
     // MARK: - Settings
 

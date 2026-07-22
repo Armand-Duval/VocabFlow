@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import Combine
 
 struct CardReviewSessionView: View {
     @Environment(\.dismiss) private var dismiss
@@ -7,33 +8,47 @@ struct CardReviewSessionView: View {
     let cards: [FlashCard]
     var dismissWhenComplete: Bool = false
 
+    @State private var sessionQueue: [FlashCard] = []
+    @State private var pendingLearning: [PendingLearningCard] = []
     @State private var currentIndex = 0
     @State private var showBack = false
+    @State private var now = Date()
+
+    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some View {
         Group {
-            if cards.isEmpty {
+            if let card = currentCard {
+                reviewContent(for: card)
+            } else if let nextLearningDate = pendingLearning.map(\.availableAt).min() {
+                learningWaitState(nextAvailable: nextLearningDate)
+            } else {
                 ContentUnavailableView {
                     Label(L10n.noCardsToReview, systemImage: "tray")
                 }
-            } else {
-                reviewContent
             }
         }
-        .onChange(of: cards.count) { _, newCount in
-            if currentIndex >= newCount {
-                currentIndex = max(0, newCount - 1)
-            }
-            showBack = false
+        .onAppear {
+            syncSessionQueue(with: cards)
+        }
+        .onChange(of: cards.map(\.id)) { _, _ in
+            syncSessionQueue(with: cards)
+        }
+        .onReceive(timer) { date in
+            now = date
+            promoteReadyLearningCards()
         }
     }
 
-    private var reviewContent: some View {
-        let card = cards[currentIndex]
+    private var currentCard: FlashCard? {
+        guard sessionQueue.indices.contains(currentIndex) else { return nil }
+        return sessionQueue[currentIndex]
+    }
 
-        return VStack(spacing: 12) {
+    private func reviewContent(for card: FlashCard) -> some View {
+        VStack(spacing: 12) {
             HStack {
-                Text("\(currentIndex + 1) / \(cards.count)")
+                Text(L10n.reviewProgress(currentIndex + 1, sessionQueue.count))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                 Spacer()
@@ -81,6 +96,14 @@ struct CardReviewSessionView: View {
         }
     }
 
+    private func learningWaitState(nextAvailable: Date) -> some View {
+        ContentUnavailableView {
+            Label(L10n.reviewLearningWaitTitle, systemImage: "clock")
+        } description: {
+            Text(L10n.reviewLearningWaitMessage(ReviewScheduler.formatInterval(from: now, to: nextAvailable)))
+        }
+    }
+
     private func ratingButtons(for card: FlashCard) -> some View {
         VStack(spacing: 12) {
             HStack(spacing: 10) {
@@ -91,7 +114,7 @@ struct CardReviewSessionView: View {
                         VStack(spacing: 4) {
                             Text(rating.title)
                                 .fontWeight(.semibold)
-                            Text(rating.subtitle)
+                            Text(ReviewScheduler.intervalLabel(for: card, rating: rating, now: now))
                                 .font(.caption2)
                         }
                         .frame(maxWidth: .infinity)
@@ -116,17 +139,64 @@ struct CardReviewSessionView: View {
     }
 
     private func submit(rating: ReviewRating, for card: FlashCard) {
-        ReviewScheduler.apply(rating: rating, to: card)
+        let preview = ReviewScheduler.preview(rating: rating, for: card, now: now)
+        ReviewScheduler.apply(rating: rating, to: card, now: now)
         showBack = false
 
-        if currentIndex < cards.count - 1 {
-            currentIndex += 1
-        } else if dismissWhenComplete {
-            dismiss()
-        } else {
-            currentIndex = 0
+        sessionQueue.removeAll { $0.id == card.id }
+
+        if ReviewScheduler.isLearningDelay(preview, now: now) {
+            pendingLearning.append(PendingLearningCard(card: card, availableAt: preview.nextReviewDate))
+        }
+
+        if sessionQueue.isEmpty {
+            promoteReadyLearningCards()
+        }
+
+        if sessionQueue.isEmpty {
+            if dismissWhenComplete, pendingLearning.isEmpty {
+                dismiss()
+            }
+            return
+        }
+
+        if currentIndex >= sessionQueue.count {
+            currentIndex = max(0, sessionQueue.count - 1)
         }
     }
+
+    private func syncSessionQueue(with cards: [FlashCard]) {
+        let pendingIDs = Set(pendingLearning.map(\.card.id))
+        let existingIDs = Set(sessionQueue.map(\.id))
+
+        for card in cards where !pendingIDs.contains(card.id) && !existingIDs.contains(card.id) {
+            sessionQueue.append(card)
+        }
+
+        if currentIndex >= sessionQueue.count {
+            currentIndex = max(0, sessionQueue.count - 1)
+        }
+    }
+
+    private func promoteReadyLearningCards() {
+        let ready = pendingLearning.filter { $0.availableAt <= now }
+        guard !ready.isEmpty else { return }
+
+        pendingLearning.removeAll { $0.availableAt <= now }
+        sessionQueue.append(contentsOf: ready.map(\.card))
+
+        if currentIndex >= sessionQueue.count {
+            currentIndex = max(0, sessionQueue.count - 1)
+        }
+        showBack = false
+    }
+}
+
+private struct PendingLearningCard: Identifiable {
+    let card: FlashCard
+    let availableAt: Date
+
+    var id: UUID { card.id }
 }
 
 #Preview {
