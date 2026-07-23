@@ -10,6 +10,7 @@ final class Deck {
     var isBuiltIn: Bool
     var createdAt: Date
     var sortOrder: Int
+    var cachedCardCount: Int = 0
 
     @Relationship(deleteRule: .nullify, inverse: \FlashCard.deck)
     var cards: [FlashCard] = []
@@ -19,7 +20,8 @@ final class Deck {
         detailText: String? = nil,
         slug: String? = nil,
         isBuiltIn: Bool = false,
-        sortOrder: Int = 0
+        sortOrder: Int = 0,
+        cachedCardCount: Int = 0
     ) {
         self.id = UUID()
         self.name = name
@@ -28,9 +30,10 @@ final class Deck {
         self.isBuiltIn = isBuiltIn
         self.createdAt = Date()
         self.sortOrder = sortOrder
+        self.cachedCardCount = cachedCardCount
     }
 
-    var cardCount: Int { cards.count }
+    var cardCount: Int { cachedCardCount }
 
     var dueCount: Int {
         cards.filter { ReviewScheduler.isDue($0) }.count

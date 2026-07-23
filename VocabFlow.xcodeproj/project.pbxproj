@@ -79,6 +79,11 @@
 		SS0000010000000000000001 /* DeckPackConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = QQ0000010000000000000027 /* DeckPackConverter.swift */; };
 		SS0000010000000000000002 /* DeckDownloadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = QQ0000010000000000000028 /* DeckDownloadService.swift */; };
 		TT0000010000000000000002 /* LibraryCardGrouper.swift in Sources */ = {isa = PBXBuildFile; fileRef = TT0000010000000000000010 /* LibraryCardGrouper.swift */; };
+		UU0000010000000000000001 /* DeckCardCountService.swift in Sources */ = {isa = PBXBuildFile; fileRef = UU0000010000000000000010 /* DeckCardCountService.swift */; };
+		UU0000010000000000000002 /* LibraryCatalogCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = UU0000010000000000000011 /* LibraryCatalogCache.swift */; };
+		UU0000010000000000000003 /* BackupReminderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = UU0000010000000000000012 /* BackupReminderService.swift */; };
+		UU0000010000000000000004 /* DeckStatisticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = UU0000010000000000000013 /* DeckStatisticsService.swift */; };
+		UU0000010000000000000005 /* DeckStatisticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = UU0000010000000000000014 /* DeckStatisticsView.swift */; };
 		AA0000010000000000000057 /* CardReviewSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000058 /* CardReviewSessionView.swift */; };
 		BB0000010000000000000001 /* ShareImportStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000010000000000000011 /* ShareImportStore.swift */; };
 		BB0000010000000000000002 /* ShareImportCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000010000000000000012 /* ShareImportCoordinator.swift */; };
@@ -165,6 +170,11 @@
 		QQ0000010000000000000027 /* DeckPackConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckPackConverter.swift; sourceTree = "<group>"; };
 		QQ0000010000000000000028 /* DeckDownloadService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckDownloadService.swift; sourceTree = "<group>"; };
 		TT0000010000000000000010 /* LibraryCardGrouper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryCardGrouper.swift; sourceTree = "<group>"; };
+		UU0000010000000000000010 /* DeckCardCountService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckCardCountService.swift; sourceTree = "<group>"; };
+		UU0000010000000000000011 /* LibraryCatalogCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryCatalogCache.swift; sourceTree = "<group>"; };
+		UU0000010000000000000012 /* BackupReminderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupReminderService.swift; sourceTree = "<group>"; };
+		UU0000010000000000000013 /* DeckStatisticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckStatisticsService.swift; sourceTree = "<group>"; };
+		UU0000010000000000000014 /* DeckStatisticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckStatisticsView.swift; sourceTree = "<group>"; };
 		AA0000010000000000000058 /* CardReviewSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardReviewSessionView.swift; sourceTree = "<group>"; };
 		BB0000010000000000000010 /* VocabFlowShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = VocabFlowShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB0000010000000000000011 /* ShareImportStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareImportStore.swift; sourceTree = "<group>"; };
@@ -301,6 +311,10 @@
 				QQ0000010000000000000027 /* DeckPackConverter.swift */,
 				QQ0000010000000000000028 /* DeckDownloadService.swift */,
 				TT0000010000000000000010 /* LibraryCardGrouper.swift */,
+				UU0000010000000000000010 /* DeckCardCountService.swift */,
+				UU0000010000000000000011 /* LibraryCatalogCache.swift */,
+				UU0000010000000000000012 /* BackupReminderService.swift */,
+				UU0000010000000000000013 /* DeckStatisticsService.swift */,
 				QQ0000010000000000000015 /* MinimalZipReader.swift */,
 				QQ0000010000000000000016 /* ApkgImportService.swift */,
 				BB0000010000000000000012 /* ShareImportCoordinator.swift */,
@@ -325,6 +339,7 @@
 				PP0000010000000000000011 /* PrivacyPolicyView.swift */,
 				QQ0000010000000000000017 /* DeckPickerSection.swift */,
 				QQ0000010000000000000018 /* DeckStoreView.swift */,
+				UU0000010000000000000014 /* DeckStatisticsView.swift */,
 				MM0000010000000000000011 /* SpeakButton.swift */,
 			);
 			path = Views;
@@ -645,6 +660,11 @@
 				SS0000010000000000000001 /* DeckPackConverter.swift in Sources */,
 				SS0000010000000000000002 /* DeckDownloadService.swift in Sources */,
 				TT0000010000000000000002 /* LibraryCardGrouper.swift in Sources */,
+				UU0000010000000000000001 /* DeckCardCountService.swift in Sources */,
+				UU0000010000000000000002 /* LibraryCatalogCache.swift in Sources */,
+				UU0000010000000000000003 /* BackupReminderService.swift in Sources */,
+				UU0000010000000000000004 /* DeckStatisticsService.swift in Sources */,
+				UU0000010000000000000005 /* DeckStatisticsView.swift in Sources */,
 				RR0000010000000000000001 /* SharedDeckStore.swift in Sources */,
 				RR0000010000000000000002 /* SharedDeckPickerSection.swift in Sources */,
 				QQ0000010000000000000006 /* MinimalZipReader.swift in Sources */,

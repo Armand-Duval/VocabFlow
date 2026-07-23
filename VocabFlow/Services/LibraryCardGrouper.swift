@@ -22,8 +22,57 @@ struct LibraryWordGroup: Sendable, Identifiable {
     var id: String { wordKey }
 }
 
+struct LibrarySearchIndex: Sendable {
+    private let tokensByCardID: [UUID: [String]]
+
+    static func build(from snapshots: [LibraryCardSnapshot]) -> LibrarySearchIndex {
+        var map: [UUID: [String]] = [:]
+        map.reserveCapacity(snapshots.count)
+        for snapshot in snapshots {
+            map[snapshot.id] = tokenize(snapshot)
+        }
+        return LibrarySearchIndex(tokensByCardID: map)
+    }
+
+    func matchingSnapshots(in snapshots: [LibraryCardSnapshot], query: String) -> [LibraryCardSnapshot] {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return snapshots }
+
+        let needleTokens = Self.normalize(trimmed)
+        guard !needleTokens.isEmpty else { return snapshots }
+
+        return snapshots.filter { snapshot in
+            guard let haystack = tokensByCardID[snapshot.id] else { return false }
+            return needleTokens.allSatisfy { token in
+                haystack.contains(where: { $0.hasPrefix(token) || $0.contains(token) })
+            }
+        }
+    }
+
+    private static func tokenize(_ snapshot: LibraryCardSnapshot) -> [String] {
+        let combined = [
+            snapshot.word,
+            snapshot.sentence,
+            snapshot.front,
+            snapshot.back,
+            snapshot.contextNote ?? "",
+            snapshot.deckName ?? ""
+        ].joined(separator: " ")
+        return normalize(combined)
+    }
+
+    private static func normalize(_ text: String) -> [String] {
+        text
+            .lowercased()
+            .split { !$0.isLetter && !$0.isNumber }
+            .map(String.init)
+            .filter { !$0.isEmpty }
+    }
+}
+
 enum LibraryCardGrouper {
     static let groupPageSize = 60
+    static let flatListThreshold = 500
 
     static func makeSnapshots(from cards: [FlashCard], now: Date = .now) -> [LibraryCardSnapshot] {
         cards.map { card in
@@ -54,23 +103,23 @@ enum LibraryCardGrouper {
         return counts
     }
 
-    static func group(
+    static func shouldUseFlatList(cardCount: Int) -> Bool {
+        cardCount >= flatListThreshold
+    }
+
+    static func buildListData(
         snapshots: [LibraryCardSnapshot],
         searchQuery: String
-    ) -> [LibraryWordGroup] {
-        let trimmed = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
-        let filtered: [LibraryCardSnapshot]
-        if trimmed.isEmpty {
-            filtered = snapshots
-        } else {
-            filtered = snapshots.filter { snapshot in
-                snapshot.word.localizedCaseInsensitiveContains(trimmed)
-                    || snapshot.sentence.localizedCaseInsensitiveContains(trimmed)
-                    || snapshot.front.localizedCaseInsensitiveContains(trimmed)
-                    || snapshot.back.localizedCaseInsensitiveContains(trimmed)
-                    || (snapshot.contextNote?.localizedCaseInsensitiveContains(trimmed) ?? false)
-                    || (snapshot.deckName?.localizedCaseInsensitiveContains(trimmed) ?? false)
-            }
+    ) -> (groups: [LibraryWordGroup], flatCardIDs: [UUID], useFlatList: Bool, searchIndex: LibrarySearchIndex) {
+        let index = LibrarySearchIndex.build(from: snapshots)
+        let filtered = index.matchingSnapshots(in: snapshots, query: searchQuery)
+        let useFlatList = shouldUseFlatList(cardCount: snapshots.count)
+
+        if useFlatList {
+            let flat = filtered
+                .sorted { $0.createdAt > $1.createdAt }
+                .map(\.id)
+            return ([], flat, true, index)
         }
 
         var grouped: [String: [LibraryCardSnapshot]] = [:]
@@ -79,7 +128,7 @@ enum LibraryCardGrouper {
             grouped[snapshot.wordKey, default: []].append(snapshot)
         }
 
-        return grouped.map { key, group in
+        let groups: [LibraryWordGroup] = grouped.map { key, group in
             let sorted = group.sorted { $0.createdAt > $1.createdAt }
             return LibraryWordGroup(
                 wordKey: key,
@@ -87,6 +136,17 @@ enum LibraryCardGrouper {
                 cardIDs: sorted.map(\.id)
             )
         }
-        .sorted { $0.word.localizedCaseInsensitiveCompare($1.word) == .orderedAscending }
+        .sorted { lhs, rhs in
+            lhs.word.localizedCaseInsensitiveCompare(rhs.word) == .orderedAscending
+        }
+
+        return (groups, [], false, index)
+    }
+
+    static func group(
+        snapshots: [LibraryCardSnapshot],
+        searchQuery: String
+    ) -> [LibraryWordGroup] {
+        buildListData(snapshots: snapshots, searchQuery: searchQuery).groups
     }
 }

@@ -235,6 +235,8 @@ enum L10n {
     static var importHelpTitle: String { tr("settings.import.help") }
 
     static var backupSection: String { tr("settings.backup.section") }
+    static var settingsBackupReminderEnabled: String { tr("settings.backupReminder.enabled") }
+    static var settingsBackupReminderFooter: String { tr("settings.backupReminder.footer") }
     static var exportBackup: String { tr("settings.backup.export") }
     static var importBackup: String { tr("settings.backup.import") }
     static func backupFooter(_ count: Int) -> String { tf("settings.backup.footer", count) }
@@ -322,6 +324,9 @@ enum L10n {
     static func libraryReviewDeck(_ name: String, count: Int) -> String {
         tf("library.reviewDeck", name, count)
     }
+    static var libraryViewFlat: String { tr("library.view.flat") }
+    static var libraryViewGrouped: String { tr("library.view.grouped") }
+    static var libraryFlatListHint: String { tr("library.flatList.hint") }
     static var deckDownload: String { tr("deck.download.starter") }
     static func deckCardCount(_ count: Int) -> String {
         tf("deck.preset.starterCount", count)
@@ -373,8 +378,23 @@ enum L10n {
     static var deckExtensionFooter: String { tr("deck.extension.footer") }
     static var deckExtensionEmptyCatalog: String { tr("deck.extension.emptyCatalog") }
     static var deckExtensionEmptyCatalogHint: String { tr("deck.extension.emptyCatalogHint") }
+    static func deckImportProgress(current: Int, total: Int) -> String {
+        tf("deck.import.progress", current, total)
+    }
+    static var deckStatisticsOverview: String { tr("deck.statistics.overview") }
+    static var deckStatisticsTotal: String { tr("deck.statistics.total") }
+    static var deckStatisticsDue: String { tr("deck.statistics.due") }
+    static var deckStatisticsNew: String { tr("deck.statistics.new") }
+    static var deckStatisticsLearned: String { tr("deck.statistics.learned") }
+    static var deckStatisticsMastery: String { tr("deck.statistics.mastery") }
+    static func deckStatisticsMasteryValue(_ rate: Double) -> String {
+        tf("deck.statistics.masteryValue", Int(rate * 100))
+    }
 
     // MARK: - Notifications
+
+    static var backupReminderTitle: String { tr("backup.reminder.title") }
+    static var backupReminderBody: String { tr("backup.reminder.body") }
 
     static var notificationGenerating: String { tr("notification.generating") }
     static func notificationReady(_ count: Int) -> String { tf("notification.ready", count) }

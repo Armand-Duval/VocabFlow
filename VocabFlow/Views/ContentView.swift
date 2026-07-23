@@ -56,6 +56,13 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .shareDraftsReceived)) { _ in
             presentSharePreviewIfNeeded()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .libraryCatalogDidChange)) { _ in
+            scheduleDueCountRefresh(delayMilliseconds: 200)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .dataMaintenanceDidComplete)) { _ in
+            LibraryCatalogCache.shared.invalidateAll()
+            scheduleDueCountRefresh(delayMilliseconds: 0)
+        }
         .onReceive(NotificationCenter.default.publisher(for: .reviewQueueDidChange)) { _ in
             scheduleDueCountRefresh(delayMilliseconds: 300)
         }
@@ -82,6 +89,7 @@ struct ContentView: View {
                 shareSelectedDeckID = DeckSettings.lastSelectedDeckID
             }
             scheduleDueCountRefresh(delayMilliseconds: 800)
+            BackupReminderService.reschedule()
             prewarmIdleTabs()
         }
         .task(id: dueCountRefreshToken) {

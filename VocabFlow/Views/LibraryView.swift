@@ -10,23 +10,33 @@ struct LibraryView: View {
     @State private var debouncedSearchText = ""
     @State private var filterDeckID: UUID?
     @State private var selectedDeckID: UUID?
-    @State private var totalCardCount = 0
-    @State private var deckCounts: [UUID: Int] = [:]
-    @State private var catalogLoaded = false
+    @State private var hasAnyCards = true
+    @State private var forceGrouped = false
     @State private var searchDebounceTask: Task<Void, Never>?
+
+    private var totalCardCount: Int {
+        LibraryCatalogCache.shared.totalCount(from: decks)
+    }
+
+    private var deckCounts: [UUID: Int] {
+        LibraryCatalogCache.shared.deckCounts(from: decks)
+    }
 
     var body: some View {
         NavigationStack {
             Group {
-                if catalogLoaded && totalCardCount == 0 {
+                if !hasAnyCards {
                     emptyLibraryState
                 } else {
                     LibraryGroupedList(
                         filterDeckID: filterDeckID,
                         searchText: debouncedSearchText,
                         decks: decks,
+                        forceGrouped: forceGrouped,
                         onCardsDeleted: {
-                            Task { await refreshCatalogCounts() }
+                            LibraryCatalogCache.shared.invalidateListCache()
+                            DeckCardCountService.notifyCatalogChanged()
+                            Task { await refreshHasAnyCards() }
                         }
                     )
                 }
@@ -35,19 +45,32 @@ struct LibraryView: View {
             .searchable(text: $searchText, prompt: L10n.librarySearchPrompt)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    NavigationLink {
-                        DeckStoreView(selectedDeckID: Binding(
-                            get: { filterDeckID ?? selectedDeckID },
-                            set: { newValue in
-                                filterDeckID = newValue
-                                selectedDeckID = newValue
-                                if let newValue {
-                                    DeckSettings.lastSelectedDeckID = newValue
-                                }
+                    HStack(spacing: 12) {
+                        if totalCardCount >= LibraryCardGrouper.flatListThreshold {
+                            Button {
+                                forceGrouped.toggle()
+                            } label: {
+                                Image(systemName: forceGrouped ? "rectangle.grid.1x2" : "list.bullet")
                             }
-                        ))
-                    } label: {
-                        Image(systemName: "books.vertical")
+                            .accessibilityLabel(
+                                forceGrouped ? L10n.libraryViewFlat : L10n.libraryViewGrouped
+                            )
+                        }
+
+                        NavigationLink {
+                            DeckStoreView(selectedDeckID: Binding(
+                                get: { filterDeckID ?? selectedDeckID },
+                                set: { newValue in
+                                    filterDeckID = newValue
+                                    selectedDeckID = newValue
+                                    if let newValue {
+                                        DeckSettings.lastSelectedDeckID = newValue
+                                    }
+                                }
+                            ))
+                        } label: {
+                            Image(systemName: "books.vertical")
+                        }
                     }
                 }
             }
@@ -60,7 +83,11 @@ struct LibraryView: View {
                 }
             }
             .task {
-                await refreshCatalogCounts()
+                await refreshHasAnyCards()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .libraryCatalogDidChange)) { _ in
+                LibraryCatalogCache.shared.invalidateListCache()
+                Task { await refreshHasAnyCards() }
             }
             .onChange(of: searchText) { _, newValue in
                 searchDebounceTask?.cancel()
@@ -74,17 +101,11 @@ struct LibraryView: View {
     }
 
     @MainActor
-    private func refreshCatalogCounts() async {
+    private func refreshHasAnyCards() async {
         await Task.yield()
-        let descriptor = FetchDescriptor<FlashCard>()
-        guard let cards = try? modelContext.fetch(descriptor) else { return }
-
-        let snapshots = LibraryCardGrouper.makeSnapshots(from: cards)
-        totalCardCount = snapshots.count
-        deckCounts = await Task.detached(priority: .utility) {
-            LibraryCardGrouper.deckCounts(from: snapshots)
-        }.value
-        catalogLoaded = true
+        var descriptor = FetchDescriptor<FlashCard>()
+        descriptor.fetchLimit = 1
+        hasAnyCards = !((try? modelContext.fetch(descriptor)) ?? []).isEmpty
     }
 
     private var emptyLibraryState: some View {
@@ -111,11 +132,22 @@ struct LibraryView: View {
                             .id(LibraryDeckChipID.all)
 
                         ForEach(decks) { deck in
-                            deckChip(
-                                title: deck.name,
-                                deckID: deck.id,
-                                count: deckCounts[deck.id, default: 0]
-                            )
+                            HStack(spacing: 4) {
+                                deckChip(
+                                    title: deck.name,
+                                    deckID: deck.id,
+                                    count: deckCounts[deck.id, default: 0]
+                                )
+
+                                NavigationLink {
+                                    DeckStatisticsView(deck: deck)
+                                } label: {
+                                    Image(systemName: "chart.bar.xaxis")
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                }
+                                .buttonStyle(.plain)
+                            }
                             .id(LibraryDeckChipID.deck(deck.id))
                         }
                     }
@@ -190,27 +222,30 @@ private struct LibraryGroupedList: View {
     let filterDeckID: UUID?
     let searchText: String
     let decks: [Deck]
+    let forceGrouped: Bool
     let onCardsDeleted: () -> Void
 
     @Environment(\.modelContext) private var modelContext
 
     @State private var cards: [FlashCard] = []
     @State private var groups: [LibraryWordGroup] = []
+    @State private var flatCardIDs: [UUID] = []
+    @State private var useFlatList = false
     @State private var cardsByID: [UUID: FlashCard] = [:]
     @State private var dueCards: [FlashCard] = []
-    @State private var visibleGroupCount = LibraryCardGrouper.groupPageSize
+    @State private var visibleItemCount = LibraryCardGrouper.groupPageSize
     @State private var isLoadingGroups = false
 
     private var refreshToken: String {
-        "\(filterDeckID?.uuidString ?? "all")|\(searchText)"
+        "\(filterDeckID?.uuidString ?? "all")|\(searchText)|\(forceGrouped)"
     }
 
     var body: some View {
         Group {
-            if isLoadingGroups && groups.isEmpty {
+            if isLoadingGroups && groups.isEmpty && flatCardIDs.isEmpty {
                 ProgressView(L10n.deckLoading)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if groups.isEmpty {
+            } else if groups.isEmpty && flatCardIDs.isEmpty {
                 ContentUnavailableView {
                     Label(L10n.libraryNoResultsTitle, systemImage: "magnifyingglass")
                 } description: {
@@ -218,53 +253,74 @@ private struct LibraryGroupedList: View {
                 }
             } else {
                 List {
-                    if let filterDeckID, let deck = decks.first(where: { $0.id == filterDeckID }), !dueCards.isEmpty {
+                    if useFlatList {
                         Section {
-                            NavigationLink {
-                                CardReviewSessionView(cards: dueCards, dismissWhenComplete: true)
-                                    .navigationTitle(deck.name)
-                                    .navigationBarTitleDisplayMode(.inline)
-                            } label: {
-                                Label(L10n.libraryReviewDeck(deck.name, count: dueCards.count), systemImage: "brain.head.profile")
-                            }
+                            Text(L10n.libraryFlatListHint)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
-                    }
 
-                    ForEach(groups.prefix(visibleGroupCount)) { group in
-                        Section {
-                            ForEach(group.cardIDs, id: \.self) { cardID in
-                                if let card = cardsByID[cardID] {
-                                    NavigationLink {
-                                        FlashCardDetailView(card: card)
-                                    } label: {
-                                        LibraryCardRow(card: card, showsDeckName: filterDeckID == nil)
-                                    }
+                        ForEach(flatCardIDs.prefix(visibleItemCount), id: \.self) { cardID in
+                            if let card = cardsByID[cardID] {
+                                NavigationLink {
+                                    FlashCardDetailView(card: card)
+                                } label: {
+                                    LibraryCardRow(card: card, showsDeckName: filterDeckID == nil)
                                 }
                             }
-                            .onDelete { offsets in
-                                deleteCards(in: group, at: offsets)
-                            }
-
-                            if group.cardIDs.count > 1,
-                               let reviewCards = resolvedCards(for: group.cardIDs) {
+                        }
+                        .onDelete { offsets in
+                            deleteFlatCards(at: offsets)
+                        }
+                    } else {
+                        if let filterDeckID, let deck = decks.first(where: { $0.id == filterDeckID }), !dueCards.isEmpty {
+                            Section {
                                 NavigationLink {
-                                    CardReviewSessionView(cards: reviewCards, dismissWhenComplete: true)
-                                        .navigationTitle(group.word)
+                                    CardReviewSessionView(cards: dueCards, dismissWhenComplete: true)
+                                        .navigationTitle(deck.name)
                                         .navigationBarTitleDisplayMode(.inline)
                                 } label: {
-                                    Label(
-                                        L10n.reviewAll(group.word, count: group.cardIDs.count),
-                                        systemImage: "brain.head.profile"
-                                    )
-                                    .font(.subheadline)
+                                    Label(L10n.libraryReviewDeck(deck.name, count: dueCards.count), systemImage: "brain.head.profile")
                                 }
                             }
-                        } header: {
-                            Text(group.word)
+                        }
+
+                        ForEach(groups.prefix(visibleItemCount)) { group in
+                            Section {
+                                ForEach(group.cardIDs, id: \.self) { cardID in
+                                    if let card = cardsByID[cardID] {
+                                        NavigationLink {
+                                            FlashCardDetailView(card: card)
+                                        } label: {
+                                            LibraryCardRow(card: card, showsDeckName: filterDeckID == nil)
+                                        }
+                                    }
+                                }
+                                .onDelete { offsets in
+                                    deleteCards(in: group, at: offsets)
+                                }
+
+                                if group.cardIDs.count > 1,
+                                   let reviewCards = resolvedCards(for: group.cardIDs) {
+                                    NavigationLink {
+                                        CardReviewSessionView(cards: reviewCards, dismissWhenComplete: true)
+                                            .navigationTitle(group.word)
+                                            .navigationBarTitleDisplayMode(.inline)
+                                    } label: {
+                                        Label(
+                                            L10n.reviewAll(group.word, count: group.cardIDs.count),
+                                            systemImage: "brain.head.profile"
+                                        )
+                                        .font(.subheadline)
+                                    }
+                                }
+                            } header: {
+                                Text(group.word)
+                            }
                         }
                     }
 
-                    if visibleGroupCount < groups.count {
+                    if visibleItemCount < currentTotalItems {
                         Section {
                             HStack {
                                 Spacer()
@@ -272,9 +328,9 @@ private struct LibraryGroupedList: View {
                                 Spacer()
                             }
                             .task {
-                                visibleGroupCount = min(
-                                    visibleGroupCount + LibraryCardGrouper.groupPageSize,
-                                    groups.count
+                                visibleItemCount = min(
+                                    visibleItemCount + LibraryCardGrouper.groupPageSize,
+                                    currentTotalItems
                                 )
                             }
                         }
@@ -296,31 +352,64 @@ private struct LibraryGroupedList: View {
         }
     }
 
+    private var currentTotalItems: Int {
+        useFlatList ? flatCardIDs.count : groups.count
+    }
+
     @MainActor
     private func rebuildGroups() async {
         isLoadingGroups = true
-        visibleGroupCount = LibraryCardGrouper.groupPageSize
+        visibleItemCount = LibraryCardGrouper.groupPageSize
         defer { isLoadingGroups = false }
 
         await Task.yield()
-        try? await Task.sleep(for: .milliseconds(32))
+        try? await Task.sleep(for: .milliseconds(16))
 
         let fetchedCards = fetchCards(for: filterDeckID)
         cards = fetchedCards
 
-        let snapshots = LibraryCardGrouper.makeSnapshots(from: fetchedCards)
+        let cache = LibraryCatalogCache.shared
+        let cacheKey = cache.cacheKey(
+            filterDeckID: filterDeckID,
+            search: searchText,
+            cardCount: fetchedCards.count
+        )
+
         let cardLookup = Dictionary(uniqueKeysWithValues: fetchedCards.map { ($0.id, $0) })
+        let snapshots = LibraryCardGrouper.makeSnapshots(from: fetchedCards)
         let query = searchText
 
-        let grouped = await Task.detached(priority: .userInitiated) {
-            LibraryCardGrouper.group(snapshots: snapshots, searchQuery: query)
-        }.value
+        let listData: (groups: [LibraryWordGroup], flatCardIDs: [UUID], useFlatList: Bool, searchIndex: LibrarySearchIndex)
+        if let cached = cache.cachedList(for: cacheKey), !forceGrouped {
+            groups = cached.groups
+            flatCardIDs = cached.flatCardIDs
+            useFlatList = cached.useFlatList
+            dueCards = cached.dueCardIDs.compactMap { cardLookup[$0] }
+        } else {
+            let built = await Task.detached(priority: .userInitiated) {
+                LibraryCardGrouper.buildListData(snapshots: snapshots, searchQuery: query)
+            }.value
 
-        let due = snapshots.filter(\.isDue).compactMap { cardLookup[$0.id] }
+            var shouldUseFlat = built.useFlatList && !forceGrouped
+            groups = shouldUseFlat ? [] : built.groups
+            flatCardIDs = shouldUseFlat ? built.flatCardIDs : []
+            useFlatList = shouldUseFlat
+
+            let due = snapshots.filter(\.isDue).compactMap { cardLookup[$0.id] }
+            dueCards = due
+
+            cache.store(
+                LibraryListCacheEntry(
+                    groups: groups,
+                    flatCardIDs: flatCardIDs,
+                    dueCardIDs: due.map(\.id),
+                    useFlatList: useFlatList
+                ),
+                for: cacheKey
+            )
+        }
 
         cardsByID = cardLookup
-        groups = grouped
-        dueCards = due
     }
 
     private func fetchCards(for deckID: UUID?) -> [FlashCard] {
@@ -347,11 +436,33 @@ private struct LibraryGroupedList: View {
     }
 
     private func deleteCards(in group: LibraryWordGroup, at offsets: IndexSet) {
-        offsets
+        let deleted = offsets
             .compactMap { group.cardIDs[$0] }
             .compactMap { cardsByID[$0] }
-            .forEach { modelContext.delete($0) }
+        deleted.forEach { card in
+            if let deck = card.deck {
+                DeckCardCountService.adjust(deck: deck, by: -1, in: modelContext)
+            }
+            modelContext.delete(card)
+        }
         onCardsDeleted()
+    }
+
+    private func deleteFlatCards(at offsets: IndexSet) {
+        let ids = offsets.compactMap { flatCardIDs[safe: $0] }
+        ids.compactMap { cardsByID[$0] }.forEach { card in
+            if let deck = card.deck {
+                DeckCardCountService.adjust(deck: deck, by: -1, in: modelContext)
+            }
+            modelContext.delete(card)
+        }
+        onCardsDeleted()
+    }
+}
+
+private extension Array {
+    subscript(safe index: Index) -> Element? {
+        indices.contains(index) ? self[index] : nil
     }
 }
 

@@ -12,6 +12,7 @@ enum DeckService {
         if !didRunInitialBootstrap {
             assignOrphanCards(to: defaultDeck, in: context)
             normalizeSelection(in: context, defaultDeck: defaultDeck)
+            DeckCardCountService.recountAll(in: context)
             didRunInitialBootstrap = true
         }
         syncSharedCatalog(in: context)
@@ -91,27 +92,33 @@ enum DeckService {
     static func importStarterCardsPublicAsync(
         from pack: DeckPackFile,
         into deck: Deck,
-        context: ModelContext
+        context: ModelContext,
+        progress: ImportProgressHandler? = nil
     ) async throws -> (deck: Deck, importedCards: Int) {
-        try await importStarterCardsAsync(from: pack, into: deck, context: context)
+        try await importStarterCardsAsync(from: pack, into: deck, context: context, progress: progress)
     }
 
     @MainActor
     private static func importStarterCardsAsync(
         from pack: DeckPackFile,
         into deck: Deck,
-        context: ModelContext
+        context: ModelContext,
+        progress: ImportProgressHandler? = nil
     ) async throws -> (deck: Deck, importedCards: Int) {
+        let total = pack.cards.count
         var imported = 0
         for (index, item) in pack.cards.enumerated() {
             context.insert(makeFlashCard(from: item, deck: deck))
             imported += 1
+            progress?(imported, total)
             if index > 0, index % importYieldInterval == 0 {
                 await Task.yield()
             }
         }
+        DeckCardCountService.adjust(deck: deck, by: imported, in: context)
         try context.save()
         syncSharedCatalog(in: context)
+        DeckCardCountService.notifyCatalogChanged()
         return (deck, imported)
     }
 
@@ -120,7 +127,8 @@ enum DeckService {
     static func importPackAsync(
         _ pack: DeckPackFile,
         in context: ModelContext,
-        markBuiltIn: Bool = false
+        markBuiltIn: Bool = false,
+        progress: ImportProgressHandler? = nil
     ) async throws -> (deck: Deck, importedCards: Int) {
         let deck: Deck
         if let slug = pack.slug, let existing = fetchDeck(slug: slug, in: context) {
@@ -136,17 +144,21 @@ enum DeckService {
             context.insert(deck)
         }
 
+        let total = pack.cards.count
         var imported = 0
         for (index, item) in pack.cards.enumerated() {
             context.insert(makeFlashCard(from: item, deck: deck))
             imported += 1
+            progress?(imported, total)
             if index > 0, index % importYieldInterval == 0 {
                 await Task.yield()
             }
         }
 
+        DeckCardCountService.adjust(deck: deck, by: imported, in: context)
         try context.save()
         syncSharedCatalog(in: context)
+        DeckCardCountService.notifyCatalogChanged()
         return (deck, imported)
     }
 
@@ -177,15 +189,21 @@ enum DeckService {
             imported += 1
         }
 
+        DeckCardCountService.adjust(deck: deck, by: imported, in: context)
         try context.save()
         syncSharedCatalog(in: context)
+        DeckCardCountService.notifyCatalogChanged()
         return (deck, imported)
     }
 
     @MainActor
-    static func importPackDataAsync(_ data: Data, in context: ModelContext) async throws -> (deck: Deck, importedCards: Int) {
+    static func importPackDataAsync(
+        _ data: Data,
+        in context: ModelContext,
+        progress: ImportProgressHandler? = nil
+    ) async throws -> (deck: Deck, importedCards: Int) {
         let pack = try JSONDecoder().decode(DeckPackFile.self, from: data)
-        return try await importPackAsync(pack, in: context)
+        return try await importPackAsync(pack, in: context, progress: progress)
     }
 
     @MainActor
@@ -202,10 +220,14 @@ enum DeckService {
         }
 
         let defaultDeck = fetchOrCreateDefault(in: context)
+        let movedCount = deck.cards.count
         deck.cards.forEach { $0.deck = defaultDeck }
+        DeckCardCountService.adjust(deck: defaultDeck, by: movedCount, in: context)
+        deck.cachedCardCount = 0
         context.delete(deck)
         try context.save()
         syncSharedCatalog(in: context)
+        DeckCardCountService.notifyCatalogChanged()
     }
 
     @MainActor
@@ -225,7 +247,10 @@ enum DeckService {
             card.deck = defaultDeck
             changed = true
         }
-        if changed { try? context.save() }
+        if changed {
+            try? context.save()
+            DeckCardCountService.recountAll(in: context)
+        }
     }
 
     @MainActor

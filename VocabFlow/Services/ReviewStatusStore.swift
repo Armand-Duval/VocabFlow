@@ -2,6 +2,8 @@ import Foundation
 
 extension Notification.Name {
     static let reviewQueueDidChange = Notification.Name("reviewQueueDidChange")
+    static let libraryCatalogDidChange = Notification.Name("libraryCatalogDidChange")
+    static let dataMaintenanceDidComplete = Notification.Name("dataMaintenanceDidComplete")
 }
 
 enum ReviewStatusStore {

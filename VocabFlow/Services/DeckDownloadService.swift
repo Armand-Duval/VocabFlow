@@ -22,7 +22,8 @@ enum DeckDownloadService {
     @MainActor
     static func downloadAndInstall(
         pack: DeckRemotePack,
-        in context: ModelContext
+        in context: ModelContext,
+        progress: ImportProgressHandler? = nil
     ) async throws -> (deck: Deck, importedCards: Int) {
         let data: Data
         do {
@@ -47,12 +48,17 @@ enum DeckDownloadService {
         }
 
         if let existing = DeckService.fetchDeck(slug: pack.slug, in: context) {
-            if existing.cards.isEmpty {
-                return try await DeckService.importStarterCardsPublicAsync(from: deckPack, into: existing, context: context)
+            if existing.cardCount == 0 {
+                return try await DeckService.importStarterCardsPublicAsync(
+                    from: deckPack,
+                    into: existing,
+                    context: context,
+                    progress: progress
+                )
             }
             return (existing, 0)
         }
 
-        return try await DeckService.importPackAsync(deckPack, in: context, markBuiltIn: true)
+        return try await DeckService.importPackAsync(deckPack, in: context, markBuiltIn: true, progress: progress)
     }
 }

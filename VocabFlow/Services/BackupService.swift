@@ -45,6 +45,8 @@ enum BackupService {
         }
 
         try context.save()
+        DeckCardCountService.recountAll(in: context)
+        DeckCardCountService.notifyCatalogChanged()
         return (added, updated)
     }
 
@@ -67,6 +69,8 @@ enum BackupService {
         }
 
         try context.save()
+        DeckCardCountService.recountAll(in: context)
+        DeckCardCountService.notifyDataMaintenance()
         return backup.cards.count
     }
 

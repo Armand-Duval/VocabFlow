@@ -91,7 +91,15 @@ struct ReviewView: View {
 
         await Task.yield()
 
+        var emptyDescriptor = FetchDescriptor<FlashCard>()
+        emptyDescriptor.fetchLimit = 1
+        hasAnyCards = !((try? modelContext.fetch(emptyDescriptor)) ?? []).isEmpty
+
+        let dueDate = Date.now
         let descriptor = FetchDescriptor<FlashCard>(
+            predicate: #Predicate<FlashCard> { card in
+                card.nextReviewDate <= dueDate
+            },
             sortBy: [SortDescriptor(\FlashCard.nextReviewDate)]
         )
         guard let cards = try? modelContext.fetch(descriptor) else {
@@ -99,7 +107,6 @@ struct ReviewView: View {
             return
         }
 
-        hasAnyCards = !cards.isEmpty
         plan = ReviewQueueBuilder.plan(
             from: cards,
             dailyNewLimit: reviewSettings.dailyNewLimit,

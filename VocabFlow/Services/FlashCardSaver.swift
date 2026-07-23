@@ -29,6 +29,8 @@ enum FlashCardSaver {
         }
 
         DeckSettings.lastSelectedDeckID = deck.id
+        DeckCardCountService.adjust(deck: deck, by: selected.count, in: context)
+        DeckCardCountService.notifyCatalogChanged()
         return selected.count
     }
 }

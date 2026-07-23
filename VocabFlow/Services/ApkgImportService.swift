@@ -33,7 +33,8 @@ enum ApkgImportService {
     static func importApkgAsync(
         data: Data,
         into deck: Deck,
-        context: ModelContext
+        context: ModelContext,
+        progress: ImportProgressHandler? = nil
     ) async throws -> ImportResult {
         let notes = try await Task.detached(priority: .userInitiated) {
             try parseNotes(from: data)
@@ -41,6 +42,7 @@ enum ApkgImportService {
 
         guard !notes.isEmpty else { throw ApkgImportError.emptyImport }
 
+        let total = notes.count
         for (index, note) in notes.enumerated() {
             context.insert(
                 FlashCard(
@@ -52,13 +54,16 @@ enum ApkgImportService {
                     deck: deck
                 )
             )
+            progress?(index + 1, total)
             if index > 0, index % importYieldInterval == 0 {
                 await Task.yield()
             }
         }
 
+        DeckCardCountService.adjust(deck: deck, by: total, in: context)
         try context.save()
-        return ImportResult(imported: notes.count)
+        DeckCardCountService.notifyCatalogChanged()
+        return ImportResult(imported: total)
     }
 
     @MainActor
@@ -83,7 +88,9 @@ enum ApkgImportService {
             )
         }
 
+        DeckCardCountService.adjust(deck: deck, by: notes.count, in: context)
         try context.save()
+        DeckCardCountService.notifyCatalogChanged()
         return ImportResult(imported: notes.count)
     }
 

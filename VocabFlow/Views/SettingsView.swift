@@ -14,6 +14,7 @@ struct SettingsView: View {
     @State private var showImportHelp = false
     @State private var reminderEnabled = ReviewReminderService.isEnabled
     @State private var reminderTime = ReviewReminderService.reminderDate
+    @State private var backupReminderEnabled = BackupReminderService.isEnabled
 
     @State private var showResetAllConfirm = false
     @State private var showDeleteAllConfirm = false
@@ -57,6 +58,7 @@ struct SettingsView: View {
 
                 aiSection
                 importHelpSection
+                backupReminderSection
                 maintenanceSection
                 aboutSection
                 saveSection
@@ -71,6 +73,9 @@ struct SettingsView: View {
                 await refreshHasAnyCards()
             }
             .onReceive(NotificationCenter.default.publisher(for: .reviewQueueDidChange)) { _ in
+                Task { await refreshHasAnyCards() }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .dataMaintenanceDidComplete)) { _ in
                 Task { await refreshHasAnyCards() }
             }
             .alert(L10n.settingsSavedTitle, isPresented: $saved) {
@@ -163,6 +168,16 @@ struct SettingsView: View {
         }
     }
 
+    private var backupReminderSection: some View {
+        Section {
+            Toggle(L10n.settingsBackupReminderEnabled, isOn: $backupReminderEnabled)
+        } header: {
+            Text(L10n.backupSection)
+        } footer: {
+            Text(L10n.settingsBackupReminderFooter)
+        }
+    }
+
     private var maintenanceSection: some View {
         Section {
             Button {
@@ -219,6 +234,8 @@ struct SettingsView: View {
         reviewSettings.persist()
         ReviewReminderService.isEnabled = reminderEnabled
         ReviewReminderService.applyReminderTime(reminderTime)
+        BackupReminderService.isEnabled = backupReminderEnabled
+        BackupReminderService.reschedule()
         ReviewReminderService.reschedule(dueCount: ReviewStatusStore.dueCount)
         saved = true
     }
@@ -237,12 +254,15 @@ struct SettingsView: View {
 
     private func resetAllProgress() {
         fetchAllCards().forEach { ReviewScheduler.resetProgress(for: $0) }
+        DeckCardCountService.notifyDataMaintenance()
         showMaintenanceResult(title: L10n.settingsResetAllSRSDone, message: L10n.settingsResetAllSRSDoneMessage)
     }
 
     private func deleteAllCards() {
         fetchAllCards().forEach { modelContext.delete($0) }
+        DeckCardCountService.recountAll(in: modelContext)
         hasAnyCards = false
+        DeckCardCountService.notifyDataMaintenance()
         showMaintenanceResult(title: L10n.settingsDeleteAllDone, message: L10n.settingsDeleteAllDoneMessage)
     }
 

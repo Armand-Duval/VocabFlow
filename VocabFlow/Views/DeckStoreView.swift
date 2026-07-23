@@ -11,7 +11,9 @@ struct DeckStoreView: View {
     @Query(sort: [SortDescriptor(\Deck.sortOrder), SortDescriptor(\Deck.createdAt)])
     private var decks: [Deck]
 
-    @Query private var allCards: [FlashCard]
+    private var totalCardCount: Int {
+        decks.reduce(0) { $0 + $1.cachedCardCount }
+    }
 
     @State private var showCreateDeck = false
     @State private var showPackImporter = false
@@ -28,6 +30,7 @@ struct DeckStoreView: View {
     @State private var alertMessage = ""
     @State private var showAlert = false
     @State private var downloadingPackID: String?
+    @State private var importProgress: ImportProgressState?
     @State private var isImportingJSON = false
     @State private var isImportingApkg = false
     @State private var isImportingBackup = false
@@ -134,30 +137,41 @@ struct DeckStoreView: View {
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(decks) { deck in
-                    Button {
-                        selectedDeckID = deck.id
-                        DeckSettings.lastSelectedDeckID = deck.id
-                    } label: {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(deck.name)
-                                    .foregroundStyle(.primary)
-                                if let detail = deck.detailText, !detail.isEmpty {
-                                    Text(detail)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                        .lineLimit(2)
+                    HStack {
+                        Button {
+                            selectedDeckID = deck.id
+                            DeckSettings.lastSelectedDeckID = deck.id
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(deck.name)
+                                        .foregroundStyle(.primary)
+                                    if let detail = deck.detailText, !detail.isEmpty {
+                                        Text(detail)
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                            .lineLimit(2)
+                                    }
                                 }
+                                Spacer()
+                                if selectedDeckID == deck.id {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundStyle(.tint)
+                                }
+                                Text("\(deck.cardCount)")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
                             }
-                            Spacer()
-                            if selectedDeckID == deck.id {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundStyle(.tint)
-                            }
-                            Text("\(deck.cardCount)")
-                                .font(.caption)
+                        }
+                        .buttonStyle(.plain)
+
+                        NavigationLink {
+                            DeckStatisticsView(deck: deck)
+                        } label: {
+                            Image(systemName: "chart.bar.xaxis")
                                 .foregroundStyle(.secondary)
                         }
+                        .buttonStyle(.plain)
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         if deck.slug != DeckCatalog.defaultSlug {
@@ -267,11 +281,30 @@ struct DeckStoreView: View {
             } label: {
                 Label(L10n.exportApkg, systemImage: "square.and.arrow.up")
             }
-            .disabled(allCards.isEmpty)
+            .disabled(totalCardCount == 0)
         } header: {
             Text(L10n.deckBackupSection)
         } footer: {
-            Text(L10n.deckBackupFooter(allCards.count))
+            Text(L10n.deckBackupFooter(totalCardCount))
+        }
+    }
+
+    private struct ImportProgressState {
+        let key: String
+        var current: Int
+        var total: Int
+    }
+
+    @ViewBuilder
+    private func importProgressView(for key: String) -> some View {
+        if let progress = importProgress, progress.key == key, progress.total > 0 {
+            VStack(alignment: .trailing, spacing: 4) {
+                ProgressView(value: Double(progress.current), total: Double(progress.total))
+                    .frame(width: 72)
+                Text(L10n.deckImportProgress(current: progress.current, total: progress.total))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 
@@ -307,8 +340,7 @@ struct DeckStoreView: View {
                 Spacer(minLength: 8)
 
                 if isDownloading {
-                    ProgressView()
-                        .controlSize(.small)
+                    importProgressView(for: pack.id)
                 } else if isEmptyInstalled || !installed {
                     deckIconButton(systemImage: "arrow.down.circle", label: L10n.deckDownload) {
                         downloadRemotePack(pack)
@@ -373,10 +405,19 @@ struct DeckStoreView: View {
 
     private func downloadRemotePack(_ pack: DeckRemotePack) {
         downloadingPackID = pack.id
+        importProgress = ImportProgressState(key: pack.id, current: 0, total: pack.cardCount)
         Task { @MainActor in
-            defer { downloadingPackID = nil }
+            defer {
+                downloadingPackID = nil
+                importProgress = nil
+            }
             do {
-                let result = try await DeckDownloadService.downloadAndInstall(pack: pack, in: modelContext)
+                let result = try await DeckDownloadService.downloadAndInstall(
+                    pack: pack,
+                    in: modelContext
+                ) { current, total in
+                    importProgress = ImportProgressState(key: pack.id, current: current, total: total)
+                }
                 selectedDeckID = result.deck.id
                 DeckSettings.lastSelectedDeckID = result.deck.id
                 if result.importedCards > 0 {
@@ -413,11 +454,17 @@ struct DeckStoreView: View {
         switch result {
         case .success(let url):
             isImportingJSON = true
+            importProgress = ImportProgressState(key: "json-pack", current: 0, total: 1)
             Task { @MainActor in
-                defer { isImportingJSON = false }
+                defer {
+                    isImportingJSON = false
+                    importProgress = nil
+                }
                 do {
                     let data = try BackupDocumentSupport.readData(from: url)
-                    let imported = try await DeckService.importPackDataAsync(data, in: modelContext)
+                    let imported = try await DeckService.importPackDataAsync(data, in: modelContext) { current, total in
+                        importProgress = ImportProgressState(key: "json-pack", current: current, total: total)
+                    }
                     selectedDeckID = imported.deck.id
                     DeckSettings.lastSelectedDeckID = imported.deck.id
                     showResult(
@@ -440,11 +487,21 @@ struct DeckStoreView: View {
         switch result {
         case .success(let url):
             isImportingApkg = true
+            importProgress = ImportProgressState(key: "apkg", current: 0, total: 1)
             Task { @MainActor in
-                defer { isImportingApkg = false }
+                defer {
+                    isImportingApkg = false
+                    importProgress = nil
+                }
                 do {
                     let data = try BackupDocumentSupport.readData(from: url)
-                    let imported = try await ApkgImportService.importApkgAsync(data: data, into: deck, context: modelContext)
+                    let imported = try await ApkgImportService.importApkgAsync(
+                        data: data,
+                        into: deck,
+                        context: modelContext
+                    ) { current, total in
+                        importProgress = ImportProgressState(key: "apkg", current: current, total: total)
+                    }
                     selectedDeckID = deck.id
                     DeckSettings.lastSelectedDeckID = deck.id
                     showResult(
@@ -460,11 +517,17 @@ struct DeckStoreView: View {
         }
     }
 
+    private func fetchAllCards() -> [FlashCard] {
+        (try? modelContext.fetch(FetchDescriptor<FlashCard>())) ?? []
+    }
+
     private func exportJSONBackup() {
         do {
-            let data = try BackupService.export(cards: allCards, decks: decks)
+            let cards = fetchAllCards()
+            let data = try BackupService.export(cards: cards, decks: decks)
             exportDocument = BackupDocument(data: data)
             showJSONExporter = true
+            BackupReminderService.recordBackupCompleted()
         } catch {
             showResult(title: L10n.exportFailed, message: error.localizedDescription)
         }
@@ -472,7 +535,7 @@ struct DeckStoreView: View {
 
     private func exportAllApkg() {
         do {
-            let data = try ApkgExportService.export(cards: allCards)
+            let data = try ApkgExportService.export(cards: fetchAllCards())
             apkgDocument = ApkgDocument(data: data)
             showApkgExporter = true
         } catch {
