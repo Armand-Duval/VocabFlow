@@ -1,5 +1,9 @@
 import Foundation
 
+extension Notification.Name {
+    static let reviewQueueDidChange = Notification.Name("reviewQueueDidChange")
+}
+
 enum ReviewStatusStore {
     private static let dueCountKey = "review.dueCount"
 

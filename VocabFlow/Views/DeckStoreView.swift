@@ -11,25 +11,36 @@ struct DeckStoreView: View {
     @Query(sort: [SortDescriptor(\Deck.sortOrder), SortDescriptor(\Deck.createdAt)])
     private var decks: [Deck]
 
+    @Query private var allCards: [FlashCard]
+
     @State private var showCreateDeck = false
     @State private var showPackImporter = false
     @State private var showApkgImporter = false
+    @State private var showBackupImporter = false
+    @State private var showImportOptions = false
+    @State private var pendingBackupData: Data?
+    @State private var exportDocument: BackupDocument?
+    @State private var apkgDocument: ApkgDocument?
+    @State private var showJSONExporter = false
+    @State private var showApkgExporter = false
     @State private var importTargetDeckID: UUID?
     @State private var alertTitle = ""
     @State private var alertMessage = ""
     @State private var showAlert = false
-    @State private var isInstalling = false
     @State private var downloadingPackID: String?
+    @State private var isImportingJSON = false
+    @State private var isImportingApkg = false
+    @State private var isImportingBackup = false
     @State private var showApkgImportGuide = false
     @Environment(\.openURL) private var openURL
 
     var body: some View {
         List {
             myDecksSection
-            presetSection
             openSourceSection
             communitySection
-            importSection
+            importDeckSection
+            backupSection
         }
         .navigationTitle(L10n.deckStoreTitle)
         .navigationBarTitleDisplayMode(.inline)
@@ -60,6 +71,43 @@ struct DeckStoreView: View {
         ) { result in
             handleApkgImport(result)
         }
+        .fileImporter(
+            isPresented: $showBackupImporter,
+            allowedContentTypes: [.json]
+        ) { result in
+            handleBackupImportSelection(result)
+        }
+        .confirmationDialog(L10n.importModeTitle, isPresented: $showImportOptions, titleVisibility: .visible) {
+            Button(L10n.importModeMerge) {
+                performMergeBackupImport()
+            }
+            Button(L10n.importModeReplace, role: .destructive) {
+                performReplaceBackupImport()
+            }
+            Button(L10n.cancel, role: .cancel) {}
+        } message: {
+            Text(L10n.importModeMessage)
+        }
+        .fileExporter(
+            isPresented: $showJSONExporter,
+            document: exportDocument,
+            contentType: .json,
+            defaultFilename: BackupService.defaultFilename
+        ) { result in
+            if case .failure(let error) = result {
+                showResult(title: L10n.exportFailed, message: error.localizedDescription)
+            }
+        }
+        .fileExporter(
+            isPresented: $showApkgExporter,
+            document: apkgDocument,
+            contentType: .apkg,
+            defaultFilename: ApkgExportService.defaultFilename
+        ) { result in
+            if case .failure(let error) = result {
+                showResult(title: L10n.exportFailed, message: error.localizedDescription)
+            }
+        }
         .alert(alertTitle, isPresented: $showAlert) {
             Button(L10n.ok, role: .cancel) {}
         } message: {
@@ -73,14 +121,6 @@ struct DeckStoreView: View {
             Button(L10n.ok, role: .cancel) {}
         } message: {
             Text(L10n.deckCommunityImportGuideBody)
-        }
-        .overlay {
-            if isInstalling || downloadingPackID != nil {
-                ProgressView(downloadingPackID == nil ? L10n.deckInstalling : L10n.deckDownloading)
-                    .padding()
-                    .background(.regularMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-            }
         }
         .onAppear {
             DeckService.bootstrap(in: modelContext)
@@ -133,18 +173,6 @@ struct DeckStoreView: View {
         }
     }
 
-    private var presetSection: some View {
-        Section {
-            ForEach(DeckCatalog.presets) { preset in
-                presetRow(preset)
-            }
-        } header: {
-            Text(L10n.deckPresetSection)
-        } footer: {
-            Text(L10n.deckPresetFooter)
-        }
-    }
-
     private var openSourceSection: some View {
         Section {
             ForEach(DeckRemoteCatalog.packs) { pack in
@@ -175,70 +203,76 @@ struct DeckStoreView: View {
         }
     }
 
-    private var importSection: some View {
-        Section(L10n.deckImportSection) {
+    private var importDeckSection: some View {
+        Section {
             Button {
                 showPackImporter = true
             } label: {
-                Label(L10n.deckImportPack, systemImage: "doc.badge.plus")
+                HStack {
+                    Label(L10n.deckImportPack, systemImage: "doc.badge.plus")
+                    Spacer()
+                    if isImportingJSON {
+                        ProgressView()
+                            .controlSize(.small)
+                    }
+                }
             }
+            .disabled(isImportingJSON || isImportingApkg)
 
             Button {
                 importTargetDeckID = selectedDeckID ?? DeckService.fetchOrCreateDefault(in: modelContext).id
                 showApkgImporter = true
             } label: {
-                Label(L10n.deckImportApkg, systemImage: "square.and.arrow.down")
+                HStack {
+                    Label(L10n.deckImportApkg, systemImage: "square.and.arrow.down")
+                    Spacer()
+                    if isImportingApkg {
+                        ProgressView()
+                            .controlSize(.small)
+                    }
+                }
             }
+            .disabled(isImportingJSON || isImportingApkg)
+        } header: {
+            Text(L10n.deckImportDeckSection)
+        } footer: {
+            Text(L10n.deckImportDeckFooter)
         }
     }
 
-    @ViewBuilder
-    private func presetRow(_ preset: DeckCatalogPreset) -> some View {
-        let installedDeck = decks.first { $0.slug == preset.slug }
-        let installed = installedDeck != nil
-        let isEmptyInstalled = installedDeck?.cardCount == 0
+    private var backupSection: some View {
+        Section {
+            Button {
+                exportJSONBackup()
+            } label: {
+                Label(L10n.exportBackup, systemImage: "doc.text")
+            }
 
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 8) {
-                    Text(preset.name)
-                        .font(.headline)
-                    if preset.starterCardCount > 0 {
-                        Text(L10n.deckPresetStarterCount(preset.starterCardCount))
-                            .font(.caption2)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(.blue.opacity(0.12))
-                            .clipShape(Capsule())
+            Button {
+                showBackupImporter = true
+            } label: {
+                HStack {
+                    Label(L10n.importBackup, systemImage: "arrow.triangle.2.circlepath")
+                    Spacer()
+                    if isImportingBackup {
+                        ProgressView()
+                            .controlSize(.small)
                     }
                 }
-                Text(preset.detailText)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
             }
+            .disabled(isImportingBackup)
 
-            Spacer(minLength: 8)
-
-            if isEmptyInstalled {
-                Button(L10n.deckDownloadStarter) {
-                    installPreset(preset.slug)
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-            } else if installed {
-                Label(L10n.deckInstalled, systemImage: "checkmark.seal.fill")
-                    .font(.caption)
-                    .foregroundStyle(.green)
-            } else {
-                Button(L10n.deckDownloadStarter) {
-                    installPreset(preset.slug)
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
+            Button {
+                exportAllApkg()
+            } label: {
+                Label(L10n.exportApkg, systemImage: "square.and.arrow.up")
             }
+            .disabled(allCards.isEmpty)
+        } header: {
+            Text(L10n.deckBackupSection)
+        } footer: {
+            Text(L10n.deckBackupFooter(allCards.count))
         }
-        .padding(.vertical, 4)
     }
 
     @ViewBuilder
@@ -276,11 +310,9 @@ struct DeckStoreView: View {
                     ProgressView()
                         .controlSize(.small)
                 } else if isEmptyInstalled || !installed {
-                    Button(L10n.deckDownloadStarter) {
+                    deckIconButton(systemImage: "arrow.down.circle", label: L10n.deckDownload) {
                         downloadRemotePack(pack)
                     }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
                 } else {
                     Label(L10n.deckInstalled, systemImage: "checkmark.seal.fill")
                         .font(.caption)
@@ -321,14 +353,22 @@ struct DeckStoreView: View {
 
                 Spacer(minLength: 8)
 
-                Button(L10n.deckCommunityOpenAnkiWeb) {
+                deckIconButton(systemImage: "safari", label: L10n.deckCommunityOpenAnkiWeb) {
                     openURL(entry.ankiWebURL)
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
             }
         }
         .padding(.vertical, 4)
+    }
+
+    private func deckIconButton(systemImage: String, label: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .imageScale(.medium)
+                .frame(width: 28, height: 28)
+        }
+        .buttonStyle(.borderless)
+        .accessibilityLabel(label)
     }
 
     private func downloadRemotePack(_ pack: DeckRemotePack) {
@@ -356,31 +396,6 @@ struct DeckStoreView: View {
         }
     }
 
-    private func installPreset(_ slug: String) {
-        isInstalling = true
-        Task { @MainActor in
-            defer { isInstalling = false }
-            do {
-                let result = try DeckService.installPreset(slug: slug, in: modelContext)
-                selectedDeckID = result.deck.id
-                DeckSettings.lastSelectedDeckID = result.deck.id
-                if result.importedCards > 0 {
-                    showResult(
-                        title: L10n.deckInstallComplete,
-                        message: L10n.deckInstallWithCards(result.deck.name, count: result.importedCards)
-                    )
-                } else {
-                    showResult(
-                        title: L10n.deckInstallComplete,
-                        message: L10n.deckInstallEmpty(result.deck.name)
-                    )
-                }
-            } catch {
-                showResult(title: L10n.deckInstallFailed, message: error.localizedDescription)
-            }
-        }
-    }
-
     private func deleteDeck(_ deck: Deck) {
         do {
             try DeckService.deleteDeck(deck, in: modelContext)
@@ -397,17 +412,21 @@ struct DeckStoreView: View {
     private func handlePackImport(_ result: Result<URL, Error>) {
         switch result {
         case .success(let url):
-            do {
-                let data = try BackupDocumentSupport.readData(from: url)
-                let imported = try DeckService.importPackData(data, in: modelContext)
-                selectedDeckID = imported.deck.id
-                DeckSettings.lastSelectedDeckID = imported.deck.id
-                showResult(
-                    title: L10n.deckImportComplete,
-                    message: L10n.deckImportPackResult(imported.deck.name, count: imported.importedCards)
-                )
-            } catch {
-                showResult(title: L10n.deckImportFailed, message: error.localizedDescription)
+            isImportingJSON = true
+            Task { @MainActor in
+                defer { isImportingJSON = false }
+                do {
+                    let data = try BackupDocumentSupport.readData(from: url)
+                    let imported = try await DeckService.importPackDataAsync(data, in: modelContext)
+                    selectedDeckID = imported.deck.id
+                    DeckSettings.lastSelectedDeckID = imported.deck.id
+                    showResult(
+                        title: L10n.deckImportComplete,
+                        message: L10n.deckImportPackResult(imported.deck.name, count: imported.importedCards)
+                    )
+                } catch {
+                    showResult(title: L10n.deckImportFailed, message: error.localizedDescription)
+                }
             }
         case .failure(let error):
             showResult(title: L10n.deckImportFailed, message: error.localizedDescription)
@@ -420,20 +439,95 @@ struct DeckStoreView: View {
 
         switch result {
         case .success(let url):
-            do {
-                let data = try BackupDocumentSupport.readData(from: url)
-                let imported = try ApkgImportService.importApkg(data: data, into: deck, context: modelContext)
-                selectedDeckID = deck.id
-                DeckSettings.lastSelectedDeckID = deck.id
-                showResult(
-                    title: L10n.deckImportComplete,
-                    message: L10n.deckImportApkgResult(deck.name, count: imported.imported)
-                )
-            } catch {
-                showResult(title: L10n.deckImportFailed, message: error.localizedDescription)
+            isImportingApkg = true
+            Task { @MainActor in
+                defer { isImportingApkg = false }
+                do {
+                    let data = try BackupDocumentSupport.readData(from: url)
+                    let imported = try await ApkgImportService.importApkgAsync(data: data, into: deck, context: modelContext)
+                    selectedDeckID = deck.id
+                    DeckSettings.lastSelectedDeckID = deck.id
+                    showResult(
+                        title: L10n.deckImportComplete,
+                        message: L10n.deckImportApkgResult(deck.name, count: imported.imported)
+                    )
+                } catch {
+                    showResult(title: L10n.deckImportFailed, message: error.localizedDescription)
+                }
             }
         case .failure(let error):
             showResult(title: L10n.deckImportFailed, message: error.localizedDescription)
+        }
+    }
+
+    private func exportJSONBackup() {
+        do {
+            let data = try BackupService.export(cards: allCards, decks: decks)
+            exportDocument = BackupDocument(data: data)
+            showJSONExporter = true
+        } catch {
+            showResult(title: L10n.exportFailed, message: error.localizedDescription)
+        }
+    }
+
+    private func exportAllApkg() {
+        do {
+            let data = try ApkgExportService.export(cards: allCards)
+            apkgDocument = ApkgDocument(data: data)
+            showApkgExporter = true
+        } catch {
+            showResult(title: L10n.exportFailed, message: error.localizedDescription)
+        }
+    }
+
+    private func handleBackupImportSelection(_ result: Result<URL, Error>) {
+        switch result {
+        case .success(let url):
+            do {
+                pendingBackupData = try BackupDocumentSupport.readData(from: url)
+                showImportOptions = true
+            } catch {
+                showResult(title: L10n.readFailed, message: error.localizedDescription)
+            }
+        case .failure(let error):
+            showResult(title: L10n.importFailed, message: error.localizedDescription)
+        }
+    }
+
+    private func performMergeBackupImport() {
+        guard let data = pendingBackupData else { return }
+        isImportingBackup = true
+        Task { @MainActor in
+            defer {
+                isImportingBackup = false
+                pendingBackupData = nil
+            }
+            do {
+                let result = try BackupService.importMerge(data: data, into: modelContext)
+                showResult(
+                    title: L10n.importComplete,
+                    message: L10n.importMergeResult(added: result.added, updated: result.updated)
+                )
+            } catch {
+                showResult(title: L10n.importFailed, message: error.localizedDescription)
+            }
+        }
+    }
+
+    private func performReplaceBackupImport() {
+        guard let data = pendingBackupData else { return }
+        isImportingBackup = true
+        Task { @MainActor in
+            defer {
+                isImportingBackup = false
+                pendingBackupData = nil
+            }
+            do {
+                let count = try BackupService.importReplace(data: data, into: modelContext)
+                showResult(title: L10n.importComplete, message: L10n.importReplaceResult(count))
+            } catch {
+                showResult(title: L10n.importFailed, message: error.localizedDescription)
+            }
         }
     }
 

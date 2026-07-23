@@ -39,18 +39,20 @@ enum DeckDownloadService {
             throw DeckDownloadError.network(error)
         }
 
-        let deckPack = try DeckPackConverter.deckPack(from: data, format: pack.format, remote: pack)
+        let deckPack = try await Task.detached(priority: .userInitiated) {
+            try DeckPackConverter.deckPack(from: data, format: pack.format, remote: pack)
+        }.value
         guard !deckPack.cards.isEmpty else {
             throw DeckDownloadError.emptyPack
         }
 
         if let existing = DeckService.fetchDeck(slug: pack.slug, in: context) {
             if existing.cards.isEmpty {
-                return try DeckService.importStarterCardsPublic(from: deckPack, into: existing, context: context)
+                return try await DeckService.importStarterCardsPublicAsync(from: deckPack, into: existing, context: context)
             }
             return (existing, 0)
         }
 
-        return try DeckService.importPack(deckPack, in: context, markBuiltIn: true)
+        return try await DeckService.importPackAsync(deckPack, in: context, markBuiltIn: true)
     }
 }

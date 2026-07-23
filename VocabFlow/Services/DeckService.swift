@@ -3,12 +3,17 @@ import SwiftData
 
 enum DeckService {
     static let defaultDeckName = L10n.deckDefaultName
+    private static let importYieldInterval = 40
+    private static var didRunInitialBootstrap = false
 
     @MainActor
     static func bootstrap(in context: ModelContext) {
         let defaultDeck = fetchOrCreateDefault(in: context)
-        assignOrphanCards(to: defaultDeck, in: context)
-        normalizeSelection(in: context, defaultDeck: defaultDeck)
+        if !didRunInitialBootstrap {
+            assignOrphanCards(to: defaultDeck, in: context)
+            normalizeSelection(in: context, defaultDeck: defaultDeck)
+            didRunInitialBootstrap = true
+        }
         syncSharedCatalog(in: context)
     }
 
@@ -83,62 +88,63 @@ enum DeckService {
     }
 
     @MainActor
-    @discardableResult
-    static func installPreset(
-        slug: String,
-        in context: ModelContext
-    ) throws -> (deck: Deck, importedCards: Int) {
-        if let existing = fetchDeck(slug: slug, in: context) {
-            if existing.cards.isEmpty,
-               let preset = DeckCatalog.preset(for: slug),
-               let pack = DeckCatalog.loadBundledPack(named: preset.packFilename),
-               !pack.cards.isEmpty {
-                return try importStarterCards(from: pack, into: existing, context: context)
-            }
-            return (existing, 0)
-        }
-
-        guard let preset = DeckCatalog.preset(for: slug) else {
-            throw DeckServiceError.unknownPreset
-        }
-
-        guard let pack = DeckCatalog.loadBundledPack(named: preset.packFilename) else {
-            throw DeckServiceError.missingStarterPack
-        }
-
-        return try importPack(pack, in: context, markBuiltIn: true)
-    }
-
-    @MainActor
-    static func importStarterCardsPublic(
+    static func importStarterCardsPublicAsync(
         from pack: DeckPackFile,
         into deck: Deck,
         context: ModelContext
-    ) throws -> (deck: Deck, importedCards: Int) {
-        try importStarterCards(from: pack, into: deck, context: context)
+    ) async throws -> (deck: Deck, importedCards: Int) {
+        try await importStarterCardsAsync(from: pack, into: deck, context: context)
     }
 
     @MainActor
-    private static func importStarterCards(
+    private static func importStarterCardsAsync(
         from pack: DeckPackFile,
         into deck: Deck,
         context: ModelContext
-    ) throws -> (deck: Deck, importedCards: Int) {
+    ) async throws -> (deck: Deck, importedCards: Int) {
         var imported = 0
-        for item in pack.cards {
-            let card = FlashCard(
-                word: item.word,
-                sentence: item.sentence,
-                cardType: CardType(rawValue: item.cardType ?? "") ?? .definition,
-                front: item.front,
-                back: item.back,
-                contextNote: item.contextNote,
-                phonetic: item.phonetic,
-                deck: deck
-            )
-            context.insert(card)
+        for (index, item) in pack.cards.enumerated() {
+            context.insert(makeFlashCard(from: item, deck: deck))
             imported += 1
+            if index > 0, index % importYieldInterval == 0 {
+                await Task.yield()
+            }
         }
+        try context.save()
+        syncSharedCatalog(in: context)
+        return (deck, imported)
+    }
+
+    @MainActor
+    @discardableResult
+    static func importPackAsync(
+        _ pack: DeckPackFile,
+        in context: ModelContext,
+        markBuiltIn: Bool = false
+    ) async throws -> (deck: Deck, importedCards: Int) {
+        let deck: Deck
+        if let slug = pack.slug, let existing = fetchDeck(slug: slug, in: context) {
+            deck = existing
+        } else {
+            deck = Deck(
+                name: pack.name,
+                detailText: pack.detailText,
+                slug: pack.slug,
+                isBuiltIn: markBuiltIn,
+                sortOrder: nextSortOrder(in: context)
+            )
+            context.insert(deck)
+        }
+
+        var imported = 0
+        for (index, item) in pack.cards.enumerated() {
+            context.insert(makeFlashCard(from: item, deck: deck))
+            imported += 1
+            if index > 0, index % importYieldInterval == 0 {
+                await Task.yield()
+            }
+        }
+
         try context.save()
         syncSharedCatalog(in: context)
         return (deck, imported)
@@ -167,23 +173,19 @@ enum DeckService {
 
         var imported = 0
         for item in pack.cards {
-            let card = FlashCard(
-                word: item.word,
-                sentence: item.sentence,
-                cardType: CardType(rawValue: item.cardType ?? "") ?? .definition,
-                front: item.front,
-                back: item.back,
-                contextNote: item.contextNote,
-                phonetic: item.phonetic,
-                deck: deck
-            )
-            context.insert(card)
+            context.insert(makeFlashCard(from: item, deck: deck))
             imported += 1
         }
 
         try context.save()
         syncSharedCatalog(in: context)
         return (deck, imported)
+    }
+
+    @MainActor
+    static func importPackDataAsync(_ data: Data, in context: ModelContext) async throws -> (deck: Deck, importedCards: Int) {
+        let pack = try JSONDecoder().decode(DeckPackFile.self, from: data)
+        return try await importPackAsync(pack, in: context)
     }
 
     @MainActor
@@ -204,10 +206,6 @@ enum DeckService {
         context.delete(deck)
         try context.save()
         syncSharedCatalog(in: context)
-    }
-
-    static func loadBundledPack(named filename: String) -> DeckPackFile? {
-        DeckCatalog.loadBundledPack(named: filename)
     }
 
     @MainActor
@@ -244,21 +242,28 @@ enum DeckService {
         let decks = fetchAll(in: context)
         return (decks.map(\.sortOrder).max() ?? 0) + 10
     }
+
+    private static func makeFlashCard(from item: DeckPackCard, deck: Deck) -> FlashCard {
+        FlashCard(
+            word: item.word,
+            sentence: item.sentence,
+            cardType: CardType(rawValue: item.cardType ?? "") ?? .definition,
+            front: item.front,
+            back: item.back,
+            contextNote: item.contextNote,
+            phonetic: item.phonetic,
+            deck: deck
+        )
+    }
 }
 
 enum DeckServiceError: LocalizedError {
-    case unknownPreset
     case cannotDeleteDefault
-    case missingStarterPack
 
     var errorDescription: String? {
         switch self {
-        case .unknownPreset:
-            L10n.deckErrorUnknownPreset
         case .cannotDeleteDefault:
             L10n.deckErrorCannotDeleteDefault
-        case .missingStarterPack:
-            L10n.deckErrorMissingStarterPack
         }
     }
 }

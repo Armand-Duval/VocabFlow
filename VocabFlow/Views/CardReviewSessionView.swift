@@ -172,6 +172,7 @@ struct CardReviewSessionView: View {
     private func submit(rating: ReviewRating, for card: FlashCard) {
         let preview = ReviewScheduler.preview(rating: rating, for: card, now: now)
         ReviewScheduler.apply(rating: rating, to: card, now: now)
+        NotificationCenter.default.post(name: .reviewQueueDidChange, object: nil)
         showBack = false
 
         sessionQueue.removeAll { $0.id == card.id }

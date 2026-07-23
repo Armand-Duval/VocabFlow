@@ -507,7 +507,40 @@
         }
       }
     },
+    "deck.backup.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d cards total. JSON backup keeps decks, SRS data, and review progress. .apkg exports all cards for Anki."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "共 %d 张卡。JSON 备份含词库、SRS 与复习进度；.apkg 导出全部卡片供 Anki 使用。"
+          }
+        }
+      }
+    },
+    "deck.backup.section" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backup & Export"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "备份与导出"
+          }
+        }
+      }
+    },
     "deck.browsePresets" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -519,6 +552,294 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "浏览词库"
+          }
+        }
+      }
+    },
+    "deck.community.advancedVocab.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Words, phrasal verbs, and idioms for upper-intermediate learners."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "中高级词汇、短语动词与习语。"
+          }
+        }
+      }
+    },
+    "deck.community.advancedVocab.name" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Advanced English Vocabulary"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "进阶英语词汇"
+          }
+        }
+      }
+    },
+    "deck.community.english60k.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Large frequency-sorted deck with definitions and audio."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按词频排序的大型词库，含释义与发音。"
+          }
+        }
+      }
+    },
+    "deck.community.english60k.name" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "English 60K High Frequency"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "英语 6 万高频词"
+          }
+        }
+      }
+    },
+    "deck.community.estimatedCards" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "~%lld cards"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "约 %lld 张"
+          }
+        }
+      }
+    },
+    "deck.community.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens AnkiWeb in Safari. Download the .apkg, then import it in VocabFlow. Community decks are shared by users; check each deck's license."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Safari 打开 AnkiWeb 下载 .apkg，再回到 VocabFlow 导入。社区词库由用户分享，请注意各 deck 的使用条款。"
+          }
+        }
+      }
+    },
+    "deck.community.greSearch.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search AnkiWeb for GRE 3000 and other GRE decks."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 AnkiWeb 搜索 GRE 3000 等 GRE 词库。"
+          }
+        }
+      }
+    },
+    "deck.community.greSearch.name" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Browse GRE Decks"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "浏览 GRE 词库"
+          }
+        }
+      }
+    },
+    "deck.community.ielts4000.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Popular IELTS deck with IPA on AnkiWeb."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AnkiWeb 热门雅思 deck，含音标。"
+          }
+        }
+      }
+    },
+    "deck.community.ielts4000.name" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4000 IELTS Words"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4000 雅思词汇"
+          }
+        }
+      }
+    },
+    "deck.community.importGuide" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How to import .apkg"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "如何导入 .apkg"
+          }
+        }
+      }
+    },
+    "deck.community.importGuide.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. Tap Open on a community deck and download the .apkg on AnkiWeb.\n2. Save it to Files on your iPhone.\n3. Return here and tap Import Anki Package, or use the button below."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. 点击「打开」在 AnkiWeb 下载 .apkg。\n2. 保存到 iPhone「文件」App。\n3. 回到此处点击「导入 Anki 包」，或点下方按钮直接选择文件。"
+          }
+        }
+      }
+    },
+    "deck.community.importGuide.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import Anki Package"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入 Anki 包"
+          }
+        }
+      }
+    },
+    "deck.community.importNow" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import Now"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "立即导入"
+          }
+        }
+      }
+    },
+    "deck.community.openAnkiWeb" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开"
+          }
+        }
+      }
+    },
+    "deck.community.section" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Community Decks (AnkiWeb)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "社区词库（AnkiWeb）"
+          }
+        }
+      }
+    },
+    "deck.community.toeflSearch.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search AnkiWeb for TOEFL vocabulary decks."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 AnkiWeb 搜索托福词汇 deck。"
+          }
+        }
+      }
+    },
+    "deck.community.toeflSearch.name" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Browse TOEFL Decks"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "浏览 TOEFL 词库"
           }
         }
       }
@@ -619,6 +940,70 @@
         }
       }
     },
+    "deck.download.emptyPack" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloaded pack contains no cards."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载的词库包没有卡片。"
+          }
+        }
+      }
+    },
+    "deck.download.failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download Failed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载失败"
+          }
+        }
+      }
+    },
+    "deck.download.invalidResponse" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid response from the download server."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载服务器返回无效响应。"
+          }
+        }
+      }
+    },
+    "deck.download.networkFailed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Network error: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "网络错误：%@"
+          }
+        }
+      }
+    },
     "deck.download.starter" : {
       "localizations" : {
         "en" : {
@@ -631,6 +1016,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "下载"
+          }
+        }
+      }
+    },
+    "deck.downloading" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloading…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载中…"
           }
         }
       }
@@ -668,6 +1069,7 @@
       }
     },
     "deck.error.missingStarterPack" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -684,6 +1086,7 @@
       }
     },
     "deck.error.unknownPreset" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -811,6 +1214,38 @@
         }
       }
     },
+    "deck.import.deckFooter" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add cards from a deck pack (.json) or Anki package (.apkg) into the selected deck."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将词库包（.json）或 Anki 包（.apkg）导入到当前选中的词库。"
+          }
+        }
+      }
+    },
+    "deck.import.deckSection" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import into Deck"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入到词库"
+          }
+        }
+      }
+    },
     "deck.import.failed" : {
       "localizations" : {
         "en" : {
@@ -860,6 +1295,7 @@
       }
     },
     "deck.import.section" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -908,6 +1344,7 @@
       }
     },
     "deck.install.failed" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -940,6 +1377,7 @@
       }
     },
     "deck.installing" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1035,7 +1473,40 @@
         }
       }
     },
+    "deck.openSource.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloaded from GitHub. Requires network. NGSL/NAWL are CC BY-SA 4.0; TOEFL dataset is MIT."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从 GitHub 在线下载，需联网。NGSL/NAWL 为 CC BY-SA 4.0；TOEFL 数据集为 MIT。"
+          }
+        }
+      }
+    },
+    "deck.openSource.section" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Source Decks"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开源词库"
+          }
+        }
+      }
+    },
     "deck.preset.add" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1086,6 +1557,7 @@
       }
     },
     "deck.preset.economist.detail" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1102,6 +1574,7 @@
       }
     },
     "deck.preset.economist.name" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1118,6 +1591,7 @@
       }
     },
     "deck.preset.footer" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1133,205 +1607,8 @@
         }
       }
     },
-    "deck.openSource.section" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Source Decks" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "开源词库" } }
-      }
-    },
-    "deck.openSource.footer" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Downloaded from GitHub. Requires network. NGSL/NAWL are CC BY-SA 4.0; TOEFL dataset is MIT." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "从 GitHub 在线下载，需联网。NGSL/NAWL 为 CC BY-SA 4.0；TOEFL 数据集为 MIT。" } }
-      }
-    },
-    "deck.community.section" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Community Decks (AnkiWeb)" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "社区词库（AnkiWeb）" } }
-      }
-    },
-    "deck.community.footer" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Opens AnkiWeb in Safari. Download the .apkg, then import it in VocabFlow. Community decks are shared by users; check each deck's license." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 Safari 打开 AnkiWeb 下载 .apkg，再回到 VocabFlow 导入。社区词库由用户分享，请注意各 deck 的使用条款。" } }
-      }
-    },
-    "deck.community.openAnkiWeb" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开" } }
-      }
-    },
-    "deck.community.importGuide" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "How to import .apkg" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "如何导入 .apkg" } }
-      }
-    },
-    "deck.community.importGuide.title" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Import Anki Package" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "导入 Anki 包" } }
-      }
-    },
-    "deck.community.importGuide.body" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "1. Tap Open on a community deck and download the .apkg on AnkiWeb.\n2. Save it to Files on your iPhone.\n3. Return here and tap Import Anki Package, or use the button below." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "1. 点击「打开」在 AnkiWeb 下载 .apkg。\n2. 保存到 iPhone「文件」App。\n3. 回到此处点击「导入 Anki 包」，或点下方按钮直接选择文件。" } }
-      }
-    },
-    "deck.community.importNow" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Import Now" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "立即导入" } }
-      }
-    },
-    "deck.community.estimatedCards" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "~%lld cards" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "约 %lld 张" } }
-      }
-    },
-    "deck.community.ielts4000.name" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "4000 IELTS Words" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "4000 雅思词汇" } }
-      }
-    },
-    "deck.community.ielts4000.detail" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Popular IELTS deck with IPA on AnkiWeb." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "AnkiWeb 热门雅思 deck，含音标。" } }
-      }
-    },
-    "deck.community.english60k.name" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "English 60K High Frequency" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "英语 6 万高频词" } }
-      }
-    },
-    "deck.community.english60k.detail" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Large frequency-sorted deck with definitions and audio." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "按词频排序的大型词库，含释义与发音。" } }
-      }
-    },
-    "deck.community.advancedVocab.name" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Advanced English Vocabulary" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "进阶英语词汇" } }
-      }
-    },
-    "deck.community.advancedVocab.detail" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Words, phrasal verbs, and idioms for upper-intermediate learners." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "中高级词汇、短语动词与习语。" } }
-      }
-    },
-    "deck.community.greSearch.name" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Browse GRE Decks" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "浏览 GRE 词库" } }
-      }
-    },
-    "deck.community.greSearch.detail" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Search AnkiWeb for GRE 3000 and other GRE decks." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 AnkiWeb 搜索 GRE 3000 等 GRE 词库。" } }
-      }
-    },
-    "deck.community.toeflSearch.name" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Browse TOEFL Decks" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "浏览 TOEFL 词库" } }
-      }
-    },
-    "deck.community.toeflSearch.detail" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Search AnkiWeb for TOEFL vocabulary decks." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 AnkiWeb 搜索托福词汇 deck。" } }
-      }
-    },
-    "deck.remote.license" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "License: %@" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "协议：%@" } }
-      }
-    },
-    "deck.remote.viewSource" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "View source & attribution" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "查看来源与署名" } }
-      }
-    },
-    "deck.remote.ngsl.name" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "NGSL General English" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "NGSL 通用英语" } }
-      }
-    },
-    "deck.remote.ngsl.detail" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "2,809 core words covering ~92% of general English texts." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "2809 个核心词，覆盖约 92% 通用英语文本。" } }
-      }
-    },
-    "deck.remote.nawl.name" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "NAWL Academic English" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "NAWL 学术英语" } }
-      }
-    },
-    "deck.remote.nawl.detail" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "963 academic words for textbooks and papers (pairs with NGSL)." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "963 个学术词汇，适合论文与教材（与 NGSL 配套）。" } }
-      }
-    },
-    "deck.remote.toefl.name" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "TOEFL / IELTS Academic 1000" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "托福/雅思学术 1000 词" } }
-      }
-    },
-    "deck.remote.toefl.detail" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "MIT-licensed dataset with definitions and example sentences." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "MIT 协议数据集，含英文释义与例句。" } }
-      }
-    },
-    "deck.downloading" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Downloading…" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "下载中…" } }
-      }
-    },
-    "deck.download.failed" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Download Failed" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "下载失败" } }
-      }
-    },
-    "deck.download.invalidResponse" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Invalid response from the download server." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "下载服务器返回无效响应。" } }
-      }
-    },
-    "deck.download.emptyPack" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Downloaded pack contains no cards." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "下载的词库包没有卡片。" } }
-      }
-    },
-    "deck.download.networkFailed" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Network error: %@" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "网络错误：%@" } }
-      }
-    },
     "deck.preset.gre.detail" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1348,6 +1625,7 @@
       }
     },
     "deck.preset.gre.name" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1364,6 +1642,7 @@
       }
     },
     "deck.preset.ielts.detail" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1380,6 +1659,7 @@
       }
     },
     "deck.preset.ielts.name" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1412,6 +1692,7 @@
       }
     },
     "deck.preset.poorCharlies.detail" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1428,6 +1709,7 @@
       }
     },
     "deck.preset.poorCharlies.name" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1444,6 +1726,7 @@
       }
     },
     "deck.preset.section" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1471,6 +1754,134 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld 词"
+          }
+        }
+      }
+    },
+    "deck.remote.license" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "License: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "协议：%@"
+          }
+        }
+      }
+    },
+    "deck.remote.nawl.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "963 academic words for textbooks and papers (pairs with NGSL)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "963 个学术词汇，适合论文与教材（与 NGSL 配套）。"
+          }
+        }
+      }
+    },
+    "deck.remote.nawl.name" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NAWL Academic English"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NAWL 学术英语"
+          }
+        }
+      }
+    },
+    "deck.remote.ngsl.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2,809 core words covering ~92% of general English texts."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2809 个核心词，覆盖约 92% 通用英语文本。"
+          }
+        }
+      }
+    },
+    "deck.remote.ngsl.name" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NGSL General English"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NGSL 通用英语"
+          }
+        }
+      }
+    },
+    "deck.remote.toefl.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MIT-licensed dataset with definitions and example sentences."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MIT 协议数据集，含英文释义与例句。"
+          }
+        }
+      }
+    },
+    "deck.remote.toefl.name" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TOEFL / IELTS Academic 1000"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "托福/雅思学术 1000 词"
+          }
+        }
+      }
+    },
+    "deck.remote.viewSource" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View source & attribution"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查看来源与署名"
           }
         }
       }
@@ -4055,6 +4466,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "使用你的 API Key"
+          }
+        }
+      }
+    },
+    "settings.maintenance.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import, export, and deck downloads are in Library → Decks (books icon)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "词库下载、导入与备份导出请前往词库页（Library 右上角书本图标）。"
+          }
+        }
+      }
+    },
+    "settings.maintenance.section" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maintenance"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "数据维护"
           }
         }
       }

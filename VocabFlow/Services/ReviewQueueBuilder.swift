@@ -19,7 +19,12 @@ struct ReviewQueuePlan {
 }
 
 enum ReviewQueueBuilder {
-    static func plan(from allCards: [FlashCard], now: Date = .now) -> ReviewQueuePlan {
+    static func plan(
+        from allCards: [FlashCard],
+        dailyNewLimit: Int = ReviewSettings.dailyNewLimit,
+        dailyReviewLimit: Int = ReviewSettings.dailyReviewLimit,
+        now: Date = .now
+    ) -> ReviewQueuePlan {
         ReviewSettings.resetDailyCountsIfNeeded(now: now)
 
         let due = allCards.filter { ReviewScheduler.isDue($0, now: now) }
@@ -30,8 +35,8 @@ enum ReviewQueueBuilder {
             .filter { !$0.isNewCard }
             .sorted { $0.nextReviewDate < $1.nextReviewDate }
 
-        let newRemaining = remainingQuota(limit: ReviewSettings.dailyNewLimit, studied: ReviewSettings.newStudiedToday)
-        let reviewRemaining = remainingQuota(limit: ReviewSettings.dailyReviewLimit, studied: ReviewSettings.reviewStudiedToday)
+        let newRemaining = remainingQuota(limit: dailyNewLimit, studied: ReviewSettings.newStudiedToday)
+        let reviewRemaining = remainingQuota(limit: dailyReviewLimit, studied: ReviewSettings.reviewStudiedToday)
 
         let selectedNew = Array(dueNew.prefix(newRemaining))
         let selectedReview = Array(dueReview.prefix(reviewRemaining))
@@ -40,11 +45,26 @@ enum ReviewQueueBuilder {
             sessionCards: selectedNew + selectedReview,
             newStudiedToday: ReviewSettings.newStudiedToday,
             reviewStudiedToday: ReviewSettings.reviewStudiedToday,
-            newLimit: ReviewSettings.dailyNewLimit,
-            reviewLimit: ReviewSettings.dailyReviewLimit,
+            newLimit: dailyNewLimit,
+            reviewLimit: dailyReviewLimit,
             deferredNewCount: max(0, dueNew.count - selectedNew.count),
             deferredReviewCount: max(0, dueReview.count - selectedReview.count)
         )
+    }
+
+    /// 今日配额内可立即复习的数量（与 Review 页实际队列一致）。
+    static func sessionDueCount(
+        from allCards: [FlashCard],
+        dailyNewLimit: Int = ReviewSettings.dailyNewLimit,
+        dailyReviewLimit: Int = ReviewSettings.dailyReviewLimit,
+        now: Date = .now
+    ) -> Int {
+        plan(
+            from: allCards,
+            dailyNewLimit: dailyNewLimit,
+            dailyReviewLimit: dailyReviewLimit,
+            now: now
+        ).sessionCards.count
     }
 
     private static func remainingQuota(limit: Int, studied: Int) -> Int {

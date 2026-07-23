@@ -199,6 +199,8 @@ enum L10n {
     static var settingsAISection: String { tr("settings.ai.section") }
     static var settingsImportSection: String { tr("settings.import.section") }
     static var settingsDataSection: String { tr("settings.data.section") }
+    static var settingsMaintenanceSection: String { tr("settings.maintenance.section") }
+    static var settingsMaintenanceFooter: String { tr("settings.maintenance.footer") }
     static var settingsAboutSection: String { tr("settings.about.section") }
     static func settingsDataFooter(_ count: Int) -> String { tf("settings.data.footer", count) }
     static var exportApkg: String { tr("settings.apkg.export") }
@@ -288,14 +290,13 @@ enum L10n {
     static var deckStoreTitle: String { tr("deck.store.title") }
     static var deckMyDecks: String { tr("deck.myDecks") }
     static var deckEmpty: String { tr("deck.empty") }
-    static var deckPresetSection: String { tr("deck.preset.section") }
-    static var deckPresetFooter: String { tr("deck.preset.footer") }
-    static var deckImportSection: String { tr("deck.import.section") }
+    static var deckImportDeckSection: String { tr("deck.import.deckSection") }
+    static var deckImportDeckFooter: String { tr("deck.import.deckFooter") }
+    static var deckBackupSection: String { tr("deck.backup.section") }
+    static func deckBackupFooter(_ count: Int) -> String { tf("deck.backup.footer", count) }
     static var deckImportPack: String { tr("deck.import.pack") }
     static var deckImportApkg: String { tr("deck.import.apkg") }
-    static var deckAddPreset: String { tr("deck.preset.add") }
     static var deckInstalled: String { tr("deck.preset.installed") }
-    static var deckInstalling: String { tr("deck.installing") }
     static var deckInstallComplete: String { tr("deck.install.complete") }
     static func deckInstallWithCards(_ name: String, count: Int) -> String {
         tf("deck.install.withCards", name, count)
@@ -303,7 +304,6 @@ enum L10n {
     static func deckInstallEmpty(_ name: String) -> String {
         tf("deck.install.empty", name)
     }
-    static var deckInstallFailed: String { tr("deck.install.failed") }
     static var deckCreateTitle: String { tr("deck.create.title") }
     static var deckNamePlaceholder: String { tr("deck.name.placeholder") }
     static var deckDetailPlaceholder: String { tr("deck.detail.placeholder") }
@@ -319,25 +319,14 @@ enum L10n {
         tf("deck.import.apkgResult", name, count)
     }
     static var deckFilterAll: String { tr("deck.filter.all") }
-    static var deckBrowsePresets: String { tr("deck.browsePresets") }
     static func libraryReviewDeck(_ name: String, count: Int) -> String {
         tf("library.reviewDeck", name, count)
     }
-    static var deckDownloadStarter: String { tr("deck.download.starter") }
-    static func deckPresetStarterCount(_ count: Int) -> String {
+    static var deckDownload: String { tr("deck.download.starter") }
+    static func deckCardCount(_ count: Int) -> String {
         tf("deck.preset.starterCount", count)
     }
-    static var deckPresetPoorCharliesName: String { tr("deck.preset.poorCharlies.name") }
-    static var deckPresetPoorCharliesDetail: String { tr("deck.preset.poorCharlies.detail") }
-    static var deckPresetEconomistName: String { tr("deck.preset.economist.name") }
-    static var deckPresetEconomistDetail: String { tr("deck.preset.economist.detail") }
-    static var deckPresetIELTSName: String { tr("deck.preset.ielts.name") }
-    static var deckPresetIELTSDetail: String { tr("deck.preset.ielts.detail") }
-    static var deckPresetGREName: String { tr("deck.preset.gre.name") }
-    static var deckPresetGREDetail: String { tr("deck.preset.gre.detail") }
-    static var deckErrorUnknownPreset: String { tr("deck.error.unknownPreset") }
     static var deckErrorCannotDeleteDefault: String { tr("deck.error.cannotDeleteDefault") }
-    static var deckErrorMissingStarterPack: String { tr("deck.error.missingStarterPack") }
     static var deckOpenSourceSection: String { tr("deck.openSource.section") }
     static var deckOpenSourceFooter: String { tr("deck.openSource.footer") }
     static var deckCommunitySection: String { tr("deck.community.section") }

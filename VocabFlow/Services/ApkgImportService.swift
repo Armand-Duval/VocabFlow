@@ -27,33 +27,71 @@ enum ApkgImportService {
         let imported: Int
     }
 
+    private static let importYieldInterval = 40
+
+    @MainActor
+    static func importApkgAsync(
+        data: Data,
+        into deck: Deck,
+        context: ModelContext
+    ) async throws -> ImportResult {
+        let notes = try await Task.detached(priority: .userInitiated) {
+            try parseNotes(from: data)
+        }.value
+
+        guard !notes.isEmpty else { throw ApkgImportError.emptyImport }
+
+        for (index, note) in notes.enumerated() {
+            context.insert(
+                FlashCard(
+                    word: note.word,
+                    sentence: note.sentence,
+                    cardType: .definition,
+                    front: note.front,
+                    back: note.back,
+                    deck: deck
+                )
+            )
+            if index > 0, index % importYieldInterval == 0 {
+                await Task.yield()
+            }
+        }
+
+        try context.save()
+        return ImportResult(imported: notes.count)
+    }
+
     @MainActor
     static func importApkg(
         data: Data,
         into deck: Deck,
         context: ModelContext
     ) throws -> ImportResult {
-        guard let collectionData = extractCollection(from: data) else {
-            throw ApkgImportError.missingCollection
-        }
-
-        let notes = try readNotes(from: collectionData)
+        let notes = try parseNotes(from: data)
         guard !notes.isEmpty else { throw ApkgImportError.emptyImport }
 
         for note in notes {
-            let card = FlashCard(
-                word: note.word,
-                sentence: note.sentence,
-                cardType: .definition,
-                front: note.front,
-                back: note.back,
-                deck: deck
+            context.insert(
+                FlashCard(
+                    word: note.word,
+                    sentence: note.sentence,
+                    cardType: .definition,
+                    front: note.front,
+                    back: note.back,
+                    deck: deck
+                )
             )
-            context.insert(card)
         }
 
         try context.save()
         return ImportResult(imported: notes.count)
+    }
+
+    private static func parseNotes(from data: Data) throws -> [ImportedNote] {
+        guard let collectionData = extractCollection(from: data) else {
+            throw ApkgImportError.missingCollection
+        }
+        return try readNotes(from: collectionData)
     }
 
     private static func extractCollection(from data: Data) -> Data? {

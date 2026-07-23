@@ -11,6 +11,7 @@ struct VocabFlowApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(shareImport)
+                .environment(ReviewSettingsStore.shared)
                 .onOpenURL { url in
                     if ShareImportService.handleIncomingURL(url) {
                         Task {

@@ -19,7 +19,7 @@ struct DeckRemotePack: Identifiable {
     let attributionURL: URL
 
     var cardCountLabel: String {
-        L10n.deckPresetStarterCount(cardCount)
+        L10n.deckCardCount(cardCount)
     }
 
     var licenseLabel: String {

@@ -2,38 +2,63 @@ import SwiftUI
 import SwiftData
 
 struct ReviewView: View {
-    @Query(sort: \FlashCard.nextReviewDate) private var allCards: [FlashCard]
+    @Environment(\.modelContext) private var modelContext
+    @Environment(ReviewSettingsStore.self) private var reviewSettings
 
+    @State private var plan: ReviewQueuePlan?
+    @State private var hasAnyCards = false
+    @State private var isLoading = true
     @State private var showQuotaDetail = false
 
-    private var plan: ReviewQueuePlan {
-        ReviewQueueBuilder.plan(from: allCards)
+    private var refreshToken: Int {
+        reviewSettings.revision
+    }
+
+    private var sessionSignature: String {
+        guard let plan else { return "loading" }
+        let sessionCards = plan.sessionCards
+        let head = sessionCards.prefix(3).map(\.id.uuidString).joined(separator: ",")
+        return "\(reviewSettings.revision)-\(sessionCards.count)-\(head)"
     }
 
     var body: some View {
         NavigationStack {
             Group {
-                if plan.sessionCards.isEmpty {
-                    emptyState
-                } else {
-                    VStack(spacing: 0) {
-                        ReviewQuotaBanner(plan: plan) {
-                            showQuotaDetail = true
+                if isLoading {
+                    ProgressView(L10n.deckLoading)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if let plan {
+                    if plan.sessionCards.isEmpty {
+                        emptyState(plan: plan)
+                    } else {
+                        VStack(spacing: 0) {
+                            ReviewQuotaBanner(plan: plan) {
+                                showQuotaDetail = true
+                            }
+                            CardReviewSessionView(cards: plan.sessionCards)
+                                .id(sessionSignature)
                         }
-                        CardReviewSessionView(cards: plan.sessionCards)
                     }
                 }
             }
             .navigationTitle(L10n.reviewTitle)
             .sheet(isPresented: $showQuotaDetail) {
-                ReviewQuotaDetailSheet(plan: plan)
+                if let plan {
+                    ReviewQuotaDetailSheet(plan: plan)
+                }
             }
+        }
+        .task(id: refreshToken) {
+            await loadPlan()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .reviewQueueDidChange)) { _ in
+            Task { await loadPlan() }
         }
     }
 
     @ViewBuilder
-    private var emptyState: some View {
-        if allCards.isEmpty {
+    private func emptyState(plan: ReviewQueuePlan) -> some View {
+        if !hasAnyCards {
             ContentUnavailableView {
                 Label(L10n.reviewEmptyTitle, systemImage: "tray")
             } description: {
@@ -56,6 +81,31 @@ struct ReviewView: View {
                 Text(L10n.reviewEmptyDone)
             }
         }
+    }
+
+    @MainActor
+    private func loadPlan() async {
+        if plan == nil {
+            isLoading = true
+        }
+
+        await Task.yield()
+
+        let descriptor = FetchDescriptor<FlashCard>(
+            sortBy: [SortDescriptor(\FlashCard.nextReviewDate)]
+        )
+        guard let cards = try? modelContext.fetch(descriptor) else {
+            isLoading = false
+            return
+        }
+
+        hasAnyCards = !cards.isEmpty
+        plan = ReviewQueueBuilder.plan(
+            from: cards,
+            dailyNewLimit: reviewSettings.dailyNewLimit,
+            dailyReviewLimit: reviewSettings.dailyReviewLimit
+        )
+        isLoading = false
     }
 }
 
@@ -160,5 +210,6 @@ private struct ReviewQuotaDetailSheet: View {
 
 #Preview {
     ReviewView()
+        .environment(ReviewSettingsStore.shared)
         .modelContainer(for: FlashCard.self, inMemory: true)
 }
