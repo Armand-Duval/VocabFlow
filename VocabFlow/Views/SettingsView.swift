@@ -8,13 +8,15 @@ struct SettingsView: View {
     @State private var apiKey = APISettings.kimiAPIKey
     @State private var selectedModel = APISettings.kimiModel
     @State private var showKey = false
-    @State private var saved = false
     @State private var hasAnyCards = false
+    @State private var isTestingAPI = false
 
     @State private var showImportHelp = false
+    @State private var showHelpCenter = false
     @State private var reminderEnabled = ReviewReminderService.isEnabled
     @State private var reminderTime = ReviewReminderService.reminderDate
     @State private var backupReminderEnabled = BackupReminderService.isEnabled
+    @State private var showDeckStore = false
 
     @State private var showResetAllConfirm = false
     @State private var showDeleteAllConfirm = false
@@ -57,7 +59,7 @@ struct SettingsView: View {
                 }
 
                 aiSection
-                importHelpSection
+                importExportSection
                 backupReminderSection
                 maintenanceSection
                 aboutSection
@@ -66,6 +68,9 @@ struct SettingsView: View {
             .navigationTitle(L10n.settingsTitle)
             .dismissKeyboardOnScroll()
             .keyboardDoneButton()
+            .navigationDestination(isPresented: $showDeckStore) {
+                DeckStoreView(selectedDeckID: .constant(DeckSettings.lastSelectedDeckID))
+            }
             .onAppear {
                 reviewSettings.reloadFromPersistence()
             }
@@ -77,9 +82,6 @@ struct SettingsView: View {
             }
             .onReceive(NotificationCenter.default.publisher(for: .dataMaintenanceDidComplete)) { _ in
                 Task { await refreshHasAnyCards() }
-            }
-            .alert(L10n.settingsSavedTitle, isPresented: $saved) {
-                Button(L10n.ok, role: .cancel) {}
             }
             .alert(maintenanceAlertTitle, isPresented: $showMaintenanceAlert) {
                 Button(L10n.ok, role: .cancel) {}
@@ -135,6 +137,22 @@ struct SettingsView: View {
                 }
             }
 
+            Text(APISettings.modelDescription(for: selectedModel))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            Button {
+                Task { await testAPIConnection() }
+            } label: {
+                HStack {
+                    if isTestingAPI {
+                        ProgressView()
+                    }
+                    Text(isTestingAPI ? L10n.settingsTestingAPI : L10n.settingsTestAPI)
+                }
+            }
+            .disabled(isTestingAPI)
+
             Label {
                 Text(APISettings.keySourceDescription)
                     .foregroundStyle(APISettings.canUseKimi ? Color.primary : Color.orange)
@@ -145,12 +163,18 @@ struct SettingsView: View {
         } header: {
             Text(L10n.settingsAISection)
         } footer: {
-            Text(L10n.apiKeyFooter)
+            Text(L10n.settingsAIKeyFooter)
         }
     }
 
-    private var importHelpSection: some View {
+    private var importExportSection: some View {
         Section {
+            Button {
+                showDeckStore = true
+            } label: {
+                Label(L10n.settingsOpenDeckStore, systemImage: "books.vertical")
+            }
+
             DisclosureGroup(isExpanded: $showImportHelp) {
                 Label(L10n.importShareStep1, systemImage: "square.and.arrow.up")
                 Label(L10n.importShareStep2, systemImage: "checkmark.circle")
@@ -162,9 +186,9 @@ struct SettingsView: View {
                 Label(L10n.importHelpTitle, systemImage: "arrow.down.doc")
             }
         } header: {
-            Text(L10n.settingsImportSection)
+            Text(L10n.settingsImportExportSection)
         } footer: {
-            Text(L10n.importCopyFooter)
+            Text(L10n.settingsImportFormatsFooter)
         }
     }
 
@@ -201,12 +225,28 @@ struct SettingsView: View {
     }
 
     private var aboutSection: some View {
-        Section(L10n.settingsAboutSection) {
+        Section {
             NavigationLink {
                 PrivacyPolicyView()
             } label: {
                 Label(L10n.privacyTitle, systemImage: "hand.raised")
             }
+
+            DisclosureGroup(isExpanded: $showHelpCenter) {
+                Text(L10n.settingsHelpBYOK)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                Text(L10n.settingsHelpApkg)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                Text(L10n.settingsHelpShare)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            } label: {
+                Label(L10n.settingsHelpTitle, systemImage: "questionmark.circle")
+            }
+        } header: {
+            Text(L10n.settingsAboutSection)
         }
     }
 
@@ -237,7 +277,27 @@ struct SettingsView: View {
         BackupReminderService.isEnabled = backupReminderEnabled
         BackupReminderService.reschedule()
         ReviewReminderService.reschedule(dueCount: ReviewStatusStore.dueCount)
-        saved = true
+        ToastCenter.shared.show(L10n.settingsSavedTitle)
+    }
+
+    @MainActor
+    private func testAPIConnection() async {
+        isTestingAPI = true
+        defer { isTestingAPI = false }
+
+        let key = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        let testKey = key.isEmpty ? APISettings.effectiveAPIKey : key
+        guard !testKey.isEmpty else {
+            ToastCenter.shared.show(L10n.settingsTestAPIFailed(L10n.missingAPIKeyError))
+            return
+        }
+
+        do {
+            try await KimiCardGenerator.testConnection(apiKey: testKey, model: selectedModel)
+            ToastCenter.shared.show(L10n.settingsTestAPISuccess)
+        } catch {
+            ToastCenter.shared.show(L10n.settingsTestAPIFailed(error.localizedDescription))
+        }
     }
 
     @MainActor

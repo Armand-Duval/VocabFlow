@@ -62,7 +62,7 @@ struct ReviewView: View {
             ContentUnavailableView {
                 Label(L10n.reviewEmptyTitle, systemImage: "tray")
             } description: {
-                Text(L10n.reviewEmptyNoCards)
+                Text(L10n.reviewEmptyGoCreate)
             }
         } else if plan.hasDeferredCards {
             ContentUnavailableView {
@@ -134,8 +134,9 @@ private struct ReviewQuotaBanner: View {
                     limit: plan.reviewLimit
                 )
                 Spacer(minLength: 0)
-                Image(systemName: "info.circle")
-                    .font(.caption)
+                Image(systemName: "chevron.right")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
             }
             .font(.caption)
             .foregroundStyle(.secondary)

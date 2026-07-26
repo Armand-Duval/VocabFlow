@@ -117,6 +117,34 @@ enum KimiCardGenerator {
         return content
     }
 
+    static func testConnection(apiKey: String, model: String) async throws {
+        let trimmedKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedKey.isEmpty else {
+            throw KimiCardGeneratorError.missingAPIKey
+        }
+
+        guard let url = URL(string: "\(APISettings.baseURL)/models") else {
+            throw KimiCardGeneratorError.invalidResponse
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(trimmedKey)", forHTTPHeaderField: "Authorization")
+        request.timeoutInterval = 20
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else {
+            throw KimiCardGeneratorError.invalidResponse
+        }
+
+        if http.statusCode != 200 {
+            let message = extractErrorMessage(from: data) ?? "HTTP \(http.statusCode)"
+            throw KimiCardGeneratorError.apiError(message)
+        }
+
+        _ = model
+    }
+
     private static func parseCards(from content: String, sentence: String) throws -> [GeneratedCardDraft] {
         let jsonString = extractJSON(from: content)
         guard let data = jsonString.data(using: .utf8) else {

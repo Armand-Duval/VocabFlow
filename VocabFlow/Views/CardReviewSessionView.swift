@@ -52,18 +52,13 @@ struct CardReviewSessionView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                 Spacer()
-                Text(card.cardType.displayName)
-                    .font(.caption)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(.blue.opacity(0.12))
-                    .clipShape(Capsule())
+                CardTypeChip(title: card.cardType.displayName)
             }
             .padding(.horizontal)
 
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
+            HStack(alignment: .firstTextBaseline, spacing: AppSpacing.sm) {
                 Text(card.word)
-                    .font(.title3.weight(.semibold))
+                    .font(AppFont.sectionTitle())
 
                 if let phonetic = card.phonetic, !phonetic.isEmpty {
                     Text(phonetic)
@@ -82,25 +77,27 @@ struct CardReviewSessionView: View {
                     }
                 } label: {
                     Image(systemName: "speaker.wave.2.fill")
+                        .font(.title2)
+                        .frame(width: 44, height: 44)
                         .foregroundStyle(.tint)
                 }
+                .accessibilityLabel(L10n.speakWord)
             }
             .padding(.horizontal)
 
             ScrollView {
                 Text(showBack ? card.displayBack : card.front)
-                    .font(.body)
+                    .font(AppFont.body())
                     .lineSpacing(6)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(maxWidth: .infinity, minHeight: 120, alignment: .topLeading)
                     .fixedSize(horizontal: false, vertical: true)
                     .textSelection(.enabled)
                     .contentTransition(.opacity)
-                    .padding(20)
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
+                    .padding(AppSpacing.lg)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .frame(maxHeight: 340)
             .background(.regularMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 20))
+            .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
             .padding(.horizontal)
             .onTapGesture {
                 withAnimation(.easeInOut(duration: 0.2)) {
@@ -146,7 +143,7 @@ struct CardReviewSessionView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(ReviewRatingButtonStyle())
                     .tint(ratingTint(rating))
                 }
             }
@@ -229,6 +226,24 @@ private struct PendingLearningCard: Identifiable {
     let availableAt: Date
 
     var id: UUID { card.id }
+}
+
+private struct ReviewRatingButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(configuration.isPressed ? Color.accentColor.opacity(0.12) : Color.clear)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(.secondary.opacity(configuration.isPressed ? 0.5 : 0.25))
+            }
+            .scaleEffect(configuration.isPressed ? 0.96 : 1)
+            .animation(.easeInOut(duration: 0.12), value: configuration.isPressed)
+    }
 }
 
 #Preview {

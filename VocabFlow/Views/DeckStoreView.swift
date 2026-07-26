@@ -37,6 +37,10 @@ struct DeckStoreView: View {
     @State private var showApkgImportGuide = false
     @Environment(\.openURL) private var openURL
 
+    private var isImportBusy: Bool {
+        isImportingJSON || isImportingApkg || isImportingBackup || downloadingPackID != nil
+    }
+
     var body: some View {
         List {
             myDecksSection
@@ -47,6 +51,7 @@ struct DeckStoreView: View {
         }
         .navigationTitle(L10n.deckStoreTitle)
         .navigationBarTitleDisplayMode(.inline)
+        .loadingOverlay(isPresented: isImportBusy, message: L10n.deckImporting)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
@@ -528,6 +533,7 @@ struct DeckStoreView: View {
             exportDocument = BackupDocument(data: data)
             showJSONExporter = true
             BackupReminderService.recordBackupCompleted()
+            ToastCenter.shared.show(L10n.exportBackupSuccess)
         } catch {
             showResult(title: L10n.exportFailed, message: error.localizedDescription)
         }
@@ -598,6 +604,9 @@ struct DeckStoreView: View {
         alertTitle = title
         alertMessage = message
         showAlert = true
+        if title == L10n.importComplete || title == L10n.deckImportComplete {
+            ToastCenter.shared.show(message)
+        }
     }
 }
 

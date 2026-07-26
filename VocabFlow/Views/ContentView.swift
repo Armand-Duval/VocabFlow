@@ -21,7 +21,7 @@ struct ContentView: View {
                 .opacity(selectedTab == 0 ? 1 : 0)
                 .allowsHitTesting(selectedTab == 0)
                 .tabItem {
-                    Label(L10n.tabCreate, systemImage: "plus.rectangle.on.rectangle")
+                    Label(L10n.tabCreate, systemImage: "rectangle.stack.badge.plus")
                 }
                 .tag(0)
 
@@ -38,7 +38,7 @@ struct ContentView: View {
                 LibraryView()
             }
             .tabItem {
-                Label(L10n.tabLibrary, systemImage: "books.vertical")
+                Label(L10n.tabLibrary, systemImage: "books.vertical.fill")
             }
             .tag(2)
 
@@ -46,10 +46,11 @@ struct ContentView: View {
                 SettingsView()
             }
             .tabItem {
-                Label(L10n.tabSettings, systemImage: "gearshape")
+                Label(L10n.tabSettings, systemImage: "gearshape.fill")
             }
             .tag(3)
         }
+        .appToast()
         .onReceive(NotificationCenter.default.publisher(for: .shareImportReceived)) { _ in
             shareImport.refreshAll()
         }

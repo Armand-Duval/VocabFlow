@@ -3,6 +3,12 @@ import PhotosUI
 import UIKit
 
 struct CreateCardsView: View {
+    private enum LongTextSuggestion {
+        case none
+        case keepSingleSentence
+        case splitIntoWords
+    }
+
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var shareImport: ShareImportCoordinator
     @State private var sentence = ""
@@ -19,114 +25,228 @@ struct CreateCardsView: View {
     @State private var wordFeedbackIsError = false
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var isRecognizingPhoto = false
+    @State private var showCamera = false
+    @State private var showLongTextPrompt = false
+    @State private var pendingLongText = ""
+
+    private var trimmedSentence: String {
+        sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var canGenerate: Bool {
+        !trimmedSentence.isEmpty && !words.isEmpty
+    }
 
     var body: some View {
         NavigationStack {
-            Form {
-                if let importBannerMessage {
-                    Section {
-                        ImportBannerView(
-                            message: importBannerMessage,
-                            systemImage: "arrow.down.doc"
-                        )
+            formContent
+                .navigationTitle(L10n.createTitle)
+                .navigationBarTitleDisplayMode(.large)
+                .dismissKeyboardOnScroll()
+                .keyboardDoneButton()
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    generateFooter
+                }
+                .loadingOverlay(isPresented: isGenerating, message: L10n.generating)
+                .loadingOverlay(isPresented: isRecognizingPhoto, message: L10n.recognizingPhoto)
+                .navigationDestination(isPresented: $showPreview) {
+                    CardPreviewView(drafts: drafts, selectedDeckID: $selectedDeckID) {
+                        showPreview = false
                     }
                 }
-
-                Section(L10n.sourceText) {
-                    ZStack(alignment: .topLeading) {
-                        SelectableTextEditor(
-                            text: $sentence,
-                            selectedText: $selectedText,
-                            selectionClearNonce: $selectionClearNonce,
-                            onAddToVocabulary: appendSelectionToWords
-                        )
-
-                        if sentence.isEmpty {
-                            Text(L10n.sourcePlaceholder)
-                                .foregroundStyle(.tertiary)
-                                .padding(.top, 8)
-                                .allowsHitTesting(false)
-                        }
+                .modifier(CreateCardsAlertsModifier(errorMessage: $errorMessage))
+                .modifier(CreateCardsLifecycleModifier(
+                    sentence: $sentence,
+                    pendingLongText: $pendingLongText,
+                    showLongTextPrompt: $showLongTextPrompt,
+                    showPreview: $showPreview,
+                    drafts: $drafts,
+                    selectedPhotoItem: $selectedPhotoItem,
+                    shareImport: shareImport,
+                    onAppearImport: applyShareImportIfNeeded,
+                    onPhotoSelected: { item in
+                        Task { await importPhoto(item) }
                     }
-
-                    if !selectedText.isEmpty {
-                        SelectionActionBar(selectedText: selectedText, action: appendSelectionToWords)
+                ))
+                .sheet(isPresented: $showCamera) {
+                    CameraImagePicker { image in
+                        Task { await importCapturedImage(image) }
                     }
-
-                    PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
-                        Label(L10n.importFromPhoto, systemImage: "photo.on.rectangle")
-                    }
-                    .disabled(isRecognizingPhoto)
-
-                    if isRecognizingPhoto {
-                        HStack(spacing: 8) {
-                            ProgressView()
-                            Text(L10n.recognizingPhoto)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
+                    .ignoresSafeArea()
                 }
+                .confirmationDialog(
+                    L10n.createLongTextTitle,
+                    isPresented: $showLongTextPrompt,
+                    titleVisibility: .visible
+                ) {
+                    Button(L10n.createLongTextKeepSentence) {
+                        applyLongTextSuggestion(.keepSingleSentence)
+                    }
+                    Button(L10n.createLongTextSplitWords) {
+                        applyLongTextSuggestion(.splitIntoWords)
+                    }
+                    Button(L10n.cancel, role: .cancel) {
+                        pendingLongText = ""
+                    }
+                } message: {
+                    Text(L10n.createLongTextMessage)
+                }
+        }
+    }
 
-                Section(L10n.wordsSection) {
-                    VocabularyWordsEditor(
-                        words: $words,
-                        feedbackMessage: $wordFeedbackMessage,
-                        feedbackIsError: $wordFeedbackIsError
+    private var formContent: some View {
+        Form {
+            if let importBannerMessage {
+                Section {
+                    ImportBannerView(
+                        message: importBannerMessage,
+                        systemImage: "arrow.down.doc"
                     )
                 }
+            }
 
-                DeckPickerSection(selectedDeckID: $selectedDeckID)
+            sourceSection
+            wordsSection
+            DeckPickerSection(selectedDeckID: $selectedDeckID)
+        }
+    }
+
+    private var sourceSection: some View {
+        Section {
+            ZStack(alignment: .topLeading) {
+                SelectableTextEditor(
+                    text: $sentence,
+                    selectedText: $selectedText,
+                    selectionClearNonce: $selectionClearNonce,
+                    onAddToVocabulary: appendSelectionToWords
+                )
+
+                if sentence.isEmpty {
+                    Text(L10n.createSourceEmptyHint)
+                        .foregroundStyle(.tertiary)
+                        .padding(.top, 8)
+                        .allowsHitTesting(false)
+                }
             }
-            .navigationTitle(L10n.createTitle)
-            .navigationBarTitleDisplayMode(.large)
-            .dismissKeyboardOnScroll()
-            .keyboardDoneButton()
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        generateCards()
-                    } label: {
-                        if isGenerating {
-                            ProgressView()
-                        } else {
-                            Image(systemName: "sparkles")
-                        }
+
+            if !selectedText.isEmpty {
+                SelectionActionBar(selectedText: selectedText, action: appendSelectionToWords)
+            }
+
+            importActionsRow
+
+            if isRecognizingPhoto {
+                HStack(spacing: 8) {
+                    ProgressView()
+                    Text(L10n.recognizingPhoto)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        } header: {
+            HStack {
+                Text(L10n.sourceText)
+                Spacer()
+                if !sentence.isEmpty {
+                    Text(L10n.createCharCount(sentence.count))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Button(L10n.clear) {
+                        sentence = ""
+                        selectedText = ""
                     }
-                    .disabled(isGenerating || sentence.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || words.isEmpty)
-                    .accessibilityLabel(L10n.generateCards)
+                    .font(.caption)
                 }
             }
-            .navigationDestination(isPresented: $showPreview) {
-                CardPreviewView(drafts: drafts, selectedDeckID: $selectedDeckID) {
-                    showPreview = false
+        } footer: {
+            if sentence.isEmpty {
+                Text(L10n.createSourceFooterHint)
+            } else if sentence.count > 800 {
+                Text(L10n.createSourceLongHint)
+            }
+        }
+    }
+
+    private var importActionsRow: some View {
+        HStack(spacing: 12) {
+            PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                Label(L10n.importFromPhoto, systemImage: "photo.on.rectangle")
+            }
+            .disabled(isRecognizingPhoto)
+
+            if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                Button {
+                    showCamera = true
+                } label: {
+                    Label(L10n.importFromCamera, systemImage: "camera")
                 }
+                .disabled(isRecognizingPhoto)
             }
-            .onChange(of: showPreview) { _, isShowing in
-                guard !isShowing else { return }
-                DispatchQueue.main.async {
-                    drafts.removeAll()
+        }
+    }
+
+    private var wordsSection: some View {
+        Section {
+            VocabularyWordsEditor(
+                words: $words,
+                feedbackMessage: $wordFeedbackMessage,
+                feedbackIsError: $wordFeedbackIsError
+            )
+        } header: {
+            Text(L10n.wordsSection)
+        } footer: {
+            if words.isEmpty {
+                Text(L10n.createWordsEmptyHint)
+            }
+        }
+    }
+
+    private var generateFooter: some View {
+        VStack(spacing: 8) {
+            if !canGenerate {
+                Text(L10n.createGenerateHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            Button(action: generateCards) {
+                HStack(spacing: 8) {
+                    if isGenerating {
+                        ProgressView()
+                            .tint(.white)
+                    } else {
+                        Image(systemName: "sparkles")
+                    }
+                    Text(L10n.generateCards)
+                        .fontWeight(.semibold)
                 }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
             }
-            .alert(L10n.generateFailedTitle, isPresented: Binding(
-                get: { errorMessage != nil },
-                set: { if !$0 { errorMessage = nil } }
-            )) {
-                Button(L10n.ok, role: .cancel) {}
-            } message: {
-                Text(errorMessage ?? "")
-            }
-            .onAppear {
-                applyShareImportIfNeeded()
-            }
-            .onChange(of: shareImport.pendingPayload) { _, _ in
-                applyShareImportIfNeeded()
-            }
-            .onChange(of: selectedPhotoItem) { _, item in
-                guard let item else { return }
-                Task {
-                    await importPhoto(item)
+            .buttonStyle(.borderedProminent)
+            .disabled(isGenerating || !canGenerate)
+        }
+        .padding(.horizontal)
+        .padding(.top, 10)
+        .padding(.bottom, 8)
+        .background(.bar)
+    }
+
+    private func applyLongTextSuggestion(_ suggestion: LongTextSuggestion) {
+        defer { pendingLongText = "" }
+
+        switch suggestion {
+        case .none, .keepSingleSentence:
+            break
+        case .splitIntoWords:
+            let parsed = ImportTextAnalyzer.parse(sentence)
+            if !parsed.prefilledWords.isEmpty {
+                for word in parsed.prefilledWords {
+                    _ = VocabularyWords.append(word, to: &words)
                 }
+            } else {
+                showToast(L10n.createLongTextSplitFallback)
             }
         }
     }
@@ -144,6 +264,18 @@ struct CreateCardsView: View {
             return
         }
 
+        await recognizeImage(image, successBanner: L10n.importFromPhotoSuccess)
+    }
+
+    @MainActor
+    private func importCapturedImage(_ image: UIImage) async {
+        isRecognizingPhoto = true
+        defer { isRecognizingPhoto = false }
+        await recognizeImage(image, successBanner: L10n.importFromCameraSuccess)
+    }
+
+    @MainActor
+    private func recognizeImage(_ image: UIImage, successBanner: String) async {
         do {
             let text = try await ImageOCRService.recognizeText(in: image)
                 .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -152,7 +284,8 @@ struct CreateCardsView: View {
                 return
             }
             sentence = text
-            importBannerMessage = L10n.importFromPhotoSuccess
+            importBannerMessage = successBanner
+            showToast(successBanner)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -182,6 +315,10 @@ struct CreateCardsView: View {
         }
     }
 
+    private func showToast(_ message: String) {
+        ToastCenter.shared.show(message)
+    }
+
     private func applyShareImportIfNeeded() {
         guard let payload = shareImport.pendingPayload else { return }
         sentence = payload.sentence
@@ -207,6 +344,7 @@ struct CreateCardsView: View {
                     } else {
                         drafts = generated
                         showPreview = true
+                        showToast(L10n.createGenerateSuccess(generated.count))
                     }
                 }
             } catch {
@@ -216,6 +354,57 @@ struct CreateCardsView: View {
                 }
             }
         }
+    }
+}
+
+private struct CreateCardsAlertsModifier: ViewModifier {
+    @Binding var errorMessage: String?
+
+    func body(content: Content) -> some View {
+        content.alert(L10n.generateFailedTitle, isPresented: Binding(
+            get: { errorMessage != nil },
+            set: { if !$0 { errorMessage = nil } }
+        )) {
+            Button(L10n.ok, role: .cancel) {}
+        } message: {
+            Text(errorMessage ?? "")
+        }
+    }
+}
+
+private struct CreateCardsLifecycleModifier: ViewModifier {
+    @Binding var sentence: String
+    @Binding var pendingLongText: String
+    @Binding var showLongTextPrompt: Bool
+    @Binding var showPreview: Bool
+    @Binding var drafts: [GeneratedCardDraft]
+    @Binding var selectedPhotoItem: PhotosPickerItem?
+
+    let shareImport: ShareImportCoordinator
+    let onAppearImport: () -> Void
+    let onPhotoSelected: (PhotosPickerItem) -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear(perform: onAppearImport)
+            .onChange(of: shareImport.pendingPayload) { _, _ in
+                onAppearImport()
+            }
+            .onChange(of: showPreview) { _, isShowing in
+                guard !isShowing else { return }
+                DispatchQueue.main.async {
+                    drafts.removeAll()
+                }
+            }
+            .onChange(of: selectedPhotoItem) { _, item in
+                guard let item else { return }
+                onPhotoSelected(item)
+            }
+            .onChange(of: sentence) { oldValue, newValue in
+                guard oldValue.count <= 800, newValue.count > 800, pendingLongText != newValue else { return }
+                pendingLongText = newValue
+                showLongTextPrompt = true
+            }
     }
 }
 

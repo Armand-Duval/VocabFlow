@@ -57,6 +57,21 @@ enum APISettings {
         "kimi-k2.6"
     ]
 
+    static func modelDescription(for model: String) -> String {
+        switch model {
+        case "moonshot-v1-8k":
+            L10n.settingsModel8kDetail
+        case "moonshot-v1-32k":
+            L10n.settingsModel32kDetail
+        case "kimi-k2.5":
+            L10n.settingsModelK2Detail
+        case "kimi-k2.6":
+            L10n.settingsModelK26Detail
+        default:
+            L10n.settingsModelDefaultDetail
+        }
+    }
+
     static func migrateToAppGroupIfNeeded() {
         let legacy = UserDefaults.standard
         guard legacy !== defaults else { return }

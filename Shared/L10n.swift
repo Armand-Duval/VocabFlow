@@ -17,6 +17,7 @@ enum L10n {
     static var cancel: String { tr("common.cancel") }
     static var close: String { tr("common.close") }
     static var done: String { tr("common.done") }
+    static var clear: String { tr("common.clear") }
     static var add: String { tr("common.add") }
 
     // MARK: - Create cards
@@ -26,6 +27,18 @@ enum L10n {
     static var sourcePlaceholder: String { tr("create.source.placeholder") }
     static var wordsSection: String { tr("create.words") }
     static var generateCards: String { tr("create.generate") }
+    static var createGenerateHint: String { tr("create.generate.hint") }
+    static func createGenerateSuccess(_ count: Int) -> String { tf("create.generate.success", count) }
+    static func createCharCount(_ count: Int) -> String { tf("create.source.charCount", count) }
+    static var createSourceEmptyHint: String { tr("create.source.emptyHint") }
+    static var createSourceFooterHint: String { tr("create.source.footerHint") }
+    static var createSourceLongHint: String { tr("create.source.longHint") }
+    static var createWordsEmptyHint: String { tr("create.words.emptyHint") }
+    static var createLongTextTitle: String { tr("create.longText.title") }
+    static var createLongTextMessage: String { tr("create.longText.message") }
+    static var createLongTextKeepSentence: String { tr("create.longText.keepSentence") }
+    static var createLongTextSplitWords: String { tr("create.longText.splitWords") }
+    static var createLongTextSplitFallback: String { tr("create.longText.splitFallback") }
     static var generating: String { tr("create.generating") }
     static var usingDefaultKey: String { tr("create.defaultKey") }
     static var createTipTitle: String { tr("create.tip.title") }
@@ -84,6 +97,8 @@ enum L10n {
     static var speakSentence: String { tr("speech.sentence") }
     static var importFromPhoto: String { tr("import.photo") }
     static var importFromPhotoSuccess: String { tr("import.photo.success") }
+    static var importFromCamera: String { tr("import.camera") }
+    static var importFromCameraSuccess: String { tr("import.camera.success") }
     static var recognizingPhoto: String { tr("import.photo.recognizing") }
     static var ocrEmpty: String { tr("import.ocr.empty") }
     static var ocrFailed: String { tr("import.ocr.failed") }
@@ -98,6 +113,7 @@ enum L10n {
     static var reviewTitle: String { tr("review.title") }
     static var reviewEmptyTitle: String { tr("review.empty.title") }
     static var reviewEmptyNoCards: String { tr("review.empty.noCards") }
+    static var reviewEmptyGoCreate: String { tr("review.empty.goCreate") }
     static var reviewEmptyDone: String { tr("review.empty.done") }
     static var noCardsToReview: String { tr("review.noCards") }
     static var cardFront: String { tr("review.card.front") }
@@ -198,6 +214,28 @@ enum L10n {
     static var settingsSavedTitle: String { tr("settings.saved.title") }
     static var settingsAISection: String { tr("settings.ai.section") }
     static var settingsImportSection: String { tr("settings.import.section") }
+    static var settingsImportExportSection: String { tr("settings.importExport.section") }
+    static var settingsOpenDeckStore: String { tr("settings.openDeckStore") }
+    static var settingsImportFormatsFooter: String { tr("settings.import.formatsFooter") }
+    static var settingsAIKeyFooter: String { tr("settings.ai.keyFooter") }
+    static var settingsTestAPI: String { tr("settings.testAPI") }
+    static var settingsTestingAPI: String { tr("settings.testAPI.testing") }
+    static var settingsTestAPITitle: String { tr("settings.testAPI.title") }
+    static var settingsTestAPISuccess: String { tr("settings.testAPI.success") }
+    static func settingsTestAPIFailed(_ message: String) -> String { tf("settings.testAPI.failed", message) }
+    static var settingsHelpTitle: String { tr("settings.help.title") }
+    static var settingsHelpBYOK: String { tr("settings.help.byok") }
+    static var settingsHelpApkg: String { tr("settings.help.apkg") }
+    static var settingsHelpShare: String { tr("settings.help.share") }
+    static var settingsModel8kDetail: String { tr("settings.model.8k.detail") }
+    static var settingsModel32kDetail: String { tr("settings.model.32k.detail") }
+    static var settingsModelK2Detail: String { tr("settings.model.k2.detail") }
+    static var settingsModelK26Detail: String { tr("settings.model.k26.detail") }
+    static var settingsModelDefaultDetail: String { tr("settings.model.default.detail") }
+    static var libraryQuickImport: String { tr("library.quick.import") }
+    static var libraryQuickExport: String { tr("library.quick.export") }
+    static var deckImporting: String { tr("deck.importing") }
+    static var exportBackupSuccess: String { tr("settings.exportBackup.success") }
     static var settingsDataSection: String { tr("settings.data.section") }
     static var settingsMaintenanceSection: String { tr("settings.maintenance.section") }
     static var settingsMaintenanceFooter: String { tr("settings.maintenance.footer") }
@@ -327,6 +365,12 @@ enum L10n {
     static var libraryViewFlat: String { tr("library.view.flat") }
     static var libraryViewGrouped: String { tr("library.view.grouped") }
     static var libraryFlatListHint: String { tr("library.flatList.hint") }
+    static var libraryFilterTitle: String { tr("library.filter.title") }
+    static var libraryFilterAll: String { tr("library.filter.all") }
+    static var libraryFilterDue: String { tr("library.filter.due") }
+    static var libraryFilterDefinition: String { tr("library.filter.definition") }
+    static var libraryFilterCloze: String { tr("library.filter.cloze") }
+    static var libraryEmptyGoCreate: String { tr("library.empty.goCreate") }
     static var deckDownload: String { tr("deck.download.starter") }
     static func deckCardCount(_ count: Int) -> String {
         tf("deck.preset.starterCount", count)

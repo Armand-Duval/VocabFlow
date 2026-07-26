@@ -1,6 +1,24 @@
 import SwiftUI
 import SwiftData
 
+private enum LibraryCardFilter: String, CaseIterable, Identifiable {
+    case all
+    case due
+    case definition
+    case cloze
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .all: L10n.libraryFilterAll
+        case .due: L10n.libraryFilterDue
+        case .definition: L10n.libraryFilterDefinition
+        case .cloze: L10n.libraryFilterCloze
+        }
+    }
+}
+
 struct LibraryView: View {
     @Query(sort: [SortDescriptor(\Deck.sortOrder), SortDescriptor(\Deck.createdAt)])
     private var decks: [Deck]
@@ -12,6 +30,8 @@ struct LibraryView: View {
     @State private var selectedDeckID: UUID?
     @State private var hasAnyCards = true
     @State private var forceGrouped = false
+    @State private var cardFilter: LibraryCardFilter = .all
+    @State private var showDeckStore = false
     @State private var searchDebounceTask: Task<Void, Never>?
 
     private var totalCardCount: Int {
@@ -31,6 +51,7 @@ struct LibraryView: View {
                     LibraryGroupedList(
                         filterDeckID: filterDeckID,
                         searchText: debouncedSearchText,
+                        cardFilter: cardFilter,
                         decks: decks,
                         forceGrouped: forceGrouped,
                         onCardsDeleted: {
@@ -44,8 +65,31 @@ struct LibraryView: View {
             .navigationTitle(L10n.libraryTitle)
             .searchable(text: $searchText, prompt: L10n.librarySearchPrompt)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Menu {
+                        Picker(L10n.libraryFilterTitle, selection: $cardFilter) {
+                            ForEach(LibraryCardFilter.allCases) { filter in
+                                Text(filter.title).tag(filter)
+                            }
+                        }
+                    } label: {
+                        Label(cardFilter.title, systemImage: "line.3.horizontal.decrease.circle")
+                    }
+                }
+
                 ToolbarItem(placement: .topBarTrailing) {
-                    HStack(spacing: 12) {
+                    HStack(spacing: AppSpacing.sm) {
+                        if !searchText.isEmpty {
+                            Button {
+                                searchText = ""
+                                debouncedSearchText = ""
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundStyle(.secondary)
+                            }
+                            .accessibilityLabel(L10n.clear)
+                        }
+
                         if totalCardCount >= LibraryCardGrouper.flatListThreshold {
                             Button {
                                 forceGrouped.toggle()
@@ -76,6 +120,23 @@ struct LibraryView: View {
             }
             .safeAreaInset(edge: .top, spacing: 0) {
                 deckFilterBar
+            }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if hasAnyCards {
+                    libraryQuickActionsBar
+                }
+            }
+            .navigationDestination(isPresented: $showDeckStore) {
+                DeckStoreView(selectedDeckID: Binding(
+                    get: { filterDeckID ?? selectedDeckID },
+                    set: { newValue in
+                        filterDeckID = newValue
+                        selectedDeckID = newValue
+                        if let newValue {
+                            DeckSettings.lastSelectedDeckID = newValue
+                        }
+                    }
+                ))
             }
             .onAppear {
                 if filterDeckID == nil {
@@ -108,11 +169,34 @@ struct LibraryView: View {
         hasAnyCards = !((try? modelContext.fetch(descriptor)) ?? []).isEmpty
     }
 
+    private var libraryQuickActionsBar: some View {
+        HStack(spacing: AppSpacing.sm) {
+            Button {
+                showDeckStore = true
+            } label: {
+                Label(L10n.libraryQuickImport, systemImage: "square.and.arrow.down")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+
+            Button {
+                showDeckStore = true
+            } label: {
+                Label(L10n.libraryQuickExport, systemImage: "square.and.arrow.up")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+        }
+        .padding(.horizontal, AppSpacing.md)
+        .padding(.vertical, AppSpacing.sm)
+        .background(.bar)
+    }
+
     private var emptyLibraryState: some View {
         ContentUnavailableView {
             Label(L10n.libraryEmptyTitle, systemImage: "tray")
         } description: {
-            Text(L10n.libraryEmptyMessage)
+            Text(L10n.libraryEmptyGoCreate)
         } actions: {
             NavigationLink {
                 DeckStoreView(selectedDeckID: $selectedDeckID)
@@ -221,6 +305,7 @@ private enum LibraryDeckChipID: Hashable {
 private struct LibraryGroupedList: View {
     let filterDeckID: UUID?
     let searchText: String
+    let cardFilter: LibraryCardFilter
     let decks: [Deck]
     let forceGrouped: Bool
     let onCardsDeleted: () -> Void
@@ -237,7 +322,7 @@ private struct LibraryGroupedList: View {
     @State private var isLoadingGroups = false
 
     private var refreshToken: String {
-        "\(filterDeckID?.uuidString ?? "all")|\(searchText)|\(forceGrouped)"
+        "\(filterDeckID?.uuidString ?? "all")|\(searchText)|\(forceGrouped)|\(cardFilter.rawValue)"
     }
 
     var body: some View {
@@ -365,7 +450,7 @@ private struct LibraryGroupedList: View {
         await Task.yield()
         try? await Task.sleep(for: .milliseconds(16))
 
-        let fetchedCards = fetchCards(for: filterDeckID)
+        let fetchedCards = fetchCards(for: filterDeckID, filter: cardFilter)
         cards = fetchedCards
 
         let cache = LibraryCatalogCache.shared
@@ -412,7 +497,8 @@ private struct LibraryGroupedList: View {
         cardsByID = cardLookup
     }
 
-    private func fetchCards(for deckID: UUID?) -> [FlashCard] {
+    private func fetchCards(for deckID: UUID?, filter: LibraryCardFilter) -> [FlashCard] {
+        let baseCards: [FlashCard]
         if let deckID {
             let id = deckID
             var descriptor = FetchDescriptor<FlashCard>(
@@ -421,13 +507,24 @@ private struct LibraryGroupedList: View {
                 },
                 sortBy: [SortDescriptor(\FlashCard.createdAt, order: .reverse)]
             )
-            return (try? modelContext.fetch(descriptor)) ?? []
+            baseCards = (try? modelContext.fetch(descriptor)) ?? []
+        } else {
+            let descriptor = FetchDescriptor<FlashCard>(
+                sortBy: [SortDescriptor(\FlashCard.createdAt, order: .reverse)]
+            )
+            baseCards = (try? modelContext.fetch(descriptor)) ?? []
         }
 
-        let descriptor = FetchDescriptor<FlashCard>(
-            sortBy: [SortDescriptor(\FlashCard.createdAt, order: .reverse)]
-        )
-        return (try? modelContext.fetch(descriptor)) ?? []
+        switch filter {
+        case .all:
+            return baseCards
+        case .due:
+            return baseCards.filter { ReviewScheduler.isDue($0) }
+        case .definition:
+            return baseCards.filter { $0.cardType == .definition }
+        case .cloze:
+            return baseCards.filter { $0.cardType == .cloze }
+        }
     }
 
     private func resolvedCards(for ids: [UUID]) -> [FlashCard]? {
@@ -473,12 +570,7 @@ private struct LibraryCardRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text(card.cardType.displayName)
-                    .font(.caption)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(.blue.opacity(0.12))
-                    .clipShape(Capsule())
+                CardTypeChip(title: card.cardType.displayName)
 
                 if let deckName = card.deck?.name, showsDeckName {
                     Text(deckName)
@@ -489,15 +581,7 @@ private struct LibraryCardRow: View {
 
                 Spacer()
 
-                if ReviewScheduler.isDue(card) {
-                    Text(L10n.dueForReview)
-                        .font(.caption2)
-                        .foregroundStyle(.orange)
-                } else {
-                    Text(L10n.nextReview(card.nextReviewDate.formatted(date: .abbreviated, time: .shortened)))
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
+                LibraryCardStatusChip(card: card)
             }
 
             Text(card.front)

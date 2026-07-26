@@ -1,5 +1,42 @@
 import SwiftUI
 
+struct ToastBanner: View {
+    let message: String
+
+    var body: some View {
+        Text(message)
+            .font(.subheadline)
+            .multilineTextAlignment(.center)
+            .foregroundStyle(.primary)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(.ultraThinMaterial, in: Capsule())
+            .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
+    }
+}
+
+struct ToastBannerModifier: ViewModifier {
+    let message: String?
+    var bottomPadding: CGFloat = 96
+
+    func body(content: Content) -> some View {
+        content.overlay(alignment: .bottom) {
+            if let message {
+                ToastBanner(message: message)
+                    .padding(.bottom, bottomPadding)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.easeInOut(duration: 0.25), value: message)
+    }
+}
+
+extension View {
+    func toastBanner(message: String?, bottomPadding: CGFloat = 96) -> some View {
+        modifier(ToastBannerModifier(message: message, bottomPadding: bottomPadding))
+    }
+}
+
 struct ImportBannerView: View {
     let message: String
     let systemImage: String

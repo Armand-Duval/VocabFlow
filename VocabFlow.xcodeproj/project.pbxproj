@@ -45,6 +45,19 @@
 		HH0000010000000000000007 /* CreateCardsUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = HH0000010000000000000012 /* CreateCardsUI.swift */; };
 		HH0000010000000000000008 /* CreateCardsUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = HH0000010000000000000012 /* CreateCardsUI.swift */; };
 		HH0000010000000000000009 /* CreateCardsUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = HH0000010000000000000012 /* CreateCardsUI.swift */; };
+		VV0000010000000000000001 /* CameraImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = VV0000010000000000000010 /* CameraImagePicker.swift */; };
+		VV0000010000000000000002 /* CameraImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = VV0000010000000000000010 /* CameraImagePicker.swift */; };
+		VV0000010000000000000003 /* CameraImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = VV0000010000000000000010 /* CameraImagePicker.swift */; };
+		WW0000010000000000000001 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = WW0000010000000000000010 /* DesignTokens.swift */; };
+		WW0000010000000000000002 /* StatusChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = WW0000010000000000000011 /* StatusChip.swift */; };
+		WW0000010000000000000003 /* ToastCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = WW0000010000000000000012 /* ToastCenter.swift */; };
+		WW0000010000000000000004 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = WW0000010000000000000010 /* DesignTokens.swift */; };
+		WW0000010000000000000005 /* StatusChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = WW0000010000000000000011 /* StatusChip.swift */; };
+		WW0000010000000000000006 /* ToastCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = WW0000010000000000000012 /* ToastCenter.swift */; };
+		WW0000010000000000000007 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = WW0000010000000000000010 /* DesignTokens.swift */; };
+		WW0000010000000000000008 /* StatusChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = WW0000010000000000000011 /* StatusChip.swift */; };
+		WW0000010000000000000009 /* ToastCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = WW0000010000000000000012 /* ToastCenter.swift */; };
+		XX0000010000000000000001 /* LibraryCardStatusChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = XX0000010000000000000010 /* LibraryCardStatusChip.swift */; };
 		HH000001000000000000000A /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = HH0000010000000000000013 /* Localizable.xcstrings */; };
 		HH000001000000000000000B /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = HH0000010000000000000013 /* Localizable.xcstrings */; };
 		HH000001000000000000000C /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = HH0000010000000000000013 /* Localizable.xcstrings */; };
@@ -146,6 +159,11 @@
 		HH0000010000000000000010 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
 		HH0000010000000000000011 /* ImportTextAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportTextAnalyzer.swift; sourceTree = "<group>"; };
 		HH0000010000000000000012 /* CreateCardsUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateCardsUI.swift; sourceTree = "<group>"; };
+		VV0000010000000000000010 /* CameraImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraImagePicker.swift; sourceTree = "<group>"; };
+		WW0000010000000000000010 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
+		WW0000010000000000000011 /* StatusChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusChip.swift; sourceTree = "<group>"; };
+		WW0000010000000000000012 /* ToastCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastCenter.swift; sourceTree = "<group>"; };
+		XX0000010000000000000010 /* LibraryCardStatusChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryCardStatusChip.swift; sourceTree = "<group>"; };
 		HH0000010000000000000013 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		AA0000010000000000000051 /* FlashCardBackup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashCardBackup.swift; sourceTree = "<group>"; };
 		AA0000010000000000000053 /* BackupDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupDocument.swift; sourceTree = "<group>"; };
@@ -340,6 +358,7 @@
 				QQ0000010000000000000017 /* DeckPickerSection.swift */,
 				QQ0000010000000000000018 /* DeckStoreView.swift */,
 				UU0000010000000000000014 /* DeckStatisticsView.swift */,
+				XX0000010000000000000010 /* LibraryCardStatusChip.swift */,
 				MM0000010000000000000011 /* SpeakButton.swift */,
 			);
 			path = Views;
@@ -376,6 +395,10 @@
 				HH0000010000000000000010 /* L10n.swift */,
 				HH0000010000000000000011 /* ImportTextAnalyzer.swift */,
 				HH0000010000000000000012 /* CreateCardsUI.swift */,
+				VV0000010000000000000010 /* CameraImagePicker.swift */,
+				WW0000010000000000000010 /* DesignTokens.swift */,
+				WW0000010000000000000011 /* StatusChip.swift */,
+				WW0000010000000000000012 /* ToastCenter.swift */,
 				HH0000010000000000000013 /* Localizable.xcstrings */,
 				NN0000010000000000000010 /* ImageOCRService.swift */,
 				CC0000010000000000000011 /* CardDraft.swift */,
@@ -526,6 +549,10 @@
 				HH0000010000000000000002 /* L10n.swift in Sources */,
 				HH0000010000000000000005 /* ImportTextAnalyzer.swift in Sources */,
 				HH0000010000000000000008 /* CreateCardsUI.swift in Sources */,
+				VV0000010000000000000002 /* CameraImagePicker.swift in Sources */,
+				WW0000010000000000000004 /* DesignTokens.swift in Sources */,
+				WW0000010000000000000005 /* StatusChip.swift in Sources */,
+				WW0000010000000000000006 /* ToastCenter.swift in Sources */,
 				NN0000010000000000000002 /* ImageOCRService.swift in Sources */,
 				CC0000010000000000000003 /* CardDraft.swift in Sources */,
 				CC0000010000000000000004 /* KimiCardGenerator.swift in Sources */,
@@ -552,6 +579,10 @@
 				HH0000010000000000000003 /* L10n.swift in Sources */,
 				HH0000010000000000000006 /* ImportTextAnalyzer.swift in Sources */,
 				HH0000010000000000000009 /* CreateCardsUI.swift in Sources */,
+				VV0000010000000000000003 /* CameraImagePicker.swift in Sources */,
+				WW0000010000000000000007 /* DesignTokens.swift in Sources */,
+				WW0000010000000000000008 /* StatusChip.swift in Sources */,
+				WW0000010000000000000009 /* ToastCenter.swift in Sources */,
 				NN0000010000000000000003 /* ImageOCRService.swift in Sources */,
 				DD0000010000000000000007 /* CardDraft.swift in Sources */,
 				DD0000010000000000000008 /* KimiCardGenerator.swift in Sources */,
@@ -635,6 +666,11 @@
 				HH0000010000000000000001 /* L10n.swift in Sources */,
 				HH0000010000000000000004 /* ImportTextAnalyzer.swift in Sources */,
 				HH0000010000000000000007 /* CreateCardsUI.swift in Sources */,
+				VV0000010000000000000001 /* CameraImagePicker.swift in Sources */,
+				WW0000010000000000000001 /* DesignTokens.swift in Sources */,
+				WW0000010000000000000002 /* StatusChip.swift in Sources */,
+				WW0000010000000000000003 /* ToastCenter.swift in Sources */,
+				XX0000010000000000000001 /* LibraryCardStatusChip.swift in Sources */,
 				AA0000010000000000000050 /* FlashCardBackup.swift in Sources */,
 				AA0000010000000000000052 /* BackupDocument.swift in Sources */,
 				AA0000010000000000000054 /* BackupService.swift in Sources */,
