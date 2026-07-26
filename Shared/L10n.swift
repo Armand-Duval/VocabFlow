@@ -432,6 +432,16 @@ enum L10n {
     static func deckImportApkgMultiResult(deckCount: Int, cardCount: Int) -> String {
         tf("deck.import.apkgMultiResult", deckCount, cardCount)
     }
+    static var deckImportFallbackUnmappedName: String { tr("deck.import.fallback.unmappedName") }
+    static var deckImportFallbackIncompleteName: String { tr("deck.import.fallback.incompleteName") }
+    static var deckImportEmptyCardPlaceholder: String { tr("deck.import.emptyCardPlaceholder") }
+    static var deckImportMissingBackPlaceholder: String { tr("deck.import.missingBackPlaceholder") }
+    static func deckImportApkgUnmappedResult(_ name: String, count: Int) -> String {
+        tf("deck.import.apkgUnmappedResult", name, count)
+    }
+    static func deckImportApkgIncompleteResult(_ name: String, count: Int) -> String {
+        tf("deck.import.apkgIncompleteResult", name, count)
+    }
     static func deckImportDeckJSONResult(_ name: String, added: Int, updated: Int) -> String {
         tf("deck.import.deckJSONResult", name, added, updated)
     }

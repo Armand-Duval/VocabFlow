@@ -1953,6 +1953,42 @@
         }
       }
     },
+    "deck.import.apkgUnmappedResult" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%2$d cards without deck info → “%1$@”." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%2$d 张无词库信息的卡片 → 「%1$@」。" } }
+      }
+    },
+    "deck.import.apkgIncompleteResult" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%2$d cards with incomplete fields → “%1$@”." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%2$d 张字段不完整的卡片 → 「%1$@」。" } }
+      }
+    },
+    "deck.import.fallback.unmappedName" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Anki Import (Unknown Deck)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Anki 导入（未知词库）" } }
+      }
+    },
+    "deck.import.fallback.incompleteName" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Anki Import (Incomplete)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Anki 导入（字段不完整）" } }
+      }
+    },
+    "deck.import.emptyCardPlaceholder" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "(Empty card)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "（空卡片）" } }
+      }
+    },
+    "deck.import.missingBackPlaceholder" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "(No back field)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "（无背面字段）" } }
+      }
+    },
     "deck.import.apkgResult" : {
       "localizations" : {
         "en" : {

@@ -611,11 +611,9 @@ struct DeckStoreView: View {
                 }
                 do {
                     let data = try BackupDocumentSupport.readData(from: url)
-                    let targets = checkedDecks
                     let imported = try await ApkgImportService.importApkgAsync(
                         data: data,
-                        context: modelContext,
-                        targetDecks: targets.isEmpty ? nil : targets
+                        context: modelContext
                     ) { current, total in
                         importProgress = ImportProgressState(key: "apkg", current: current, total: total)
                     }
