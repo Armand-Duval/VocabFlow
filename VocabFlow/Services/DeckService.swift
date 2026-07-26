@@ -128,6 +128,25 @@ enum DeckService {
     }
 
     @MainActor
+    static func updateDeck(
+        _ deck: Deck,
+        name: String,
+        detailText: String?,
+        in context: ModelContext
+    ) throws {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            throw DeckServiceError.invalidName
+        }
+        let normalizedDetail = detailText?.trimmingCharacters(in: .whitespacesAndNewlines)
+        deck.name = trimmed
+        deck.detailText = normalizedDetail?.isEmpty == true ? nil : normalizedDetail
+        try context.save()
+        syncSharedCatalog(in: context)
+        DeckCardCountService.notifyCatalogChanged()
+    }
+
+    @MainActor
     static func importStarterCardsPublicAsync(
         from pack: DeckPackFile,
         into deck: Deck,
@@ -283,8 +302,15 @@ enum DeckService {
     }
 
     @MainActor
+    static func canDelete(_ deck: Deck) -> Bool {
+        if deck.slug == DeckCatalog.defaultSlug { return false }
+        if deck.slug == nil, deck.isBuiltIn, deck.sortOrder == 0 { return false }
+        return true
+    }
+
+    @MainActor
     static func deleteDeck(_ deck: Deck, in context: ModelContext) throws {
-        guard deck.slug != DeckCatalog.defaultSlug else {
+        guard canDelete(deck) else {
             throw DeckServiceError.cannotDeleteDefault
         }
 
@@ -353,11 +379,14 @@ enum DeckService {
 
 enum DeckServiceError: LocalizedError {
     case cannotDeleteDefault
+    case invalidName
 
     var errorDescription: String? {
         switch self {
         case .cannotDeleteDefault:
             L10n.deckErrorCannotDeleteDefault
+        case .invalidName:
+            L10n.deckErrorInvalidName
         }
     }
 }

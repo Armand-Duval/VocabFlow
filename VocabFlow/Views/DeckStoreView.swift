@@ -19,15 +19,12 @@ struct DeckStoreView: View {
     }
 
     @State private var showCreateDeck = false
+    @State private var editingDeck: Deck?
     @State private var showUnifiedFileImporter = false
     @State private var fileImportMode: DeckFileImportMode?
     @State private var allowedImportTypes: [UTType] = [.json]
-    @State private var exportDocument: BackupDocument?
-    @State private var apkgDocument: ApkgDocument?
-    @State private var showJSONExporter = false
-    @State private var showApkgExporter = false
-    @State private var apkgExportFilename = ApkgExportService.defaultFilename
-    @State private var jsonExportFilename = BackupService.defaultFilename
+    @State private var pendingFileExport: PendingFileExport?
+    @State private var showFileExporter = false
     @State private var alertTitle = ""
     @State private var alertMessage = ""
     @State private var showAlert = false
@@ -52,7 +49,7 @@ struct DeckStoreView: View {
     }
 
     private var checkedCardCount: Int {
-        checkedDecks.reduce(0) { $0 + $1.cardCount }
+        fetchCards(in: checkedDeckIDs).count
     }
 
     private var allDecksSelected: Bool {
@@ -79,10 +76,16 @@ struct DeckStoreView: View {
             }
         }
         .sheet(isPresented: $showCreateDeck) {
-            CreateDeckSheet { deck in
+            DeckEditorSheet { deck in
                 selectedDeckID = deck.id
                 DeckSettings.lastSelectedDeckID = deck.id
                 checkedDeckIDs = [deck.id]
+                reloadDecks()
+                DeckCardCountService.notifyCatalogChanged()
+            }
+        }
+        .sheet(item: $editingDeck) { deck in
+            DeckEditorSheet(deck: deck) { _ in
                 reloadDecks()
                 DeckCardCountService.notifyCatalogChanged()
             }
@@ -95,26 +98,20 @@ struct DeckStoreView: View {
             handleUnifiedFileImport(result)
         }
         .fileExporter(
-            isPresented: $showJSONExporter,
-            document: exportDocument,
-            contentType: .json,
-            defaultFilename: jsonExportFilename
+            isPresented: $showFileExporter,
+            document: pendingFileExport?.document,
+            contentType: pendingFileExport?.contentType ?? .json,
+            defaultFilename: pendingFileExport?.filename ?? BackupService.defaultFilename
         ) { result in
+            let recordsBackupCompletion = pendingFileExport?.recordsBackupCompletion == true
+            defer { pendingFileExport = nil }
             switch result {
             case .success:
-                BackupReminderService.recordBackupCompleted()
-                ToastCenter.shared.show(L10n.exportBackupSuccess)
+                if recordsBackupCompletion {
+                    BackupReminderService.recordBackupCompleted()
+                    ToastCenter.shared.show(L10n.exportBackupSuccess)
+                }
             case .failure(let error):
-                showResult(title: L10n.exportFailed, message: error.localizedDescription)
-            }
-        }
-        .fileExporter(
-            isPresented: $showApkgExporter,
-            document: apkgDocument,
-            contentType: .apkg,
-            defaultFilename: apkgExportFilename
-        ) { result in
-            if case .failure(let error) = result {
                 showResult(title: L10n.exportFailed, message: error.localizedDescription)
             }
         }
@@ -183,54 +180,58 @@ struct DeckStoreView: View {
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(decks) { deck in
-                    HStack {
+                    HStack(alignment: .center, spacing: AppSpacing.sm) {
                         Button {
                             toggleDeckCheck(deck)
                         } label: {
-                            HStack(spacing: AppSpacing.sm) {
+                            HStack(alignment: .center, spacing: AppSpacing.sm) {
                                 Image(systemName: checkedDeckIDs.contains(deck.id) ? "checkmark.circle.fill" : "circle")
                                     .foregroundStyle(checkedDeckIDs.contains(deck.id) ? AppColor.accent : .secondary)
                                     .font(.title3)
+                                    .frame(width: 28)
 
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(deck.name)
+                                        .font(AppFont.body())
                                         .foregroundStyle(.primary)
+                                        .multilineTextAlignment(.leading)
+                                        .lineLimit(2)
                                     if let detail = deck.detailText, !detail.isEmpty {
                                         Text(detail)
                                             .font(AppFont.caption())
                                             .foregroundStyle(.secondary)
-                                            .lineLimit(2)
+                                            .lineLimit(1)
                                     }
                                 }
-
-                                Spacer()
-
-                                Text("\(deck.cardCount)")
-                                    .font(AppFont.caption())
-                                    .foregroundStyle(.secondary)
                             }
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         .buttonStyle(.plain)
+
+                        Text("\(deck.cardCount)")
+                            .font(AppFont.caption())
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                            .layoutPriority(1)
 
                         NavigationLink {
                             DeckStatisticsView(deck: deck)
                         } label: {
                             Image(systemName: "chart.bar.xaxis")
                                 .foregroundStyle(.secondary)
+                                .frame(width: 28, height: 28)
                         }
                         .buttonStyle(.plain)
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        if deck.cardCount > 0 {
-                            Button {
-                                exportDeckApkg(deck)
-                            } label: {
-                                Label(L10n.deckExportApkg, systemImage: "square.and.arrow.up")
-                            }
-                            .tint(AppColor.accent)
+                        Button {
+                            editingDeck = deck
+                        } label: {
+                            Label(L10n.deckEdit, systemImage: "pencil")
                         }
+                        .tint(AppColor.accent)
 
-                        if deck.slug != DeckCatalog.defaultSlug {
+                        if DeckService.canDelete(deck) {
                             Button(role: .destructive) {
                                 deleteDeck(deck)
                             } label: {
@@ -716,37 +717,42 @@ struct DeckStoreView: View {
         }
     }
 
-    private func presentJSONExport(data: Data, filename: String) {
-        exportDocument = BackupDocument(data: data)
-        jsonExportFilename = filename
+    private func presentFileExport(
+        data: Data,
+        contentType: UTType,
+        filename: String,
+        recordsBackupCompletion: Bool
+    ) {
+        showFileExporter = false
+        pendingFileExport = PendingFileExport(
+            document: ExportFileDocument(data: data),
+            contentType: contentType,
+            filename: filename,
+            recordsBackupCompletion: recordsBackupCompletion
+        )
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(150))
-            showJSONExporter = true
+            guard pendingFileExport != nil else { return }
+            showFileExporter = true
         }
+    }
+
+    private func presentJSONExport(data: Data, filename: String) {
+        presentFileExport(
+            data: data,
+            contentType: .json,
+            filename: filename,
+            recordsBackupCompletion: true
+        )
     }
 
     private func presentApkgExport(data: Data, filename: String) {
-        apkgDocument = ApkgDocument(data: data)
-        apkgExportFilename = filename
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(150))
-            showApkgExporter = true
-        }
-    }
-
-    private func exportDeckApkg(_ deck: Deck) {
-        checkedDeckIDs = [deck.id]
-        exportCheckedDecksApkg()
-    }
-
-    private func fetchCards(for deck: Deck) -> [FlashCard] {
-        let deckID = deck.id
-        let descriptor = FetchDescriptor<FlashCard>(
-            predicate: #Predicate<FlashCard> { card in
-                card.deck?.id == deckID
-            }
+        presentFileExport(
+            data: data,
+            contentType: .apkg,
+            filename: filename,
+            recordsBackupCompletion: false
         )
-        return (try? modelContext.fetch(descriptor)) ?? []
     }
 
     private func showResult(title: String, message: String) {
@@ -757,6 +763,13 @@ struct DeckStoreView: View {
             ToastCenter.shared.show(message)
         }
     }
+}
+
+private struct PendingFileExport {
+    let document: ExportFileDocument
+    let contentType: UTType
+    let filename: String
+    let recordsBackupCompletion: Bool
 }
 
 private enum DeckFileImportMode {
@@ -780,14 +793,23 @@ private extension Error {
     }
 }
 
-private struct CreateDeckSheet: View {
+private struct DeckEditorSheet: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
-    let onCreated: (Deck) -> Void
+    let deck: Deck?
+    let onSaved: (Deck) -> Void
 
     @State private var name = ""
     @State private var detailText = ""
+    @State private var errorMessage = ""
+
+    init(deck: Deck? = nil, onSaved: @escaping (Deck) -> Void) {
+        self.deck = deck
+        self.onSaved = onSaved
+    }
+
+    private var isEditing: Bool { deck != nil }
 
     var body: some View {
         NavigationStack {
@@ -796,27 +818,52 @@ private struct CreateDeckSheet: View {
                 TextField(L10n.deckDetailPlaceholder, text: $detailText, axis: .vertical)
                     .lineLimit(2...5)
             }
-            .navigationTitle(L10n.deckCreateTitle)
+            .navigationTitle(isEditing ? L10n.deckEditTitle : L10n.deckCreateTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L10n.cancel) { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(L10n.add) {
-                        let deck = DeckService.createCustomDeck(
-                            name: name,
-                            detailText: detailText,
-                            in: modelContext
-                        )
-                        onCreated(deck)
-                        dismiss()
+                    Button(isEditing ? L10n.deckSave : L10n.add) {
+                        saveDeck()
                     }
                     .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
             }
+            .alert(L10n.deckEditFailed, isPresented: Binding(
+                get: { !errorMessage.isEmpty },
+                set: { if !$0 { errorMessage = "" } }
+            )) {
+                Button(L10n.ok, role: .cancel) {}
+            } message: {
+                Text(errorMessage)
+            }
+            .onAppear {
+                name = deck?.name ?? ""
+                detailText = deck?.detailText ?? ""
+            }
         }
         .presentationDetents([.medium])
+    }
+
+    private func saveDeck() {
+        do {
+            if let deck {
+                try DeckService.updateDeck(deck, name: name, detailText: detailText, in: modelContext)
+                onSaved(deck)
+            } else {
+                let created = DeckService.createCustomDeck(
+                    name: name,
+                    detailText: detailText,
+                    in: modelContext
+                )
+                onSaved(created)
+            }
+            dismiss()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 }
 

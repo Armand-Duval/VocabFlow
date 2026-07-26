@@ -398,6 +398,10 @@ enum L10n {
         tf("deck.install.empty", name)
     }
     static var deckCreateTitle: String { tr("deck.create.title") }
+    static var deckEditTitle: String { tr("deck.edit.title") }
+    static var deckEdit: String { tr("deck.edit") }
+    static var deckEditFailed: String { tr("deck.edit.failed") }
+    static var deckSave: String { tr("deck.save") }
     static var deckNamePlaceholder: String { tr("deck.name.placeholder") }
     static var deckDetailPlaceholder: String { tr("deck.detail.placeholder") }
     static var deckUntitled: String { tr("deck.untitled") }
@@ -441,6 +445,7 @@ enum L10n {
         tf("deck.preset.starterCount", count)
     }
     static var deckErrorCannotDeleteDefault: String { tr("deck.error.cannotDeleteDefault") }
+    static var deckErrorInvalidName: String { tr("deck.error.invalidName") }
     static var deckOpenSourceSection: String { tr("deck.openSource.section") }
     static var deckOpenSourceFooter: String { tr("deck.openSource.footer") }
     static var deckCommunitySection: String { tr("deck.community.section") }

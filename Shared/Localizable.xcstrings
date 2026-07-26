@@ -1484,6 +1484,30 @@
         }
       }
     },
+    "deck.edit" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "编辑" } }
+      }
+    },
+    "deck.edit.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit Deck" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "编辑词库" } }
+      }
+    },
+    "deck.edit.failed" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit Failed" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "编辑失败" } }
+      }
+    },
+    "deck.save" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Save" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "保存" } }
+      }
+    },
     "deck.default.detail" : {
       "localizations" : {
         "en" : {
@@ -1706,6 +1730,12 @@
             "value" : "默认词库不能删除"
           }
         }
+      }
+    },
+    "deck.error.invalidName" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Deck name cannot be empty" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "词库名称不能为空" } }
       }
     },
     "deck.error.missingStarterPack" : {

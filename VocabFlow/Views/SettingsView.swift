@@ -19,7 +19,6 @@ struct SettingsView: View {
     @State private var showDeckStore = false
 
     @State private var showResetAllConfirm = false
-    @State private var showDeleteAllConfirm = false
     @State private var maintenanceAlertTitle = ""
     @State private var maintenanceAlertMessage = ""
     @State private var showMaintenanceAlert = false
@@ -77,14 +76,6 @@ struct SettingsView: View {
                 Button(L10n.cancel, role: .cancel) {}
             } message: {
                 Text(L10n.settingsResetAllSRSMessage)
-            }
-            .confirmationDialog(L10n.settingsDeleteAllCards, isPresented: $showDeleteAllConfirm, titleVisibility: .visible) {
-                Button(L10n.settingsDeleteAllCards, role: .destructive) {
-                    deleteAllCards()
-                }
-                Button(L10n.cancel, role: .cancel) {}
-            } message: {
-                Text(L10n.settingsDeleteAllCardsMessage)
             }
         }
     }
@@ -259,21 +250,6 @@ struct SettingsView: View {
                 .buttonStyle(.plain)
                 .disabled(!hasAnyCards)
                 .opacity(hasAnyCards ? 1 : 0.45)
-
-                SettingsDivider()
-
-                Button(role: .destructive) {
-                    showDeleteAllConfirm = true
-                } label: {
-                    SettingsNavigationRow(
-                        title: L10n.settingsDeleteAllCards,
-                        systemImage: "trash",
-                        tint: .red
-                    )
-                }
-                .buttonStyle(.plain)
-                .disabled(!hasAnyCards)
-                .opacity(hasAnyCards ? 1 : 0.45)
             }
         }
     }
@@ -387,14 +363,6 @@ struct SettingsView: View {
         fetchAllCards().forEach { ReviewScheduler.resetProgress(for: $0) }
         DeckCardCountService.notifyDataMaintenance()
         showMaintenanceResult(title: L10n.settingsResetAllSRSDone, message: L10n.settingsResetAllSRSDoneMessage)
-    }
-
-    private func deleteAllCards() {
-        fetchAllCards().forEach { modelContext.delete($0) }
-        DeckCardCountService.recountAll(in: modelContext)
-        hasAnyCards = false
-        DeckCardCountService.notifyDataMaintenance()
-        showMaintenanceResult(title: L10n.settingsDeleteAllDone, message: L10n.settingsDeleteAllDoneMessage)
     }
 
     private func showMaintenanceResult(title: String, message: String) {

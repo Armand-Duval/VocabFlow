@@ -11,6 +11,7 @@ extension UTType {
 
 struct ApkgDocument: FileDocument {
     static var readableContentTypes: [UTType] { [.apkg] }
+    static var writableContentTypes: [UTType] { [.apkg] }
 
     var data: Data
 
