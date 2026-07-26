@@ -9,7 +9,13 @@ struct DeckStoreView: View {
     @Binding var selectedDeckID: UUID?
 
     @Query(sort: [SortDescriptor(\Deck.sortOrder), SortDescriptor(\Deck.createdAt)])
-    private var decks: [Deck]
+    private var queriedDecks: [Deck]
+
+    @State private var cachedDecks: [Deck] = []
+
+    private var decks: [Deck] {
+        queriedDecks.isEmpty ? cachedDecks : queriedDecks
+    }
 
     private var totalCardCount: Int {
         decks.reduce(0) { $0 + $1.cachedCardCount }
@@ -66,6 +72,8 @@ struct DeckStoreView: View {
             CreateDeckSheet { deck in
                 selectedDeckID = deck.id
                 DeckSettings.lastSelectedDeckID = deck.id
+                reloadDecks()
+                DeckCardCountService.notifyCatalogChanged()
             }
         }
         .fileImporter(
@@ -103,7 +111,11 @@ struct DeckStoreView: View {
             contentType: .json,
             defaultFilename: BackupService.defaultFilename
         ) { result in
-            if case .failure(let error) = result {
+            switch result {
+            case .success:
+                BackupReminderService.recordBackupCompleted()
+                ToastCenter.shared.show(L10n.exportBackupSuccess)
+            case .failure(let error):
                 showResult(title: L10n.exportFailed, message: error.localizedDescription)
             }
         }
@@ -132,8 +144,15 @@ struct DeckStoreView: View {
             Text(L10n.deckCommunityImportGuideBody)
         }
         .onAppear {
-            DeckService.bootstrap(in: modelContext)
+            reloadDecks()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .libraryCatalogDidChange)) { _ in
+            reloadDecks()
+        }
+    }
+
+    private func reloadDecks() {
+        cachedDecks = DeckService.refreshDecks(in: modelContext)
     }
 
     private var myDecksSection: some View {
@@ -480,6 +499,8 @@ struct DeckStoreView: View {
                     }
                     selectedDeckID = imported.deck.id
                     DeckSettings.lastSelectedDeckID = imported.deck.id
+                    reloadDecks()
+                    DeckCardCountService.notifyCatalogChanged()
                     showResult(
                         title: L10n.deckImportComplete,
                         message: L10n.deckImportPackResult(imported.deck.name, count: imported.importedCards)
@@ -489,13 +510,14 @@ struct DeckStoreView: View {
                 }
             }
         case .failure(let error):
+            guard !error.isFileImporterCancellation else { return }
             showResult(title: L10n.deckImportFailed, message: error.localizedDescription)
         }
     }
 
     private func handleApkgImport(_ result: Result<URL, Error>) {
         let deckID = importTargetDeckID ?? selectedDeckID ?? DeckService.fetchOrCreateDefault(in: modelContext).id
-        guard let deck = DeckService.fetchDeck(id: deckID, in: modelContext) else { return }
+        let deck = DeckService.resolvedDeck(id: deckID, in: modelContext)
 
         switch result {
         case .success(let url):
@@ -517,6 +539,8 @@ struct DeckStoreView: View {
                     }
                     selectedDeckID = deck.id
                     DeckSettings.lastSelectedDeckID = deck.id
+                    reloadDecks()
+                    DeckCardCountService.notifyCatalogChanged()
                     showResult(
                         title: L10n.deckImportComplete,
                         message: L10n.deckImportApkgResult(deck.name, count: imported.imported)
@@ -526,6 +550,7 @@ struct DeckStoreView: View {
                 }
             }
         case .failure(let error):
+            guard !error.isFileImporterCancellation else { return }
             showResult(title: L10n.deckImportFailed, message: error.localizedDescription)
         }
     }
@@ -540,8 +565,6 @@ struct DeckStoreView: View {
             let data = try BackupService.export(cards: cards, decks: decks)
             exportDocument = BackupDocument(data: data)
             showJSONExporter = true
-            BackupReminderService.recordBackupCompleted()
-            ToastCenter.shared.show(L10n.exportBackupSuccess)
         } catch {
             showResult(title: L10n.exportFailed, message: error.localizedDescription)
         }
@@ -594,6 +617,7 @@ struct DeckStoreView: View {
                 showResult(title: L10n.readFailed, message: error.localizedDescription)
             }
         case .failure(let error):
+            guard !error.isFileImporterCancellation else { return }
             showResult(title: L10n.importFailed, message: error.localizedDescription)
         }
     }
@@ -608,6 +632,8 @@ struct DeckStoreView: View {
             }
             do {
                 let result = try BackupService.importMerge(data: data, into: modelContext)
+                reloadDecks()
+                DeckCardCountService.notifyDataMaintenance()
                 showResult(
                     title: L10n.importComplete,
                     message: L10n.importMergeResult(added: result.added, updated: result.updated)
@@ -628,6 +654,8 @@ struct DeckStoreView: View {
             }
             do {
                 let count = try BackupService.importReplace(data: data, into: modelContext)
+                reloadDecks()
+                DeckCardCountService.notifyDataMaintenance()
                 showResult(title: L10n.importComplete, message: L10n.importReplaceResult(count))
             } catch {
                 showResult(title: L10n.importFailed, message: error.localizedDescription)
@@ -642,6 +670,13 @@ struct DeckStoreView: View {
         if title == L10n.importComplete || title == L10n.deckImportComplete {
             ToastCenter.shared.show(message)
         }
+    }
+}
+
+private extension Error {
+    var isFileImporterCancellation: Bool {
+        let nsError = self as NSError
+        return nsError.domain == NSCocoaErrorDomain && nsError.code == NSUserCancelledError
     }
 }
 

@@ -1,5 +1,4 @@
 import SwiftUI
-import PhotosUI
 import UIKit
 
 struct CreateCardsView: View {
@@ -23,8 +22,8 @@ struct CreateCardsView: View {
     @State private var selectionClearNonce = 0
     @State private var wordFeedbackMessage: String?
     @State private var wordFeedbackIsError = false
-    @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var isRecognizingPhoto = false
+    @State private var showPhotoLibrary = false
     @State private var showCamera = false
     @State private var showLongTextPrompt = false
     @State private var pendingLongText = ""
@@ -61,16 +60,18 @@ struct CreateCardsView: View {
                     showLongTextPrompt: $showLongTextPrompt,
                     showPreview: $showPreview,
                     drafts: $drafts,
-                    selectedPhotoItem: $selectedPhotoItem,
                     shareImport: shareImport,
-                    onAppearImport: applyShareImportIfNeeded,
-                    onPhotoSelected: { item in
-                        Task { await importPhoto(item) }
-                    }
+                    onAppearImport: applyShareImportIfNeeded
                 ))
+                .sheet(isPresented: $showPhotoLibrary) {
+                    PhotoLibraryPicker { image in
+                        Task { await importCapturedImage(image, successBanner: L10n.importFromPhotoSuccess) }
+                    }
+                    .ignoresSafeArea()
+                }
                 .sheet(isPresented: $showCamera) {
                     CameraImagePicker { image in
-                        Task { await importCapturedImage(image) }
+                        Task { await importCapturedImage(image, successBanner: L10n.importFromCameraSuccess) }
                     }
                     .ignoresSafeArea()
                 }
@@ -171,12 +172,15 @@ struct CreateCardsView: View {
 
     private var importActionsRow: some View {
         HStack(spacing: AppSpacing.md) {
-            PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+            Button {
+                showPhotoLibrary = true
+            } label: {
                 AppIcon.symbol("photo.on.rectangle")
                     .foregroundStyle(AppColor.accent)
                     .frame(width: 44, height: 44)
                     .background(AppColor.accentBackground(0.10), in: RoundedRectangle(cornerRadius: AppRadius.button))
             }
+            .buttonStyle(.plain)
             .disabled(isRecognizingPhoto)
             .accessibilityLabel(L10n.importFromPhoto)
 
@@ -189,6 +193,7 @@ struct CreateCardsView: View {
                         .frame(width: 44, height: 44)
                         .background(AppColor.accentBackground(0.10), in: RoundedRectangle(cornerRadius: AppRadius.button))
                 }
+                .buttonStyle(.plain)
                 .disabled(isRecognizingPhoto)
                 .accessibilityLabel(L10n.importFromCamera)
             }
@@ -258,27 +263,11 @@ struct CreateCardsView: View {
         }
     }
 
-    private func importPhoto(_ item: PhotosPickerItem) async {
-        isRecognizingPhoto = true
-        defer {
-            isRecognizingPhoto = false
-            selectedPhotoItem = nil
-        }
-
-        guard let data = try? await item.loadTransferable(type: Data.self),
-              let image = UIImage(data: data) else {
-            errorMessage = L10n.ocrFailed
-            return
-        }
-
-        await recognizeImage(image, successBanner: L10n.importFromPhotoSuccess)
-    }
-
     @MainActor
-    private func importCapturedImage(_ image: UIImage) async {
+    private func importCapturedImage(_ image: UIImage, successBanner: String) async {
         isRecognizingPhoto = true
         defer { isRecognizingPhoto = false }
-        await recognizeImage(image, successBanner: L10n.importFromCameraSuccess)
+        await recognizeImage(image, successBanner: successBanner)
     }
 
     @MainActor
@@ -385,11 +374,9 @@ private struct CreateCardsLifecycleModifier: ViewModifier {
     @Binding var showLongTextPrompt: Bool
     @Binding var showPreview: Bool
     @Binding var drafts: [GeneratedCardDraft]
-    @Binding var selectedPhotoItem: PhotosPickerItem?
 
     let shareImport: ShareImportCoordinator
     let onAppearImport: () -> Void
-    let onPhotoSelected: (PhotosPickerItem) -> Void
 
     func body(content: Content) -> some View {
         content
@@ -402,10 +389,6 @@ private struct CreateCardsLifecycleModifier: ViewModifier {
                 DispatchQueue.main.async {
                     drafts.removeAll()
                 }
-            }
-            .onChange(of: selectedPhotoItem) { _, item in
-                guard let item else { return }
-                onPhotoSelected(item)
             }
             .onChange(of: sentence) { oldValue, newValue in
                 guard oldValue.count <= 800, newValue.count > 800, pendingLongText != newValue else { return }

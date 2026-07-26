@@ -7,14 +7,30 @@ enum DeckService {
     private static var didRunInitialBootstrap = false
 
     @MainActor
+    static func refreshDecks(in context: ModelContext) -> [Deck] {
+        bootstrap(in: context)
+        context.processPendingChanges()
+        var decks = fetchAll(in: context)
+        if decks.isEmpty {
+            let defaultDeck = fetchOrCreateDefault(in: context)
+            context.processPendingChanges()
+            decks = fetchAll(in: context)
+            if decks.isEmpty {
+                decks = [defaultDeck]
+            }
+        }
+        return decks
+    }
+
+    @MainActor
     static func bootstrap(in context: ModelContext) {
         let defaultDeck = fetchOrCreateDefault(in: context)
         if !didRunInitialBootstrap {
             assignOrphanCards(to: defaultDeck, in: context)
-            normalizeSelection(in: context, defaultDeck: defaultDeck)
             DeckCardCountService.recountAll(in: context)
             didRunInitialBootstrap = true
         }
+        normalizeSelection(in: context, defaultDeck: defaultDeck)
         syncSharedCatalog(in: context)
     }
 
@@ -33,7 +49,11 @@ enum DeckService {
             sortOrder: 0
         )
         context.insert(deck)
-        try? context.save()
+        do {
+            try context.save()
+        } catch {
+            assertionFailure("Failed to create default deck: \(error)")
+        }
         return deck
     }
 
@@ -54,9 +74,7 @@ enum DeckService {
 
     @MainActor
     static func fetchDeck(slug: String, in context: ModelContext) -> Deck? {
-        var descriptor = FetchDescriptor<Deck>(predicate: #Predicate { $0.slug == slug })
-        descriptor.fetchLimit = 1
-        return try? context.fetch(descriptor).first
+        fetchAll(in: context).first { $0.slug == slug }
     }
 
     @MainActor
@@ -83,8 +101,13 @@ enum DeckService {
             sortOrder: nextSortOrder(in: context)
         )
         context.insert(deck)
-        try? context.save()
+        do {
+            try context.save()
+        } catch {
+            assertionFailure("Failed to create deck: \(error)")
+        }
         syncSharedCatalog(in: context)
+        DeckCardCountService.notifyCatalogChanged()
         return deck
     }
 

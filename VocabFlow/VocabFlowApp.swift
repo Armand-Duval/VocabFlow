@@ -29,7 +29,7 @@ struct VocabFlowApp: App {
                     _ = await ShareExtensionNotifier.requestAuthorizationIfNeeded()
                 }
         }
-        .modelContainer(for: [FlashCard.self, Deck.self])
+        .modelContainer(AppModelContainer.shared)
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
                 Task {

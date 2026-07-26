@@ -6,12 +6,22 @@ struct DeckPickerSection: View {
     @Binding var selectedDeckID: UUID?
 
     @Query(sort: [SortDescriptor(\Deck.sortOrder), SortDescriptor(\Deck.createdAt)])
-    private var decks: [Deck]
+    private var queriedDecks: [Deck]
+
+    @State private var cachedDecks: [Deck] = []
+    @State private var hasAttemptedLoad = false
+
+    private var decks: [Deck] {
+        queriedDecks.isEmpty ? cachedDecks : queriedDecks
+    }
 
     var body: some View {
         Section {
-            if decks.isEmpty {
-                Text(L10n.deckLoading)
+            if !hasAttemptedLoad && decks.isEmpty {
+                ProgressView(L10n.deckLoading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else if decks.isEmpty {
+                Text(L10n.deckEmpty)
                     .foregroundStyle(.secondary)
             } else {
                 Picker(L10n.deckTarget, selection: deckSelection) {
@@ -31,12 +41,26 @@ struct DeckPickerSection: View {
         } footer: {
             Text(L10n.deckSectionFooter)
         }
+        .task {
+            await reloadDecks()
+        }
         .onAppear {
             normalizeSelection()
         }
-        .onChange(of: decks.map(\.id)) { _, _ in
+        .onChange(of: queriedDecks.map(\.id)) { _, _ in
             normalizeSelection()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .libraryCatalogDidChange)) { _ in
+            cachedDecks = DeckService.refreshDecks(in: modelContext)
+            normalizeSelection()
+        }
+    }
+
+    @MainActor
+    private func reloadDecks() async {
+        cachedDecks = DeckService.refreshDecks(in: modelContext)
+        hasAttemptedLoad = true
+        normalizeSelection()
     }
 
     private var deckSelection: Binding<UUID> {
@@ -57,7 +81,6 @@ struct DeckPickerSection: View {
     }
 
     private func normalizeSelection() {
-        DeckService.bootstrap(in: modelContext)
         if let selectedDeckID,
            decks.contains(where: { $0.id == selectedDeckID }) {
             return

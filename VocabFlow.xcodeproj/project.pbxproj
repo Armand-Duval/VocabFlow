@@ -76,6 +76,7 @@
 		QQ0000010000000000000001 /* Deck.swift in Sources */ = {isa = PBXBuildFile; fileRef = QQ0000010000000000000010 /* Deck.swift */; };
 		QQ0000010000000000000002 /* DeckPack.swift in Sources */ = {isa = PBXBuildFile; fileRef = QQ0000010000000000000011 /* DeckPack.swift */; };
 		QQ0000010000000000000003 /* DeckService.swift in Sources */ = {isa = PBXBuildFile; fileRef = QQ0000010000000000000012 /* DeckService.swift */; };
+		ZZ0000010000000000000001 /* AppModelContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = ZZ0000010000000000000010 /* AppModelContainer.swift */; };
 		QQ0000010000000000000004 /* DeckCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = QQ0000010000000000000013 /* DeckCatalog.swift */; };
 		RR0000010000000000000001 /* SharedDeckStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = RR0000010000000000000010 /* SharedDeckStore.swift */; };
 		RR0000010000000000000002 /* SharedDeckPickerSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = RR0000010000000000000011 /* SharedDeckPickerSection.swift */; };
@@ -176,6 +177,7 @@
 		QQ0000010000000000000010 /* Deck.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Deck.swift; sourceTree = "<group>"; };
 		QQ0000010000000000000011 /* DeckPack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckPack.swift; sourceTree = "<group>"; };
 		QQ0000010000000000000012 /* DeckService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckService.swift; sourceTree = "<group>"; };
+		ZZ0000010000000000000010 /* AppModelContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModelContainer.swift; sourceTree = "<group>"; };
 		QQ0000010000000000000013 /* DeckCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckCatalog.swift; sourceTree = "<group>"; };
 		QQ0000010000000000000015 /* MinimalZipReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinimalZipReader.swift; sourceTree = "<group>"; };
 		QQ0000010000000000000016 /* ApkgImportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApkgImportService.swift; sourceTree = "<group>"; };
@@ -323,6 +325,7 @@
 				PP0000010000000000000012 /* ApkgExportService.swift */,
 				PP0000010000000000000013 /* MinimalZipWriter.swift */,
 				QQ0000010000000000000012 /* DeckService.swift */,
+				ZZ0000010000000000000010 /* AppModelContainer.swift */,
 				QQ0000010000000000000013 /* DeckCatalog.swift */,
 				QQ0000010000000000000025 /* DeckCommunityCatalog.swift */,
 				QQ0000010000000000000026 /* DeckRemoteCatalog.swift */,
@@ -690,6 +693,7 @@
 				QQ0000010000000000000001 /* Deck.swift in Sources */,
 				QQ0000010000000000000002 /* DeckPack.swift in Sources */,
 				QQ0000010000000000000003 /* DeckService.swift in Sources */,
+				ZZ0000010000000000000001 /* AppModelContainer.swift in Sources */,
 				QQ0000010000000000000004 /* DeckCatalog.swift in Sources */,
 				QQ000001000000000000000E /* DeckCommunityCatalog.swift in Sources */,
 				QQ000001000000000000000F /* DeckRemoteCatalog.swift in Sources */,
