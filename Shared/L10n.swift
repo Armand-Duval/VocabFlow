@@ -407,6 +407,14 @@ enum L10n {
     static var deckUntitled: String { tr("deck.untitled") }
     static var deckDelete: String { tr("deck.delete") }
     static var deckDeleteFailed: String { tr("deck.delete.failed") }
+    static var deckClear: String { tr("deck.clear") }
+    static var deckClearTitle: String { tr("deck.clear.title") }
+    static func deckClearMessage(_ name: String) -> String { tf("deck.clear.message", name) }
+    static var deckClearComplete: String { tr("deck.clear.complete") }
+    static var deckClearFailed: String { tr("deck.clear.failed") }
+    static func deckClearResult(_ name: String, count: Int) -> String {
+        tf("deck.clear.result", name, count)
+    }
     static var deckImportComplete: String { tr("deck.import.complete") }
     static var deckImportFailed: String { tr("deck.import.failed") }
     static var deckImportInvalidJSON: String { tr("deck.import.invalidJSON") }

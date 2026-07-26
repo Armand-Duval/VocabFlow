@@ -1572,6 +1572,42 @@
         }
       }
     },
+    "deck.clear" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "清空" } }
+      }
+    },
+    "deck.clear.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear deck contents?" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "清空词库内容？" } }
+      }
+    },
+    "deck.clear.message" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "All cards in “%@” will be permanently deleted. The deck itself will remain." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将永久删除「%@」中的所有卡片，词库本身会保留。" } }
+      }
+    },
+    "deck.clear.complete" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Deck cleared" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已清空" } }
+      }
+    },
+    "deck.clear.failed" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear failed" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "清空失败" } }
+      }
+    },
+    "deck.clear.result" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Removed %2$d cards from “%1$@”." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已从「%1$@」移除 %2$d 张卡片。" } }
+      }
+    },
     "deck.deselectAll" : {
       "localizations" : {
         "en" : {

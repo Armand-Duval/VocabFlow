@@ -34,6 +34,7 @@ struct DeckStoreView: View {
     @State private var isImportingApkg = false
     @State private var isPreparingExport = false
     @State private var showApkgImportGuide = false
+    @State private var deckPendingClear: Deck?
     @Environment(\.openURL) private var openURL
 
     private var isImportBusy: Bool {
@@ -128,6 +129,28 @@ struct DeckStoreView: View {
         } message: {
             Text(L10n.deckCommunityImportGuideBody)
         }
+        .confirmationDialog(
+            L10n.deckClearTitle,
+            isPresented: Binding(
+                get: { deckPendingClear != nil },
+                set: { if !$0 { deckPendingClear = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button(L10n.deckClear, role: .destructive) {
+                if let deck = deckPendingClear {
+                    clearDeck(deck)
+                }
+                deckPendingClear = nil
+            }
+            Button(L10n.cancel, role: .cancel) {
+                deckPendingClear = nil
+            }
+        } message: {
+            if let deck = deckPendingClear {
+                Text(L10n.deckClearMessage(deck.name))
+            }
+        }
         .onAppear {
             reloadDecks()
             seedCheckedDecksIfNeeded()
@@ -170,6 +193,7 @@ struct DeckStoreView: View {
     }
 
     private func reloadDecks() {
+        DeckCardCountService.recountAll(in: modelContext)
         cachedDecks = DeckService.refreshDecks(in: modelContext)
     }
 
@@ -236,6 +260,12 @@ struct DeckStoreView: View {
                                 deleteDeck(deck)
                             } label: {
                                 Label(L10n.deckDelete, systemImage: "trash")
+                            }
+                        } else if deck.cardCount > 0 {
+                            Button(role: .destructive) {
+                                deckPendingClear = deck
+                            } label: {
+                                Label(L10n.deckClear, systemImage: "xmark.circle")
                             }
                         }
                     }
@@ -503,6 +533,19 @@ struct DeckStoreView: View {
         }
     }
 
+    private func clearDeck(_ deck: Deck) {
+        do {
+            let count = try DeckService.clearDeck(deck, in: modelContext)
+            reloadDecks()
+            showResult(
+                title: L10n.deckClearComplete,
+                message: L10n.deckClearResult(deck.name, count: count)
+            )
+        } catch {
+            showResult(title: L10n.deckClearFailed, message: error.localizedDescription)
+        }
+    }
+
     private func handleDeckJSONImport(_ result: Result<URL, Error>) {
         switch result {
         case .success(let url):
@@ -568,30 +611,13 @@ struct DeckStoreView: View {
                 }
                 do {
                     let data = try BackupDocumentSupport.readData(from: url)
-                    let imported: ApkgImportService.ImportResult
-                    if try ApkgImportService.hasDeckInfo(in: data) {
-                        imported = try await ApkgImportService.importApkgAsync(
-                            data: data,
-                            context: modelContext
-                        ) { current, total in
-                            importProgress = ImportProgressState(key: "apkg", current: current, total: total)
-                        }
-                    } else {
-                        let targets = checkedDecks
-                        guard !targets.isEmpty else {
-                            showResult(
-                                title: L10n.deckImportFailed,
-                                message: L10n.deckImportNeedSelectionForNoDeckInfo
-                            )
-                            return
-                        }
-                        imported = try await ApkgImportService.importApkgAsync(
-                            data: data,
-                            context: modelContext,
-                            targetDecks: targets
-                        ) { current, total in
-                            importProgress = ImportProgressState(key: "apkg", current: current, total: total)
-                        }
+                    let targets = checkedDecks
+                    let imported = try await ApkgImportService.importApkgAsync(
+                        data: data,
+                        context: modelContext,
+                        targetDecks: targets.isEmpty ? nil : targets
+                    ) { current, total in
+                        importProgress = ImportProgressState(key: "apkg", current: current, total: total)
                     }
                     reloadDecks()
                     if let deckName = imported.primaryDeckName,

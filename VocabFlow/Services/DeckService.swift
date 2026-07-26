@@ -309,6 +309,30 @@ enum DeckService {
     }
 
     @MainActor
+    static func isDefaultDeck(_ deck: Deck) -> Bool {
+        !canDelete(deck)
+    }
+
+    @MainActor
+    @discardableResult
+    static func clearDeck(_ deck: Deck, in context: ModelContext) throws -> Int {
+        let deckID = deck.id
+        let cards = try context.fetch(
+            FetchDescriptor<FlashCard>(
+                predicate: #Predicate<FlashCard> { card in
+                    card.deck?.id == deckID
+                }
+            )
+        )
+        cards.forEach { context.delete($0) }
+        deck.cachedCardCount = 0
+        try context.save()
+        DeckCardCountService.recountAll(in: context)
+        DeckCardCountService.notifyDataMaintenance()
+        return cards.count
+    }
+
+    @MainActor
     static func deleteDeck(_ deck: Deck, in context: ModelContext) throws {
         guard canDelete(deck) else {
             throw DeckServiceError.cannotDeleteDefault
