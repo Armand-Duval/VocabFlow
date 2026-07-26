@@ -4,26 +4,23 @@ enum StatusChipStyle {
     case due
     case new
     case scheduled
+    case suspended
     case cardType
     case neutral
 
     var foreground: Color {
         switch self {
-        case .due: .orange
-        case .new: .blue
-        case .scheduled: .secondary
-        case .cardType: .blue
-        case .neutral: .secondary
+        case .due: AppColor.warning
+        case .new, .cardType: AppColor.accent
+        case .scheduled, .neutral, .suspended: .secondary
         }
     }
 
     var background: Color {
         switch self {
-        case .due: Color.orange.opacity(0.14)
-        case .new: Color.blue.opacity(0.12)
-        case .scheduled: Color.secondary.opacity(0.10)
-        case .cardType: Color.blue.opacity(0.12)
-        case .neutral: Color.secondary.opacity(0.12)
+        case .due: AppColor.warningBackground()
+        case .new, .cardType: AppColor.accentBackground(0.12)
+        case .scheduled, .neutral, .suspended: Color.secondary.opacity(0.10)
         }
     }
 }

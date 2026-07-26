@@ -13,8 +13,10 @@ struct CardReviewSessionView: View {
     @State private var currentIndex = 0
     @State private var showBack = false
     @State private var now = Date()
+    @State private var dragOffset: CGSize = .zero
 
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    private let swipeThreshold: CGFloat = 72
 
     var body: some View {
         Group {
@@ -23,9 +25,11 @@ struct CardReviewSessionView: View {
             } else if let nextLearningDate = pendingLearning.map(\.availableAt).min() {
                 learningWaitState(nextAvailable: nextLearningDate)
             } else {
-                ContentUnavailableView {
-                    Label(L10n.noCardsToReview, systemImage: "tray")
-                }
+                AppEmptyState(
+                    title: L10n.noCardsToReview,
+                    message: L10n.reviewEmptyDone,
+                    systemImage: "tray"
+                )
             }
         }
         .onAppear {
@@ -46,15 +50,15 @@ struct CardReviewSessionView: View {
     }
 
     private func reviewContent(for card: FlashCard) -> some View {
-        VStack(spacing: 12) {
+        VStack(spacing: AppSpacing.sm) {
             HStack {
                 Text(L10n.reviewProgress(currentIndex + 1, sessionQueue.count))
-                    .font(.subheadline)
+                    .font(AppFont.captionSecondary())
                     .foregroundStyle(.secondary)
                 Spacer()
                 CardTypeChip(title: card.cardType.displayName)
             }
-            .padding(.horizontal)
+            .padding(.horizontal, AppSpacing.md)
 
             HStack(alignment: .firstTextBaseline, spacing: AppSpacing.sm) {
                 Text(card.word)
@@ -62,7 +66,7 @@ struct CardReviewSessionView: View {
 
                 if let phonetic = card.phonetic, !phonetic.isEmpty {
                     Text(phonetic)
-                        .font(.subheadline)
+                        .font(AppFont.secondary())
                         .foregroundStyle(.secondary)
                 }
 
@@ -79,57 +83,95 @@ struct CardReviewSessionView: View {
                     Image(systemName: "speaker.wave.2.fill")
                         .font(.title2)
                         .frame(width: 44, height: 44)
-                        .foregroundStyle(.tint)
+                        .foregroundStyle(AppColor.accent)
                 }
                 .accessibilityLabel(L10n.speakWord)
             }
-            .padding(.horizontal)
+            .padding(.horizontal, AppSpacing.md)
 
-            ScrollView {
-                Text(showBack ? card.displayBack : card.front)
-                    .font(AppFont.body())
-                    .lineSpacing(6)
-                    .frame(maxWidth: .infinity, minHeight: 120, alignment: .topLeading)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .textSelection(.enabled)
-                    .contentTransition(.opacity)
-                    .padding(AppSpacing.lg)
-            }
-            .frame(maxHeight: 340)
-            .background(.regularMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
-            .padding(.horizontal)
-            .onTapGesture {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    showBack.toggle()
-                }
-            }
+            cardFace(card)
+                .offset(x: dragOffset.width * 0.25)
+                .gesture(swipeGesture(for: card))
 
             if showBack {
                 ratingButtons(for: card)
+                Text(L10n.reviewSwipeHint)
+                    .font(AppFont.caption())
+                    .foregroundStyle(.tertiary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, AppSpacing.md)
             } else {
                 Button(L10n.showAnswer) {
                     withAnimation(.easeInOut(duration: 0.2)) {
                         showBack = true
                     }
                 }
-                .buttonStyle(.borderedProminent)
-                .padding(.bottom, 8)
+                .buttonStyle(PrimaryButtonStyle())
+                .padding(.horizontal, AppSpacing.md)
+                .padding(.bottom, AppSpacing.xs)
             }
         }
     }
 
-    private func learningWaitState(nextAvailable: Date) -> some View {
-        ContentUnavailableView {
-            Label(L10n.reviewLearningWaitTitle, systemImage: "clock")
-        } description: {
-            Text(L10n.reviewLearningWaitMessage(ReviewScheduler.formatInterval(from: now, to: nextAvailable)))
+    private func cardFace(_ card: FlashCard) -> some View {
+        ScrollView {
+            Text(showBack ? card.displayBack : card.front)
+                .font(AppFont.body())
+                .lineSpacing(6)
+                .frame(maxWidth: .infinity, minHeight: 120, alignment: .topLeading)
+                .fixedSize(horizontal: false, vertical: true)
+                .textSelection(.enabled)
+                .contentTransition(.opacity)
+                .padding(AppSpacing.lg)
+        }
+        .frame(maxHeight: 340)
+        .background(.regularMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
+        .padding(.horizontal, AppSpacing.md)
+        .onTapGesture {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                showBack.toggle()
+            }
         }
     }
 
+    private func swipeGesture(for card: FlashCard) -> some Gesture {
+        DragGesture(minimumDistance: 24)
+            .onChanged { value in
+                guard showBack else { return }
+                dragOffset = value.translation
+            }
+            .onEnded { value in
+                guard showBack else {
+                    dragOffset = .zero
+                    return
+                }
+
+                defer { dragOffset = .zero }
+
+                if value.translation.width <= -swipeThreshold {
+                    submit(rating: .again, for: card)
+                } else if value.translation.width >= swipeThreshold {
+                    submit(rating: .easy, for: card)
+                } else if value.translation.height <= -swipeThreshold {
+                    submit(rating: .hard, for: card)
+                } else if value.translation.height >= swipeThreshold {
+                    submit(rating: .good, for: card)
+                }
+            }
+    }
+
+    private func learningWaitState(nextAvailable: Date) -> some View {
+        AppEmptyState(
+            title: L10n.reviewLearningWaitTitle,
+            message: L10n.reviewLearningWaitMessage(ReviewScheduler.formatInterval(from: now, to: nextAvailable)),
+            systemImage: "clock"
+        )
+    }
+
     private func ratingButtons(for card: FlashCard) -> some View {
-        VStack(spacing: 12) {
-            HStack(spacing: 10) {
+        VStack(spacing: AppSpacing.sm) {
+            HStack(spacing: AppSpacing.sm) {
                 ForEach(ReviewRating.allCases, id: \.rawValue) { rating in
                     Button {
                         submit(rating: rating, for: card)
@@ -138,10 +180,10 @@ struct CardReviewSessionView: View {
                             Text(rating.title)
                                 .fontWeight(.semibold)
                             Text(ReviewScheduler.intervalLabel(for: card, rating: rating, now: now))
-                                .font(.caption2)
+                                .font(AppFont.caption())
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
+                        .padding(.vertical, AppSpacing.sm)
                     }
                     .buttonStyle(ReviewRatingButtonStyle())
                     .tint(ratingTint(rating))
@@ -149,19 +191,19 @@ struct CardReviewSessionView: View {
             }
 
             Text(L10n.reviewRatingHint)
-                .font(.caption2)
+                .font(AppFont.caption())
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
-        .padding(.horizontal)
-        .padding(.bottom, 8)
+        .padding(.horizontal, AppSpacing.md)
+        .padding(.bottom, AppSpacing.xs)
     }
 
     private func ratingTint(_ rating: ReviewRating) -> Color {
         switch rating {
         case .again: .red
         case .hard: .orange
-        case .good: .blue
+        case .good: AppColor.accent
         case .easy: .green
         }
     }
@@ -171,6 +213,7 @@ struct CardReviewSessionView: View {
         ReviewScheduler.apply(rating: rating, to: card, now: now)
         NotificationCenter.default.post(name: .reviewQueueDidChange, object: nil)
         showBack = false
+        dragOffset = .zero
 
         sessionQueue.removeAll { $0.id == card.id }
 
@@ -231,14 +274,12 @@ private struct PendingLearningCard: Identifiable {
 private struct ReviewRatingButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
             .background(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(configuration.isPressed ? Color.accentColor.opacity(0.12) : Color.clear)
+                RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
+                    .fill(configuration.isPressed ? AppColor.accentBackground(0.14) : Color.clear)
             )
             .overlay {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
                     .strokeBorder(.secondary.opacity(configuration.isPressed ? 0.5 : 0.25))
             }
             .scaleEffect(configuration.isPressed ? 0.96 : 1)

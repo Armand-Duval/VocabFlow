@@ -25,6 +25,7 @@ struct DeckStoreView: View {
     @State private var apkgDocument: ApkgDocument?
     @State private var showJSONExporter = false
     @State private var showApkgExporter = false
+    @State private var apkgExportFilename = ApkgExportService.defaultFilename
     @State private var importTargetDeckID: UUID?
     @State private var alertTitle = ""
     @State private var alertMessage = ""
@@ -57,7 +58,7 @@ struct DeckStoreView: View {
                 Button {
                     showCreateDeck = true
                 } label: {
-                    Image(systemName: "plus")
+                    AppIcon.symbol("plus")
                 }
             }
         }
@@ -110,7 +111,7 @@ struct DeckStoreView: View {
             isPresented: $showApkgExporter,
             document: apkgDocument,
             contentType: .apkg,
-            defaultFilename: ApkgExportService.defaultFilename
+            defaultFilename: apkgExportFilename
         ) { result in
             if case .failure(let error) = result {
                 showResult(title: L10n.exportFailed, message: error.localizedDescription)
@@ -153,7 +154,7 @@ struct DeckStoreView: View {
                                         .foregroundStyle(.primary)
                                     if let detail = deck.detailText, !detail.isEmpty {
                                         Text(detail)
-                                            .font(.caption)
+                                            .font(AppFont.caption())
                                             .foregroundStyle(.secondary)
                                             .lineLimit(2)
                                     }
@@ -164,7 +165,7 @@ struct DeckStoreView: View {
                                         .foregroundStyle(.tint)
                                 }
                                 Text("\(deck.cardCount)")
-                                    .font(.caption)
+                                    .font(AppFont.caption())
                                     .foregroundStyle(.secondary)
                             }
                         }
@@ -179,6 +180,15 @@ struct DeckStoreView: View {
                         .buttonStyle(.plain)
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        if deck.cardCount > 0 {
+                            Button {
+                                exportDeckApkg(deck)
+                            } label: {
+                                Label(L10n.deckExportApkg, systemImage: "square.and.arrow.up")
+                            }
+                            .tint(AppColor.accent)
+                        }
+
                         if deck.slug != DeckCatalog.defaultSlug {
                             Button(role: .destructive) {
                                 deleteDeck(deck)
@@ -307,7 +317,7 @@ struct DeckStoreView: View {
                 ProgressView(value: Double(progress.current), total: Double(progress.total))
                     .frame(width: 72)
                 Text(L10n.deckImportProgress(current: progress.current, total: progress.total))
-                    .font(.caption2)
+                    .font(AppFont.caption())
                     .foregroundStyle(.secondary)
             }
         }
@@ -320,29 +330,28 @@ struct DeckStoreView: View {
         let isEmptyInstalled = installedDeck?.cardCount == 0
         let isDownloading = downloadingPackID == pack.id
 
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .top, spacing: 12) {
+        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+            HStack(alignment: .top, spacing: AppSpacing.sm) {
                 VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 8) {
+                    HStack(spacing: AppSpacing.xs) {
                         Text(pack.name)
-                            .font(.headline)
+                            .font(AppFont.sectionTitle())
                         Text(pack.cardCountLabel)
-                            .font(.caption2)
+                            .font(AppFont.caption())
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(.green.opacity(0.12))
-                            .clipShape(Capsule())
+                            .background(AppColor.successBackground(), in: Capsule())
                     }
                     Text(pack.detailText)
-                        .font(.caption)
+                        .font(AppFont.caption())
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                     Text(pack.licenseLabel)
-                        .font(.caption2)
+                        .font(AppFont.caption())
                         .foregroundStyle(.tertiary)
                 }
 
-                Spacer(minLength: 8)
+                Spacer(minLength: AppSpacing.xs)
 
                 if isDownloading {
                     importProgressView(for: pack.id)
@@ -352,14 +361,14 @@ struct DeckStoreView: View {
                     }
                 } else {
                     Label(L10n.deckInstalled, systemImage: "checkmark.seal.fill")
-                        .font(.caption)
+                        .font(AppFont.caption())
                         .foregroundStyle(.green)
                 }
             }
 
             Link(destination: pack.attributionURL) {
                 Text(L10n.deckRemoteViewSource)
-                    .font(.caption2)
+                    .font(AppFont.caption())
             }
         }
         .padding(.vertical, 4)
@@ -367,23 +376,22 @@ struct DeckStoreView: View {
 
     @ViewBuilder
     private func communityRow(_ entry: DeckCommunityEntry) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .top, spacing: 12) {
+        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+            HStack(alignment: .top, spacing: AppSpacing.sm) {
                 VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 8) {
+                    HStack(spacing: AppSpacing.xs) {
                         Text(entry.name)
-                            .font(.headline)
+                            .font(AppFont.sectionTitle())
                         if let countLabel = entry.cardCountLabel {
                             Text(countLabel)
-                                .font(.caption2)
+                                .font(AppFont.caption())
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
-                                .background(.orange.opacity(0.12))
-                                .clipShape(Capsule())
+                                .background(AppColor.warningBackground(), in: Capsule())
                         }
                     }
                     Text(entry.detailText)
-                        .font(.caption)
+                        .font(AppFont.caption())
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -400,9 +408,9 @@ struct DeckStoreView: View {
 
     private func deckIconButton(systemImage: String, label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: systemImage)
-                .imageScale(.medium)
-                .frame(width: 28, height: 28)
+            AppIcon.symbol(systemImage)
+                .frame(width: 32, height: 32)
+                .foregroundStyle(AppColor.accent)
         }
         .buttonStyle(.borderless)
         .accessibilityLabel(label)
@@ -543,10 +551,37 @@ struct DeckStoreView: View {
         do {
             let data = try ApkgExportService.export(cards: fetchAllCards())
             apkgDocument = ApkgDocument(data: data)
+            apkgExportFilename = ApkgExportService.defaultFilename
             showApkgExporter = true
         } catch {
             showResult(title: L10n.exportFailed, message: error.localizedDescription)
         }
+    }
+
+    private func exportDeckApkg(_ deck: Deck) {
+        let cards = fetchCards(for: deck)
+        guard !cards.isEmpty else {
+            showResult(title: L10n.exportFailed, message: L10n.apkgExportEmpty)
+            return
+        }
+        do {
+            let data = try ApkgExportService.export(cards: cards, deckName: deck.name)
+            apkgDocument = ApkgDocument(data: data)
+            apkgExportFilename = ApkgExportService.sanitizedFilename(deck.name)
+            showApkgExporter = true
+        } catch {
+            showResult(title: L10n.exportFailed, message: error.localizedDescription)
+        }
+    }
+
+    private func fetchCards(for deck: Deck) -> [FlashCard] {
+        let deckID = deck.id
+        let descriptor = FetchDescriptor<FlashCard>(
+            predicate: #Predicate<FlashCard> { card in
+                card.deck?.id == deckID
+            }
+        )
+        return (try? modelContext.fetch(descriptor)) ?? []
     }
 
     private func handleBackupImportSelection(_ result: Result<URL, Error>) {

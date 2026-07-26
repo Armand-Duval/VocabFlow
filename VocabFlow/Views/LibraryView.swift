@@ -65,18 +65,6 @@ struct LibraryView: View {
             .navigationTitle(L10n.libraryTitle)
             .searchable(text: $searchText, prompt: L10n.librarySearchPrompt)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Menu {
-                        Picker(L10n.libraryFilterTitle, selection: $cardFilter) {
-                            ForEach(LibraryCardFilter.allCases) { filter in
-                                Text(filter.title).tag(filter)
-                            }
-                        }
-                    } label: {
-                        Label(cardFilter.title, systemImage: "line.3.horizontal.decrease.circle")
-                    }
-                }
-
                 ToolbarItem(placement: .topBarTrailing) {
                     HStack(spacing: AppSpacing.sm) {
                         if !searchText.isEmpty {
@@ -94,7 +82,7 @@ struct LibraryView: View {
                             Button {
                                 forceGrouped.toggle()
                             } label: {
-                                Image(systemName: forceGrouped ? "rectangle.grid.1x2" : "list.bullet")
+                                AppIcon.symbol(forceGrouped ? "rectangle.grid.1x2" : "list.bullet")
                             }
                             .accessibilityLabel(
                                 forceGrouped ? L10n.libraryViewFlat : L10n.libraryViewGrouped
@@ -113,13 +101,16 @@ struct LibraryView: View {
                                 }
                             ))
                         } label: {
-                            Image(systemName: "books.vertical")
+                            AppIcon.symbol("books.vertical")
                         }
                     }
                 }
             }
             .safeAreaInset(edge: .top, spacing: 0) {
-                deckFilterBar
+                VStack(spacing: 0) {
+                    deckFilterBar
+                    cardFilterBar
+                }
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if hasAnyCards {
@@ -177,7 +168,7 @@ struct LibraryView: View {
                 Label(L10n.libraryQuickImport, systemImage: "square.and.arrow.down")
                     .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(SecondaryButtonStyle())
 
             Button {
                 showDeckStore = true
@@ -185,7 +176,7 @@ struct LibraryView: View {
                 Label(L10n.libraryQuickExport, systemImage: "square.and.arrow.up")
                     .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(SecondaryButtonStyle())
         }
         .padding(.horizontal, AppSpacing.md)
         .padding(.vertical, AppSpacing.sm)
@@ -193,16 +184,41 @@ struct LibraryView: View {
     }
 
     private var emptyLibraryState: some View {
-        ContentUnavailableView {
-            Label(L10n.libraryEmptyTitle, systemImage: "tray")
-        } description: {
-            Text(L10n.libraryEmptyGoCreate)
-        } actions: {
+        VStack(spacing: AppSpacing.lg) {
+            Spacer()
+            AppEmptyState(
+                title: L10n.libraryEmptyTitle,
+                message: L10n.libraryEmptyGoCreate,
+                systemImage: "books.vertical"
+            )
             NavigationLink {
                 DeckStoreView(selectedDeckID: $selectedDeckID)
             } label: {
                 Text(L10n.deckManage)
             }
+            .buttonStyle(PrimaryButtonStyle())
+            .padding(.horizontal, AppSpacing.xl)
+            Spacer()
+        }
+    }
+
+    @ViewBuilder
+    private var cardFilterBar: some View {
+        if hasAnyCards {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: AppSpacing.xs) {
+                    ForEach(LibraryCardFilter.allCases) { filter in
+                        FilterChip(
+                            title: filter.title,
+                            isSelected: cardFilter == filter,
+                            action: { cardFilter = filter }
+                        )
+                    }
+                }
+                .padding(.horizontal, AppSpacing.md)
+                .padding(.vertical, AppSpacing.xs)
+            }
+            .background(.bar)
         }
     }
 
@@ -211,7 +227,7 @@ struct LibraryView: View {
         if !decks.isEmpty {
             ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
+                    HStack(spacing: AppSpacing.xs) {
                         deckChip(title: L10n.deckFilterAll, deckID: nil, count: totalCardCount)
                             .id(LibraryDeckChipID.all)
 
@@ -226,7 +242,7 @@ struct LibraryView: View {
                                 NavigationLink {
                                     DeckStatisticsView(deck: deck)
                                 } label: {
-                                    Image(systemName: "chart.bar.xaxis")
+                                    AppIcon.symbol("chart.bar.xaxis")
                                         .font(.caption2)
                                         .foregroundStyle(.secondary)
                                 }
@@ -235,8 +251,8 @@ struct LibraryView: View {
                             .id(LibraryDeckChipID.deck(deck.id))
                         }
                     }
-                    .padding(.horizontal)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, AppSpacing.md)
+                    .padding(.vertical, AppSpacing.xs)
                 }
                 .background(.bar)
                 .onAppear {
@@ -267,25 +283,20 @@ struct LibraryView: View {
     }
 
     private func deckChip(title: String, deckID: UUID?, count: Int) -> some View {
-        let isSelected = filterDeckID == deckID
-        return Button {
-            var transaction = Transaction()
-            transaction.disablesAnimations = true
-            withTransaction(transaction) {
-                filterDeckID = deckID
+        FilterChip(
+            title: count > 0 ? L10n.deckLabelWithCount(title, count: count) : title,
+            isSelected: filterDeckID == deckID,
+            action: {
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) {
+                    filterDeckID = deckID
+                }
+                if let deckID {
+                    DeckSettings.lastSelectedDeckID = deckID
+                }
             }
-            if let deckID {
-                DeckSettings.lastSelectedDeckID = deckID
-            }
-        } label: {
-            Text(count > 0 ? L10n.deckLabelWithCount(title, count: count) : title)
-                .font(.caption)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(isSelected ? Color.accentColor.opacity(0.18) : Color.secondary.opacity(0.12))
-                .clipShape(Capsule())
-        }
-        .buttonStyle(.plain)
+        )
     }
 }
 
@@ -331,17 +342,17 @@ private struct LibraryGroupedList: View {
                 ProgressView(L10n.deckLoading)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if groups.isEmpty && flatCardIDs.isEmpty {
-                ContentUnavailableView {
-                    Label(L10n.libraryNoResultsTitle, systemImage: "magnifyingglass")
-                } description: {
-                    Text(L10n.libraryNoResultsMessage)
-                }
+                AppEmptyState(
+                    title: L10n.libraryNoResultsTitle,
+                    message: L10n.libraryNoResultsMessage,
+                    systemImage: "magnifyingglass"
+                )
             } else {
                 List {
                     if useFlatList {
                         Section {
                             Text(L10n.libraryFlatListHint)
-                                .font(.caption)
+                                .font(AppFont.caption())
                                 .foregroundStyle(.secondary)
                         }
 
@@ -350,7 +361,11 @@ private struct LibraryGroupedList: View {
                                 NavigationLink {
                                     FlashCardDetailView(card: card)
                                 } label: {
-                                    LibraryCardRow(card: card, showsDeckName: filterDeckID == nil)
+                                    LibraryCardRow(
+                                        card: card,
+                                        showsDeckName: filterDeckID == nil,
+                                        searchHighlight: searchText
+                                    )
                                 }
                             }
                         }
@@ -377,7 +392,11 @@ private struct LibraryGroupedList: View {
                                         NavigationLink {
                                             FlashCardDetailView(card: card)
                                         } label: {
-                                            LibraryCardRow(card: card, showsDeckName: filterDeckID == nil)
+                                            LibraryCardRow(
+                                        card: card,
+                                        showsDeckName: filterDeckID == nil,
+                                        searchHighlight: searchText
+                                    )
                                         }
                                     }
                                 }
@@ -396,7 +415,7 @@ private struct LibraryGroupedList: View {
                                             L10n.reviewAll(group.word, count: group.cardIDs.count),
                                             systemImage: "brain.head.profile"
                                         )
-                                        .font(.subheadline)
+                                        .font(AppFont.secondary())
                                     }
                                 }
                             } header: {
@@ -566,34 +585,46 @@ private extension Array {
 private struct LibraryCardRow: View {
     let card: FlashCard
     let showsDeckName: Bool
+    var searchHighlight: String = ""
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                CardTypeChip(title: card.cardType.displayName)
+        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+            HStack(alignment: .firstTextBaseline, spacing: AppSpacing.sm) {
+                HighlightedText(
+                    text: card.word,
+                    query: searchHighlight,
+                    font: AppFont.sectionTitle(),
+                    lineLimit: 1
+                )
 
-                if let deckName = card.deck?.name, showsDeckName {
-                    Text(deckName)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
-
-                Spacer()
+                Spacer(minLength: AppSpacing.sm)
 
                 LibraryCardStatusChip(card: card)
             }
 
-            Text(card.front)
-                .font(.subheadline)
-                .lineLimit(4)
+            HighlightedText(
+                text: card.front,
+                query: searchHighlight,
+                font: AppFont.secondary(),
+                lineLimit: 2
+            )
+            .foregroundStyle(.primary)
 
-            Text(card.sentence)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .lineLimit(2)
+            HStack(spacing: AppSpacing.xs) {
+                CardTypeChip(title: card.cardType.displayName)
+
+                if showsDeckName, let deckName = card.deck?.name {
+                    HighlightedText(
+                        text: deckName,
+                        query: searchHighlight,
+                        font: AppFont.caption(),
+                        lineLimit: 1
+                    )
+                    .foregroundStyle(.secondary)
+                }
+            }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, AppSpacing.xs)
     }
 }
 

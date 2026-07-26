@@ -138,7 +138,7 @@ struct SettingsView: View {
             }
 
             Text(APISettings.modelDescription(for: selectedModel))
-                .font(.caption)
+                .font(AppFont.caption())
                 .foregroundStyle(.secondary)
 
             Button {
@@ -155,7 +155,7 @@ struct SettingsView: View {
 
             Label {
                 Text(APISettings.keySourceDescription)
-                    .foregroundStyle(APISettings.canUseKimi ? Color.primary : Color.orange)
+                    .foregroundStyle(APISettings.canUseKimi ? Color.primary : AppColor.warning)
             } icon: {
                 Image(systemName: statusIcon)
                     .foregroundStyle(statusColor)
@@ -234,13 +234,13 @@ struct SettingsView: View {
 
             DisclosureGroup(isExpanded: $showHelpCenter) {
                 Text(L10n.settingsHelpBYOK)
-                    .font(.subheadline)
+                    .font(AppFont.secondary())
                     .foregroundStyle(.secondary)
                 Text(L10n.settingsHelpApkg)
-                    .font(.subheadline)
+                    .font(AppFont.secondary())
                     .foregroundStyle(.secondary)
                 Text(L10n.settingsHelpShare)
-                    .font(.subheadline)
+                    .font(AppFont.secondary())
                     .foregroundStyle(.secondary)
             } label: {
                 Label(L10n.settingsHelpTitle, systemImage: "questionmark.circle")
@@ -264,8 +264,8 @@ struct SettingsView: View {
     }
 
     private var statusColor: Color {
-        if APISettings.canUseKimi { .green }
-        else { .orange }
+        if APISettings.canUseKimi { AppColor.success }
+        else { AppColor.warning }
     }
 
     private func saveSettings() {

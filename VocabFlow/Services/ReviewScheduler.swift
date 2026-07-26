@@ -45,7 +45,11 @@ enum ReviewScheduler {
     private static let lapseHours = 10
 
     static func isDue(_ card: FlashCard, now: Date = .now) -> Bool {
-        card.nextReviewDate <= now
+        !card.isSuspended && card.nextReviewDate <= now
+    }
+
+    static func isActive(_ card: FlashCard) -> Bool {
+        !card.isSuspended
     }
 
     static func preview(rating: ReviewRating, for card: FlashCard, now: Date = .now) -> ReviewSnapshot {

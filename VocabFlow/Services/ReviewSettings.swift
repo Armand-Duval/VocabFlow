@@ -6,6 +6,7 @@ enum ReviewSettings {
     private static let dailyDateKey = "review.dailyDate"
     private static let dailyNewStudiedKey = "review.dailyNewStudied"
     private static let dailyReviewStudiedKey = "review.dailyReviewStudied"
+    private static let reviewDeckIDKey = "review.selectedDeckID"
 
     static let defaultDailyNewLimit = 20
     static let defaultDailyReviewLimit = 100
@@ -50,6 +51,21 @@ enum ReviewSettings {
         resetDailyCountsIfNeeded(now: now)
         let key = wasNewCard ? dailyNewStudiedKey : dailyReviewStudiedKey
         defaults.set(defaults.integer(forKey: key) + 1, forKey: key)
+    }
+
+    /// nil 表示复习全部词库。
+    static var reviewDeckID: UUID? {
+        get {
+            guard let raw = defaults.string(forKey: reviewDeckIDKey) else { return nil }
+            return UUID(uuidString: raw)
+        }
+        set {
+            if let newValue {
+                defaults.set(newValue.uuidString, forKey: reviewDeckIDKey)
+            } else {
+                defaults.removeObject(forKey: reviewDeckIDKey)
+            }
+        }
     }
 
     static func resetDailyCountsIfNeeded(now: Date = .now) {

@@ -22,10 +22,14 @@ enum ApkgExportService {
     static let defaultFilename = "vocabflow"
     private static let deckID: Int64 = 1
     private static let modelID: Int64 = 1_607_392_319
-    private static let deckName = "VocabFlow"
 
-    static func export(cards: [FlashCard]) throws -> Data {
+    static func export(cards: [FlashCard], deckName: String? = nil) throws -> Data {
         guard !cards.isEmpty else { throw ApkgExportError.emptyDeck }
+
+        let trimmedName = deckName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let resolvedDeckName = trimmedName.isEmpty
+            ? (cards.first?.deck?.name.nilIfEmpty ?? defaultFilename)
+            : trimmedName
 
         let tempDir = FileManager.default.temporaryDirectory
             .appendingPathComponent("vocabflow-apkg-\(UUID().uuidString)", isDirectory: true)
@@ -33,7 +37,7 @@ enum ApkgExportService {
         defer { try? FileManager.default.removeItem(at: tempDir) }
 
         let dbURL = tempDir.appendingPathComponent("collection.anki2")
-        try buildCollection(at: dbURL, cards: cards)
+        try buildCollection(at: dbURL, cards: cards, deckName: resolvedDeckName)
 
         let mediaData = Data("{}".utf8)
         var zipWriter = MinimalZipWriter()
@@ -42,7 +46,19 @@ enum ApkgExportService {
         return zipWriter.build()
     }
 
-    private static func buildCollection(at url: URL, cards: [FlashCard]) throws {
+    static func sanitizedFilename(_ name: String) -> String {
+        let cleaned = name
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "/", with: "-")
+            .replacingOccurrences(of: ":", with: "-")
+        let allowed = cleaned.filter { $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" || $0 == " " }
+        let collapsed = allowed
+            .split(whereSeparator: { $0 == " " || $0 == "-" || $0 == "_" })
+            .joined(separator: "_")
+        return collapsed.isEmpty ? defaultFilename : String(collapsed.prefix(64))
+    }
+
+    private static func buildCollection(at url: URL, cards: [FlashCard], deckName: String) throws {
         var db: OpaquePointer?
         guard sqlite3_open(url.path, &db) == SQLITE_OK, let db else {
             throw ApkgExportError.sqliteError("open failed")
@@ -122,7 +138,7 @@ enum ApkgExportService {
         """
         let models = basicModelJSON()
         let decks = """
-        {"\(deckID)":{"id":\(deckID),"mod":0,"name":"\(deckName)","usn":0,"desc":"","dyn":0,"conf":1,"extConf":{},"collapsed":false}}
+        {"\(deckID)":{"id":\(deckID),"mod":0,"name":"\(escapeSQL(deckName))","usn":0,"desc":"","dyn":0,"conf":1,"extConf":{},"collapsed":false}}
         """
         let dconf = """
         {"1":{"id":1,"mod":0,"name":"Default","usn":0,"maxTaken":60,"autoplay":true,"timer":0,"replayq":true,"new":{"bury":false,"delays":[1,10],"initialFactor":2500,"ints":[1,4,7],"order":1,"perDay":20},"rev":{"bury":false,"ease4":1.3,"fuzz":0.05,"ivlFct":1,"maxIvl":36500,"perDay":200,"hardFactor":1.2},"lapse":{"delays":[10],"leechAction":1,"leechFails":8,"minInt":1,"mult":0},"dyn":false}}
@@ -158,10 +174,12 @@ enum ApkgExportService {
             );
             """)
 
+            let queue = card.isSuspended ? -1 : 0
+
             try exec(db, """
             INSERT INTO cards VALUES(
                 \(noteID), \(noteID), \(deckID), 0, \(nowMs), 0,
-                0, 0, \(cardDue), 0, 2500, 0, 0, 0, 0, 0, 0, ''
+                0, \(queue), \(cardDue), 0, 2500, 0, 0, 0, 0, 0, 0, ''
             );
             """)
 
@@ -241,5 +259,11 @@ enum ApkgExportService {
             sqlite3_free(errorMessage)
             throw ApkgExportError.sqliteError(message)
         }
+    }
+}
+
+private extension String {
+    var nilIfEmpty: String? {
+        trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : self
     }
 }

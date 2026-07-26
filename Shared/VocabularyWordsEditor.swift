@@ -115,9 +115,9 @@ private struct VocabularyWordChip: View {
             .buttonStyle(.plain)
             .accessibilityLabel(Text(L10n.cancel))
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(Color.accentColor.opacity(0.12), in: Capsule())
+        .padding(.horizontal, AppSpacing.sm)
+        .padding(.vertical, AppSpacing.xs)
+        .background(AppColor.accentBackground(0.12), in: Capsule())
     }
 }
 

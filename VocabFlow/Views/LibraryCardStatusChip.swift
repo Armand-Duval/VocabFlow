@@ -4,7 +4,9 @@ struct LibraryCardStatusChip: View {
     let card: FlashCard
 
     var body: some View {
-        if ReviewScheduler.isDue(card) {
+        if card.isSuspended {
+            StatusChip(text: L10n.cardSuspendedStatus, style: .suspended)
+        } else if ReviewScheduler.isDue(card) {
             StatusChip(text: L10n.dueForReview, style: .due)
         } else if card.isNewCard {
             StatusChip(text: L10n.librarySRSNew, style: .new)

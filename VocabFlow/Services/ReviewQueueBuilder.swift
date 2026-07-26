@@ -19,6 +19,11 @@ struct ReviewQueuePlan {
 }
 
 enum ReviewQueueBuilder {
+    static func cards(in deckID: UUID?, from allCards: [FlashCard]) -> [FlashCard] {
+        guard let deckID else { return allCards }
+        return allCards.filter { $0.deck?.id == deckID }
+    }
+
     static func plan(
         from allCards: [FlashCard],
         dailyNewLimit: Int = ReviewSettings.dailyNewLimit,

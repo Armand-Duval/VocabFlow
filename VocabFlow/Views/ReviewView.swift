@@ -5,6 +5,9 @@ struct ReviewView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(ReviewSettingsStore.self) private var reviewSettings
 
+    @Query(sort: [SortDescriptor(\Deck.sortOrder), SortDescriptor(\Deck.createdAt)])
+    private var decks: [Deck]
+
     @State private var plan: ReviewQueuePlan?
     @State private var hasAnyCards = false
     @State private var isLoading = true
@@ -42,6 +45,11 @@ struct ReviewView: View {
                 }
             }
             .navigationTitle(L10n.reviewTitle)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    reviewDeckMenu
+                }
+            }
             .sheet(isPresented: $showQuotaDetail) {
                 if let plan {
                     ReviewQuotaDetailSheet(plan: plan)
@@ -56,30 +64,64 @@ struct ReviewView: View {
         }
     }
 
+    private var reviewDeckMenu: some View {
+        Menu {
+            Button {
+                reviewSettings.setReviewDeckID(nil)
+            } label: {
+                if reviewSettings.reviewDeckID == nil {
+                    Label(L10n.reviewDeckFilterAll, systemImage: "checkmark")
+                } else {
+                    Text(L10n.reviewDeckFilterAll)
+                }
+            }
+
+            ForEach(decks) { deck in
+                Button {
+                    reviewSettings.setReviewDeckID(deck.id)
+                } label: {
+                    if reviewSettings.reviewDeckID == deck.id {
+                        Label(deck.name, systemImage: "checkmark")
+                    } else {
+                        Text(deck.name)
+                    }
+                }
+            }
+        } label: {
+            Label(reviewDeckMenuTitle, systemImage: "books.vertical")
+        }
+    }
+
+    private var reviewDeckMenuTitle: String {
+        if let deckID = reviewSettings.reviewDeckID,
+           let deck = decks.first(where: { $0.id == deckID }) {
+            return deck.name
+        }
+        return L10n.reviewDeckFilterAll
+    }
+
     @ViewBuilder
     private func emptyState(plan: ReviewQueuePlan) -> some View {
         if !hasAnyCards {
-            ContentUnavailableView {
-                Label(L10n.reviewEmptyTitle, systemImage: "tray")
-            } description: {
-                Text(L10n.reviewEmptyGoCreate)
-            }
+            AppEmptyState(
+                title: L10n.reviewEmptyTitle,
+                message: L10n.reviewEmptyGoCreate,
+                systemImage: "sparkles.rectangle.stack"
+            )
         } else if plan.hasDeferredCards {
-            ContentUnavailableView {
-                Label(L10n.reviewQuotaReachedTitle, systemImage: "clock")
-            } description: {
-                Text(L10n.reviewQuotaReachedMessage(plan.deferredTotalCount))
-            } actions: {
-                Button(L10n.reviewQuotaDetailTitle) {
-                    showQuotaDetail = true
-                }
-            }
+            AppEmptyState(
+                title: L10n.reviewQuotaReachedTitle,
+                message: L10n.reviewQuotaReachedMessage(plan.deferredTotalCount),
+                systemImage: "clock",
+                actionTitle: L10n.reviewQuotaDetailTitle,
+                action: { showQuotaDetail = true }
+            )
         } else {
-            ContentUnavailableView {
-                Label(L10n.reviewEmptyTitle, systemImage: "checkmark.circle")
-            } description: {
-                Text(L10n.reviewEmptyDone)
-            }
+            AppEmptyState(
+                title: L10n.reviewEmptyTitle,
+                message: L10n.reviewEmptyDone,
+                systemImage: "checkmark.circle"
+            )
         }
     }
 
@@ -102,10 +144,12 @@ struct ReviewView: View {
             },
             sortBy: [SortDescriptor(\FlashCard.nextReviewDate)]
         )
-        guard let cards = try? modelContext.fetch(descriptor) else {
+        guard let allCards = try? modelContext.fetch(descriptor) else {
             isLoading = false
             return
         }
+
+        let cards = ReviewQueueBuilder.cards(in: reviewSettings.reviewDeckID, from: allCards)
 
         plan = ReviewQueueBuilder.plan(
             from: cards,
@@ -122,7 +166,7 @@ private struct ReviewQuotaBanner: View {
 
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: 16) {
+            HStack(spacing: AppSpacing.md) {
                 quotaItem(
                     title: L10n.reviewQuotaNew,
                     studied: plan.newStudiedToday,
@@ -135,13 +179,13 @@ private struct ReviewQuotaBanner: View {
                 )
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.right")
-                    .font(.caption2)
+                    .font(AppFont.caption())
                     .foregroundStyle(.tertiary)
             }
-            .font(.caption)
+            .font(AppFont.captionSecondary())
             .foregroundStyle(.secondary)
-            .padding(.horizontal)
-            .padding(.vertical, 10)
+            .padding(.horizontal, AppSpacing.md)
+            .padding(.vertical, AppSpacing.sm)
             .background(.bar)
         }
         .buttonStyle(.plain)
@@ -177,14 +221,14 @@ private struct ReviewQuotaDetailSheet: View {
                 if plan.hasDeferredCards {
                     Section {
                         Text(L10n.reviewQuotaDetailDeferredMessage(plan.deferredTotalCount))
-                            .font(.subheadline)
+                            .font(AppFont.secondary())
                             .foregroundStyle(.secondary)
                     }
                 }
 
                 Section {
                     Text(L10n.reviewQuotaDetailHint)
-                        .font(.subheadline)
+                        .font(AppFont.secondary())
                         .foregroundStyle(.secondary)
                 }
             }
@@ -202,14 +246,14 @@ private struct ReviewQuotaDetailSheet: View {
     private func quotaRow(title: String, studied: Int, limit: Int, deferred: Int) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
-                .font(.headline)
+                .font(AppFont.sectionTitle())
             Text(L10n.reviewQuotaProgress(title, studied: studied, limit: limit))
-                .font(.subheadline)
+                .font(AppFont.secondary())
                 .foregroundStyle(.secondary)
             if deferred > 0 {
                 Text(L10n.reviewQuotaDetailDeferred(deferred))
-                    .font(.caption)
-                    .foregroundStyle(.orange)
+                    .font(AppFont.caption())
+                    .foregroundStyle(AppColor.warning)
             }
         }
         .padding(.vertical, 2)

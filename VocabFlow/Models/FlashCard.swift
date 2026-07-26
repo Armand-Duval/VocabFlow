@@ -18,6 +18,7 @@ final class FlashCard {
     var repetitions: Int
     var reviewCount: Int
     var learningStep: Int
+    var isSuspended: Bool
     var deck: Deck?
 
     var cardType: CardType {
@@ -56,5 +57,6 @@ final class FlashCard {
         self.repetitions = 0
         self.reviewCount = 0
         self.learningStep = 0
+        self.isSuspended = false
     }
 }

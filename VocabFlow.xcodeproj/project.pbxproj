@@ -48,13 +48,13 @@
 		VV0000010000000000000001 /* CameraImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = VV0000010000000000000010 /* CameraImagePicker.swift */; };
 		VV0000010000000000000002 /* CameraImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = VV0000010000000000000010 /* CameraImagePicker.swift */; };
 		VV0000010000000000000003 /* CameraImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = VV0000010000000000000010 /* CameraImagePicker.swift */; };
-		WW0000010000000000000001 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = WW0000010000000000000010 /* DesignTokens.swift */; };
+		WW0000010000000000000001 /* AppComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = WW0000010000000000000015 /* AppComponents.swift */; };
 		WW0000010000000000000002 /* StatusChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = WW0000010000000000000011 /* StatusChip.swift */; };
 		WW0000010000000000000003 /* ToastCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = WW0000010000000000000012 /* ToastCenter.swift */; };
-		WW0000010000000000000004 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = WW0000010000000000000010 /* DesignTokens.swift */; };
+		WW0000010000000000000004 /* AppComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = WW0000010000000000000015 /* AppComponents.swift */; };
 		WW0000010000000000000005 /* StatusChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = WW0000010000000000000011 /* StatusChip.swift */; };
 		WW0000010000000000000006 /* ToastCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = WW0000010000000000000012 /* ToastCenter.swift */; };
-		WW0000010000000000000007 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = WW0000010000000000000010 /* DesignTokens.swift */; };
+		WW0000010000000000000007 /* AppComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = WW0000010000000000000015 /* AppComponents.swift */; };
 		WW0000010000000000000008 /* StatusChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = WW0000010000000000000011 /* StatusChip.swift */; };
 		WW0000010000000000000009 /* ToastCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = WW0000010000000000000012 /* ToastCenter.swift */; };
 		XX0000010000000000000001 /* LibraryCardStatusChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = XX0000010000000000000010 /* LibraryCardStatusChip.swift */; };
@@ -160,7 +160,7 @@
 		HH0000010000000000000011 /* ImportTextAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportTextAnalyzer.swift; sourceTree = "<group>"; };
 		HH0000010000000000000012 /* CreateCardsUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateCardsUI.swift; sourceTree = "<group>"; };
 		VV0000010000000000000010 /* CameraImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraImagePicker.swift; sourceTree = "<group>"; };
-		WW0000010000000000000010 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
+		WW0000010000000000000015 /* AppComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/AppComponents.swift; sourceTree = SOURCE_ROOT; };
 		WW0000010000000000000011 /* StatusChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusChip.swift; sourceTree = "<group>"; };
 		WW0000010000000000000012 /* ToastCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastCenter.swift; sourceTree = "<group>"; };
 		XX0000010000000000000010 /* LibraryCardStatusChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryCardStatusChip.swift; sourceTree = "<group>"; };
@@ -396,7 +396,7 @@
 				HH0000010000000000000011 /* ImportTextAnalyzer.swift */,
 				HH0000010000000000000012 /* CreateCardsUI.swift */,
 				VV0000010000000000000010 /* CameraImagePicker.swift */,
-				WW0000010000000000000010 /* DesignTokens.swift */,
+				WW0000010000000000000015 /* AppComponents.swift */,
 				WW0000010000000000000011 /* StatusChip.swift */,
 				WW0000010000000000000012 /* ToastCenter.swift */,
 				HH0000010000000000000013 /* Localizable.xcstrings */,
@@ -550,7 +550,7 @@
 				HH0000010000000000000005 /* ImportTextAnalyzer.swift in Sources */,
 				HH0000010000000000000008 /* CreateCardsUI.swift in Sources */,
 				VV0000010000000000000002 /* CameraImagePicker.swift in Sources */,
-				WW0000010000000000000004 /* DesignTokens.swift in Sources */,
+				WW0000010000000000000004 /* AppComponents.swift in Sources */,
 				WW0000010000000000000005 /* StatusChip.swift in Sources */,
 				WW0000010000000000000006 /* ToastCenter.swift in Sources */,
 				NN0000010000000000000002 /* ImageOCRService.swift in Sources */,
@@ -580,7 +580,7 @@
 				HH0000010000000000000006 /* ImportTextAnalyzer.swift in Sources */,
 				HH0000010000000000000009 /* CreateCardsUI.swift in Sources */,
 				VV0000010000000000000003 /* CameraImagePicker.swift in Sources */,
-				WW0000010000000000000007 /* DesignTokens.swift in Sources */,
+				WW0000010000000000000007 /* AppComponents.swift in Sources */,
 				WW0000010000000000000008 /* StatusChip.swift in Sources */,
 				WW0000010000000000000009 /* ToastCenter.swift in Sources */,
 				NN0000010000000000000003 /* ImageOCRService.swift in Sources */,
@@ -667,7 +667,7 @@
 				HH0000010000000000000004 /* ImportTextAnalyzer.swift in Sources */,
 				HH0000010000000000000007 /* CreateCardsUI.swift in Sources */,
 				VV0000010000000000000001 /* CameraImagePicker.swift in Sources */,
-				WW0000010000000000000001 /* DesignTokens.swift in Sources */,
+				WW0000010000000000000001 /* AppComponents.swift in Sources */,
 				WW0000010000000000000002 /* StatusChip.swift in Sources */,
 				WW0000010000000000000003 /* ToastCenter.swift in Sources */,
 				XX0000010000000000000001 /* LibraryCardStatusChip.swift in Sources */,

@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UniformTypeIdentifiers
 
 struct FlashCardDetailView: View {
     @Environment(\.modelContext) private var modelContext
@@ -13,6 +14,9 @@ struct FlashCardDetailView: View {
     @State private var isEditing = false
     @State private var showDeleteConfirm = false
     @State private var showResetConfirm = false
+    @State private var apkgDocument: ApkgDocument?
+    @State private var showApkgExporter = false
+    @State private var apkgExportFilename = ApkgExportService.defaultFilename
 
     @State private var editWord = ""
     @State private var editPhonetic = ""
@@ -47,24 +51,48 @@ struct FlashCardDetailView: View {
                     Button(L10n.libraryEdit) { beginEditing() }
                     Menu {
                         Button {
+                            exportCardApkg()
+                        } label: {
+                            Label(L10n.cardExportApkg, systemImage: "square.and.arrow.up")
+                        }
+
+                        Button {
+                            toggleSuspended()
+                        } label: {
+                            Label(
+                                card.isSuspended ? L10n.cardUnsuspend : L10n.cardSuspend,
+                                systemImage: card.isSuspended ? "play.circle" : "pause.circle"
+                            )
+                        }
+
+                        Button {
                             showResetConfirm = true
                         } label: {
                             Label(L10n.libraryResetSRS, systemImage: "arrow.counterclockwise")
                         }
+                        .disabled(card.isSuspended)
+
                         Button(role: .destructive) {
                             showDeleteConfirm = true
                         } label: {
                             Label(L10n.libraryDeleteCard, systemImage: "trash")
                         }
                     } label: {
-                        Image(systemName: "ellipsis.circle")
+                        AppIcon.symbol("ellipsis.circle")
                     }
                 }
             }
         }
+        .fileExporter(
+            isPresented: $showApkgExporter,
+            document: apkgDocument,
+            contentType: .apkg,
+            defaultFilename: apkgExportFilename
+        ) { _ in }
         .confirmationDialog(L10n.libraryDeleteCard, isPresented: $showDeleteConfirm, titleVisibility: .visible) {
             Button(L10n.libraryDeleteCard, role: .destructive) {
                 modelContext.delete(card)
+                DeckCardCountService.notifyDataMaintenance()
                 dismiss()
             }
             Button(L10n.cancel, role: .cancel) {}
@@ -74,6 +102,7 @@ struct FlashCardDetailView: View {
         .confirmationDialog(L10n.libraryResetSRS, isPresented: $showResetConfirm, titleVisibility: .visible) {
             Button(L10n.libraryResetSRS) {
                 ReviewScheduler.resetProgress(for: card)
+                DeckCardCountService.notifyCatalogChanged()
             }
             Button(L10n.cancel, role: .cancel) {}
         } message: {
@@ -83,11 +112,19 @@ struct FlashCardDetailView: View {
 
     private var detailContent: some View {
         List {
-            Section {
-                NavigationLink {
-                    CardReviewSessionView(cards: [card], dismissWhenComplete: true)
-                } label: {
-                    Label(L10n.libraryReviewThisCard, systemImage: "brain.head.profile")
+            if !card.isSuspended {
+                Section {
+                    NavigationLink {
+                        CardReviewSessionView(cards: [card], dismissWhenComplete: true)
+                    } label: {
+                        Label(L10n.libraryReviewThisCard, systemImage: "brain.head.profile")
+                    }
+                }
+            } else {
+                Section {
+                    Text(L10n.cardSuspendedHint)
+                        .font(AppFont.secondary())
+                        .foregroundStyle(.secondary)
                 }
             }
 
@@ -98,36 +135,19 @@ struct FlashCardDetailView: View {
                     LabeledContent(L10n.phoneticLabel, value: phonetic)
                 }
                 LabeledContent(L10n.typeLabel, value: card.cardType.displayName)
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(L10n.sourceText)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Text(card.sentence)
-                        .font(.subheadline)
-                }
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(L10n.frontLabel)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Text(card.front)
-                        .font(.subheadline)
-                }
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(L10n.backLabel)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Text(card.displayBack)
-                        .font(.subheadline)
-                }
+                DetailField(label: L10n.sourceText, value: card.sentence)
+                DetailField(label: L10n.frontLabel, value: card.front)
+                DetailField(label: L10n.backLabel, value: card.displayBack)
             }
 
             Section(L10n.libraryDetailSRS) {
                 LabeledContent(L10n.librarySRSStatus) {
-                    Text(srsStatusText)
-                        .foregroundStyle(ReviewScheduler.isDue(card) ? .orange : .secondary)
+                    srsStatusChip
                 }
-                LabeledContent(L10n.librarySRSNextReview) {
-                    Text(card.nextReviewDate.formatted(date: .abbreviated, time: .shortened))
+                if !card.isSuspended {
+                    LabeledContent(L10n.librarySRSNextReview) {
+                        Text(card.nextReviewDate.formatted(date: .abbreviated, time: .shortened))
+                    }
                 }
                 LabeledContent(L10n.librarySRSReviewCount, value: "\(card.reviewCount)")
                 LabeledContent(L10n.librarySRSInterval, value: intervalText)
@@ -164,13 +184,17 @@ struct FlashCardDetailView: View {
         .dismissKeyboardOnScroll()
     }
 
-    private var srsStatusText: String {
-        if card.isNewCard {
-            L10n.librarySRSNew
-        } else if ReviewScheduler.isDue(card) {
-            L10n.dueForReview
-        } else {
-            L10n.librarySRSScheduled
+    private var srsStatusChip: some View {
+        Group {
+            if card.isSuspended {
+                StatusChip(text: L10n.cardSuspendedStatus, style: .suspended)
+            } else if card.isNewCard {
+                StatusChip(text: L10n.librarySRSNew, style: .new)
+            } else if ReviewScheduler.isDue(card) {
+                StatusChip(text: L10n.dueForReview, style: .due)
+            } else {
+                StatusChip(text: L10n.librarySRSScheduled, style: .scheduled)
+            }
         }
     }
 
@@ -179,6 +203,23 @@ struct FlashCardDetailView: View {
             "—"
         } else {
             L10n.intervalDays(Int(card.intervalDays.rounded()))
+        }
+    }
+
+    private func toggleSuspended() {
+        card.isSuspended.toggle()
+        DeckCardCountService.notifyCatalogChanged()
+        ToastCenter.shared.show(card.isSuspended ? L10n.cardSuspendedDone : L10n.cardUnsuspendedDone)
+    }
+
+    private func exportCardApkg() {
+        do {
+            let data = try ApkgExportService.export(cards: [card], deckName: card.deck?.name)
+            apkgDocument = ApkgDocument(data: data)
+            apkgExportFilename = ApkgExportService.sanitizedFilename(card.word)
+            showApkgExporter = true
+        } catch {
+            ToastCenter.shared.show(error.localizedDescription)
         }
     }
 
@@ -210,5 +251,6 @@ struct FlashCardDetailView: View {
         card.contextNote = note.isEmpty ? nil : note
         card.deck = DeckService.resolvedDeck(id: editDeckID, in: modelContext)
         isEditing = false
+        DeckCardCountService.notifyCatalogChanged()
     }
 }

@@ -55,6 +55,7 @@ struct SelectableTextEditor: UIViewRepresentable {
 
         if textView.text != text {
             textView.text = text
+            context.coordinator.applySelectionStyle(to: textView)
             textView.invalidateIntrinsicContentSize()
         }
 
@@ -85,10 +86,12 @@ struct SelectableTextEditor: UIViewRepresentable {
         func textViewDidChange(_ textView: UITextView) {
             parent.text = textView.text
             textView.invalidateIntrinsicContentSize()
+            applySelectionStyle(to: textView)
             publishSelection(from: textView)
         }
 
         func textViewDidChangeSelection(_ textView: UITextView) {
+            applySelectionStyle(to: textView)
             publishSelection(from: textView)
         }
 
@@ -192,6 +195,31 @@ struct SelectableTextEditor: UIViewRepresentable {
             let value = String(textView.text[selectedRange])
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             return value.isEmpty ? nil : value
+        }
+
+        func applySelectionStyle(to textView: UITextView) {
+            let plain = textView.text ?? ""
+            let selectedRange = textView.selectedRange
+            let attributed = NSMutableAttributedString(
+                string: plain,
+                attributes: [
+                    .font: UIFont.preferredFont(forTextStyle: .body),
+                    .foregroundColor: UIColor.label,
+                ]
+            )
+
+            if selectedRange.length > 0, NSMaxRange(selectedRange) <= attributed.length {
+                attributed.addAttribute(
+                    .backgroundColor,
+                    value: UIColor.tintColor.withAlphaComponent(0.28),
+                    range: selectedRange
+                )
+            }
+
+            textView.textStorage.beginEditing()
+            textView.textStorage.setAttributedString(attributed)
+            textView.textStorage.endEditing()
+            textView.selectedRange = selectedRange
         }
     }
 }

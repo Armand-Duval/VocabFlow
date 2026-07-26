@@ -23,12 +23,13 @@ struct FlashCardBackup: Codable {
     let repetitions: Int
     let reviewCount: Int
     let learningStep: Int
+    let isSuspended: Bool
     let deckId: UUID?
 
     enum CodingKeys: String, CodingKey {
         case id, word, phonetic, sentence, cardTypeRaw, front, back, contextNote
         case createdAt, nextReviewDate, intervalDays, easeFactor, repetitions, reviewCount, learningStep
-        case deckId
+        case isSuspended, deckId
     }
 
     init(from card: FlashCard) {
@@ -47,6 +48,7 @@ struct FlashCardBackup: Codable {
         repetitions = card.repetitions
         reviewCount = card.reviewCount
         learningStep = card.learningStep
+        isSuspended = card.isSuspended
         deckId = card.deck?.id
     }
 
@@ -67,6 +69,7 @@ struct FlashCardBackup: Codable {
         repetitions = try container.decode(Int.self, forKey: .repetitions)
         reviewCount = try container.decodeIfPresent(Int.self, forKey: .reviewCount) ?? 0
         learningStep = try container.decodeIfPresent(Int.self, forKey: .learningStep) ?? 0
+        isSuspended = try container.decodeIfPresent(Bool.self, forKey: .isSuspended) ?? false
         deckId = try container.decodeIfPresent(UUID.self, forKey: .deckId)
     }
 
@@ -87,6 +90,7 @@ struct FlashCardBackup: Codable {
         try container.encode(repetitions, forKey: .repetitions)
         try container.encode(reviewCount, forKey: .reviewCount)
         try container.encode(learningStep, forKey: .learningStep)
+        try container.encode(isSuspended, forKey: .isSuspended)
         try container.encode(deckId, forKey: .deckId)
     }
 
@@ -105,6 +109,7 @@ struct FlashCardBackup: Codable {
         card.repetitions = repetitions
         card.reviewCount = reviewCount
         card.learningStep = learningStep
+        card.isSuspended = isSuspended
         if let deckId, let deck = deckLookup[deckId] {
             card.deck = deck
         } else {
@@ -130,6 +135,7 @@ struct FlashCardBackup: Codable {
         card.repetitions = repetitions
         card.reviewCount = reviewCount
         card.learningStep = learningStep
+        card.isSuspended = isSuspended
         if let deckId, let deck = deckLookup[deckId] {
             card.deck = deck
         } else {

@@ -107,8 +107,9 @@ struct CreateCardsView: View {
 
             sourceSection
             wordsSection
-            DeckPickerSection(selectedDeckID: $selectedDeckID)
-        }
+                DeckPickerSection(selectedDeckID: $selectedDeckID)
+            }
+            .appFormSectionSpacing()
     }
 
     private var sourceSection: some View {
@@ -121,9 +122,10 @@ struct CreateCardsView: View {
                     onAddToVocabulary: appendSelectionToWords
                 )
 
-                if sentence.isEmpty {
-                    Text(L10n.createSourceEmptyHint)
-                        .foregroundStyle(.tertiary)
+                        if sentence.isEmpty {
+                            Text(L10n.createSourceEmptyHint)
+                                .foregroundStyle(.secondary)
+                                .font(AppFont.helper())
                         .padding(.top, 8)
                         .allowsHitTesting(false)
                 }
@@ -139,7 +141,7 @@ struct CreateCardsView: View {
                 HStack(spacing: 8) {
                     ProgressView()
                     Text(L10n.recognizingPhoto)
-                        .font(.caption)
+                        .font(AppFont.caption())
                         .foregroundStyle(.secondary)
                 }
             }
@@ -149,13 +151,13 @@ struct CreateCardsView: View {
                 Spacer()
                 if !sentence.isEmpty {
                     Text(L10n.createCharCount(sentence.count))
-                        .font(.caption)
+                        .font(AppFont.caption())
                         .foregroundStyle(.secondary)
                     Button(L10n.clear) {
                         sentence = ""
                         selectedText = ""
                     }
-                    .font(.caption)
+                    .font(AppFont.caption())
                 }
             }
         } footer: {
@@ -168,19 +170,27 @@ struct CreateCardsView: View {
     }
 
     private var importActionsRow: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: AppSpacing.md) {
             PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
-                Label(L10n.importFromPhoto, systemImage: "photo.on.rectangle")
+                AppIcon.symbol("photo.on.rectangle")
+                    .foregroundStyle(AppColor.accent)
+                    .frame(width: 44, height: 44)
+                    .background(AppColor.accentBackground(0.10), in: RoundedRectangle(cornerRadius: AppRadius.button))
             }
             .disabled(isRecognizingPhoto)
+            .accessibilityLabel(L10n.importFromPhoto)
 
             if UIImagePickerController.isSourceTypeAvailable(.camera) {
                 Button {
                     showCamera = true
                 } label: {
-                    Label(L10n.importFromCamera, systemImage: "camera")
+                    AppIcon.symbol("camera")
+                        .foregroundStyle(AppColor.accent)
+                        .frame(width: 44, height: 44)
+                        .background(AppColor.accentBackground(0.10), in: RoundedRectangle(cornerRadius: AppRadius.button))
                 }
                 .disabled(isRecognizingPhoto)
+                .accessibilityLabel(L10n.importFromCamera)
             }
         }
     }
@@ -202,16 +212,16 @@ struct CreateCardsView: View {
     }
 
     private var generateFooter: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: AppSpacing.xs) {
             if !canGenerate {
                 Text(L10n.createGenerateHint)
-                    .font(.caption)
+                    .font(AppFont.helper())
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             Button(action: generateCards) {
-                HStack(spacing: 8) {
+                HStack(spacing: AppSpacing.xs) {
                     if isGenerating {
                         ProgressView()
                             .tint(.white)
@@ -219,17 +229,14 @@ struct CreateCardsView: View {
                         Image(systemName: "sparkles")
                     }
                     Text(L10n.generateCards)
-                        .fontWeight(.semibold)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(PrimaryButtonStyle())
             .disabled(isGenerating || !canGenerate)
         }
-        .padding(.horizontal)
-        .padding(.top, 10)
-        .padding(.bottom, 8)
+        .padding(.horizontal, AppSpacing.md)
+        .padding(.top, AppSpacing.sm)
+        .padding(.bottom, AppSpacing.xs)
         .background(.bar)
     }
 

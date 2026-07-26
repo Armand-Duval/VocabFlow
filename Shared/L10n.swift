@@ -170,6 +170,14 @@ enum L10n {
     static var librarySRSNew: String { tr("library.srs.new") }
     static var librarySRSScheduled: String { tr("library.srs.scheduled") }
     static var libraryContextNote: String { tr("library.contextNote") }
+    static var cardSuspend: String { tr("card.suspend") }
+    static var cardUnsuspend: String { tr("card.unsuspend") }
+    static var cardSuspendedStatus: String { tr("card.suspended.status") }
+    static var cardSuspendedHint: String { tr("card.suspended.hint") }
+    static var cardSuspendedDone: String { tr("card.suspended.done") }
+    static var cardUnsuspendedDone: String { tr("card.unsuspended.done") }
+    static var cardExportApkg: String { tr("card.export.apkg") }
+    static var deckExportApkg: String { tr("deck.export.apkg") }
 
     // MARK: - Review quota
 
@@ -192,6 +200,8 @@ enum L10n {
     }
     static var reviewQuotaDetailHint: String { tr("review.quota.detail.hint") }
     static var reviewRatingHint: String { tr("review.rating.hint") }
+    static var reviewSwipeHint: String { tr("review.swipe.hint") }
+    static var reviewDeckFilterAll: String { tr("review.deckFilter.all") }
     private static func limitDisplay(_ limit: Int) -> String {
         limit == 0 ? tr("review.quota.unlimited") : "\(limit)"
     }

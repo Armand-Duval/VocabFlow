@@ -19,27 +19,29 @@
 
 | ID | 项 | 状态 | 说明 |
 |----|----|------|------|
-| P0-1 | DesignTokens（间距/字号/圆角） | [x] | `Shared/DesignTokens.swift` |
+| P0-1 | DesignTokens（间距/字号/圆角） | [x] | 合并为 `Shared/AppComponents.swift` |
 | P0-2 | StatusChip 统一标签（Due/New/类型） | [x] | `Shared/StatusChip.swift` + `LibraryCardStatusChip` |
 | P0-3 | 全局 Toast | [x] | `ToastCenter` + ContentView / 制卡 / 设置 / 导入 |
 | P0-4 | Loading 遮罩 | [x] | 制卡 OCR/AI、词库包导入 |
 | P0-5 | Due 标签浅橙底 + 角标规范 | [x] | StatusChip `.due` / `.new` / `.scheduled` |
 | P0-6 | 置灰主按钮说明文案 | [x] | 制卡页底部 |
-| P0-7 | SF Symbols 权重统一 | [ ] | Tab / 工具栏 `.regular` |
+| P0-7 | SF Symbols 权重统一 | [x] | Tab `AppTabIcon` + 工具栏 `.regular` / hierarchical |
 
 ## P1 — 中期（1–3 天）
 
 | ID | 项 | 状态 | 说明 |
 |----|----|------|------|
 | P1-1 | Library 顶部导入/导出快捷入口 | [x] | 底部 Import / Export 栏 → 词库包 |
-| P1-2 | 字体层级：28/20/16/13 | [~] | AppFont 已建，待全页套用 |
-| P1-3 | OCR 按钮图标化 | [ ] | 制卡页 |
-| P1-4 | 选词高亮反馈 | [ ] | SelectableTextEditor |
+| P1-2 | 字体层级：28/20/16/13 | [x] | 主要页面已套用 AppFont/AppSpacing |
+| P1-3 | OCR 按钮图标化 | [x] | 44pt 图标按钮 + AppIcon |
+| P1-4 | 选词高亮反馈 | [x] | SelectableTextEditor 选区 tint 底 |
 | P1-5 | Review 卡片压缩空白 + 大发音钮 | [x] | maxHeight 340 + 44pt 发音区 |
 | P1-6 | Settings 模型参数 footer | [x] | 各 model 一行说明 |
-| P1-7 | 搜索框清空 + 关键词高亮 | [~] | 清空已有；高亮待做 |
-| P1-8 | 深色模式扫 hardcoded 色 | [ ] | 跟随系统 |
+| P1-7 | 搜索框清空 + 关键词高亮 | [x] | `HighlightedText` 词/释义/deck |
+| P1-8 | 深色模式扫 hardcoded 色 | [x] | `AppColor` 语义色 + 主要页面替换 |
 | P1-9 | Settings 隐私政策置顶 | [x] | About 区第一项 |
+| P1-10 | 复习滑动手势 | [x] | 左 Again / 右 Easy / 上 Hard / 下 Good |
+| P1-11 | Library 筛选 chip 栏 | [x] | 替换 toolbar Menu，与 deck chip 统一 |
 
 ## P2 — 上架前 / 长期
 
@@ -49,10 +51,11 @@
 | P2-2 | 启动隐私同意弹窗 | [ ] | 首次启动 |
 | P2-3 | 开源协议二次确认 | [ ] | 社区 deck 导入 |
 | P2-4 | Share Extension 空文本/超时 | [ ] | |
-| P2-5 | apkg 批量/单卡导出 | [ ] | 阶段 1 功能 |
-| P2-6 | 卡片归档/暂停复习 | [ ] | |
+| P2-5 | apkg 批量/单卡导出 | [x] | 全库 / 按 deck 左滑 / 单卡详情 |
+| P2-6 | 卡片归档/暂停复习 | [x] | `isSuspended` + 详情菜单 |
 | P2-7 | 复习统计看板 | [ ] | |
 | P2-8 | 动态字体 | [ ] | |
+| P2-9 | 按 deck 隔离复习队列 | [x] | Review Tab deck 筛选 Menu |
 
 ---
 
@@ -71,10 +74,12 @@
 
 - **2026-07-26** 创建 backlog
 - **2026-07-26** 完成 P0-1～P0-6、P1-1、P1-5、P1-6、P1-7（清空）、P1-9；Debug 编译通过
+- **2026-07-26** 设计系统合并至 AppComponents；复习滑动手势；P0-7、P1-3、P1-4、P1-7、P1-10；Debug 编译通过
+- **2026-07-26** P1-2/P1-8 全页字体与语义色；Library 筛选 chip 栏；FilterChip/DetailField 组件
+- **2026-07-26** 阶段 1：apkg 按 deck/单卡导出、卡片暂停、Review 按 deck 筛选
 
 ## 下一步建议
 
-1. P0-7 + P1-2：全 App 套用 DesignTokens / AppFont  
-2. P1-3～P1-4：制卡 OCR 图标化、选词高亮  
-3. P1-8：深色模式  
-4. 进入阶段 1 功能：apkg 批量导出、卡片暂停、按 deck 复习
+1. P2-1 / P2-2：会员额度页、启动隐私同意
+2. P2-7：复习统计看板
+3. P2-8：动态字体支持

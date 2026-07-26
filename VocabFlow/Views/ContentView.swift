@@ -21,7 +21,11 @@ struct ContentView: View {
                 .opacity(selectedTab == 0 ? 1 : 0)
                 .allowsHitTesting(selectedTab == 0)
                 .tabItem {
-                    Label(L10n.tabCreate, systemImage: "rectangle.stack.badge.plus")
+                    Label {
+                        Text(L10n.tabCreate)
+                    } icon: {
+                        AppTabIcon(systemName: "rectangle.stack.badge.plus")
+                    }
                 }
                 .tag(0)
 
@@ -29,7 +33,11 @@ struct ContentView: View {
                 ReviewView()
             }
             .tabItem {
-                Label(L10n.tabReview, systemImage: "brain.head.profile")
+                Label {
+                    Text(L10n.tabReview)
+                } icon: {
+                    AppTabIcon(systemName: "brain.head.profile")
+                }
             }
             .badge(sessionDueCount > 0 ? sessionDueCount : 0)
             .tag(1)
@@ -38,7 +46,11 @@ struct ContentView: View {
                 LibraryView()
             }
             .tabItem {
-                Label(L10n.tabLibrary, systemImage: "books.vertical.fill")
+                Label {
+                    Text(L10n.tabLibrary)
+                } icon: {
+                    AppTabIcon(systemName: "books.vertical")
+                }
             }
             .tag(2)
 
@@ -46,7 +58,11 @@ struct ContentView: View {
                 SettingsView()
             }
             .tabItem {
-                Label(L10n.tabSettings, systemImage: "gearshape.fill")
+                Label {
+                    Text(L10n.tabSettings)
+                } icon: {
+                    AppTabIcon(systemName: "gearshape")
+                }
             }
             .tag(3)
         }
@@ -156,8 +172,10 @@ struct ContentView: View {
         let descriptor = FetchDescriptor<FlashCard>()
         guard let cards = try? modelContext.fetch(descriptor) else { return }
 
+        let scoped = ReviewQueueBuilder.cards(in: reviewSettings.reviewDeckID, from: cards)
+
         let count = ReviewQueueBuilder.sessionDueCount(
-            from: cards,
+            from: scoped,
             dailyNewLimit: reviewSettings.dailyNewLimit,
             dailyReviewLimit: reviewSettings.dailyReviewLimit
         )
