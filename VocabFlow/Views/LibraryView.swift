@@ -62,8 +62,9 @@ struct LibraryView: View {
                     )
                 }
             }
-            .navigationTitle(L10n.libraryTitle)
-            .searchable(text: $searchText, prompt: L10n.librarySearchPrompt)
+            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: L10n.librarySearchPrompt)
+            .appPageBackground()
+            .appNavTitle(L10n.libraryTitle, style: .hidden)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     HStack(spacing: AppSpacing.sm) {
@@ -161,20 +162,24 @@ struct LibraryView: View {
     }
 
     private var libraryQuickActionsBar: some View {
-        HStack(spacing: AppSpacing.sm) {
+        HStack(spacing: AppSpacing.md) {
             QuickActionChip(
                 systemImage: "square.and.arrow.down.fill",
-                title: L10n.libraryQuickImport
+                title: L10n.libraryQuickImport,
+                iconOnly: true
             ) {
                 showDeckStore = true
             }
+            .accessibilityLabel(L10n.libraryQuickImport)
 
             QuickActionChip(
                 systemImage: "square.and.arrow.up.fill",
-                title: L10n.libraryQuickExport
+                title: L10n.libraryQuickExport,
+                iconOnly: true
             ) {
                 showDeckStore = true
             }
+            .accessibilityLabel(L10n.libraryQuickExport)
         }
         .padding(.horizontal, AppSpacing.md)
         .padding(.vertical, AppSpacing.sm)
@@ -281,8 +286,9 @@ struct LibraryView: View {
     }
 
     private func deckChip(title: String, deckID: UUID?, count: Int) -> some View {
-        FilterChip(
-            title: count > 0 ? L10n.deckLabelWithCount(title, count: count) : title,
+        DeckFilterChip(
+            title: title,
+            badge: count > 0 ? count : nil,
             isSelected: filterDeckID == deckID,
             action: {
                 var transaction = Transaction()
@@ -417,7 +423,7 @@ private struct LibraryGroupedList: View {
                                     }
                                 }
                             } header: {
-                                Text(group.word)
+                                AppSectionHeader(title: group.word)
                             }
                         }
                     }
@@ -438,6 +444,8 @@ private struct LibraryGroupedList: View {
                         }
                     }
                 }
+                .listStyle(.insetGrouped)
+                .scrollContentBackground(.hidden)
                 .animation(.none, value: filterDeckID)
                 .overlay(alignment: .top) {
                     if isLoadingGroups {
@@ -586,7 +594,7 @@ private struct LibraryCardRow: View {
     var searchHighlight: String = ""
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+        VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline, spacing: AppSpacing.sm) {
                 HighlightedText(
                     text: card.word,
@@ -600,29 +608,42 @@ private struct LibraryCardRow: View {
                 LibraryCardStatusChip(card: card)
             }
 
-            HighlightedText(
-                text: card.front,
-                query: searchHighlight,
-                font: AppFont.secondary(),
-                lineLimit: 2
-            )
-            .foregroundStyle(.primary)
+            if !contextLine.isEmpty {
+                HighlightedText(
+                    text: contextLine,
+                    query: searchHighlight,
+                    font: AppFont.secondary(),
+                    lineLimit: 2
+                )
+                .foregroundStyle(.secondary)
+            }
 
-            HStack(spacing: AppSpacing.xs) {
-                CardTypeChip(title: card.cardType.displayName)
-
-                if showsDeckName, let deckName = card.deck?.name {
-                    HighlightedText(
-                        text: deckName,
-                        query: searchHighlight,
-                        font: AppFont.caption(),
-                        lineLimit: 1
-                    )
-                    .foregroundStyle(.secondary)
-                }
+            if showsDeckName, let deckName = card.deck?.name {
+                Text(deckName)
+                    .font(AppFont.caption())
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
             }
         }
         .padding(.vertical, AppSpacing.xs)
+    }
+
+    private var contextLine: String {
+        let trimmedSentence = card.sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedSentence.isEmpty {
+            return trimmedSentence
+        }
+
+        let trimmedFront = card.front.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedWord = card.word.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedFront.isEmpty, trimmedFront.caseInsensitiveCompare(trimmedWord) != .orderedSame {
+            return trimmedFront
+        }
+
+        return card.displayBack
+            .components(separatedBy: .newlines)
+            .first?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
     }
 }
 

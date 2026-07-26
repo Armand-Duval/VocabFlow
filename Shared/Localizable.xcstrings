@@ -1,6 +1,9 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "" : {
+
+    },
     "%lld" : {
 
     },
@@ -116,6 +119,159 @@
         }
       }
     },
+    "backup.reminder.body" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export a JSON backup from Decks to keep your progress safe."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请在「词库包」页导出 JSON 备份，以免学习进度丢失。"
+          }
+        }
+      }
+    },
+    "backup.reminder.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time to back up your cards"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "该备份词库了"
+          }
+        }
+      }
+    },
+    "card.export.apkg" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export as apkg"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出 apkg"
+          }
+        }
+      }
+    },
+    "card.suspend" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suspend review"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂停复习"
+          }
+        }
+      }
+    },
+    "card.suspended.done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Card suspended"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已暂停复习"
+          }
+        }
+      }
+    },
+    "card.suspended.hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This card is suspended and won't appear in review queues."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此卡片已暂停，不会进入复习队列。"
+          }
+        }
+      }
+    },
+    "card.suspended.status" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suspended"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已暂停"
+          }
+        }
+      }
+    },
+    "card.unsuspend" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resume review"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恢复复习"
+          }
+        }
+      }
+    },
+    "card.unsuspended.done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Card resumed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已恢复复习"
+          }
+        }
+      }
+    },
     "cardType.cloze" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -184,6 +340,23 @@
         }
       }
     },
+    "common.clear" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清空"
+          }
+        }
+      }
+    },
     "common.close" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -214,23 +387,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "完成"
-          }
-        }
-      }
-    },
-    "common.clear" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clear"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "清空"
           }
         }
       }
@@ -354,6 +510,23 @@
         }
       }
     },
+    "create.generate.hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add source text and at least one word to generate cards."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请先输入原文并添加至少一个生词。"
+          }
+        }
+      }
+    },
     "create.generate.short" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -371,19 +544,172 @@
         }
       }
     },
-    "create.quick.photo" : {
+    "create.generate.success" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Album"
+            "value" : "Generated %d cards"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "相册"
+            "value" : "已生成 %d 张卡片"
+          }
+        }
+      }
+    },
+    "create.generating" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generating..."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "生成中..."
+          }
+        }
+      }
+    },
+    "create.longText.keepSentence" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep as one passage"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保留整段"
+          }
+        }
+      }
+    },
+    "create.longText.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This passage is quite long. Keep it as one sentence or try extracting vocabulary?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这段文字较长。保留为整段原文，还是尝试提取生词？"
+          }
+        }
+      }
+    },
+    "create.longText.splitFallback" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not auto-extract words. Select text manually."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未能自动提取生词，请在原文中手动选中。"
+          }
+        }
+      }
+    },
+    "create.longText.splitWords" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try extract words"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尝试提取生词"
+          }
+        }
+      }
+    },
+    "create.longText.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Long text"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "长文本提示"
+          }
+        }
+      }
+    },
+    "create.pending.action" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查看"
+          }
+        }
+      }
+    },
+    "create.pending.draftsSubtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d cards ready to review"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d 张卡片待确认"
+          }
+        }
+      }
+    },
+    "create.pending.importTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shared content ready"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "待制作卡片"
           }
         }
       }
@@ -422,87 +748,36 @@
         }
       }
     },
-    "create.pending.importTitle" : {
+    "create.quick.photo" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Shared content ready"
+            "value" : "Album"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "待制作卡片"
+            "value" : "相册"
           }
         }
       }
     },
-    "create.pending.draftsSubtitle" : {
+    "create.source" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%d cards ready to review"
+            "value" : "Source Text"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%d 张卡片待确认"
-          }
-        }
-      }
-    },
-    "create.pending.action" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Review"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "查看"
-          }
-        }
-      }
-    },
-    "create.generate.hint" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add source text and at least one word to generate cards."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "请先输入原文并添加至少一个生词。"
-          }
-        }
-      }
-    },
-    "create.generate.success" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Generated %d cards"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已生成 %d 张卡片"
+            "value" : "原文"
           }
         }
       }
@@ -541,6 +816,23 @@
         }
       }
     },
+    "create.source.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag to select text, then add it as vocabulary. Safari supports Share; for Apple Books and similar apps, copy text and open VocabFlow."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拖选文字后点「加入生词」，或长按选区菜单选择。Safari 可分享导入；Apple Books、番茄小说等请复制文字后打开 App，会自动填入。"
+          }
+        }
+      }
+    },
     "create.source.footerHint" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -571,159 +863,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "检测到较长文本，建议手动选中生词或分段制卡。"
-          }
-        }
-      }
-    },
-    "create.words.emptyHint" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap + to add words, or select text above."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "点 + 添加生词，或在上方原文中选中单词。"
-          }
-        }
-      }
-    },
-    "create.longText.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Long text"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "长文本提示"
-          }
-        }
-      }
-    },
-    "create.longText.message" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This passage is quite long. Keep it as one sentence or try extracting vocabulary?"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "这段文字较长。保留为整段原文，还是尝试提取生词？"
-          }
-        }
-      }
-    },
-    "create.longText.keepSentence" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keep as one passage"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "保留整段"
-          }
-        }
-      }
-    },
-    "create.longText.splitWords" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Try extract words"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "尝试提取生词"
-          }
-        }
-      }
-    },
-    "create.longText.splitFallback" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Could not auto-extract words. Select text manually."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "未能自动提取生词，请在原文中手动选中。"
-          }
-        }
-      }
-    },
-    "create.generating" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Generating..."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "生成中..."
-          }
-        }
-      }
-    },
-    "create.source" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Source Text"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "原文"
-          }
-        }
-      }
-    },
-    "create.source.footer" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Drag to select text, then add it as vocabulary. Safari supports Share; for Apple Books and similar apps, copy text and open VocabFlow."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "拖选文字后点「加入生词」，或长按选区菜单选择。Safari 可分享导入；Apple Books、番茄小说等请复制文字后打开 App，会自动填入。"
           }
         }
       }
@@ -802,7 +941,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Create Cards"
+            "value" : "Create"
           }
         },
         "zh-Hans" : {
@@ -830,6 +969,23 @@
         }
       }
     },
+    "create.words.emptyHint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap + to add words, or select text above."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点 + 添加生词，或在上方原文中选中单词。"
+          }
+        }
+      }
+    },
     "create.words.footer" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -843,6 +999,134 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "点击标签上的 × 可移除生词。"
+          }
+        }
+      }
+    },
+    "deck.actions.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d deck(s) selected for export. Import reads deck info from the file and merges automatically."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已选 %d 个词库用于导出。导入会读取文件中的词库信息并自动合并。"
+          }
+        }
+      }
+    },
+    "deck.actions.importFooter" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import uses deck info from the file when available. Otherwise select one or more decks first. Export requires a selection."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件含词库信息时自动导入；否则请先选择一个或多个词库。导出需先选择词库。"
+          }
+        }
+      }
+    },
+    "deck.actions.section" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import & Export"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入 / 导出"
+          }
+        }
+      }
+    },
+    "deck.app.exportAllApkg" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export all Anki"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出全部 Anki"
+          }
+        }
+      }
+    },
+    "deck.app.restoreBackup" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore all"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恢复全部"
+          }
+        }
+      }
+    },
+    "deck.app.saveBackup" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save all"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存全部"
+          }
+        }
+      }
+    },
+    "deck.appBackup.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Full-app backup: all decks, cards, and SRS progress. Restore replaces or merges everything — not tied to the selected deck."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全 App 备份：含所有词库、卡片与复习进度。恢复时合并或覆盖全部数据，与上方选中的词库无关。"
+          }
+        }
+      }
+    },
+    "deck.appBackup.section" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All decks"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部词库"
           }
         }
       }
@@ -1264,6 +1548,22 @@
         }
       }
     },
+    "deck.deselectAll" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消全选"
+          }
+        }
+      }
+    },
     "deck.detail.placeholder" : {
       "localizations" : {
         "en" : {
@@ -1442,6 +1742,55 @@
         }
       }
     },
+    "deck.export.apkg" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export apkg"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出 apkg"
+          }
+        }
+      }
+    },
+    "deck.export.checkedJSONResult" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exported cards from %d deck(s)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已导出 %d 个词库中的卡片。"
+          }
+        }
+      }
+    },
+    "deck.export.needSelection" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select at least one deck to export."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请至少选择一个词库再导出。"
+          }
+        }
+      }
+    },
     "deck.extension.emptyCatalog" : {
       "localizations" : {
         "en" : {
@@ -1522,87 +1871,18 @@
         }
       }
     },
-    "deck.quick.importPack" : {
-      "extractionState" : "manual",
+    "deck.import.apkgMultiResult" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Import"
+            "value" : "Imported %2$d Anki cards across %1$d decks."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "导入"
-          }
-        }
-      }
-    },
-    "deck.quick.importApkg" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anki"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anki"
-          }
-        }
-      }
-    },
-    "deck.quick.exportJSON" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Backup"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "备份"
-          }
-        }
-      }
-    },
-    "deck.quick.importBackup" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Restore"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "恢复"
-          }
-        }
-      }
-    },
-    "deck.quick.exportApkg" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Export"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "导出"
+            "value" : "已从 Anki 包导入 %2$d 张卡片，涉及 %1$d 个词库。"
           }
         }
       }
@@ -1655,6 +1935,22 @@
         }
       }
     },
+    "deck.import.deckJSONResult" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imported into %1$@: %2$d added, %3$d updated."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已导入「%1$@」：新增 %2$d 张，更新 %3$d 张。"
+          }
+        }
+      }
+    },
     "deck.import.deckSection" : {
       "localizations" : {
         "en" : {
@@ -1671,6 +1967,22 @@
         }
       }
     },
+    "deck.import.emptyFile" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The file is empty or still downloading from iCloud. Open Files, wait for the download to finish, then try again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件为空或 iCloud 尚未下载完成。请在「文件」中等待下载完成后再试。"
+          }
+        }
+      }
+    },
     "deck.import.failed" : {
       "localizations" : {
         "en" : {
@@ -1683,6 +1995,87 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "导入失败"
+          }
+        }
+      }
+    },
+    "deck.import.intoSelectedDecksResult" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imported into %1$d deck(s): %2$d added, %3$d updated."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已导入到 %1$d 个词库：新增 %2$d 张，更新 %3$d 张。"
+          }
+        }
+      }
+    },
+    "deck.import.invalidJSON" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This JSON file is not a supported VocabFlow format."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这不是 VocabFlow 支持的 JSON 格式。"
+          }
+        }
+      }
+    },
+    "deck.import.needSelectionForNoDeckInfo" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This file has no deck info. Select one or more decks, then import again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "该文件不含词库信息，请先选择一个或多个词库后再导入。"
+          }
+        }
+      }
+    },
+    "deck.import.needSingleOrNoneForBackup" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select one deck to import into it, deselect all for a full-library restore, or select all decks to replace everything."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请只选 1 个词库导入到该词库，或取消全选以恢复整个词库，或全选后替换全部。"
+          }
+        }
+      }
+    },
+    "deck.import.needSingleSelection" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select exactly one deck for JSON pack / Anki import. Full backups offer merge or replace."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "词库包或 Anki 导入请只选 1 个词库。完整备份文件会提示合并或覆盖。"
           }
         }
       }
@@ -1719,6 +2112,39 @@
         }
       }
     },
+    "deck.import.progress" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$d / %2$d"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$d / %2$d"
+          }
+        }
+      }
+    },
+    "deck.import.replaceDeckResult" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replaced contents of “%1$@” with %2$lld cards."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已用 %2$lld 张卡片替换「%1$@」的内容。"
+          }
+        }
+      }
+    },
     "deck.import.section" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1732,6 +2158,135 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "导入"
+          }
+        }
+      }
+    },
+    "deck.import.wrongFormatBackup" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This is a VocabFlow backup file. Use Restore backup instead of Import pack."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这是 VocabFlow 备份文件，请用「恢复备份」而不是「导入词库包」。"
+          }
+        }
+      }
+    },
+    "deck.import.wrongFormatHintBackup" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JSON format mismatch. Restore backup needs a VocabFlow backup (.json with exportedAt). Deck packs should use Import pack."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JSON 格式不匹配。恢复备份需要含 exportedAt 的 VocabFlow 备份；词库包请用「导入词库包」。"
+          }
+        }
+      }
+    },
+    "deck.import.wrongFormatHintPack" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JSON format mismatch. Import pack needs a deck pack (.json with name + cards). Backups should use Restore backup."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JSON 格式不匹配。导入词库包需要含 name 和 cards 的词库包；完整备份请用「恢复备份」。"
+          }
+        }
+      }
+    },
+    "deck.import.wrongFormatPack" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This is a deck pack file. Use Import pack instead of Restore backup."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这是词库包文件，请用「导入词库包」而不是「恢复备份」。"
+          }
+        }
+      }
+    },
+    "deck.importing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importing…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在导入…"
+          }
+        }
+      }
+    },
+    "deck.importMode.message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Merge updates matching IDs in “%@” and appends new cards. Replace clears only that deck first. Other decks are not affected."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "合并：在「%@」中同 ID 更新并追加新卡片。替换：仅清空该词库后导入，其他词库不受影响。"
+          }
+        }
+      }
+    },
+    "deck.importMode.replace" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replace deck contents"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "替换该词库内容"
+          }
+        }
+      }
+    },
+    "deck.importMode.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import into deck"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入到词库"
           }
         }
       }
@@ -1926,6 +2481,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "开源词库"
+          }
+        }
+      }
+    },
+    "deck.preparingExport" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparing file…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在准备文件…"
           }
         }
       }
@@ -2183,6 +2754,139 @@
         }
       }
     },
+    "deck.quick.exportApkg" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export Anki"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出 Anki"
+          }
+        }
+      }
+    },
+    "deck.quick.exportDeckApkg" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export Anki"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出 Anki"
+          }
+        }
+      }
+    },
+    "deck.quick.exportDeckJSON" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export JSON"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出 JSON"
+          }
+        }
+      }
+    },
+    "deck.quick.exportJSON" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save backup"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存备份"
+          }
+        }
+      }
+    },
+    "deck.quick.importApkg" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import Anki"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入 Anki"
+          }
+        }
+      }
+    },
+    "deck.quick.importBackup" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恢复备份"
+          }
+        }
+      }
+    },
+    "deck.quick.importJSON" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import JSON"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入 JSON"
+          }
+        }
+      }
+    },
+    "deck.quick.importPack" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import pack"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入词库包"
+          }
+        }
+      }
+    },
     "deck.remote.license" : {
       "localizations" : {
         "en" : {
@@ -2339,6 +3043,189 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "新生成的卡片会保存到此词库。可随时管理或下载更多词库。"
+          }
+        }
+      }
+    },
+    "deck.selectAll" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select all"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全选"
+          }
+        }
+      }
+    },
+    "deck.singleDeck.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actions apply to “%1$@”. JSON import supports v1/v2 backup and deck pack files."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "操作作用于「%1$@」。JSON 支持 v1/v2 备份与词库包格式。"
+          }
+        }
+      }
+    },
+    "deck.singleDeck.noSelection" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select a deck above first."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请先在上方选择一个词库。"
+          }
+        }
+      }
+    },
+    "deck.singleDeck.section" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selected deck"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前词库"
+          }
+        }
+      }
+    },
+    "deck.statistics.due" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Due today"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今日待复习"
+          }
+        }
+      }
+    },
+    "deck.statistics.learned" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Learned"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已学习"
+          }
+        }
+      }
+    },
+    "deck.statistics.mastery" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mastery"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "掌握率"
+          }
+        }
+      }
+    },
+    "deck.statistics.masteryValue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d%%"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d%%"
+          }
+        }
+      }
+    },
+    "deck.statistics.new" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未学习"
+          }
+        }
+      }
+    },
+    "deck.statistics.overview" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Overview"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "概览"
+          }
+        }
+      }
+    },
+    "deck.statistics.total" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Total cards"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "总卡片数"
           }
         }
       }
@@ -2544,6 +3431,40 @@
         }
       }
     },
+    "import.camera" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Take photo"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拍照识别"
+          }
+        }
+      }
+    },
+    "import.camera.success" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text recognized from camera"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已从拍照识别文字"
+          }
+        }
+      }
+    },
     "import.clipboard.both" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2671,40 +3592,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已从图片识别文字"
-          }
-        }
-      }
-    },
-    "import.camera" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Take photo"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "拍照识别"
-          }
-        }
-      }
-    },
-    "import.camera.success" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Text recognized from camera"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已从拍照识别文字"
           }
         }
       }
@@ -2904,6 +3791,23 @@
         }
       }
     },
+    "library.empty.goCreate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to Create tab to paste text or use OCR and generate your first cards."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前往「制卡」粘贴文本或拍照识别，生成你的第一批卡片。"
+          }
+        }
+      }
+    },
     "library.empty.message" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2934,6 +3838,108 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "词库为空"
+          }
+        }
+      }
+    },
+    "library.filter.all" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All cards"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部卡片"
+          }
+        }
+      }
+    },
+    "library.filter.cloze" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloze cards"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "挖空卡"
+          }
+        }
+      }
+    },
+    "library.filter.definition" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Definition cards"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "释义卡"
+          }
+        }
+      }
+    },
+    "library.filter.due" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Due for review"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "待复习"
+          }
+        }
+      }
+    },
+    "library.filter.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "筛选"
+          }
+        }
+      }
+    },
+    "library.flatList.hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Large deck — showing a flat list for faster scrolling. Use the menu to switch to grouped view."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "词库较大，已切换为扁平列表以提升滚动性能。可通过菜单切回分组视图。"
           }
         }
       }
@@ -2985,6 +3991,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "未找到结果"
+          }
+        }
+      }
+    },
+    "library.quick.export" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出"
+          }
+        }
+      }
+    },
+    "library.quick.import" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入"
           }
         }
       }
@@ -3250,346 +4290,6 @@
         }
       }
     },
-    "library.flatList.hint" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Large deck — showing a flat list for faster scrolling. Use the menu to switch to grouped view."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "词库较大，已切换为扁平列表以提升滚动性能。可通过菜单切回分组视图。"
-          }
-        }
-      }
-    },
-    "library.filter.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Filter"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "筛选"
-          }
-        }
-      }
-    },
-    "library.filter.all" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "All cards"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "全部卡片"
-          }
-        }
-      }
-    },
-    "library.filter.due" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Due for review"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "待复习"
-          }
-        }
-      }
-    },
-    "library.filter.definition" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Definition cards"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "释义卡"
-          }
-        }
-      }
-    },
-    "library.filter.cloze" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cloze cards"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "挖空卡"
-          }
-        }
-      }
-    },
-    "library.empty.goCreate" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Go to Create tab to paste text or use OCR and generate your first cards."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "前往「制卡」粘贴文本或拍照识别，生成你的第一批卡片。"
-          }
-        }
-      }
-    },
-    "library.quick.import" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Import"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "导入"
-          }
-        }
-      }
-    },
-    "library.quick.export" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Export"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "导出"
-          }
-        }
-      }
-    },
-    "backup.reminder.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Time to back up your cards"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "该备份词库了"
-          }
-        }
-      }
-    },
-    "backup.reminder.body" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Export a JSON backup from Decks to keep your progress safe."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "请在「词库包」页导出 JSON 备份，以免学习进度丢失。"
-          }
-        }
-      }
-    },
-    "deck.import.progress" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$d / %2$d"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$d / %2$d"
-          }
-        }
-      }
-    },
-    "deck.importing" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Importing…"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在导入…"
-          }
-        }
-      }
-    },
-    "deck.statistics.overview" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Overview"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "概览"
-          }
-        }
-      }
-    },
-    "deck.statistics.total" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Total cards"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "总卡片数"
-          }
-        }
-      }
-    },
-    "deck.statistics.due" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Due today"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "今日待复习"
-          }
-        }
-      }
-    },
-    "deck.statistics.new" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "New"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "未学习"
-          }
-        }
-      }
-    },
-    "deck.statistics.learned" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Learned"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已学习"
-          }
-        }
-      }
-    },
-    "deck.statistics.mastery" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mastery"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "掌握率"
-          }
-        }
-      }
-    },
-    "deck.statistics.masteryValue" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d%%"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d%%"
-          }
-        }
-      }
-    },
     "notification.failed" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3849,13 +4549,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Preview Cards"
+            "value" : "Preview"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "预览卡片"
+            "value" : "预览"
           }
         }
       }
@@ -4256,6 +4956,23 @@
         }
       }
     },
+    "review.deckFilter.all" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All decks"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部词库"
+          }
+        }
+      }
+    },
     "review.empty.done" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4273,23 +4990,6 @@
         }
       }
     },
-    "review.empty.noCards" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Create and save cards first."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "先去「制卡」生成并保存卡片。"
-          }
-        }
-      }
-    },
     "review.empty.goCreate" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4303,6 +5003,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "前往「制卡」粘贴文本或拍照识别，生成并保存第一张卡片。"
+          }
+        }
+      }
+    },
+    "review.empty.noCards" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create and save cards first."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "先去「制卡」生成并保存卡片。"
           }
         }
       }
@@ -4581,176 +5298,6 @@
         }
       }
     },
-    "review.swipe.hint" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Swipe left Again · right Easy · up Hard · down Good"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "左滑重来 · 右滑简单 · 上滑困难 · 下滑良好"
-          }
-        }
-      }
-    },
-    "review.deckFilter.all" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "All decks"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "全部词库"
-          }
-        }
-      }
-    },
-    "card.suspend" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Suspend review"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "暂停复习"
-          }
-        }
-      }
-    },
-    "card.unsuspend" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Resume review"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "恢复复习"
-          }
-        }
-      }
-    },
-    "card.suspended.status" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Suspended"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已暂停"
-          }
-        }
-      }
-    },
-    "card.suspended.hint" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This card is suspended and won't appear in review queues."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "此卡片已暂停，不会进入复习队列。"
-          }
-        }
-      }
-    },
-    "card.suspended.done" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Card suspended"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已暂停复习"
-          }
-        }
-      }
-    },
-    "card.unsuspended.done" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Card resumed"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已恢复复习"
-          }
-        }
-      }
-    },
-    "card.export.apkg" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Export as apkg"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "导出 apkg"
-          }
-        }
-      }
-    },
-    "deck.export.apkg" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Export apkg"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "导出 apkg"
-          }
-        }
-      }
-    },
     "review.reminder.body" : {
       "localizations" : {
         "en" : {
@@ -4797,6 +5344,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "学习"
+          }
+        }
+      }
+    },
+    "review.swipe.hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swipe left Again · right Easy · up Hard · down Good"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左滑重来 · 右滑简单 · 上滑困难 · 下滑良好"
           }
         }
       }
@@ -4871,22 +5435,6 @@
         }
       }
     },
-    "settings.ai.section" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AI Card Generation"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AI 制卡"
-          }
-        }
-      }
-    },
     "settings.ai.keyFooter" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4904,308 +5452,18 @@
         }
       }
     },
-    "settings.testAPI" : {
-      "extractionState" : "manual",
+    "settings.ai.section" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Test connection"
+            "value" : "AI Card Generation"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "测试连通"
-          }
-        }
-      }
-    },
-    "settings.testAPI.testing" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Testing…"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "测试中…"
-          }
-        }
-      }
-    },
-    "settings.testAPI.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "API Connection"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "API 连通性"
-          }
-        }
-      }
-    },
-    "settings.testAPI.success" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connection successful. Your API key works."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "连接成功，API Key 可用。"
-          }
-        }
-      }
-    },
-    "settings.testAPI.failed" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connection failed: %@"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "连接失败：%@"
-          }
-        }
-      }
-    },
-    "settings.help.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Help & FAQ"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "帮助与常见问题"
-          }
-        }
-      }
-    },
-    "settings.help.byok" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "BYOK: enter your Moonshot/Kimi API key in AI settings. It saves AI quota charges but does not unlock paid features by itself."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "自备 Key：在 AI 设置中填写 Moonshot/Kimi API Key，可免除 AI 点数消耗，但不等同于会员权限。"
-          }
-        }
-      }
-    },
-    "settings.help.apkg" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anki sync: import .apkg decks from Decks page, review in VocabFlow, export .apkg back to AnkiMobile via Files or AirDrop."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anki 同步：在「词库包」导入 .apkg，在 VocabFlow 复习，再通过文件/AirDrop 导出 .apkg 到 AnkiMobile。"
-          }
-        }
-      }
-    },
-    "settings.help.share" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Share extension: share text from Safari or Books to VocabFlow. Clipboard import works when you open the app after copying."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "分享扩展：从 Safari、图书等分享文本到 VocabFlow。复制后打开 App 也会提示剪贴板导入。"
-          }
-        }
-      }
-    },
-    "settings.importExport.section" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Import & Export"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "导入与导出"
-          }
-        }
-      }
-    },
-    "settings.openDeckStore" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Decks, backup & Anki import"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "词库包、备份与 Anki 导入"
-          }
-        }
-      }
-    },
-    "settings.import.formatsFooter" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Supports Anki .apkg, JSON backup, and share/clipboard text import."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "支持 Anki .apkg、JSON 备份，以及分享/剪贴板文本导入。"
-          }
-        }
-      }
-    },
-    "settings.exportBackup.success" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Backup ready to export"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "备份已准备好导出"
-          }
-        }
-      }
-    },
-    "settings.model.8k.detail" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "8K context · fast · best for short sentences and small word lists"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "8K 上下文 · 速度快 · 适合短句和少量生词"
-          }
-        }
-      }
-    },
-    "settings.model.32k.detail" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "32K context · better for long passages"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "32K 上下文 · 适合较长段落"
-          }
-        }
-      }
-    },
-    "settings.model.k2.detail" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "K2.5 · stronger reasoning for nuanced definitions"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "K2.5 · 释义更准确，适合精读"
-          }
-        }
-      }
-    },
-    "settings.model.k26.detail" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "K2.6 · latest Kimi model, higher quality cards"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "K2.6 · 最新 Kimi 模型，制卡质量更高"
-          }
-        }
-      }
-    },
-    "settings.model.default.detail" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Model details unavailable"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "暂无该模型说明"
+            "value" : "AI 制卡"
           }
         }
       }
@@ -5492,6 +5750,91 @@
         }
       }
     },
+    "settings.exportBackup.success" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backup ready to export"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "备份已准备好导出"
+          }
+        }
+      }
+    },
+    "settings.help.apkg" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anki sync: import .apkg decks from Decks page, review in VocabFlow, export .apkg back to AnkiMobile via Files or AirDrop."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anki 同步：在「词库包」导入 .apkg，在 VocabFlow 复习，再通过文件/AirDrop 导出 .apkg 到 AnkiMobile。"
+          }
+        }
+      }
+    },
+    "settings.help.byok" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "BYOK: enter your Moonshot/Kimi API key in AI settings. It saves AI quota charges but does not unlock paid features by itself."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自备 Key：在 AI 设置中填写 Moonshot/Kimi API Key，可免除 AI 点数消耗，但不等同于会员权限。"
+          }
+        }
+      }
+    },
+    "settings.help.share" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share extension: share text from Safari or Books to VocabFlow. Clipboard import works when you open the app after copying."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分享扩展：从 Safari、图书等分享文本到 VocabFlow。复制后打开 App 也会提示剪贴板导入。"
+          }
+        }
+      }
+    },
+    "settings.help.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Help & FAQ"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "帮助与常见问题"
+          }
+        }
+      }
+    },
     "settings.import.complete" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5611,6 +5954,23 @@
         }
       }
     },
+    "settings.import.formatsFooter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supports Anki .apkg, JSON backup, and share/clipboard text import."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支持 Anki .apkg、JSON 备份，以及分享/剪贴板文本导入。"
+          }
+        }
+      }
+    },
     "settings.import.help" : {
       "localizations" : {
         "en" : {
@@ -5724,6 +6084,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "分享面板选 VocabFlow"
+          }
+        }
+      }
+    },
+    "settings.importExport.section" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import & Export"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入与导出"
           }
         }
       }
@@ -5892,6 +6269,108 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "模型"
+          }
+        }
+      }
+    },
+    "settings.model.8k.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "8K context · fast · best for short sentences and small word lists"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "8K 上下文 · 速度快 · 适合短句和少量生词"
+          }
+        }
+      }
+    },
+    "settings.model.32k.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "32K context · better for long passages"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "32K 上下文 · 适合较长段落"
+          }
+        }
+      }
+    },
+    "settings.model.default.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model details unavailable"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂无该模型说明"
+          }
+        }
+      }
+    },
+    "settings.model.k2.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "K2.5 · stronger reasoning for nuanced definitions"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "K2.5 · 释义更准确，适合精读"
+          }
+        }
+      }
+    },
+    "settings.model.k26.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "K2.6 · latest Kimi model, higher quality cards"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "K2.6 · 最新 Kimi 模型，制卡质量更高"
+          }
+        }
+      }
+    },
+    "settings.openDeckStore" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decks, backup & Anki import"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "词库包、备份与 Anki 导入"
           }
         }
       }
@@ -6073,6 +6552,22 @@
         }
       }
     },
+    "settings.review.unlimited" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlimited review"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无限复习"
+          }
+        }
+      }
+    },
     "settings.save" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6154,6 +6649,91 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "可以正常使用 AI 制卡"
+          }
+        }
+      }
+    },
+    "settings.testAPI" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test connection"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "测试连通"
+          }
+        }
+      }
+    },
+    "settings.testAPI.failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection failed: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接失败：%@"
+          }
+        }
+      }
+    },
+    "settings.testAPI.success" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection successful. Your API key works."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接成功，API Key 可用。"
+          }
+        }
+      }
+    },
+    "settings.testAPI.testing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Testing…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "测试中…"
+          }
+        }
+      }
+    },
+    "settings.testAPI.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API Connection"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API 连通性"
           }
         }
       }

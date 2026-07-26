@@ -3,7 +3,9 @@ import UniformTypeIdentifiers
 
 extension UTType {
     static var apkg: UTType {
-        UTType(filenameExtension: "apkg") ?? .data
+        UTType(filenameExtension: "apkg", conformingTo: .zip)
+            ?? UTType(filenameExtension: "apkg")
+            ?? .zip
     }
 }
 

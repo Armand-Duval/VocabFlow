@@ -214,6 +214,7 @@ enum L10n {
     }
 
     static var settingsReviewSection: String { tr("settings.review.section") }
+    static var settingsReviewUnlimited: String { tr("settings.review.unlimited") }
     static func settingsReviewNewLimit(_ limit: Int) -> String {
         tf("settings.review.newLimit", limitDisplay(limit))
     }
@@ -349,15 +350,45 @@ enum L10n {
     static var deckEmpty: String { tr("deck.empty") }
     static var deckImportDeckSection: String { tr("deck.import.deckSection") }
     static var deckImportDeckFooter: String { tr("deck.import.deckFooter") }
+    static var deckSingleDeckSection: String { tr("deck.singleDeck.section") }
+    static func deckSingleDeckFooter(_ name: String) -> String { tf("deck.singleDeck.footer", name) }
+    static var deckSingleDeckNoSelection: String { tr("deck.singleDeck.noSelection") }
+    static var deckActionsSection: String { tr("deck.actions.section") }
+    static func deckActionsFooter(_ count: Int) -> String { tf("deck.actions.footer", count) }
+    static var deckActionsImportFooter: String { tr("deck.actions.importFooter") }
+    static var deckSelectAll: String { tr("deck.selectAll") }
+    static var deckDeselectAll: String { tr("deck.deselectAll") }
+    static var deckImportNeedSingleSelection: String { tr("deck.import.needSingleSelection") }
+    static var deckImportNeedSelectionForNoDeckInfo: String { tr("deck.import.needSelectionForNoDeckInfo") }
+    static func deckImportIntoSelectedDecksResult(deckCount: Int, added: Int, updated: Int) -> String {
+        tf("deck.import.intoSelectedDecksResult", deckCount, added, updated)
+    }
+    static var deckImportModeTitle: String { tr("deck.importMode.title") }
+    static var deckImportModeReplace: String { tr("deck.importMode.replace") }
+    static func deckImportModeMessage(_ deckName: String) -> String { tf("deck.importMode.message", deckName) }
+    static func deckImportReplaceDeckResult(_ name: String, count: Int) -> String {
+        tf("deck.import.replaceDeckResult", name, count)
+    }
+    static var deckExportNeedSelection: String { tr("deck.export.needSelection") }
+    static func deckExportCheckedJSONResult(_ count: Int) -> String { tf("deck.export.checkedJSONResult", count) }
+    static var deckAppBackupSection: String { tr("deck.appBackup.section") }
+    static var deckAppBackupFooter: String { tr("deck.appBackup.footer") }
     static var deckBackupSection: String { tr("deck.backup.section") }
     static func deckBackupFooter(_ count: Int) -> String { tf("deck.backup.footer", count) }
     static var deckImportPack: String { tr("deck.import.pack") }
     static var deckImportApkg: String { tr("deck.import.apkg") }
-    static var deckQuickImportPack: String { tr("deck.quick.importPack") }
+    static var deckQuickImportJSON: String { tr("deck.quick.importJSON") }
+    static var deckQuickExportDeckJSON: String { tr("deck.quick.exportDeckJSON") }
     static var deckQuickImportApkg: String { tr("deck.quick.importApkg") }
+    static var deckQuickExportDeckApkg: String { tr("deck.quick.exportDeckApkg") }
+    static var deckAppSaveBackup: String { tr("deck.app.saveBackup") }
+    static var deckAppRestoreBackup: String { tr("deck.app.restoreBackup") }
+    static var deckAppExportAllApkg: String { tr("deck.app.exportAllApkg") }
+    static var deckQuickImportPack: String { tr("deck.quick.importPack") }
     static var deckQuickExportJSON: String { tr("deck.quick.exportJSON") }
     static var deckQuickImportBackup: String { tr("deck.quick.importBackup") }
     static var deckQuickExportApkg: String { tr("deck.quick.exportApkg") }
+    static var deckPreparingExport: String { tr("deck.preparingExport") }
     static var deckInstalled: String { tr("deck.preset.installed") }
     static var deckInstallComplete: String { tr("deck.install.complete") }
     static func deckInstallWithCards(_ name: String, count: Int) -> String {
@@ -374,11 +405,23 @@ enum L10n {
     static var deckDeleteFailed: String { tr("deck.delete.failed") }
     static var deckImportComplete: String { tr("deck.import.complete") }
     static var deckImportFailed: String { tr("deck.import.failed") }
+    static var deckImportInvalidJSON: String { tr("deck.import.invalidJSON") }
+    static var deckImportEmptyFile: String { tr("deck.import.emptyFile") }
+    static var deckImportWrongFormatBackup: String { tr("deck.import.wrongFormatBackup") }
+    static var deckImportWrongFormatPack: String { tr("deck.import.wrongFormatPack") }
+    static var deckImportWrongFormatHintPack: String { tr("deck.import.wrongFormatHintPack") }
+    static var deckImportWrongFormatHintBackup: String { tr("deck.import.wrongFormatHintBackup") }
     static func deckImportPackResult(_ name: String, count: Int) -> String {
         tf("deck.import.packResult", name, count)
     }
     static func deckImportApkgResult(_ name: String, count: Int) -> String {
         tf("deck.import.apkgResult", name, count)
+    }
+    static func deckImportApkgMultiResult(deckCount: Int, cardCount: Int) -> String {
+        tf("deck.import.apkgMultiResult", deckCount, cardCount)
+    }
+    static func deckImportDeckJSONResult(_ name: String, added: Int, updated: Int) -> String {
+        tf("deck.import.deckJSONResult", name, added, updated)
     }
     static var deckFilterAll: String { tr("deck.filter.all") }
     static func libraryReviewDeck(_ name: String, count: Int) -> String {

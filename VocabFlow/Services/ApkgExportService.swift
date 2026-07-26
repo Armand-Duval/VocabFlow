@@ -20,16 +20,12 @@ enum ApkgExportError: LocalizedError {
 
 enum ApkgExportService {
     static let defaultFilename = "vocabflow"
-    private static let deckID: Int64 = 1
     private static let modelID: Int64 = 1_607_392_319
 
     static func export(cards: [FlashCard], deckName: String? = nil) throws -> Data {
         guard !cards.isEmpty else { throw ApkgExportError.emptyDeck }
 
-        let trimmedName = deckName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let resolvedDeckName = trimmedName.isEmpty
-            ? (cards.first?.deck?.name.nilIfEmpty ?? defaultFilename)
-            : trimmedName
+        let deckGroups = groupedDeckEntries(from: cards, preferredSingleName: deckName)
 
         let tempDir = FileManager.default.temporaryDirectory
             .appendingPathComponent("vocabflow-apkg-\(UUID().uuidString)", isDirectory: true)
@@ -37,7 +33,7 @@ enum ApkgExportService {
         defer { try? FileManager.default.removeItem(at: tempDir) }
 
         let dbURL = tempDir.appendingPathComponent("collection.anki2")
-        try buildCollection(at: dbURL, cards: cards, deckName: resolvedDeckName)
+        try buildCollection(at: dbURL, deckGroups: deckGroups)
 
         let mediaData = Data("{}".utf8)
         var zipWriter = MinimalZipWriter()
@@ -58,7 +54,42 @@ enum ApkgExportService {
         return collapsed.isEmpty ? defaultFilename : String(collapsed.prefix(64))
     }
 
-    private static func buildCollection(at url: URL, cards: [FlashCard], deckName: String) throws {
+    private struct DeckExportGroup {
+        let ankiDeckID: Int64
+        let deckName: String
+        let cards: [FlashCard]
+    }
+
+    private static func groupedDeckEntries(
+        from cards: [FlashCard],
+        preferredSingleName: String?
+    ) -> [DeckExportGroup] {
+        let grouped = Dictionary(grouping: cards) { card in
+            card.deck?.id.uuidString ?? "__orphan__"
+        }
+
+        if grouped.count == 1,
+           let onlyGroup = grouped.first,
+           let trimmed = preferredSingleName?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !trimmed.isEmpty {
+            return [DeckExportGroup(ankiDeckID: 1, deckName: trimmed, cards: onlyGroup.value)]
+        }
+
+        var groups: [DeckExportGroup] = []
+        var nextID: Int64 = 1
+        let sortedKeys = grouped.keys.sorted()
+
+        for key in sortedKeys {
+            guard let deckCards = grouped[key], !deckCards.isEmpty else { continue }
+            let deckName = deckCards.first?.deck?.name.nilIfEmpty ?? defaultFilename
+            groups.append(DeckExportGroup(ankiDeckID: nextID, deckName: deckName, cards: deckCards))
+            nextID += 1
+        }
+
+        return groups
+    }
+
+    private static func buildCollection(at url: URL, deckGroups: [DeckExportGroup]) throws {
         var db: OpaquePointer?
         guard sqlite3_open(url.path, &db) == SQLITE_OK, let db else {
             throw ApkgExportError.sqliteError("open failed")
@@ -133,13 +164,20 @@ enum ApkgExportService {
         """)
 
         let nowMs = Int64(Date().timeIntervalSince1970 * 1000)
+        let primaryDeckID = deckGroups.first?.ankiDeckID ?? 1
+        let activeDeckIDs = deckGroups.map(\.ankiDeckID)
+        let activeDecksJSON = activeDeckIDs.map(String.init).joined(separator: ",")
         let conf = """
-        {"activeDecks":[\(deckID)],"curDeck":\(deckID),"newSpread":0,"collapseTime":1200,"timeLim":0,"estTimes":true,"sortType":"noteFld","sortBackwards":false,"addToCur":true,"dayLearnFirst":false,"schedVer":2}
+        {"activeDecks":[\(activeDecksJSON)],"curDeck":\(primaryDeckID),"newSpread":0,"collapseTime":1200,"timeLim":0,"estTimes":true,"sortType":"noteFld","sortBackwards":false,"addToCur":true,"dayLearnFirst":false,"schedVer":2}
         """
-        let models = basicModelJSON()
-        let decks = """
-        {"\(deckID)":{"id":\(deckID),"mod":0,"name":"\(escapeSQL(deckName))","usn":0,"desc":"","dyn":0,"conf":1,"extConf":{},"collapsed":false}}
-        """
+        let models = basicModelJSON(primaryDeckID: primaryDeckID)
+        let decksJSON = deckGroups
+            .map {
+                """
+                {"\($0.ankiDeckID)":{"id":\($0.ankiDeckID),"mod":0,"name":"\(escapeSQL($0.deckName))","usn":0,"desc":"","dyn":0,"conf":1,"extConf":{},"collapsed":false}}
+                """
+            }
+            .joined()
         let dconf = """
         {"1":{"id":1,"mod":0,"name":"Default","usn":0,"maxTaken":60,"autoplay":true,"timer":0,"replayq":true,"new":{"bury":false,"delays":[1,10],"initialFactor":2500,"ints":[1,4,7],"order":1,"perDay":20},"rev":{"bury":false,"ease4":1.3,"fuzz":0.05,"ivlFct":1,"maxIvl":36500,"perDay":200,"hardFactor":1.2},"lapse":{"delays":[10],"leechAction":1,"leechFails":8,"minInt":1,"mult":0},"dyn":false}}
         """
@@ -149,7 +187,7 @@ enum ApkgExportService {
             1, \(nowMs), \(nowMs), \(nowMs), 11, 0, 0, 0,
             '\(escapeSQL(conf))',
             '\(escapeSQL(models))',
-            '\(escapeSQL(decks))',
+            '\(escapeSQL(decksJSON))',
             '\(escapeSQL(dconf))',
             '{}'
         );
@@ -158,33 +196,34 @@ enum ApkgExportService {
         var noteID: Int64 = 1_000_000_001
         var cardDue = 1
 
-        for card in cards {
-            let front = ankiFront(for: card)
-            let back = ankiBack(for: card)
-            let flds = "\(escapeField(front))\u{1f}\(escapeField(back))"
-            let guid = ankiGUID(from: card.id)
-            let tags = sanitizedTag(card.word)
-            let csum = fieldChecksum(front)
-            let sfld = sortFieldHash(front)
+        for group in deckGroups {
+            for card in group.cards {
+                let front = ankiFront(for: card)
+                let back = ankiBack(for: card)
+                let flds = "\(escapeField(front))\u{1f}\(escapeField(back))"
+                let guid = ankiGUID(from: card.id)
+                let tags = sanitizedTag(card.word)
+                let csum = fieldChecksum(front)
+                let sfld = sortFieldHash(front)
+                let queue = card.isSuspended ? -1 : 0
 
-            try exec(db, """
-            INSERT INTO notes VALUES(
-                \(noteID), '\(guid)', \(modelID), \(nowMs), 0, '\(escapeSQL(tags))',
-                '\(escapeSQL(flds))', \(sfld), \(csum), 0, ''
-            );
-            """)
+                try exec(db, """
+                INSERT INTO notes VALUES(
+                    \(noteID), '\(guid)', \(modelID), \(nowMs), 0, '\(escapeSQL(tags))',
+                    '\(escapeSQL(flds))', \(sfld), \(csum), 0, ''
+                );
+                """)
 
-            let queue = card.isSuspended ? -1 : 0
+                try exec(db, """
+                INSERT INTO cards VALUES(
+                    \(noteID), \(noteID), \(group.ankiDeckID), 0, \(nowMs), 0,
+                    0, \(queue), \(cardDue), 0, 2500, 0, 0, 0, 0, 0, 0, ''
+                );
+                """)
 
-            try exec(db, """
-            INSERT INTO cards VALUES(
-                \(noteID), \(noteID), \(deckID), 0, \(nowMs), 0,
-                0, \(queue), \(cardDue), 0, 2500, 0, 0, 0, 0, 0, 0, ''
-            );
-            """)
-
-            noteID += 1
-            cardDue += 1
+                noteID += 1
+                cardDue += 1
+            }
         }
     }
 
@@ -246,9 +285,9 @@ enum ApkgExportService {
         return Int(hash & 0x7FFF_FFFF)
     }
 
-    private static func basicModelJSON() -> String {
+    private static func basicModelJSON(primaryDeckID: Int64) -> String {
         """
-        {"\(modelID)":{"id":\(modelID),"name":"Basic","type":0,"mod":0,"usn":0,"sortf":0,"did":\(deckID),"tmpls":[{"name":"Card 1","ord":0,"qfmt":"{{Front}}","afmt":"{{FrontSide}}\\n\\n<hr id=answer>\\n\\n{{Back}}","bqfmt":"","bafmt":"","did":null,"bfont":"","bsize":0}],"flds":[{"name":"Front","ord":0,"sticky":false,"rtl":false,"font":"Arial","size":20,"media":[]},{"name":"Back","ord":1,"sticky":false,"rtl":false,"font":"Arial","size":20,"media":[]}],"css":".card{font-family:arial;font-size:20px;text-align:center;color:black;background-color:white;}","latexPre":"\\\\documentclass[12pt]{article}\\n\\\\usepackage[utf8]{inputenc}\\n\\\\usepackage{amssymb,amsmath}\\n\\\\pagestyle{empty}\\n\\\\begin{document}\\n","latexPost":"\\\\end{document}","latexsvg":false}}
+        {"\(modelID)":{"id":\(modelID),"name":"Basic","type":0,"mod":0,"usn":0,"sortf":0,"did":\(primaryDeckID),"tmpls":[{"name":"Card 1","ord":0,"qfmt":"{{Front}}","afmt":"{{FrontSide}}\\n\\n<hr id=answer>\\n\\n{{Back}}","bqfmt":"","bafmt":"","did":null,"bfont":"","bsize":0}],"flds":[{"name":"Front","ord":0,"sticky":false,"rtl":false,"font":"Arial","size":20,"media":[]},{"name":"Back","ord":1,"sticky":false,"rtl":false,"font":"Arial","size":20,"media":[]}],"css":".card{font-family:arial;font-size:20px;text-align:center;color:black;background-color:white;}","latexPre":"\\\\documentclass[12pt]{article}\\n\\\\usepackage[utf8]{inputenc}\\n\\\\usepackage{amssymb,amsmath}\\n\\\\pagestyle{empty}\\n\\\\begin{document}\\n","latexPost":"\\\\end{document}","latexsvg":false}}
         """
     }
 

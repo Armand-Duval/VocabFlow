@@ -28,46 +28,28 @@ struct SettingsView: View {
         @Bindable var reviewSettings = reviewSettings
 
         NavigationStack {
-            Form {
-                Section {
-                    Stepper(value: $reviewSettings.dailyNewLimit, in: 0...999) {
-                        Text(L10n.settingsReviewNewLimit(reviewSettings.dailyNewLimit))
-                    }
-                    Stepper(value: $reviewSettings.dailyReviewLimit, in: 0...999) {
-                        Text(L10n.settingsReviewReviewLimit(reviewSettings.dailyReviewLimit))
-                    }
-
-                    Toggle(L10n.settingsReviewReminderEnabled, isOn: $reminderEnabled)
-                        .onChange(of: reminderEnabled) { _, enabled in
-                            guard enabled else { return }
-                            Task {
-                                _ = await ShareExtensionNotifier.requestAuthorizationIfNeeded()
-                            }
-                        }
-
-                    if reminderEnabled {
-                        DatePicker(
-                            L10n.settingsReviewReminderTime,
-                            selection: $reminderTime,
-                            displayedComponents: .hourAndMinute
-                        )
-                    }
-                } header: {
-                    Text(L10n.settingsReviewSection)
-                } footer: {
-                    Text(L10n.settingsReviewFooter)
+            ScrollView {
+                VStack(spacing: AppSpacing.md) {
+                    reviewCard(
+                        dailyNewLimit: $reviewSettings.dailyNewLimit,
+                        dailyReviewLimit: $reviewSettings.dailyReviewLimit
+                    )
+                    aiCard
+                    importExportCard
+                    maintenanceCard
+                    aboutCard
                 }
-
-                aiSection
-                importExportSection
-                backupReminderSection
-                maintenanceSection
-                aboutSection
-                saveSection
+                .padding(.horizontal, AppSpacing.md)
+                .padding(.top, AppSpacing.xs)
+                .padding(.bottom, AppSpacing.sm)
             }
-            .navigationTitle(L10n.settingsTitle)
+            .appPageBackground()
+            .appNavTitle(L10n.settingsTitle)
             .dismissKeyboardOnScroll()
             .keyboardDoneButton()
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                saveFooter
+            }
             .navigationDestination(isPresented: $showDeckStore) {
                 DeckStoreView(selectedDeckID: .constant(DeckSettings.lastSelectedDeckID))
             }
@@ -107,155 +89,244 @@ struct SettingsView: View {
         }
     }
 
-    private var aiSection: some View {
-        Section {
-            HStack {
-                if showKey {
-                    TextField(L10n.apiKeyPlaceholder, text: $apiKey)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .submitLabel(.done)
-                } else {
-                    SecureField(L10n.apiKeyPlaceholder, text: $apiKey)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .submitLabel(.done)
+    private var saveFooter: some View {
+        Button(L10n.saveSettings, action: saveSettings)
+            .buttonStyle(PrimaryButtonStyle())
+            .padding(.horizontal, AppSpacing.md)
+            .padding(.top, AppSpacing.sm)
+            .padding(.bottom, AppSpacing.xs)
+            .background(.bar)
+    }
+
+    private func reviewCard(
+        dailyNewLimit: Binding<Int>,
+        dailyReviewLimit: Binding<Int>
+    ) -> some View {
+        AppSurfaceCard {
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                Toggle(L10n.settingsReviewUnlimited, isOn: unlimitedReviewBinding)
+
+                if !isUnlimitedReview {
+                    SettingsDivider()
+                    Stepper(value: dailyNewLimit, in: 0...999) {
+                        Text(L10n.settingsReviewNewLimit(dailyNewLimit.wrappedValue))
+                            .font(AppFont.secondary())
+                    }
+                    SettingsDivider()
+                    Stepper(value: dailyReviewLimit, in: 0...999) {
+                        Text(L10n.settingsReviewReviewLimit(dailyReviewLimit.wrappedValue))
+                            .font(AppFont.secondary())
+                    }
                 }
+
+                SettingsDivider()
+                Toggle(L10n.settingsReviewReminderEnabled, isOn: $reminderEnabled)
+                    .onChange(of: reminderEnabled) { _, enabled in
+                        guard enabled else { return }
+                        Task {
+                            _ = await ShareExtensionNotifier.requestAuthorizationIfNeeded()
+                        }
+                    }
+
+                if reminderEnabled {
+                    SettingsDivider()
+                    DatePicker(
+                        L10n.settingsReviewReminderTime,
+                        selection: $reminderTime,
+                        displayedComponents: .hourAndMinute
+                    )
+                    .font(AppFont.secondary())
+                }
+
+                SettingsDivider()
+                Toggle(L10n.settingsBackupReminderEnabled, isOn: $backupReminderEnabled)
+            }
+        }
+    }
+
+    private var aiCard: some View {
+        AppSurfaceCard {
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                HStack(spacing: AppSpacing.sm) {
+                    Group {
+                        if showKey {
+                            TextField(L10n.apiKeyPlaceholder, text: $apiKey)
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled()
+                                .submitLabel(.done)
+                        } else {
+                            SecureField(L10n.apiKeyPlaceholder, text: $apiKey)
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled()
+                                .submitLabel(.done)
+                        }
+                    }
+                    .font(AppFont.secondary())
+
+                    Button {
+                        showKey.toggle()
+                    } label: {
+                        Image(systemName: showKey ? "eye.slash" : "eye")
+                            .foregroundStyle(.secondary)
+                            .frame(width: 44, height: 44)
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                SettingsDivider()
+
+                Picker(L10n.modelSection, selection: $selectedModel) {
+                    ForEach(APISettings.availableModels, id: \.self) { model in
+                        Text(model).tag(model)
+                    }
+                }
+                .font(AppFont.secondary())
+
+                SettingsDivider()
 
                 Button {
-                    showKey.toggle()
+                    Task { await testAPIConnection() }
                 } label: {
-                    Image(systemName: showKey ? "eye.slash" : "eye")
-                        .foregroundStyle(.secondary)
+                    HStack {
+                        if isTestingAPI {
+                            ProgressView()
+                        }
+                        Text(isTestingAPI ? L10n.settingsTestingAPI : L10n.settingsTestAPI)
+                            .font(AppFont.secondary())
+                        Spacer()
+                    }
+                }
+                .disabled(isTestingAPI)
+
+                SettingsDivider()
+
+                HStack(alignment: .top, spacing: AppSpacing.sm) {
+                    Image(systemName: statusIcon)
+                        .foregroundStyle(statusColor)
+                    Text(APISettings.keySourceDescription)
+                        .font(AppFont.caption())
+                        .foregroundStyle(APISettings.canUseKimi ? .secondary : AppColor.warning)
+                }
+            }
+        }
+    }
+
+    private var importExportCard: some View {
+        AppSurfaceCard {
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                Button {
+                    showDeckStore = true
+                } label: {
+                    SettingsNavigationRow(
+                        title: L10n.settingsOpenDeckStore,
+                        systemImage: "books.vertical"
+                    )
                 }
                 .buttonStyle(.plain)
-            }
 
-            Picker(L10n.modelSection, selection: $selectedModel) {
-                ForEach(APISettings.availableModels, id: \.self) { model in
-                    Text(model).tag(model)
-                }
-            }
+                SettingsDivider()
 
-            Text(APISettings.modelDescription(for: selectedModel))
-                .font(AppFont.caption())
-                .foregroundStyle(.secondary)
-
-            Button {
-                Task { await testAPIConnection() }
-            } label: {
-                HStack {
-                    if isTestingAPI {
-                        ProgressView()
+                DisclosureGroup(isExpanded: $showImportHelp) {
+                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                        Label(L10n.importShareStep1, systemImage: "square.and.arrow.up")
+                        Label(L10n.importShareStep2, systemImage: "checkmark.circle")
+                        Label(L10n.importCopyStep1, systemImage: "book.closed")
+                        Label(L10n.importCopyStep2, systemImage: "doc.on.doc")
+                        Label(L10n.importCopyStep3, systemImage: "arrow.right.circle")
                     }
-                    Text(isTestingAPI ? L10n.settingsTestingAPI : L10n.settingsTestAPI)
+                    .font(AppFont.caption())
+                    .foregroundStyle(.secondary)
+                    .padding(.top, AppSpacing.xs)
+                } label: {
+                    Label(L10n.importHelpTitle, systemImage: "arrow.down.doc")
+                        .font(AppFont.secondary())
                 }
             }
-            .disabled(isTestingAPI)
-
-            Label {
-                Text(APISettings.keySourceDescription)
-                    .foregroundStyle(APISettings.canUseKimi ? Color.primary : AppColor.warning)
-            } icon: {
-                Image(systemName: statusIcon)
-                    .foregroundStyle(statusColor)
-            }
-        } header: {
-            Text(L10n.settingsAISection)
-        } footer: {
-            Text(L10n.settingsAIKeyFooter)
         }
     }
 
-    private var importExportSection: some View {
-        Section {
-            Button {
-                showDeckStore = true
-            } label: {
-                Label(L10n.settingsOpenDeckStore, systemImage: "books.vertical")
-            }
+    private var maintenanceCard: some View {
+        AppSurfaceCard {
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                Button {
+                    showResetAllConfirm = true
+                } label: {
+                    SettingsNavigationRow(
+                        title: L10n.settingsResetAllSRS,
+                        systemImage: "arrow.counterclockwise"
+                    )
+                }
+                .buttonStyle(.plain)
+                .disabled(!hasAnyCards)
+                .opacity(hasAnyCards ? 1 : 0.45)
 
-            DisclosureGroup(isExpanded: $showImportHelp) {
-                Label(L10n.importShareStep1, systemImage: "square.and.arrow.up")
-                Label(L10n.importShareStep2, systemImage: "checkmark.circle")
+                SettingsDivider()
 
-                Label(L10n.importCopyStep1, systemImage: "book.closed")
-                Label(L10n.importCopyStep2, systemImage: "doc.on.doc")
-                Label(L10n.importCopyStep3, systemImage: "arrow.right.circle")
-            } label: {
-                Label(L10n.importHelpTitle, systemImage: "arrow.down.doc")
+                Button(role: .destructive) {
+                    showDeleteAllConfirm = true
+                } label: {
+                    SettingsNavigationRow(
+                        title: L10n.settingsDeleteAllCards,
+                        systemImage: "trash",
+                        tint: .red
+                    )
+                }
+                .buttonStyle(.plain)
+                .disabled(!hasAnyCards)
+                .opacity(hasAnyCards ? 1 : 0.45)
             }
-        } header: {
-            Text(L10n.settingsImportExportSection)
-        } footer: {
-            Text(L10n.settingsImportFormatsFooter)
         }
     }
 
-    private var backupReminderSection: some View {
-        Section {
-            Toggle(L10n.settingsBackupReminderEnabled, isOn: $backupReminderEnabled)
-        } header: {
-            Text(L10n.backupSection)
-        } footer: {
-            Text(L10n.settingsBackupReminderFooter)
-        }
-    }
+    private var aboutCard: some View {
+        AppSurfaceCard {
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                NavigationLink {
+                    PrivacyPolicyView()
+                } label: {
+                    SettingsNavigationRow(
+                        title: L10n.privacyTitle,
+                        systemImage: "hand.raised"
+                    )
+                }
+                .buttonStyle(.plain)
 
-    private var maintenanceSection: some View {
-        Section {
-            Button {
-                showResetAllConfirm = true
-            } label: {
-                Label(L10n.settingsResetAllSRS, systemImage: "arrow.counterclockwise")
-            }
-            .disabled(!hasAnyCards)
+                SettingsDivider()
 
-            Button(role: .destructive) {
-                showDeleteAllConfirm = true
-            } label: {
-                Label(L10n.settingsDeleteAllCards, systemImage: "trash")
-            }
-            .disabled(!hasAnyCards)
-        } header: {
-            Text(L10n.settingsMaintenanceSection)
-        } footer: {
-            Text(L10n.settingsMaintenanceFooter)
-        }
-    }
-
-    private var aboutSection: some View {
-        Section {
-            NavigationLink {
-                PrivacyPolicyView()
-            } label: {
-                Label(L10n.privacyTitle, systemImage: "hand.raised")
-            }
-
-            DisclosureGroup(isExpanded: $showHelpCenter) {
-                Text(L10n.settingsHelpBYOK)
-                    .font(AppFont.secondary())
+                DisclosureGroup(isExpanded: $showHelpCenter) {
+                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                        Text(L10n.settingsHelpBYOK)
+                        Text(L10n.settingsHelpApkg)
+                        Text(L10n.settingsHelpShare)
+                    }
+                    .font(AppFont.caption())
                     .foregroundStyle(.secondary)
-                Text(L10n.settingsHelpApkg)
-                    .font(AppFont.secondary())
-                    .foregroundStyle(.secondary)
-                Text(L10n.settingsHelpShare)
-                    .font(AppFont.secondary())
-                    .foregroundStyle(.secondary)
-            } label: {
-                Label(L10n.settingsHelpTitle, systemImage: "questionmark.circle")
+                    .padding(.top, AppSpacing.xs)
+                } label: {
+                    Label(L10n.settingsHelpTitle, systemImage: "questionmark.circle")
+                        .font(AppFont.secondary())
+                }
             }
-        } header: {
-            Text(L10n.settingsAboutSection)
         }
     }
 
-    private var saveSection: some View {
-        Section {
-            Button(L10n.saveSettings) {
-                saveSettings()
+    private var isUnlimitedReview: Bool {
+        reviewSettings.dailyNewLimit == 0 && reviewSettings.dailyReviewLimit == 0
+    }
+
+    private var unlimitedReviewBinding: Binding<Bool> {
+        Binding(
+            get: { isUnlimitedReview },
+            set: { unlimited in
+                if unlimited {
+                    reviewSettings.dailyNewLimit = 0
+                    reviewSettings.dailyReviewLimit = 0
+                } else {
+                    reviewSettings.dailyNewLimit = ReviewSettings.defaultDailyNewLimit
+                    reviewSettings.dailyReviewLimit = ReviewSettings.defaultDailyReviewLimit
+                }
             }
-        }
+        )
     }
 
     private var statusIcon: String {
@@ -330,6 +401,37 @@ struct SettingsView: View {
         maintenanceAlertTitle = title
         maintenanceAlertMessage = message
         showMaintenanceAlert = true
+    }
+}
+
+private struct SettingsDivider: View {
+    var body: some View {
+        Divider()
+    }
+}
+
+private struct SettingsNavigationRow: View {
+    let title: String
+    let systemImage: String
+    var tint: Color = .primary
+
+    var body: some View {
+        HStack(spacing: AppSpacing.sm) {
+            Label {
+                Text(title)
+                    .foregroundStyle(tint)
+            } icon: {
+                Image(systemName: systemImage)
+                    .foregroundStyle(tint == .primary ? AppColor.accent : tint)
+            }
+            .font(AppFont.secondary())
+
+            Spacer(minLength: 0)
+
+            Image(systemName: "chevron.right")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.tertiary)
+        }
     }
 }
 

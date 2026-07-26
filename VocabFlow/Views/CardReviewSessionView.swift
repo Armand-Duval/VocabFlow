@@ -7,6 +7,8 @@ struct CardReviewSessionView: View {
 
     let cards: [FlashCard]
     var dismissWhenComplete: Bool = false
+    /// When reviewing all decks, show each card's deck name beside progress.
+    var showDeckName: Bool = false
 
     @State private var sessionQueue: [FlashCard] = []
     @State private var pendingLearning: [PendingLearningCard] = []
@@ -55,6 +57,14 @@ struct CardReviewSessionView: View {
                 Text(L10n.reviewProgress(currentIndex + 1, sessionQueue.count))
                     .font(AppFont.captionSecondary())
                     .foregroundStyle(.secondary)
+
+                if showDeckName, let deckName = card.deck?.name, !deckName.isEmpty {
+                    Text(deckName)
+                        .font(AppFont.captionSecondary())
+                        .foregroundStyle(.tertiary)
+                        .lineLimit(1)
+                }
+
                 Spacer()
                 CardTypeChip(title: card.cardType.displayName)
             }
@@ -185,8 +195,7 @@ struct CardReviewSessionView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, AppSpacing.sm)
                     }
-                    .buttonStyle(ReviewRatingButtonStyle())
-                    .tint(ratingTint(rating))
+                    .buttonStyle(ReviewRatingButtonStyle(rating: rating))
                 }
             }
 
@@ -197,15 +206,6 @@ struct CardReviewSessionView: View {
         }
         .padding(.horizontal, AppSpacing.md)
         .padding(.bottom, AppSpacing.xs)
-    }
-
-    private func ratingTint(_ rating: ReviewRating) -> Color {
-        switch rating {
-        case .again: .red
-        case .hard: .orange
-        case .good: AppColor.accent
-        case .easy: .green
-        }
     }
 
     private func submit(rating: ReviewRating, for card: FlashCard) {
@@ -272,18 +272,51 @@ private struct PendingLearningCard: Identifiable {
 }
 
 private struct ReviewRatingButtonStyle: ButtonStyle {
+    let rating: ReviewRating
+
     func makeBody(configuration: Configuration) -> some View {
+        let palette = palette(for: rating)
         configuration.label
+            .foregroundStyle(palette.foreground)
             .background(
                 RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
-                    .fill(configuration.isPressed ? AppColor.accentBackground(0.14) : Color.clear)
+                    .fill(palette.background.opacity(configuration.isPressed ? 1.35 : 1))
             )
             .overlay {
                 RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
-                    .strokeBorder(.secondary.opacity(configuration.isPressed ? 0.5 : 0.25))
+                    .strokeBorder(palette.border.opacity(configuration.isPressed ? 0.85 : 1), lineWidth: 1)
             }
             .scaleEffect(configuration.isPressed ? 0.96 : 1)
             .animation(.easeInOut(duration: 0.12), value: configuration.isPressed)
+    }
+
+    private func palette(for rating: ReviewRating) -> (background: Color, border: Color, foreground: Color) {
+        switch rating {
+        case .again:
+            (
+                AppColor.ratingAgainBackground(),
+                Color.red.opacity(0.45),
+                Color.red
+            )
+        case .hard:
+            (
+                AppColor.ratingHardBackground(),
+                Color.orange.opacity(0.55),
+                Color.orange
+            )
+        case .good:
+            (
+                AppColor.surface,
+                Color.secondary.opacity(0.35),
+                AppColor.accent
+            )
+        case .easy:
+            (
+                AppColor.ratingEasyBackground(),
+                Color.green.opacity(0.45),
+                Color.green
+            )
+        }
     }
 }
 

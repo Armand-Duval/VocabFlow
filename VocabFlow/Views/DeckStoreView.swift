@@ -12,27 +12,22 @@ struct DeckStoreView: View {
     private var queriedDecks: [Deck]
 
     @State private var cachedDecks: [Deck] = []
+    @State private var checkedDeckIDs: Set<UUID> = []
 
     private var decks: [Deck] {
         queriedDecks.isEmpty ? cachedDecks : queriedDecks
     }
 
-    private var totalCardCount: Int {
-        decks.reduce(0) { $0 + $1.cachedCardCount }
-    }
-
     @State private var showCreateDeck = false
-    @State private var showPackImporter = false
-    @State private var showApkgImporter = false
-    @State private var showBackupImporter = false
-    @State private var showImportOptions = false
-    @State private var pendingBackupData: Data?
+    @State private var showUnifiedFileImporter = false
+    @State private var fileImportMode: DeckFileImportMode?
+    @State private var allowedImportTypes: [UTType] = [.json]
     @State private var exportDocument: BackupDocument?
     @State private var apkgDocument: ApkgDocument?
     @State private var showJSONExporter = false
     @State private var showApkgExporter = false
     @State private var apkgExportFilename = ApkgExportService.defaultFilename
-    @State private var importTargetDeckID: UUID?
+    @State private var jsonExportFilename = BackupService.defaultFilename
     @State private var alertTitle = ""
     @State private var alertMessage = ""
     @State private var showAlert = false
@@ -40,25 +35,40 @@ struct DeckStoreView: View {
     @State private var importProgress: ImportProgressState?
     @State private var isImportingJSON = false
     @State private var isImportingApkg = false
-    @State private var isImportingBackup = false
+    @State private var isPreparingExport = false
     @State private var showApkgImportGuide = false
     @Environment(\.openURL) private var openURL
 
     private var isImportBusy: Bool {
-        isImportingJSON || isImportingApkg || isImportingBackup || downloadingPackID != nil
+        isImportingJSON || isImportingApkg || downloadingPackID != nil || isPreparingExport
+    }
+
+    private var busyOverlayMessage: String {
+        isPreparingExport ? L10n.deckPreparingExport : L10n.deckImporting
+    }
+
+    private var checkedDecks: [Deck] {
+        decks.filter { checkedDeckIDs.contains($0.id) }
+    }
+
+    private var checkedCardCount: Int {
+        checkedDecks.reduce(0) { $0 + $1.cardCount }
+    }
+
+    private var allDecksSelected: Bool {
+        !decks.isEmpty && checkedDeckIDs.count == decks.count
     }
 
     var body: some View {
         List {
             myDecksSection
+            deckActionsSection
             openSourceSection
             communitySection
-            importDeckSection
-            backupSection
         }
         .navigationTitle(L10n.deckStoreTitle)
         .navigationBarTitleDisplayMode(.inline)
-        .loadingOverlay(isPresented: isImportBusy, message: L10n.deckImporting)
+        .loadingOverlay(isPresented: isImportBusy, message: busyOverlayMessage)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
@@ -72,44 +82,23 @@ struct DeckStoreView: View {
             CreateDeckSheet { deck in
                 selectedDeckID = deck.id
                 DeckSettings.lastSelectedDeckID = deck.id
+                checkedDeckIDs = [deck.id]
                 reloadDecks()
                 DeckCardCountService.notifyCatalogChanged()
             }
         }
         .fileImporter(
-            isPresented: $showPackImporter,
-            allowedContentTypes: [.json]
+            isPresented: $showUnifiedFileImporter,
+            allowedContentTypes: allowedImportTypes,
+            allowsMultipleSelection: false
         ) { result in
-            handlePackImport(result)
-        }
-        .fileImporter(
-            isPresented: $showApkgImporter,
-            allowedContentTypes: [.apkg, .data]
-        ) { result in
-            handleApkgImport(result)
-        }
-        .fileImporter(
-            isPresented: $showBackupImporter,
-            allowedContentTypes: [.json]
-        ) { result in
-            handleBackupImportSelection(result)
-        }
-        .confirmationDialog(L10n.importModeTitle, isPresented: $showImportOptions, titleVisibility: .visible) {
-            Button(L10n.importModeMerge) {
-                performMergeBackupImport()
-            }
-            Button(L10n.importModeReplace, role: .destructive) {
-                performReplaceBackupImport()
-            }
-            Button(L10n.cancel, role: .cancel) {}
-        } message: {
-            Text(L10n.importModeMessage)
+            handleUnifiedFileImport(result)
         }
         .fileExporter(
             isPresented: $showJSONExporter,
             document: exportDocument,
             contentType: .json,
-            defaultFilename: BackupService.defaultFilename
+            defaultFilename: jsonExportFilename
         ) { result in
             switch result {
             case .success:
@@ -136,8 +125,7 @@ struct DeckStoreView: View {
         }
         .alert(L10n.deckCommunityImportGuideTitle, isPresented: $showApkgImportGuide) {
             Button(L10n.deckCommunityImportNow) {
-                importTargetDeckID = selectedDeckID ?? DeckService.fetchOrCreateDefault(in: modelContext).id
-                showApkgImporter = true
+                beginFileImport(.apkg)
             }
             Button(L10n.ok, role: .cancel) {}
         } message: {
@@ -145,10 +133,43 @@ struct DeckStoreView: View {
         }
         .onAppear {
             reloadDecks()
+            seedCheckedDecksIfNeeded()
         }
         .onReceive(NotificationCenter.default.publisher(for: .libraryCatalogDidChange)) { _ in
             reloadDecks()
         }
+    }
+
+    private func seedCheckedDecksIfNeeded() {
+        guard checkedDeckIDs.isEmpty else { return }
+        if let selectedDeckID, decks.contains(where: { $0.id == selectedDeckID }) {
+            checkedDeckIDs = [selectedDeckID]
+        }
+    }
+
+    private func syncPrimaryDeckSelection() {
+        if checkedDeckIDs.count == 1, let deckID = checkedDeckIDs.first {
+            selectedDeckID = deckID
+            DeckSettings.lastSelectedDeckID = deckID
+        }
+    }
+
+    private func toggleDeckCheck(_ deck: Deck) {
+        if checkedDeckIDs.contains(deck.id) {
+            checkedDeckIDs.remove(deck.id)
+        } else {
+            checkedDeckIDs.insert(deck.id)
+        }
+        syncPrimaryDeckSelection()
+    }
+
+    private func toggleSelectAllDecks() {
+        if allDecksSelected {
+            checkedDeckIDs.removeAll()
+        } else {
+            checkedDeckIDs = Set(decks.map(\.id))
+        }
+        syncPrimaryDeckSelection()
     }
 
     private func reloadDecks() {
@@ -156,7 +177,7 @@ struct DeckStoreView: View {
     }
 
     private var myDecksSection: some View {
-        Section(L10n.deckMyDecks) {
+        Section {
             if decks.isEmpty {
                 Text(L10n.deckEmpty)
                     .foregroundStyle(.secondary)
@@ -164,10 +185,13 @@ struct DeckStoreView: View {
                 ForEach(decks) { deck in
                     HStack {
                         Button {
-                            selectedDeckID = deck.id
-                            DeckSettings.lastSelectedDeckID = deck.id
+                            toggleDeckCheck(deck)
                         } label: {
-                            HStack {
+                            HStack(spacing: AppSpacing.sm) {
+                                Image(systemName: checkedDeckIDs.contains(deck.id) ? "checkmark.circle.fill" : "circle")
+                                    .foregroundStyle(checkedDeckIDs.contains(deck.id) ? AppColor.accent : .secondary)
+                                    .font(.title3)
+
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(deck.name)
                                         .foregroundStyle(.primary)
@@ -178,11 +202,9 @@ struct DeckStoreView: View {
                                             .lineLimit(2)
                                     }
                                 }
+
                                 Spacer()
-                                if selectedDeckID == deck.id {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .foregroundStyle(.tint)
-                                }
+
                                 Text("\(deck.cardCount)")
                                     .font(AppFont.caption())
                                     .foregroundStyle(.secondary)
@@ -218,6 +240,17 @@ struct DeckStoreView: View {
                     }
                 }
             }
+        } header: {
+            HStack {
+                AppSectionHeader(title: L10n.deckMyDecks)
+                Spacer()
+                if !decks.isEmpty {
+                    Button(allDecksSelected ? L10n.deckDeselectAll : L10n.deckSelectAll) {
+                        toggleSelectAllDecks()
+                    }
+                    .font(AppFont.caption())
+                }
+            }
         }
     }
 
@@ -227,9 +260,7 @@ struct DeckStoreView: View {
                 remotePackRow(pack)
             }
         } header: {
-            Text(L10n.deckOpenSourceSection)
-        } footer: {
-            Text(L10n.deckOpenSourceFooter)
+            AppSectionHeader(title: L10n.deckOpenSourceSection)
         }
     }
 
@@ -245,27 +276,35 @@ struct DeckStoreView: View {
                 Label(L10n.deckCommunityImportGuide, systemImage: "questionmark.circle")
             }
         } header: {
-            Text(L10n.deckCommunitySection)
-        } footer: {
-            Text(L10n.deckCommunityFooter)
+            AppSectionHeader(title: L10n.deckCommunitySection)
         }
     }
 
-    private var importDeckSection: some View {
+    private var deckActionsSection: some View {
         Section {
             LazyVGrid(
                 columns: [GridItem(.flexible()), GridItem(.flexible())],
                 spacing: AppSpacing.sm
             ) {
                 QuickActionChip(
-                    systemImage: "doc.badge.plus",
-                    title: L10n.deckQuickImportPack,
+                    systemImage: "square.and.arrow.down",
+                    title: L10n.deckQuickImportJSON,
                     isLoading: isImportingJSON,
                     isDisabled: isImportingApkg
                 ) {
-                    showPackImporter = true
+                    beginFileImport(.deckJSON)
                 }
-                .accessibilityLabel(L10n.deckImportPack)
+                .accessibilityLabel(L10n.deckQuickImportJSON)
+
+                QuickActionChip(
+                    systemImage: "square.and.arrow.up",
+                    title: L10n.deckQuickExportDeckJSON,
+                    isLoading: isPreparingExport,
+                    isDisabled: checkedDeckIDs.isEmpty || checkedCardCount == 0
+                ) {
+                    exportCheckedDecksJSON()
+                }
+                .accessibilityLabel(L10n.deckQuickExportDeckJSON)
 
                 QuickActionChip(
                     systemImage: "square.and.arrow.down.fill",
@@ -273,53 +312,33 @@ struct DeckStoreView: View {
                     isLoading: isImportingApkg,
                     isDisabled: isImportingJSON
                 ) {
-                    importTargetDeckID = selectedDeckID ?? DeckService.fetchOrCreateDefault(in: modelContext).id
-                    showApkgImporter = true
+                    beginFileImport(.apkg)
                 }
                 .accessibilityLabel(L10n.deckImportApkg)
-            }
-            .padding(.vertical, AppSpacing.xs)
-        } header: {
-            Text(L10n.deckImportDeckSection)
-        }
-    }
-
-    private var backupSection: some View {
-        Section {
-            LazyVGrid(
-                columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())],
-                spacing: AppSpacing.sm
-            ) {
-                QuickActionChip(
-                    systemImage: "doc.text.fill",
-                    title: L10n.deckQuickExportJSON
-                ) {
-                    exportJSONBackup()
-                }
-                .accessibilityLabel(L10n.exportBackup)
-
-                QuickActionChip(
-                    systemImage: "arrow.triangle.2.circlepath",
-                    title: L10n.deckQuickImportBackup,
-                    isLoading: isImportingBackup
-                ) {
-                    showBackupImporter = true
-                }
-                .accessibilityLabel(L10n.importBackup)
 
                 QuickActionChip(
                     systemImage: "square.and.arrow.up.fill",
-                    title: L10n.deckQuickExportApkg,
-                    isDisabled: totalCardCount == 0
+                    title: L10n.deckQuickExportDeckApkg,
+                    isLoading: isPreparingExport,
+                    isDisabled: checkedDeckIDs.isEmpty || checkedCardCount == 0
                 ) {
-                    exportAllApkg()
+                    exportCheckedDecksApkg()
                 }
-                .accessibilityLabel(L10n.exportApkg)
+                .accessibilityLabel(L10n.deckQuickExportDeckApkg)
             }
             .padding(.vertical, AppSpacing.xs)
         } header: {
-            Text(L10n.deckBackupSection)
+            AppSectionHeader(title: L10n.deckActionsSection)
+        } footer: {
+            Text(
+                checkedDeckIDs.isEmpty
+                    ? L10n.deckActionsImportFooter
+                    : L10n.deckActionsFooter(checkedDeckIDs.count)
+            )
+            .font(AppFont.caption())
         }
+        .listRowInsets(EdgeInsets(top: AppSpacing.sm, leading: AppSpacing.md, bottom: AppSpacing.sm, trailing: AppSpacing.md))
+        .listRowBackground(Color.clear)
     }
 
     private struct ImportProgressState {
@@ -451,6 +470,7 @@ struct DeckStoreView: View {
                 }
                 selectedDeckID = result.deck.id
                 DeckSettings.lastSelectedDeckID = result.deck.id
+                checkedDeckIDs.insert(result.deck.id)
                 if result.importedCards > 0 {
                     showResult(
                         title: L10n.deckInstallComplete,
@@ -471,6 +491,7 @@ struct DeckStoreView: View {
     private func deleteDeck(_ deck: Deck) {
         do {
             try DeckService.deleteDeck(deck, in: modelContext)
+            checkedDeckIDs.remove(deck.id)
             if selectedDeckID == deck.id {
                 let fallback = DeckService.fetchOrCreateDefault(in: modelContext)
                 selectedDeckID = fallback.id
@@ -481,31 +502,51 @@ struct DeckStoreView: View {
         }
     }
 
-    private func handlePackImport(_ result: Result<URL, Error>) {
+    private func handleDeckJSONImport(_ result: Result<URL, Error>) {
         switch result {
         case .success(let url):
             isImportingJSON = true
-            importProgress = ImportProgressState(key: "json-pack", current: 0, total: 1)
+            importProgress = ImportProgressState(key: "deck-json", current: 0, total: 1)
             Task { @MainActor in
                 defer {
                     isImportingJSON = false
                     importProgress = nil
                 }
                 do {
-                    let data = try BackupDocumentSupport.readData(from: url)
-                    let imported = try await DeckService.importPackDataAsync(data, in: modelContext) { current, total in
-                        importProgress = ImportProgressState(key: "json-pack", current: current, total: total)
+                    let data = try JSONImportSupport.readImportData(from: url)
+                    let imported: BackupService.JSONImportMergeResult
+                    if JSONImportSupport.hasDeckInfo(data) {
+                        imported = try await BackupService.importJSONMerge(data: data, into: modelContext)
+                    } else {
+                        let targets = checkedDecks
+                        guard !targets.isEmpty else {
+                            showResult(
+                                title: L10n.deckImportFailed,
+                                message: L10n.deckImportNeedSelectionForNoDeckInfo
+                            )
+                            return
+                        }
+                        imported = try await BackupService.importJSONMerge(
+                            data: data,
+                            into: modelContext,
+                            targetDecks: targets
+                        )
                     }
-                    selectedDeckID = imported.deck.id
-                    DeckSettings.lastSelectedDeckID = imported.deck.id
                     reloadDecks()
-                    DeckCardCountService.notifyCatalogChanged()
+                    if let deckName = imported.deckName,
+                       let deck = DeckService.fetchDeck(name: deckName, in: modelContext) {
+                        selectedDeckID = deck.id
+                        DeckSettings.lastSelectedDeckID = deck.id
+                    }
                     showResult(
                         title: L10n.deckImportComplete,
-                        message: L10n.deckImportPackResult(imported.deck.name, count: imported.importedCards)
+                        message: imported.summaryMessage
                     )
                 } catch {
-                    showResult(title: L10n.deckImportFailed, message: error.localizedDescription)
+                    showResult(
+                        title: L10n.deckImportFailed,
+                        message: JSONImportSupport.message(for: error, expecting: .backup)
+                    )
                 }
             }
         case .failure(let error):
@@ -515,9 +556,6 @@ struct DeckStoreView: View {
     }
 
     private func handleApkgImport(_ result: Result<URL, Error>) {
-        let deckID = importTargetDeckID ?? selectedDeckID ?? DeckService.fetchOrCreateDefault(in: modelContext).id
-        let deck = DeckService.resolvedDeck(id: deckID, in: modelContext)
-
         switch result {
         case .success(let url):
             isImportingApkg = true
@@ -529,20 +567,40 @@ struct DeckStoreView: View {
                 }
                 do {
                     let data = try BackupDocumentSupport.readData(from: url)
-                    let imported = try await ApkgImportService.importApkgAsync(
-                        data: data,
-                        into: deck,
-                        context: modelContext
-                    ) { current, total in
-                        importProgress = ImportProgressState(key: "apkg", current: current, total: total)
+                    let imported: ApkgImportService.ImportResult
+                    if try ApkgImportService.hasDeckInfo(in: data) {
+                        imported = try await ApkgImportService.importApkgAsync(
+                            data: data,
+                            context: modelContext
+                        ) { current, total in
+                            importProgress = ImportProgressState(key: "apkg", current: current, total: total)
+                        }
+                    } else {
+                        let targets = checkedDecks
+                        guard !targets.isEmpty else {
+                            showResult(
+                                title: L10n.deckImportFailed,
+                                message: L10n.deckImportNeedSelectionForNoDeckInfo
+                            )
+                            return
+                        }
+                        imported = try await ApkgImportService.importApkgAsync(
+                            data: data,
+                            context: modelContext,
+                            targetDecks: targets
+                        ) { current, total in
+                            importProgress = ImportProgressState(key: "apkg", current: current, total: total)
+                        }
                     }
-                    selectedDeckID = deck.id
-                    DeckSettings.lastSelectedDeckID = deck.id
                     reloadDecks()
-                    DeckCardCountService.notifyCatalogChanged()
+                    if let deckName = imported.primaryDeckName,
+                       let deck = DeckService.fetchDeck(name: deckName, in: modelContext) {
+                        selectedDeckID = deck.id
+                        DeckSettings.lastSelectedDeckID = deck.id
+                    }
                     showResult(
                         title: L10n.deckImportComplete,
-                        message: L10n.deckImportApkgResult(deck.name, count: imported.imported)
+                        message: imported.summaryMessage
                     )
                 } catch {
                     showResult(title: L10n.deckImportFailed, message: error.localizedDescription)
@@ -554,46 +612,131 @@ struct DeckStoreView: View {
         }
     }
 
+    private func beginFileImport(_ mode: DeckFileImportMode) {
+        fileImportMode = mode
+        allowedImportTypes = mode.contentTypes
+        showUnifiedFileImporter = true
+    }
+
+    private func handleUnifiedFileImport(_ result: Result<[URL], Error>) {
+        guard let mode = fileImportMode else { return }
+        defer { fileImportMode = nil }
+
+        switch mode {
+        case .deckJSON:
+            handleDeckJSONImport(singleURLResult(from: result))
+        case .apkg:
+            handleApkgImport(singleURLResult(from: result))
+        }
+    }
+
+    private func singleURLResult(from result: Result<[URL], Error>) -> Result<URL, Error> {
+        switch result {
+        case .success(let urls):
+            guard let url = urls.first else {
+                return .failure(CocoaError(.fileNoSuchFile))
+            }
+            return .success(url)
+        case .failure(let error):
+            return .failure(error)
+        }
+    }
+
     private func fetchAllCards() -> [FlashCard] {
         (try? modelContext.fetch(FetchDescriptor<FlashCard>())) ?? []
     }
 
-    private func exportJSONBackup() {
-        do {
-            let cards = fetchAllCards()
-            let data = try BackupService.export(cards: cards, decks: decks)
-            exportDocument = BackupDocument(data: data)
-            showJSONExporter = true
-        } catch {
-            showResult(title: L10n.exportFailed, message: error.localizedDescription)
+    private func exportCheckedDecksJSON() {
+        guard !checkedDeckIDs.isEmpty else {
+            showResult(title: L10n.exportFailed, message: L10n.deckExportNeedSelection)
+            return
+        }
+        guard checkedCardCount > 0 else {
+            showResult(title: L10n.exportFailed, message: L10n.apkgExportEmpty)
+            return
+        }
+
+        isPreparingExport = true
+        Task { @MainActor in
+            defer { isPreparingExport = false }
+            do {
+                let data = try BackupService.export(
+                    checkedDeckIDs: checkedDeckIDs,
+                    cards: fetchAllCards(),
+                    decks: decks
+                )
+                let filename: String
+                if checkedDeckIDs.count == 1, let deck = checkedDecks.first {
+                    filename = ApkgExportService.sanitizedFilename(deck.name)
+                } else {
+                    filename = BackupService.defaultFilename
+                }
+                presentJSONExport(data: data, filename: filename)
+            } catch {
+                showResult(title: L10n.exportFailed, message: error.localizedDescription)
+            }
         }
     }
 
-    private func exportAllApkg() {
-        do {
-            let data = try ApkgExportService.export(cards: fetchAllCards())
-            apkgDocument = ApkgDocument(data: data)
-            apkgExportFilename = ApkgExportService.defaultFilename
-            showApkgExporter = true
-        } catch {
-            showResult(title: L10n.exportFailed, message: error.localizedDescription)
+    private func exportCheckedDecksApkg() {
+        guard !checkedDeckIDs.isEmpty else {
+            showResult(title: L10n.exportFailed, message: L10n.deckExportNeedSelection)
+            return
         }
-    }
 
-    private func exportDeckApkg(_ deck: Deck) {
-        let cards = fetchCards(for: deck)
+        let cards = fetchCards(in: checkedDeckIDs)
         guard !cards.isEmpty else {
             showResult(title: L10n.exportFailed, message: L10n.apkgExportEmpty)
             return
         }
-        do {
-            let data = try ApkgExportService.export(cards: cards, deckName: deck.name)
-            apkgDocument = ApkgDocument(data: data)
-            apkgExportFilename = ApkgExportService.sanitizedFilename(deck.name)
-            showApkgExporter = true
-        } catch {
-            showResult(title: L10n.exportFailed, message: error.localizedDescription)
+
+        isPreparingExport = true
+        Task { @MainActor in
+            defer { isPreparingExport = false }
+            do {
+                let deckName = checkedDeckIDs.count == 1 ? checkedDecks.first?.name : nil
+                let data = try ApkgExportService.export(cards: cards, deckName: deckName)
+                let filename: String
+                if checkedDeckIDs.count == 1, let deck = checkedDecks.first {
+                    filename = ApkgExportService.sanitizedFilename(deck.name)
+                } else {
+                    filename = ApkgExportService.defaultFilename
+                }
+                presentApkgExport(data: data, filename: filename)
+            } catch {
+                showResult(title: L10n.exportFailed, message: error.localizedDescription)
+            }
         }
+    }
+
+    private func fetchCards(in deckIDs: Set<UUID>) -> [FlashCard] {
+        fetchAllCards().filter { card in
+            guard let deckID = card.deck?.id else { return false }
+            return deckIDs.contains(deckID)
+        }
+    }
+
+    private func presentJSONExport(data: Data, filename: String) {
+        exportDocument = BackupDocument(data: data)
+        jsonExportFilename = filename
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(150))
+            showJSONExporter = true
+        }
+    }
+
+    private func presentApkgExport(data: Data, filename: String) {
+        apkgDocument = ApkgDocument(data: data)
+        apkgExportFilename = filename
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(150))
+            showApkgExporter = true
+        }
+    }
+
+    private func exportDeckApkg(_ deck: Deck) {
+        checkedDeckIDs = [deck.id]
+        exportCheckedDecksApkg()
     }
 
     private func fetchCards(for deck: Deck) -> [FlashCard] {
@@ -606,68 +749,26 @@ struct DeckStoreView: View {
         return (try? modelContext.fetch(descriptor)) ?? []
     }
 
-    private func handleBackupImportSelection(_ result: Result<URL, Error>) {
-        switch result {
-        case .success(let url):
-            do {
-                pendingBackupData = try BackupDocumentSupport.readData(from: url)
-                showImportOptions = true
-            } catch {
-                showResult(title: L10n.readFailed, message: error.localizedDescription)
-            }
-        case .failure(let error):
-            guard !error.isFileImporterCancellation else { return }
-            showResult(title: L10n.importFailed, message: error.localizedDescription)
-        }
-    }
-
-    private func performMergeBackupImport() {
-        guard let data = pendingBackupData else { return }
-        isImportingBackup = true
-        Task { @MainActor in
-            defer {
-                isImportingBackup = false
-                pendingBackupData = nil
-            }
-            do {
-                let result = try BackupService.importMerge(data: data, into: modelContext)
-                reloadDecks()
-                DeckCardCountService.notifyDataMaintenance()
-                showResult(
-                    title: L10n.importComplete,
-                    message: L10n.importMergeResult(added: result.added, updated: result.updated)
-                )
-            } catch {
-                showResult(title: L10n.importFailed, message: error.localizedDescription)
-            }
-        }
-    }
-
-    private func performReplaceBackupImport() {
-        guard let data = pendingBackupData else { return }
-        isImportingBackup = true
-        Task { @MainActor in
-            defer {
-                isImportingBackup = false
-                pendingBackupData = nil
-            }
-            do {
-                let count = try BackupService.importReplace(data: data, into: modelContext)
-                reloadDecks()
-                DeckCardCountService.notifyDataMaintenance()
-                showResult(title: L10n.importComplete, message: L10n.importReplaceResult(count))
-            } catch {
-                showResult(title: L10n.importFailed, message: error.localizedDescription)
-            }
-        }
-    }
-
     private func showResult(title: String, message: String) {
         alertTitle = title
         alertMessage = message
         showAlert = true
         if title == L10n.importComplete || title == L10n.deckImportComplete {
             ToastCenter.shared.show(message)
+        }
+    }
+}
+
+private enum DeckFileImportMode {
+    case deckJSON
+    case apkg
+
+    var contentTypes: [UTType] {
+        switch self {
+        case .deckJSON:
+            return [.json]
+        case .apkg:
+            return [.apkg, .zip, .data]
         }
     }
 }

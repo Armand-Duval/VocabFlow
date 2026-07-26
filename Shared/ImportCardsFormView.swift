@@ -28,7 +28,7 @@ struct ImportCardsFormView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section(L10n.sourceText) {
+                Section {
                     ZStack(alignment: .topLeading) {
                         SelectableTextEditor(
                             text: $sentence,
@@ -50,7 +50,7 @@ struct ImportCardsFormView: View {
                     }
                 }
 
-                Section(L10n.wordsSection) {
+                Section {
                     VocabularyWordsEditor(
                         words: $words,
                         feedbackMessage: $wordFeedbackMessage,
@@ -69,7 +69,7 @@ struct ImportCardsFormView: View {
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(L10n.generateCards, action: submitGeneration)
+                    Button(L10n.generateCardsShort, action: submitGeneration)
                         .fontWeight(.semibold)
                         .disabled(trimmedSentence.isEmpty || words.isEmpty)
                 }

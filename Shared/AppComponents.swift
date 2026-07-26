@@ -4,6 +4,12 @@ enum AppColor {
     static var accent: Color { .accentColor }
     static var warning: Color { .orange }
     static var success: Color { .green }
+    static var pageBackground: Color { Color(.systemGroupedBackground) }
+    static var surface: Color { Color(.systemBackground) }
+    /// Primary nav title gray (#666666).
+    static var navTitle: Color { Color(red: 0.4, green: 0.4, blue: 0.4) }
+    /// Secondary (push) pages — slightly stronger contrast.
+    static var navTitleSecondary: Color { Color(red: 0.27, green: 0.27, blue: 0.27) }
 
     static func accentBackground(_ opacity: Double = 0.12) -> Color {
         accent.opacity(opacity)
@@ -15,6 +21,18 @@ enum AppColor {
 
     static func warningBackground(_ opacity: Double = 0.14) -> Color {
         Color.orange.opacity(opacity)
+    }
+
+    static func ratingAgainBackground(_ opacity: Double = 0.12) -> Color {
+        Color.red.opacity(opacity)
+    }
+
+    static func ratingHardBackground(_ opacity: Double = 0.22) -> Color {
+        Color.yellow.opacity(opacity)
+    }
+
+    static func ratingEasyBackground(_ opacity: Double = 0.12) -> Color {
+        Color.green.opacity(opacity)
     }
 }
 
@@ -41,6 +59,7 @@ enum AppFont {
     static func caption() -> Font { .caption }
     static func captionSecondary() -> Font { .caption.weight(.medium) }
     static func helper() -> Font { .footnote }
+    static func navTitle() -> Font { .callout.weight(.medium) }
 }
 
 enum AppIcon {
@@ -130,6 +149,56 @@ extension View {
     func appScreenPadding() -> some View {
         padding(.horizontal, AppSpacing.md)
     }
+
+    func appPageBackground() -> some View {
+        background(AppColor.pageBackground)
+    }
+
+    func appNavTitle(_ title: String, style: AppNavTitleStyle = .primary) -> some View {
+        modifier(AppNavTitleModifier(title: title, style: style))
+    }
+}
+
+enum AppNavTitleStyle {
+    /// Create / Review / Settings — inline, medium, #666.
+    case primary
+    /// Library — search + chips identify the page; no nav title.
+    case hidden
+    /// Push/detail pages — slightly darker for hierarchy.
+    case secondary
+}
+
+private struct AppNavTitleModifier: ViewModifier {
+    let title: String
+    let style: AppNavTitleStyle
+
+    func body(content: Content) -> some View {
+        content
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarTitleDisplayMode(.inline)
+            .navigationTitle("")
+            .toolbar {
+                if style == .primary || style == .secondary {
+                    ToolbarItem(placement: .principal) {
+                        Text(title)
+                            .font(AppFont.navTitle())
+                            .foregroundStyle(style == .secondary ? AppColor.navTitleSecondary : AppColor.navTitle)
+                    }
+                }
+            }
+    }
+}
+
+struct AppSurfaceCard<Content: View>: View {
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        content()
+            .padding(AppSpacing.md)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(AppColor.surface, in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
+            .shadow(color: .black.opacity(0.06), radius: 10, y: 3)
+    }
 }
 
 struct HighlightedText: View {
@@ -175,9 +244,21 @@ struct AppTabIcon: View {
     }
 }
 
+struct AppSectionHeader: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .font(AppFont.caption())
+            .foregroundStyle(.secondary)
+            .textCase(nil)
+    }
+}
+
 struct QuickActionChip: View {
     let systemImage: String
     let title: String
+    var iconOnly: Bool = false
     var isHighlighted: Bool = false
     var isLoading: Bool = false
     var isDisabled: Bool = false
@@ -185,36 +266,27 @@ struct QuickActionChip: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 6) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
-                        .fill(isHighlighted ? AppColor.accent : AppColor.accentBackground(0.12))
-                        .frame(width: 48, height: 48)
-
-                    if isLoading {
-                        ProgressView()
-                            .tint(isHighlighted ? .white : AppColor.accent)
-                    } else {
-                        Image(systemName: systemImage)
-                            .font(.system(size: 22, weight: AppIcon.weight))
-                            .symbolRenderingMode(.hierarchical)
-                            .foregroundStyle(isHighlighted ? .white : AppColor.accent)
+            Group {
+                if iconOnly {
+                    iconBlock
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, AppSpacing.sm)
+                        .background(chipBackground, in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
+                } else {
+                    VStack(spacing: 6) {
+                        iconBlock
+                        Text(title)
+                            .font(AppFont.captionSecondary())
+                            .foregroundStyle(isHighlighted ? AppColor.accent : .primary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.85)
                     }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, AppSpacing.sm)
+                    .padding(.horizontal, AppSpacing.xs)
+                    .background(chipBackground, in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
                 }
-
-                Text(title)
-                    .font(AppFont.captionSecondary())
-                    .foregroundStyle(isHighlighted ? AppColor.accent : .primary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.85)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, AppSpacing.sm)
-            .padding(.horizontal, AppSpacing.xs)
-            .background(
-                RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                    .fill(Color(.secondarySystemGroupedBackground))
-            )
             .overlay {
                 if isHighlighted {
                     RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
@@ -225,6 +297,66 @@ struct QuickActionChip: View {
         .buttonStyle(.plain)
         .disabled(isDisabled || isLoading)
         .opacity(isDisabled ? 0.45 : 1)
+    }
+
+    private var iconBlock: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
+                .fill(isHighlighted ? AppColor.accent : AppColor.accentBackground(0.12))
+                .frame(width: 48, height: 48)
+
+            if isLoading {
+                ProgressView()
+                    .tint(isHighlighted ? .white : AppColor.accent)
+            } else {
+                Image(systemName: systemImage)
+                    .font(.system(size: 22, weight: AppIcon.weight))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(isHighlighted ? .white : AppColor.accent)
+            }
+        }
+    }
+
+    private var chipBackground: some ShapeStyle {
+        Color(.secondarySystemGroupedBackground)
+    }
+}
+
+struct DeckFilterChip: View {
+    let title: String
+    var badge: Int?
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Text(title)
+                    .font(AppFont.caption())
+                    .lineLimit(1)
+                if let badge, badge > 0 {
+                    Text("\(badge)")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(isSelected ? AppColor.accent : .secondary)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(chipBadgeBackground, in: Capsule())
+                }
+            }
+            .foregroundStyle(isSelected ? AppColor.accent : .primary)
+            .padding(.horizontal, AppSpacing.sm)
+            .padding(.vertical, 6)
+            .background(chipBackground, in: Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var chipBackground: some ShapeStyle {
+        isSelected ? AppColor.accentBackground(0.18) : Color.secondary.opacity(0.12)
+    }
+
+    private var chipBadgeBackground: some ShapeStyle {
+        isSelected ? AppColor.accentBackground(0.28) : Color.secondary.opacity(0.14)
     }
 }
 

@@ -25,80 +25,257 @@ enum ApkgImportError: LocalizedError {
 enum ApkgImportService {
     struct ImportResult {
         let imported: Int
+        let deckCount: Int
+        let primaryDeckName: String?
+        let targetDeckCount: Int
+
+        var summaryMessage: String {
+            if targetDeckCount > 1 {
+                return L10n.deckImportIntoSelectedDecksResult(
+                    deckCount: targetDeckCount,
+                    added: imported,
+                    updated: 0
+                )
+            }
+            if deckCount <= 1, let primaryDeckName {
+                return L10n.deckImportApkgResult(primaryDeckName, count: imported)
+            }
+            return L10n.deckImportApkgMultiResult(deckCount: deckCount, cardCount: imported)
+        }
     }
 
     private static let importYieldInterval = 40
+    fileprivate static let defaultDeckGroupKey: Int64 = -1
+
+    static func hasDeckInfo(in data: Data) throws -> Bool {
+        let groupedNotes = try parseGroupedNotes(from: data)
+        return !groupedNotes.isEmpty && groupedNotes.allSatisfy { $0.deckName != nil }
+    }
+
+    private static func hasDeckInfo(in groupedNotes: [DeckNotesGroup]) -> Bool {
+        !groupedNotes.isEmpty && groupedNotes.allSatisfy { $0.deckName != nil }
+    }
 
     @MainActor
     static func importApkgAsync(
         data: Data,
-        into deck: Deck,
         context: ModelContext,
+        targetDecks: [Deck]? = nil,
         progress: ImportProgressHandler? = nil
     ) async throws -> ImportResult {
-        let notes = try await Task.detached(priority: .userInitiated) {
-            try parseNotes(from: data)
+        let groupedNotes = try await Task.detached(priority: .userInitiated) {
+            try parseGroupedNotes(from: data)
         }.value
 
-        guard !notes.isEmpty else { throw ApkgImportError.emptyImport }
+        guard !groupedNotes.isEmpty else { throw ApkgImportError.emptyImport }
 
-        let total = notes.count
-        for (index, note) in notes.enumerated() {
-            context.insert(
-                FlashCard(
-                    word: note.word,
-                    sentence: note.sentence,
-                    cardType: .definition,
-                    front: note.front,
-                    back: note.back,
-                    deck: deck
-                )
+        if let targetDecks, !targetDecks.isEmpty {
+            return try await importNotesIntoSelectedDecks(
+                groupedNotes: groupedNotes,
+                targetDecks: targetDecks,
+                context: context,
+                progress: progress
             )
-            progress?(index + 1, total)
-            if index > 0, index % importYieldInterval == 0 {
-                await Task.yield()
-            }
         }
 
-        DeckCardCountService.adjust(deck: deck, by: total, in: context)
-        try context.save()
-        DeckCardCountService.notifyCatalogChanged()
-        return ImportResult(imported: total)
+        guard hasDeckInfo(in: groupedNotes) else {
+            throw JSONImportError.needTargetDeckSelection
+        }
+
+        return try await importGroupedNotes(
+            groupedNotes,
+            context: context,
+            progress: progress,
+            targetDeckCount: 0
+        )
     }
 
     @MainActor
     static func importApkg(
         data: Data,
-        into deck: Deck,
-        context: ModelContext
+        context: ModelContext,
+        targetDecks: [Deck]? = nil
     ) throws -> ImportResult {
-        let notes = try parseNotes(from: data)
-        guard !notes.isEmpty else { throw ApkgImportError.emptyImport }
+        let groupedNotes = try parseGroupedNotes(from: data)
+        guard !groupedNotes.isEmpty else { throw ApkgImportError.emptyImport }
 
-        for note in notes {
-            context.insert(
-                FlashCard(
-                    word: note.word,
-                    sentence: note.sentence,
-                    cardType: .definition,
-                    front: note.front,
-                    back: note.back,
-                    deck: deck
-                )
+        if let targetDecks, !targetDecks.isEmpty {
+            return try importNotesIntoSelectedDecksSync(
+                groupedNotes: groupedNotes,
+                targetDecks: targetDecks,
+                context: context
             )
         }
 
-        DeckCardCountService.adjust(deck: deck, by: notes.count, in: context)
-        try context.save()
-        DeckCardCountService.notifyCatalogChanged()
-        return ImportResult(imported: notes.count)
+        guard hasDeckInfo(in: groupedNotes) else {
+            throw JSONImportError.needTargetDeckSelection
+        }
+
+        return try importGroupedNotesSync(
+            groupedNotes,
+            context: context,
+            targetDeckCount: 0
+        )
     }
 
-    private static func parseNotes(from data: Data) throws -> [ImportedNote] {
+    @MainActor
+    private static func importNotesIntoSelectedDecks(
+        groupedNotes: [DeckNotesGroup],
+        targetDecks: [Deck],
+        context: ModelContext,
+        progress: ImportProgressHandler? = nil
+    ) async throws -> ImportResult {
+        let notes = groupedNotes.flatMap(\.notes)
+        guard !notes.isEmpty else { throw ApkgImportError.emptyImport }
+
+        let total = notes.count * targetDecks.count
+        var imported = 0
+
+        for deck in targetDecks {
+            for note in notes {
+                context.insert(makeFlashCard(from: note, deck: deck))
+                imported += 1
+                progress?(imported, total)
+                if imported > 0, imported % importYieldInterval == 0 {
+                    await Task.yield()
+                }
+            }
+            DeckCardCountService.adjust(deck: deck, by: notes.count, in: context)
+        }
+
+        try context.save()
+        DeckCardCountService.notifyCatalogChanged()
+        return ImportResult(
+            imported: imported,
+            deckCount: targetDecks.count,
+            primaryDeckName: targetDecks.first?.name,
+            targetDeckCount: targetDecks.count
+        )
+    }
+
+    @MainActor
+    private static func importNotesIntoSelectedDecksSync(
+        groupedNotes: [DeckNotesGroup],
+        targetDecks: [Deck],
+        context: ModelContext
+    ) throws -> ImportResult {
+        let notes = groupedNotes.flatMap(\.notes)
+        guard !notes.isEmpty else { throw ApkgImportError.emptyImport }
+
+        var imported = 0
+        for deck in targetDecks {
+            for note in notes {
+                context.insert(makeFlashCard(from: note, deck: deck))
+                imported += 1
+            }
+            DeckCardCountService.adjust(deck: deck, by: notes.count, in: context)
+        }
+
+        try context.save()
+        DeckCardCountService.notifyCatalogChanged()
+        return ImportResult(
+            imported: imported,
+            deckCount: targetDecks.count,
+            primaryDeckName: targetDecks.first?.name,
+            targetDeckCount: targetDecks.count
+        )
+    }
+
+    @MainActor
+    private static func importGroupedNotes(
+        _ groupedNotes: [DeckNotesGroup],
+        context: ModelContext,
+        progress: ImportProgressHandler? = nil,
+        targetDeckCount: Int
+    ) async throws -> ImportResult {
+        let total = groupedNotes.reduce(0) { $0 + $1.notes.count }
+        var imported = 0
+        var primaryDeckName: String?
+
+        for (index, group) in groupedNotes.enumerated() {
+            guard let deckName = group.deckName else { continue }
+            let deck = DeckService.resolveOrCreateDeck(named: deckName, in: context)
+            if index == 0 {
+                primaryDeckName = deck.name
+            }
+
+            for note in group.notes {
+                context.insert(makeFlashCard(from: note, deck: deck))
+                imported += 1
+                progress?(imported, total)
+                if imported > 0, imported % importYieldInterval == 0 {
+                    await Task.yield()
+                }
+            }
+
+            DeckCardCountService.adjust(deck: deck, by: group.notes.count, in: context)
+        }
+
+        try context.save()
+        DeckCardCountService.notifyCatalogChanged()
+        return ImportResult(
+            imported: imported,
+            deckCount: groupedNotes.count,
+            primaryDeckName: primaryDeckName,
+            targetDeckCount: targetDeckCount
+        )
+    }
+
+    @MainActor
+    private static func importGroupedNotesSync(
+        _ groupedNotes: [DeckNotesGroup],
+        context: ModelContext,
+        targetDeckCount: Int
+    ) throws -> ImportResult {
+        var imported = 0
+        var primaryDeckName: String?
+
+        for (index, group) in groupedNotes.enumerated() {
+            guard let deckName = group.deckName else { continue }
+            let deck = DeckService.resolveOrCreateDeck(named: deckName, in: context)
+            if index == 0 {
+                primaryDeckName = deck.name
+            }
+
+            for note in group.notes {
+                context.insert(makeFlashCard(from: note, deck: deck))
+                imported += 1
+            }
+
+            DeckCardCountService.adjust(deck: deck, by: group.notes.count, in: context)
+        }
+
+        try context.save()
+        DeckCardCountService.notifyCatalogChanged()
+        return ImportResult(
+            imported: imported,
+            deckCount: groupedNotes.count,
+            primaryDeckName: primaryDeckName,
+            targetDeckCount: targetDeckCount
+        )
+    }
+
+    private static func makeFlashCard(from note: ImportedNote, deck: Deck) -> FlashCard {
+        FlashCard(
+            word: note.word,
+            sentence: note.sentence,
+            cardType: .definition,
+            front: note.front,
+            back: note.back,
+            deck: deck
+        )
+    }
+
+    private struct DeckNotesGroup {
+        let deckName: String?
+        let notes: [ImportedNote]
+    }
+
+    private static func parseGroupedNotes(from data: Data) throws -> [DeckNotesGroup] {
         guard let collectionData = extractCollection(from: data) else {
             throw ApkgImportError.missingCollection
         }
-        return try readNotes(from: collectionData)
+        return try readGroupedNotes(from: collectionData)
     }
 
     private static func extractCollection(from data: Data) -> Data? {
@@ -111,7 +288,7 @@ enum ApkgImportService {
         return MinimalZipReader.firstEntry(where: { $0.contains("collection.anki") }, in: data)?.data
     }
 
-    private static func readNotes(from sqliteData: Data) throws -> [ImportedNote] {
+    private static func readGroupedNotes(from sqliteData: Data) throws -> [DeckNotesGroup] {
         let tempURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("vocabflow-import-\(UUID().uuidString).anki2")
         try sqliteData.write(to: tempURL)
@@ -123,23 +300,84 @@ enum ApkgImportService {
         }
         defer { sqlite3_close(db) }
 
+        let deckNames = try readDeckNames(from: db)
+        let grouped = try readNotesGroupedByDeck(from: db, deckNames: deckNames)
+        return grouped
+            .sorted { $0.key.sortKey < $1.key.sortKey }
+            .map { DeckNotesGroup(deckName: $0.value.name, notes: $0.value.notes) }
+            .filter { !$0.notes.isEmpty }
+    }
+
+    private static func readDeckNames(from db: OpaquePointer) throws -> [Int64: String] {
         var statement: OpaquePointer?
-        let sql = "SELECT flds, tags FROM notes"
-        guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK, let statement else {
-            throw ApkgImportError.sqliteError("prepare failed")
+        guard sqlite3_prepare_v2(db, "SELECT decks FROM col LIMIT 1", -1, &statement, nil) == SQLITE_OK,
+              let statement else {
+            throw ApkgImportError.sqliteError("prepare col failed")
         }
         defer { sqlite3_finalize(statement) }
 
-        var notes: [ImportedNote] = []
-        while sqlite3_step(statement) == SQLITE_ROW {
-            guard let fldsCString = sqlite3_column_text(statement, 0) else { continue }
-            let flds = String(cString: fldsCString)
-            let tags = sqlite3_column_text(statement, 1).map { String(cString: $0) } ?? ""
-            if let note = ImportedNote(flds: flds, tags: tags) {
-                notes.append(note)
-            }
+        guard sqlite3_step(statement) == SQLITE_ROW,
+              let decksCString = sqlite3_column_text(statement, 0) else {
+            return [:]
         }
-        return notes
+
+        let decksJSON = String(cString: decksCString)
+        guard let data = decksJSON.data(using: .utf8),
+              let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return [:]
+        }
+
+        var names: [Int64: String] = [:]
+        for (key, value) in root {
+            guard let deckID = Int64(key),
+                  let deckObject = value as? [String: Any],
+                  let name = deckObject["name"] as? String else {
+                continue
+            }
+            names[deckID] = name
+        }
+        return names
+    }
+
+    private static func readNotesGroupedByDeck(
+        from db: OpaquePointer,
+        deckNames: [Int64: String]
+    ) throws -> [Int64: (name: String?, notes: [ImportedNote])] {
+        var statement: OpaquePointer?
+        let sql = """
+        SELECT cards.did, notes.flds, notes.tags
+        FROM cards
+        JOIN notes ON cards.nid = notes.id
+        ORDER BY cards.did, cards.id
+        """
+        guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK, let statement else {
+            throw ApkgImportError.sqliteError("prepare cards failed")
+        }
+        defer { sqlite3_finalize(statement) }
+
+        var grouped: [Int64: (name: String?, notes: [ImportedNote])] = [:]
+
+        while sqlite3_step(statement) == SQLITE_ROW {
+            let deckID = sqlite3_column_int64(statement, 0)
+            guard let fldsCString = sqlite3_column_text(statement, 1) else { continue }
+            let flds = String(cString: fldsCString)
+            let tags = sqlite3_column_text(statement, 2).map { String(cString: $0) } ?? ""
+            guard let note = ImportedNote(flds: flds, tags: tags) else { continue }
+
+            let resolvedName = deckNames[deckID]?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+            let groupKey = resolvedName == nil ? defaultDeckGroupKey : deckID
+            var entry = grouped[groupKey] ?? (resolvedName, [])
+            entry.notes.append(note)
+            grouped[groupKey] = entry
+        }
+
+        return grouped
+    }
+}
+
+private extension Int64 {
+    var sortKey: Int64 {
+        self == ApkgImportService.defaultDeckGroupKey ? Int64.max : self
     }
 }
 
@@ -168,5 +406,11 @@ private struct ImportedNote {
             .replacingOccurrences(of: "_", with: " ")
         word = tagWord ?? rawFront.components(separatedBy: .newlines).first ?? rawFront
         sentence = rawFront
+    }
+}
+
+private extension String {
+    var nilIfEmpty: String? {
+        trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : self
     }
 }

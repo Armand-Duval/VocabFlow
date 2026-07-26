@@ -78,6 +78,22 @@ enum DeckService {
     }
 
     @MainActor
+    static func fetchDeck(name: String, in context: ModelContext) -> Deck? {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        return fetchAll(in: context).first { $0.name == trimmed }
+    }
+
+    @MainActor
+    @discardableResult
+    static func resolveOrCreateDeck(named name: String, in context: ModelContext) -> Deck {
+        if let existing = fetchDeck(name: name, in: context) {
+            return existing
+        }
+        return createCustomDeck(name: name, detailText: nil, in: context)
+    }
+
+    @MainActor
     static func resolvedDeck(id: UUID?, in context: ModelContext) -> Deck {
         if let id, let deck = fetchDeck(id: id, in: context) {
             return deck
@@ -156,6 +172,8 @@ enum DeckService {
         let deck: Deck
         if let slug = pack.slug, let existing = fetchDeck(slug: slug, in: context) {
             deck = existing
+        } else if let existing = fetchDeck(name: pack.name, in: context) {
+            deck = existing
         } else {
             deck = Deck(
                 name: pack.name,
@@ -187,6 +205,32 @@ enum DeckService {
 
     @MainActor
     @discardableResult
+    static func importPackIntoDeckAsync(
+        _ pack: DeckPackFile,
+        deck: Deck,
+        in context: ModelContext,
+        progress: ImportProgressHandler? = nil
+    ) async throws -> Int {
+        let total = pack.cards.count
+        var imported = 0
+        for (index, item) in pack.cards.enumerated() {
+            context.insert(makeFlashCard(from: item, deck: deck))
+            imported += 1
+            progress?(imported, total)
+            if index > 0, index % importYieldInterval == 0 {
+                await Task.yield()
+            }
+        }
+
+        DeckCardCountService.adjust(deck: deck, by: imported, in: context)
+        try context.save()
+        syncSharedCatalog(in: context)
+        DeckCardCountService.notifyCatalogChanged()
+        return imported
+    }
+
+    @MainActor
+    @discardableResult
     static func importPack(
         _ pack: DeckPackFile,
         in context: ModelContext,
@@ -194,6 +238,8 @@ enum DeckService {
     ) throws -> (deck: Deck, importedCards: Int) {
         let deck: Deck
         if let slug = pack.slug, let existing = fetchDeck(slug: slug, in: context) {
+            deck = existing
+        } else if let existing = fetchDeck(name: pack.name, in: context) {
             deck = existing
         } else {
             deck = Deck(

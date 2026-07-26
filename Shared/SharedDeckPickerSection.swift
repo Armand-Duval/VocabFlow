@@ -8,7 +8,8 @@ struct SharedDeckPickerSection: View {
     var body: some View {
         Section {
             if decks.isEmpty {
-                Text(L10n.deckExtensionEmptyCatalog)
+                Text(L10n.deckExtensionEmptyCatalogHint)
+                    .font(AppFont.caption())
                     .foregroundStyle(.secondary)
             } else {
                 Picker(L10n.deckTarget, selection: $selectedDeckID) {
@@ -21,9 +22,7 @@ struct SharedDeckPickerSection: View {
                 }
             }
         } header: {
-            Text(L10n.deckSection)
-        } footer: {
-            Text(decks.isEmpty ? L10n.deckExtensionEmptyCatalogHint : L10n.deckExtensionFooter)
+            AppSectionHeader(title: L10n.deckSection)
         }
         .onAppear {
             reloadDecks()

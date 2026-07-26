@@ -38,13 +38,17 @@ struct ReviewView: View {
                             ReviewQuotaBanner(plan: plan) {
                                 showQuotaDetail = true
                             }
-                            CardReviewSessionView(cards: plan.sessionCards)
+                            CardReviewSessionView(
+                                cards: plan.sessionCards,
+                                showDeckName: reviewSettings.reviewDeckID == nil
+                            )
                                 .id(sessionSignature)
                         }
                     }
                 }
             }
-            .navigationTitle(L10n.reviewTitle)
+            .appPageBackground()
+            .appNavTitle(L10n.reviewTitle)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     reviewDeckMenu
@@ -167,32 +171,41 @@ private struct ReviewQuotaBanner: View {
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: AppSpacing.md) {
-                quotaItem(
-                    title: L10n.reviewQuotaNew,
+                quotaBar(
                     studied: plan.newStudiedToday,
-                    limit: plan.newLimit
+                    limit: plan.newLimit,
+                    label: L10n.reviewQuotaNew
                 )
-                quotaItem(
-                    title: L10n.reviewQuotaReview,
+                quotaBar(
                     studied: plan.reviewStudiedToday,
-                    limit: plan.reviewLimit
+                    limit: plan.reviewLimit,
+                    label: L10n.reviewQuotaReview
                 )
-                Spacer(minLength: 0)
-                Image(systemName: "chevron.right")
-                    .font(AppFont.caption())
-                    .foregroundStyle(.tertiary)
             }
-            .font(AppFont.captionSecondary())
-            .foregroundStyle(.secondary)
             .padding(.horizontal, AppSpacing.md)
             .padding(.vertical, AppSpacing.sm)
-            .background(.bar)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(L10n.reviewQuotaDetailTitle)
     }
 
-    private func quotaItem(title: String, studied: Int, limit: Int) -> some View {
-        Text(L10n.reviewQuotaProgress(title, studied: studied, limit: limit))
+    private func quotaBar(studied: Int, limit: Int, label: String) -> some View {
+        let progress: Double = {
+            guard limit > 0 else { return 0 }
+            return min(1, Double(studied) / Double(limit))
+        }()
+
+        return VStack(alignment: .leading, spacing: 4) {
+            ProgressView(value: progress)
+                .tint(AppColor.accent)
+            Text(label)
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+                .accessibilityHidden(true)
+        }
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(L10n.reviewQuotaProgress(label, studied: studied, limit: limit))
     }
 }
 

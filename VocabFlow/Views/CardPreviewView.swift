@@ -27,8 +27,6 @@ struct CardPreviewView: View {
                 ForEach($drafts) { $draft in
                     DraftPreviewCard(draft: $draft)
                 }
-            } header: {
-                Text(L10n.previewIntro)
             }
         }
         .navigationTitle(L10n.previewTitle)

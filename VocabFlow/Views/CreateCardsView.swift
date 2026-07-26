@@ -41,15 +41,11 @@ struct CreateCardsView: View {
         return !drafts.isEmpty
     }
 
-    private var hasPendingImportBanner: Bool {
-        importBannerMessage != nil
-    }
-
     var body: some View {
         NavigationStack {
-            formContent
-                .navigationTitle(L10n.createTitle)
-                .navigationBarTitleDisplayMode(.large)
+            scrollContent
+                .appPageBackground()
+                .appNavTitle(L10n.createTitle)
                 .dismissKeyboardOnScroll()
                 .keyboardDoneButton()
                 .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -104,16 +100,10 @@ struct CreateCardsView: View {
         }
     }
 
-    private var formContent: some View {
-        Form {
-            Section {
-                quickActionsSection
-            }
-            .listRowInsets(EdgeInsets(top: AppSpacing.sm, leading: AppSpacing.md, bottom: AppSpacing.sm, trailing: AppSpacing.md))
-            .listRowBackground(Color.clear)
-
-            if hasPendingDrafts, let pendingDrafts = shareImport.pendingDrafts {
-                Section {
+    private var scrollContent: some View {
+        ScrollView {
+            VStack(spacing: AppSpacing.md) {
+                if hasPendingDrafts, let pendingDrafts = shareImport.pendingDrafts {
                     PendingCardsBannerView(
                         title: L10n.createPendingImportTitle,
                         subtitle: L10n.createPendingDraftsSubtitle(pendingDrafts.count),
@@ -121,11 +111,7 @@ struct CreateCardsView: View {
                         actionTitle: L10n.createPendingAction,
                         action: openShareDraftPreview
                     )
-                }
-                .listRowInsets(EdgeInsets(top: 0, leading: AppSpacing.md, bottom: AppSpacing.sm, trailing: AppSpacing.md))
-                .listRowBackground(Color.clear)
-            } else if let importBannerMessage {
-                Section {
+                } else if let importBannerMessage {
                     PendingCardsBannerView(
                         title: L10n.createPendingImportTitle,
                         subtitle: importBannerMessage,
@@ -133,104 +119,106 @@ struct CreateCardsView: View {
                         onDismiss: { self.importBannerMessage = nil }
                     )
                 }
-                .listRowInsets(EdgeInsets(top: 0, leading: AppSpacing.md, bottom: AppSpacing.sm, trailing: AppSpacing.md))
-                .listRowBackground(Color.clear)
-            }
 
-            sourceSection
-            wordsSection
-            DeckPickerSection(selectedDeckID: $selectedDeckID)
-        }
-        .appFormSectionSpacing()
-    }
-
-    private var quickActionsSection: some View {
-        HStack(spacing: AppSpacing.sm) {
-            QuickActionChip(
-                systemImage: "photo.on.rectangle",
-                title: L10n.createQuickPhoto,
-                isLoading: isRecognizingPhoto,
-                isDisabled: isRecognizingPhoto
-            ) {
-                showPhotoLibrary = true
+                sourceCard
+                wordsCard
+                CreateDeckPickerCard(selectedDeckID: $selectedDeckID)
             }
-            .accessibilityLabel(L10n.importFromPhoto)
-
-            if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                QuickActionChip(
-                    systemImage: "camera.fill",
-                    title: L10n.createQuickCamera,
-                    isLoading: isRecognizingPhoto,
-                    isDisabled: isRecognizingPhoto
-                ) {
-                    showCamera = true
-                }
-                .accessibilityLabel(L10n.importFromCamera)
-            }
-
-            QuickActionChip(
-                systemImage: "tray.and.arrow.down.fill",
-                title: L10n.createQuickPending,
-                isHighlighted: hasPendingDrafts || hasPendingImportBanner
-            ) {
-                if hasPendingDrafts {
-                    openShareDraftPreview()
-                }
-            }
-            .disabled(!hasPendingDrafts)
-            .accessibilityLabel(L10n.createPendingImportTitle)
+            .padding(.horizontal, AppSpacing.md)
+            .padding(.top, AppSpacing.xs)
+            .padding(.bottom, AppSpacing.sm)
         }
     }
 
-    private var sourceSection: some View {
-        Section {
-            ZStack(alignment: .topLeading) {
-                SelectableTextEditor(
-                    text: $sentence,
-                    selectedText: $selectedText,
-                    selectionClearNonce: $selectionClearNonce,
-                    onAddToVocabulary: appendSelectionToWords
-                )
-
-                if sentence.isEmpty {
-                    Text(L10n.createSourceEmptyHint)
-                        .foregroundStyle(.secondary)
-                        .font(AppFont.helper())
-                        .padding(.top, 8)
-                        .allowsHitTesting(false)
-                }
-            }
-
-            if !selectedText.isEmpty {
-                SelectionActionBar(selectedText: selectedText, action: appendSelectionToWords)
-            }
-        } header: {
-            HStack {
-                Text(L10n.sourceText)
-                Spacer()
+    private var sourceCard: some View {
+        AppSurfaceCard {
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
                 if !sentence.isEmpty {
-                    Text(L10n.createCharCount(sentence.count))
+                    HStack {
+                        Spacer()
+                        Text(L10n.createCharCount(sentence.count))
+                            .font(AppFont.caption())
+                            .foregroundStyle(.secondary)
+                        Button(L10n.clear) {
+                            sentence = ""
+                            selectedText = ""
+                        }
                         .font(AppFont.caption())
-                        .foregroundStyle(.secondary)
-                    Button(L10n.clear) {
-                        sentence = ""
-                        selectedText = ""
                     }
-                    .font(AppFont.caption())
+                }
+
+                ZStack(alignment: .topLeading) {
+                    SelectableTextEditor(
+                        text: $sentence,
+                        selectedText: $selectedText,
+                        selectionClearNonce: $selectionClearNonce,
+                        onAddToVocabulary: appendSelectionToWords
+                    )
+
+                    if sentence.isEmpty {
+                        Text(L10n.createSourceEmptyHint)
+                            .foregroundStyle(.secondary)
+                            .font(AppFont.helper())
+                            .padding(.top, 8)
+                            .allowsHitTesting(false)
+                    }
+                }
+
+                if !selectedText.isEmpty {
+                    SelectionActionBar(selectedText: selectedText, action: appendSelectionToWords)
+                }
+
+                importActionsRow
+
+                if isRecognizingPhoto {
+                    HStack(spacing: AppSpacing.xs) {
+                        ProgressView()
+                        Text(L10n.recognizingPhoto)
+                            .font(AppFont.caption())
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
         }
     }
 
-    private var wordsSection: some View {
-        Section {
+    private var wordsCard: some View {
+        AppSurfaceCard {
             VocabularyWordsEditor(
                 words: $words,
                 feedbackMessage: $wordFeedbackMessage,
                 feedbackIsError: $wordFeedbackIsError
             )
-        } header: {
-            Text(L10n.wordsSection)
+        }
+    }
+
+    private var importActionsRow: some View {
+        HStack(spacing: AppSpacing.md) {
+            Button {
+                showPhotoLibrary = true
+            } label: {
+                AppIcon.symbol("photo.on.rectangle")
+                    .foregroundStyle(AppColor.accent)
+                    .frame(width: 44, height: 44)
+                    .background(AppColor.accentBackground(0.10), in: RoundedRectangle(cornerRadius: AppRadius.button))
+            }
+            .buttonStyle(.plain)
+            .disabled(isRecognizingPhoto)
+            .accessibilityLabel(L10n.importFromPhoto)
+
+            if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                Button {
+                    showCamera = true
+                } label: {
+                    AppIcon.symbol("camera")
+                        .foregroundStyle(AppColor.accent)
+                        .frame(width: 44, height: 44)
+                        .background(AppColor.accentBackground(0.10), in: RoundedRectangle(cornerRadius: AppRadius.button))
+                }
+                .buttonStyle(.plain)
+                .disabled(isRecognizingPhoto)
+                .accessibilityLabel(L10n.importFromCamera)
+            }
         }
     }
 

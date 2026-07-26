@@ -43,6 +43,11 @@ struct ReviewSnapshot {
 enum ReviewScheduler {
     private static let learningStepsMinutes = [1, 10]
     private static let lapseHours = 10
+    private static let graduationIntervalDays: [ReviewRating: Double] = [
+        .hard: 1,
+        .good: 3,
+        .easy: 7,
+    ]
 
     static func isDue(_ card: FlashCard, now: Date = .now) -> Bool {
         !card.isSuspended && card.nextReviewDate <= now
@@ -104,31 +109,45 @@ enum ReviewScheduler {
             }
 
         case .hard:
+            let graduating = isGraduating(snapshot)
             snapshot.learningStep = 0
             snapshot.repetitions += 1
             snapshot.easeFactor = max(1.3, snapshot.easeFactor - 0.15)
-            snapshot.intervalDays = max(1, snapshot.intervalDays * 1.2)
+            if graduating {
+                snapshot.intervalDays = graduationIntervalDays[.hard] ?? 1
+            } else {
+                snapshot.intervalDays = max(1, snapshot.intervalDays * 1.2)
+            }
             snapshot.nextReviewDate = addDays(snapshot.intervalDays, to: now)
 
         case .good:
+            let graduating = isGraduating(snapshot)
             snapshot.learningStep = 0
             snapshot.repetitions += 1
-            if snapshot.repetitions == 1 {
-                snapshot.intervalDays = 1
-            } else if snapshot.repetitions == 2 {
-                snapshot.intervalDays = 3
+            if graduating {
+                snapshot.intervalDays = graduationIntervalDays[.good] ?? 3
             } else {
-                snapshot.intervalDays = round(snapshot.intervalDays * snapshot.easeFactor)
+                snapshot.intervalDays = max(1, round(snapshot.intervalDays * snapshot.easeFactor))
             }
             snapshot.nextReviewDate = addDays(snapshot.intervalDays, to: now)
 
         case .easy:
+            let graduating = isGraduating(snapshot)
             snapshot.learningStep = 0
             snapshot.repetitions += 1
             snapshot.easeFactor += 0.15
-            snapshot.intervalDays = max(4, round(snapshot.intervalDays * snapshot.easeFactor * 1.3))
+            if graduating {
+                snapshot.intervalDays = graduationIntervalDays[.easy] ?? 7
+            } else {
+                snapshot.intervalDays = max(4, round(snapshot.intervalDays * snapshot.easeFactor * 1.3))
+            }
             snapshot.nextReviewDate = addDays(snapshot.intervalDays, to: now)
         }
+    }
+
+    /// First successful rating leaving the learning queue (new card or reset progress).
+    private static func isGraduating(_ snapshot: ReviewSnapshot) -> Bool {
+        snapshot.repetitions == 0 && snapshot.intervalDays == 0
     }
 
     static func formatInterval(from start: Date, to end: Date) -> String {
