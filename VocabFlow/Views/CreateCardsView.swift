@@ -36,6 +36,15 @@ struct CreateCardsView: View {
         !trimmedSentence.isEmpty && !words.isEmpty
     }
 
+    private var hasPendingDrafts: Bool {
+        guard let drafts = shareImport.pendingDrafts else { return false }
+        return !drafts.isEmpty
+    }
+
+    private var hasPendingImportBanner: Bool {
+        importBannerMessage != nil
+    }
+
     var body: some View {
         NavigationStack {
             formContent
@@ -97,20 +106,80 @@ struct CreateCardsView: View {
 
     private var formContent: some View {
         Form {
-            if let importBannerMessage {
+            Section {
+                quickActionsSection
+            }
+            .listRowInsets(EdgeInsets(top: AppSpacing.sm, leading: AppSpacing.md, bottom: AppSpacing.sm, trailing: AppSpacing.md))
+            .listRowBackground(Color.clear)
+
+            if hasPendingDrafts, let pendingDrafts = shareImport.pendingDrafts {
                 Section {
-                    ImportBannerView(
-                        message: importBannerMessage,
-                        systemImage: "arrow.down.doc"
+                    PendingCardsBannerView(
+                        title: L10n.createPendingImportTitle,
+                        subtitle: L10n.createPendingDraftsSubtitle(pendingDrafts.count),
+                        systemImage: "sparkles.rectangle.stack.fill",
+                        actionTitle: L10n.createPendingAction,
+                        action: openShareDraftPreview
                     )
                 }
+                .listRowInsets(EdgeInsets(top: 0, leading: AppSpacing.md, bottom: AppSpacing.sm, trailing: AppSpacing.md))
+                .listRowBackground(Color.clear)
+            } else if let importBannerMessage {
+                Section {
+                    PendingCardsBannerView(
+                        title: L10n.createPendingImportTitle,
+                        subtitle: importBannerMessage,
+                        systemImage: "arrow.down.doc.fill",
+                        onDismiss: { self.importBannerMessage = nil }
+                    )
+                }
+                .listRowInsets(EdgeInsets(top: 0, leading: AppSpacing.md, bottom: AppSpacing.sm, trailing: AppSpacing.md))
+                .listRowBackground(Color.clear)
             }
 
             sourceSection
             wordsSection
-                DeckPickerSection(selectedDeckID: $selectedDeckID)
+            DeckPickerSection(selectedDeckID: $selectedDeckID)
+        }
+        .appFormSectionSpacing()
+    }
+
+    private var quickActionsSection: some View {
+        HStack(spacing: AppSpacing.sm) {
+            QuickActionChip(
+                systemImage: "photo.on.rectangle",
+                title: L10n.createQuickPhoto,
+                isLoading: isRecognizingPhoto,
+                isDisabled: isRecognizingPhoto
+            ) {
+                showPhotoLibrary = true
             }
-            .appFormSectionSpacing()
+            .accessibilityLabel(L10n.importFromPhoto)
+
+            if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                QuickActionChip(
+                    systemImage: "camera.fill",
+                    title: L10n.createQuickCamera,
+                    isLoading: isRecognizingPhoto,
+                    isDisabled: isRecognizingPhoto
+                ) {
+                    showCamera = true
+                }
+                .accessibilityLabel(L10n.importFromCamera)
+            }
+
+            QuickActionChip(
+                systemImage: "tray.and.arrow.down.fill",
+                title: L10n.createQuickPending,
+                isHighlighted: hasPendingDrafts || hasPendingImportBanner
+            ) {
+                if hasPendingDrafts {
+                    openShareDraftPreview()
+                }
+            }
+            .disabled(!hasPendingDrafts)
+            .accessibilityLabel(L10n.createPendingImportTitle)
+        }
     }
 
     private var sourceSection: some View {
@@ -123,10 +192,10 @@ struct CreateCardsView: View {
                     onAddToVocabulary: appendSelectionToWords
                 )
 
-                        if sentence.isEmpty {
-                            Text(L10n.createSourceEmptyHint)
-                                .foregroundStyle(.secondary)
-                                .font(AppFont.helper())
+                if sentence.isEmpty {
+                    Text(L10n.createSourceEmptyHint)
+                        .foregroundStyle(.secondary)
+                        .font(AppFont.helper())
                         .padding(.top, 8)
                         .allowsHitTesting(false)
                 }
@@ -134,17 +203,6 @@ struct CreateCardsView: View {
 
             if !selectedText.isEmpty {
                 SelectionActionBar(selectedText: selectedText, action: appendSelectionToWords)
-            }
-
-            importActionsRow
-
-            if isRecognizingPhoto {
-                HStack(spacing: 8) {
-                    ProgressView()
-                    Text(L10n.recognizingPhoto)
-                        .font(AppFont.caption())
-                        .foregroundStyle(.secondary)
-                }
             }
         } header: {
             HStack {
@@ -161,42 +219,6 @@ struct CreateCardsView: View {
                     .font(AppFont.caption())
                 }
             }
-        } footer: {
-            if sentence.isEmpty {
-                Text(L10n.createSourceFooterHint)
-            } else if sentence.count > 800 {
-                Text(L10n.createSourceLongHint)
-            }
-        }
-    }
-
-    private var importActionsRow: some View {
-        HStack(spacing: AppSpacing.md) {
-            Button {
-                showPhotoLibrary = true
-            } label: {
-                AppIcon.symbol("photo.on.rectangle")
-                    .foregroundStyle(AppColor.accent)
-                    .frame(width: 44, height: 44)
-                    .background(AppColor.accentBackground(0.10), in: RoundedRectangle(cornerRadius: AppRadius.button))
-            }
-            .buttonStyle(.plain)
-            .disabled(isRecognizingPhoto)
-            .accessibilityLabel(L10n.importFromPhoto)
-
-            if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                Button {
-                    showCamera = true
-                } label: {
-                    AppIcon.symbol("camera")
-                        .foregroundStyle(AppColor.accent)
-                        .frame(width: 44, height: 44)
-                        .background(AppColor.accentBackground(0.10), in: RoundedRectangle(cornerRadius: AppRadius.button))
-                }
-                .buttonStyle(.plain)
-                .disabled(isRecognizingPhoto)
-                .accessibilityLabel(L10n.importFromCamera)
-            }
         }
     }
 
@@ -209,40 +231,38 @@ struct CreateCardsView: View {
             )
         } header: {
             Text(L10n.wordsSection)
-        } footer: {
-            if words.isEmpty {
-                Text(L10n.createWordsEmptyHint)
-            }
         }
     }
 
     private var generateFooter: some View {
-        VStack(spacing: AppSpacing.xs) {
-            if !canGenerate {
-                Text(L10n.createGenerateHint)
-                    .font(AppFont.helper())
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-
-            Button(action: generateCards) {
-                HStack(spacing: AppSpacing.xs) {
-                    if isGenerating {
-                        ProgressView()
-                            .tint(.white)
-                    } else {
-                        Image(systemName: "sparkles")
-                    }
-                    Text(L10n.generateCards)
+        Button(action: generateCards) {
+            HStack(spacing: AppSpacing.xs) {
+                if isGenerating {
+                    ProgressView()
+                        .tint(.white)
+                } else {
+                    Image(systemName: "sparkles")
                 }
+                Text(L10n.generateCardsShort)
             }
-            .buttonStyle(PrimaryButtonStyle())
-            .disabled(isGenerating || !canGenerate)
         }
+        .buttonStyle(PrimaryButtonStyle())
+        .disabled(isGenerating || !canGenerate)
         .padding(.horizontal, AppSpacing.md)
         .padding(.top, AppSpacing.sm)
         .padding(.bottom, AppSpacing.xs)
         .background(.bar)
+    }
+
+    private func openShareDraftPreview() {
+        guard let pendingDrafts = shareImport.pendingDrafts, !pendingDrafts.isEmpty else { return }
+        drafts = pendingDrafts
+        if selectedDeckID == nil {
+            selectedDeckID = SharedDeckStore.resolvedSelectedDeckID()
+        }
+        shareImport.acknowledgeDrafts()
+        importBannerMessage = nil
+        showPreview = true
     }
 
     private func applyLongTextSuggestion(_ suggestion: LongTextSuggestion) {
@@ -380,7 +400,10 @@ private struct CreateCardsLifecycleModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .onAppear(perform: onAppearImport)
+            .onAppear {
+                shareImport.refreshAll()
+                onAppearImport()
+            }
             .onChange(of: shareImport.pendingPayload) { _, _ in
                 onAppearImport()
             }

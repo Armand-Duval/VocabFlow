@@ -175,6 +175,59 @@ struct AppTabIcon: View {
     }
 }
 
+struct QuickActionChip: View {
+    let systemImage: String
+    let title: String
+    var isHighlighted: Bool = false
+    var isLoading: Bool = false
+    var isDisabled: Bool = false
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 6) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
+                        .fill(isHighlighted ? AppColor.accent : AppColor.accentBackground(0.12))
+                        .frame(width: 48, height: 48)
+
+                    if isLoading {
+                        ProgressView()
+                            .tint(isHighlighted ? .white : AppColor.accent)
+                    } else {
+                        Image(systemName: systemImage)
+                            .font(.system(size: 22, weight: AppIcon.weight))
+                            .symbolRenderingMode(.hierarchical)
+                            .foregroundStyle(isHighlighted ? .white : AppColor.accent)
+                    }
+                }
+
+                Text(title)
+                    .font(AppFont.captionSecondary())
+                    .foregroundStyle(isHighlighted ? AppColor.accent : .primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, AppSpacing.sm)
+            .padding(.horizontal, AppSpacing.xs)
+            .background(
+                RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                    .fill(Color(.secondarySystemGroupedBackground))
+            )
+            .overlay {
+                if isHighlighted {
+                    RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                        .strokeBorder(AppColor.accent.opacity(0.35), lineWidth: 1)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .disabled(isDisabled || isLoading)
+        .opacity(isDisabled ? 0.45 : 1)
+    }
+}
+
 struct FilterChip: View {
     let title: String
     let isSelected: Bool

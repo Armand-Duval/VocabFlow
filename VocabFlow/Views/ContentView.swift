@@ -9,8 +9,6 @@ struct ContentView: View {
     @Environment(ReviewSettingsStore.self) private var reviewSettings
     @State private var selectedTab = 0
     @State private var mountedTabs: Set<Int> = [0]
-    @State private var sharePreviewDrafts: [GeneratedCardDraft]?
-    @State private var shareSelectedDeckID: UUID?
     @State private var sessionDueCount = ReviewStatusStore.dueCount
     @State private var dueCountRefreshToken = 0
     @State private var dueCountRefreshDelayMilliseconds = 0
@@ -69,9 +67,10 @@ struct ContentView: View {
         .appToast()
         .onReceive(NotificationCenter.default.publisher(for: .shareImportReceived)) { _ in
             shareImport.refreshAll()
+            focusCreateTabForPendingShareWork()
         }
         .onReceive(NotificationCenter.default.publisher(for: .shareDraftsReceived)) { _ in
-            presentSharePreviewIfNeeded()
+            focusCreateTabForPendingShareWork()
         }
         .onReceive(NotificationCenter.default.publisher(for: .libraryCatalogDidChange)) { _ in
             scheduleDueCountRefresh(delayMilliseconds: 200)
@@ -90,7 +89,7 @@ struct ContentView: View {
         }
         .onChange(of: shareImport.pendingDrafts) { _, drafts in
             guard drafts != nil else { return }
-            presentSharePreviewIfNeeded()
+            selectedTab = 0
         }
         .onChange(of: selectedTab) { _, tab in
             mountedTabs.insert(tab)
@@ -101,10 +100,7 @@ struct ContentView: View {
         .onAppear {
             DeckService.bootstrap(in: modelContext)
             shareImport.refreshAll()
-            presentSharePreviewIfNeeded()
-            if shareSelectedDeckID == nil {
-                shareSelectedDeckID = DeckSettings.lastSelectedDeckID
-            }
+            focusCreateTabForPendingShareWork()
             scheduleDueCountRefresh(delayMilliseconds: 800)
             BackupReminderService.reschedule()
             prewarmIdleTabs()
@@ -116,28 +112,6 @@ struct ContentView: View {
             }
             try? await Task.sleep(for: .milliseconds(dueCountRefreshDelayMilliseconds))
             await refreshSessionDueCount()
-        }
-        .fullScreenCover(isPresented: Binding(
-            get: { sharePreviewDrafts != nil },
-            set: { if !$0 { sharePreviewDrafts = nil } }
-        )) {
-            NavigationStack {
-                CardPreviewView(
-                    drafts: sharePreviewDrafts ?? [],
-                    selectedDeckID: $shareSelectedDeckID,
-                    onComplete: {
-                        sharePreviewDrafts = nil
-                        scheduleDueCountRefresh(delayMilliseconds: 300)
-                    }
-                )
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button(L10n.close) {
-                            sharePreviewDrafts = nil
-                        }
-                    }
-                }
-            }
         }
     }
 
@@ -161,6 +135,11 @@ struct ContentView: View {
         }
     }
 
+    private func focusCreateTabForPendingShareWork() {
+        guard shareImport.hasPendingImport else { return }
+        selectedTab = 0
+    }
+
     private func scheduleDueCountRefresh(delayMilliseconds: Int) {
         dueCountRefreshDelayMilliseconds = delayMilliseconds
         dueCountRefreshToken += 1
@@ -182,18 +161,6 @@ struct ContentView: View {
         sessionDueCount = count
         ReviewReminderService.reschedule(dueCount: count)
         ReviewStatusStore.updateDueCount(count)
-    }
-
-    private func presentSharePreviewIfNeeded() {
-        guard let drafts = shareImport.pendingDrafts, !drafts.isEmpty else { return }
-        sharePreviewDrafts = drafts
-        if let pendingDeckID = SharedDeckStore.consumePendingTargetDeckID() {
-            shareSelectedDeckID = pendingDeckID
-        } else {
-            shareSelectedDeckID = SharedDeckStore.resolvedSelectedDeckID()
-        }
-        shareImport.acknowledgeDrafts()
-        selectedTab = 0
     }
 }
 

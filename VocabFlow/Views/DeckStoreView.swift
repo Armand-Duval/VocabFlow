@@ -253,73 +253,72 @@ struct DeckStoreView: View {
 
     private var importDeckSection: some View {
         Section {
-            Button {
-                showPackImporter = true
-            } label: {
-                HStack {
-                    Label(L10n.deckImportPack, systemImage: "doc.badge.plus")
-                    Spacer()
-                    if isImportingJSON {
-                        ProgressView()
-                            .controlSize(.small)
-                    }
+            LazyVGrid(
+                columns: [GridItem(.flexible()), GridItem(.flexible())],
+                spacing: AppSpacing.sm
+            ) {
+                QuickActionChip(
+                    systemImage: "doc.badge.plus",
+                    title: L10n.deckQuickImportPack,
+                    isLoading: isImportingJSON,
+                    isDisabled: isImportingApkg
+                ) {
+                    showPackImporter = true
                 }
-            }
-            .disabled(isImportingJSON || isImportingApkg)
+                .accessibilityLabel(L10n.deckImportPack)
 
-            Button {
-                importTargetDeckID = selectedDeckID ?? DeckService.fetchOrCreateDefault(in: modelContext).id
-                showApkgImporter = true
-            } label: {
-                HStack {
-                    Label(L10n.deckImportApkg, systemImage: "square.and.arrow.down")
-                    Spacer()
-                    if isImportingApkg {
-                        ProgressView()
-                            .controlSize(.small)
-                    }
+                QuickActionChip(
+                    systemImage: "square.and.arrow.down.fill",
+                    title: L10n.deckQuickImportApkg,
+                    isLoading: isImportingApkg,
+                    isDisabled: isImportingJSON
+                ) {
+                    importTargetDeckID = selectedDeckID ?? DeckService.fetchOrCreateDefault(in: modelContext).id
+                    showApkgImporter = true
                 }
+                .accessibilityLabel(L10n.deckImportApkg)
             }
-            .disabled(isImportingJSON || isImportingApkg)
+            .padding(.vertical, AppSpacing.xs)
         } header: {
             Text(L10n.deckImportDeckSection)
-        } footer: {
-            Text(L10n.deckImportDeckFooter)
         }
     }
 
     private var backupSection: some View {
         Section {
-            Button {
-                exportJSONBackup()
-            } label: {
-                Label(L10n.exportBackup, systemImage: "doc.text")
-            }
-
-            Button {
-                showBackupImporter = true
-            } label: {
-                HStack {
-                    Label(L10n.importBackup, systemImage: "arrow.triangle.2.circlepath")
-                    Spacer()
-                    if isImportingBackup {
-                        ProgressView()
-                            .controlSize(.small)
-                    }
+            LazyVGrid(
+                columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())],
+                spacing: AppSpacing.sm
+            ) {
+                QuickActionChip(
+                    systemImage: "doc.text.fill",
+                    title: L10n.deckQuickExportJSON
+                ) {
+                    exportJSONBackup()
                 }
-            }
-            .disabled(isImportingBackup)
+                .accessibilityLabel(L10n.exportBackup)
 
-            Button {
-                exportAllApkg()
-            } label: {
-                Label(L10n.exportApkg, systemImage: "square.and.arrow.up")
+                QuickActionChip(
+                    systemImage: "arrow.triangle.2.circlepath",
+                    title: L10n.deckQuickImportBackup,
+                    isLoading: isImportingBackup
+                ) {
+                    showBackupImporter = true
+                }
+                .accessibilityLabel(L10n.importBackup)
+
+                QuickActionChip(
+                    systemImage: "square.and.arrow.up.fill",
+                    title: L10n.deckQuickExportApkg,
+                    isDisabled: totalCardCount == 0
+                ) {
+                    exportAllApkg()
+                }
+                .accessibilityLabel(L10n.exportApkg)
             }
-            .disabled(totalCardCount == 0)
+            .padding(.vertical, AppSpacing.xs)
         } header: {
             Text(L10n.deckBackupSection)
-        } footer: {
-            Text(L10n.deckBackupFooter(totalCardCount))
         }
     }
 

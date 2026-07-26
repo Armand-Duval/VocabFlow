@@ -162,21 +162,19 @@ struct LibraryView: View {
 
     private var libraryQuickActionsBar: some View {
         HStack(spacing: AppSpacing.sm) {
-            Button {
+            QuickActionChip(
+                systemImage: "square.and.arrow.down.fill",
+                title: L10n.libraryQuickImport
+            ) {
                 showDeckStore = true
-            } label: {
-                Label(L10n.libraryQuickImport, systemImage: "square.and.arrow.down")
-                    .frame(maxWidth: .infinity)
             }
-            .buttonStyle(SecondaryButtonStyle())
 
-            Button {
+            QuickActionChip(
+                systemImage: "square.and.arrow.up.fill",
+                title: L10n.libraryQuickExport
+            ) {
                 showDeckStore = true
-            } label: {
-                Label(L10n.libraryQuickExport, systemImage: "square.and.arrow.up")
-                    .frame(maxWidth: .infinity)
             }
-            .buttonStyle(SecondaryButtonStyle())
         }
         .padding(.horizontal, AppSpacing.md)
         .padding(.vertical, AppSpacing.sm)

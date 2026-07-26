@@ -27,6 +27,13 @@ enum L10n {
     static var sourcePlaceholder: String { tr("create.source.placeholder") }
     static var wordsSection: String { tr("create.words") }
     static var generateCards: String { tr("create.generate") }
+    static var generateCardsShort: String { tr("create.generate.short") }
+    static var createQuickPhoto: String { tr("create.quick.photo") }
+    static var createQuickCamera: String { tr("create.quick.camera") }
+    static var createQuickPending: String { tr("create.quick.pending") }
+    static var createPendingImportTitle: String { tr("create.pending.importTitle") }
+    static func createPendingDraftsSubtitle(_ count: Int) -> String { tf("create.pending.draftsSubtitle", count) }
+    static var createPendingAction: String { tr("create.pending.action") }
     static var createGenerateHint: String { tr("create.generate.hint") }
     static func createGenerateSuccess(_ count: Int) -> String { tf("create.generate.success", count) }
     static func createCharCount(_ count: Int) -> String { tf("create.source.charCount", count) }
@@ -346,6 +353,11 @@ enum L10n {
     static func deckBackupFooter(_ count: Int) -> String { tf("deck.backup.footer", count) }
     static var deckImportPack: String { tr("deck.import.pack") }
     static var deckImportApkg: String { tr("deck.import.apkg") }
+    static var deckQuickImportPack: String { tr("deck.quick.importPack") }
+    static var deckQuickImportApkg: String { tr("deck.quick.importApkg") }
+    static var deckQuickExportJSON: String { tr("deck.quick.exportJSON") }
+    static var deckQuickImportBackup: String { tr("deck.quick.importBackup") }
+    static var deckQuickExportApkg: String { tr("deck.quick.exportApkg") }
     static var deckInstalled: String { tr("deck.preset.installed") }
     static var deckInstallComplete: String { tr("deck.install.complete") }
     static func deckInstallWithCards(_ name: String, count: Int) -> String {

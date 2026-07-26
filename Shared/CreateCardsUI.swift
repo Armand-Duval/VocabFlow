@@ -37,16 +37,57 @@ extension View {
     }
 }
 
-struct ImportBannerView: View {
-    let message: String
+struct PendingCardsBannerView: View {
+    let title: String
+    let subtitle: String
     let systemImage: String
+    var actionTitle: String?
+    var action: (() -> Void)?
+    var onDismiss: (() -> Void)?
 
     var body: some View {
-        Label(message, systemImage: systemImage)
-            .font(AppFont.caption())
-            .foregroundStyle(.secondary)
-            .symbolRenderingMode(.hierarchical)
-            .frame(maxWidth: .infinity, alignment: .leading)
+        HStack(alignment: .center, spacing: AppSpacing.sm) {
+            Image(systemName: systemImage)
+                .font(.title2)
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(AppColor.accent)
+                .frame(width: 44, height: 44)
+                .background(AppColor.accentBackground(0.18), in: Circle())
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(AppFont.secondary().weight(.semibold))
+                Text(subtitle)
+                    .font(AppFont.caption())
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+
+            Spacer(minLength: AppSpacing.xs)
+
+            if let actionTitle, let action {
+                Button(actionTitle, action: action)
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+            }
+
+            if let onDismiss {
+                Button(action: onDismiss) {
+                    Image(systemName: "xmark")
+                        .font(AppFont.caption())
+                        .foregroundStyle(.secondary)
+                        .padding(6)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(L10n.close)
+            }
+        }
+        .padding(AppSpacing.md)
+        .background(AppColor.accentBackground(0.12), in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                .strokeBorder(AppColor.accent.opacity(0.28), lineWidth: 1)
+        }
     }
 }
 
