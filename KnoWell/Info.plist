@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.knowell.app1</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>knowell</string>
+			</array>
+		</dict>
+	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>weixin</string>
+		<string>weixinULAPI</string>
+	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>拍照识别文字以生成复习卡片。</string>
+	<key>WECHAT_APP_ID</key>
+	<string></string>
+	<key>WECHAT_UNIVERSAL_LINK</key>
+	<string></string>
+	<key>AUTH_BACKEND_URL</key>
+	<string></string>
+	<key>APPLE_SIGN_IN_ENABLED</key>
+	<false/>
+</dict>
+</plist>

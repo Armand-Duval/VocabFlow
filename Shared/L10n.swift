@@ -2,6 +2,9 @@ import Foundation
 #if canImport(UIKit)
 import UIKit
 #endif
+#if canImport(Security)
+import Security
+#endif
 
 enum L10n {
     // MARK: - Tabs
@@ -10,6 +13,17 @@ enum L10n {
     static var tabReview: String { tr("tab.review") }
     static var tabLibrary: String { tr("tab.library") }
     static var tabSettings: String { tr("tab.settings") }
+    static var brandNameZH: String { tr("brand.name.zh") }
+    static var brandNameEN: String { tr("brand.name.en") }
+    static var homeStatDue: String { tr("home.stat.due") }
+    static var homeStatNewQuota: String { tr("home.stat.newQuota") }
+    static var homeStatStreak: String { tr("home.stat.streak") }
+    static func homeStatStreakValue(_ days: Int) -> String { tf("home.stat.streakValue", days) }
+    static var homeRecentDecks: String { tr("home.recentDecks") }
+    static var createAIGenerate: String { tr("create.aiGenerate") }
+    static var createPastePlaceholder: String { tr("create.pastePlaceholder") }
+    static var createAddWord: String { tr("create.addWord") }
+    static var createManageDeck: String { tr("create.manageDeck") }
 
     // MARK: - Common
 
@@ -23,6 +37,8 @@ enum L10n {
     // MARK: - Create cards
 
     static var createTitle: String { tr("create.title") }
+    static var createQuickCaptureTitle: String { tr("create.quickCapture.title") }
+    static var createQuickPaste: String { tr("create.quickCapture.paste") }
     static var sourceText: String { tr("create.source") }
     static var sourcePlaceholder: String { tr("create.source.placeholder") }
     static var wordsSection: String { tr("create.words") }
@@ -129,6 +145,15 @@ enum L10n {
     static var tapToFlipBack: String { tr("review.tapFlip") }
     static var showAnswer: String { tr("review.showAnswer") }
     static var studyTitle: String { tr("review.study") }
+    static func reviewHomeDueCount(_ count: Int) -> String { tf("review.home.dueCount", count) }
+    static var reviewHomeStart: String { tr("review.home.start") }
+    static func reviewHomeContinueDeck(_ name: String) -> String { tf("review.home.continueDeck", name) }
+    static var reviewHomeQuotaLink: String { tr("review.home.quotaLink") }
+    static var reviewHomeQuickCapture: String { tr("review.home.quickCapture") }
+    static var reviewHomeRecentDecks: String { tr("review.home.recentDecks") }
+    static var reviewHomeBack: String { tr("review.home.back") }
+    static var reviewHomeDoneToday: String { tr("review.home.doneToday") }
+    static var reviewSessionDone: String { tr("review.session.done") }
 
     static var ratingAgain: String { tr("rating.again") }
     static var ratingHard: String { tr("rating.hard") }
@@ -327,6 +352,29 @@ enum L10n {
     static var privacyContactTitle: String { tr("privacy.contact.title") }
     static var privacyContactBody: String { tr("privacy.contact.body") }
 
+    // MARK: - Account
+
+    static var accountSignedOutTitle: String { tr("account.signedOut.title") }
+    static var accountSignedOutMessage: String { tr("account.signedOut.message") }
+    static var accountSignInWeChat: String { tr("account.signIn.wechat") }
+    static var accountSignInApple: String { tr("account.signIn.apple") }
+    static var accountAppleUnavailable: String { tr("account.apple.unavailable") }
+    static var accountSignOut: String { tr("account.signOut") }
+    static var accountSignInFailed: String { tr("account.signIn.failed") }
+    static var accountProviderApple: String { tr("account.provider.apple") }
+    static var accountProviderWeChat: String { tr("account.provider.wechat") }
+    static var accountAppleCancelled: String { tr("account.apple.cancelled") }
+    static var accountAppleMissingCredential: String { tr("account.apple.missingCredential") }
+    static var accountAppleMissingToken: String { tr("account.apple.missingToken") }
+    static var accountWeChatNotConfigured: String { tr("account.wechat.notConfigured") }
+    static var accountWeChatSDKNotLinked: String { tr("account.wechat.sdkNotLinked") }
+    static var accountWeChatNotInstalled: String { tr("account.wechat.notInstalled") }
+    static var accountWeChatMissingCode: String { tr("account.wechat.missingCode") }
+    static var accountWeChatBackendRequired: String { tr("account.wechat.backendRequired") }
+    static func accountWeChatBackendFailed(_ message: String) -> String { tf("account.wechat.backendFailed", message) }
+    static func accountKeychainError(_ code: OSStatus) -> String { tf("account.keychain.error", code) }
+    static var accountInvalidData: String { tr("account.invalidData") }
+
     // MARK: - Apkg
 
     static var apkgExportEmpty: String { tr("apkg.export.empty") }
@@ -457,6 +505,7 @@ enum L10n {
     static var libraryFilterDue: String { tr("library.filter.due") }
     static var libraryFilterDefinition: String { tr("library.filter.definition") }
     static var libraryFilterCloze: String { tr("library.filter.cloze") }
+    static var libraryFilterMenu: String { tr("library.filter.menu") }
     static var libraryEmptyGoCreate: String { tr("library.empty.goCreate") }
     static var deckDownload: String { tr("deck.download.starter") }
     static func deckCardCount(_ count: Int) -> String {
@@ -465,6 +514,8 @@ enum L10n {
     static var deckErrorCannotDeleteDefault: String { tr("deck.error.cannotDeleteDefault") }
     static var deckErrorInvalidName: String { tr("deck.error.invalidName") }
     static var deckOpenSourceSection: String { tr("deck.openSource.section") }
+    static var deckCatalogTitle: String { tr("deck.catalog.title") }
+    static var deckCatalogSubtitle: String { tr("deck.catalog.subtitle") }
     static var deckOpenSourceFooter: String { tr("deck.openSource.footer") }
     static var deckCommunitySection: String { tr("deck.community.section") }
     static var deckCommunityFooter: String { tr("deck.community.footer") }

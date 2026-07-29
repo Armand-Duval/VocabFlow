@@ -1,4 +1,4 @@
-# VocabFlow
+# KnoWell
 
 语境化多语言背单词 iOS App（MVP）。输入一句任意语言原文 + 生词，自动生成复习卡片，支持间隔重复复习。
 
@@ -9,18 +9,18 @@
 - **复习**：简化版 SM-2 间隔重复（重来 / 困难 / 良好 / 简单）
 - **词库**：按原句分组查看所有卡片，支持删除
 - **备份**：导出/导入 JSON 备份（合并或替换），可用于换机和多设备同步
-- **分享制卡**：从 Safari 等 App 分享文本 → 自动打开 VocabFlow 并预填原文
+- **分享制卡**：从 Safari 等 App 分享文本 → 自动打开 KnoWell 并预填原文
 
 ## 分享扩展（Share Extension）
 
-其他 App 选中文字 → 分享 → 选择 **VocabFlow** → 自动跳转到制卡页，原文已填好。
+其他 App 选中文字 → 分享 → 选择 **KnoWell** → 自动跳转到制卡页，原文已填好。
 
 ### 开通开发者账号后需确认
 
-1. Xcode → Target **VocabFlow** 和 **VocabFlowShare** → **Signing & Capabilities**
-2. 两个 Target 都添加 **App Groups**：`group.com.vocabflow.app1`
+1. Xcode → Target **KnoWell** 和 **KnoWellShare** → **Signing & Capabilities**
+2. 两个 Target 都添加 **App Groups**：`group.com.knowell.app1`
 3. 选择你的 **Paid Team** 重新签名
-4. 真机安装后，在 Safari 选中文字 → 分享 → 更多 → 打开 VocabFlow
+4. 真机安装后，在 Safari 选中文字 → 分享 → 更多 → 打开 KnoWell
 
 ## Kimi API 配置
 
@@ -33,7 +33,7 @@
 
 ## 运行
 
-1. 用 Xcode 打开 `VocabFlow.xcodeproj`
+1. 用 Xcode 打开 `KnoWell.xcodeproj`
 2. 选择 iPhone 模拟器或真机
 3. 首次运行需在 **Signing & Capabilities** 中选择你的 Development Team
 4. `Cmd + R` 运行
@@ -41,8 +41,8 @@
 命令行编译（模拟器）：
 
 ```bash
-cd ~/Projects/VocabFlow
-xcodebuild -scheme VocabFlow -destination 'platform=iOS Simulator,name=iPhone 16' build
+cd ~/Projects/KnoWell
+xcodebuild -scheme KnoWell -destination 'platform=iOS Simulator,name=iPhone 16' build
 ```
 
 ## 使用示例
@@ -56,8 +56,8 @@ xcodebuild -scheme VocabFlow -destination 'platform=iOS Simulator,name=iPhone 16
 ## 项目结构
 
 ```
-VocabFlow/
-├── VocabFlowApp.swift          # App 入口 + SwiftData
+KnoWell/
+├── KnoWellApp.swift          # App 入口 + SwiftData
 ├── Models/FlashCard.swift      # 卡片数据模型
 ├── Services/
 │   ├── KimiCardGenerator.swift # AI 制卡
@@ -69,7 +69,7 @@ VocabFlow/
 
 ### 导出 / 导入（设置 → 数据备份）
 
-- **导出备份**：保存为 `vocabflow-backup.json`，可通过 AirDrop、文件 App 分享
+- **导出备份**：保存为 `knowell-backup.json`，可通过 AirDrop、文件 App 分享
 - **导入备份**：
   - **合并导入**：保留现有卡片，同 ID 更新、新卡片追加
   - **替换全部**：清空词库后导入

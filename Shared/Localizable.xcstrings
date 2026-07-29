@@ -4,8 +4,338 @@
     "" : {
 
     },
+    "%@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
     "%lld" : {
 
+    },
+    "account.apple.cancelled" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple sign in was cancelled."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已取消 Apple 登录。"
+          }
+        }
+      }
+    },
+    "account.apple.missingCredential" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not read Apple ID credential."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法读取 Apple 登录凭证。"
+          }
+        }
+      }
+    },
+    "account.apple.missingToken" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Missing identity token from Apple."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple 未返回 identity token。"
+          }
+        }
+      }
+    },
+    "account.apple.unavailable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Requires a paid Apple Developer Program membership. See docs/AUTH_SETUP.md."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要付费 Apple Developer 账号才能开启，详见 docs/AUTH_SETUP.md。"
+          }
+        }
+      }
+    },
+    "account.invalidData" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stored account data is invalid."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "账号数据无效。"
+          }
+        }
+      }
+    },
+    "account.keychain.error" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keychain error (%ld)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "钥匙串错误（%ld）。"
+          }
+        }
+      }
+    },
+    "account.provider.apple" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple ID"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple 账号"
+          }
+        }
+      }
+    },
+    "account.provider.wechat" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WeChat"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "微信"
+          }
+        }
+      }
+    },
+    "account.signedOut.message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync your profile across devices after signing in."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登录后可同步账号信息（词库仍保存在本机）。"
+          }
+        }
+      }
+    },
+    "account.signedOut.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登录账号"
+          }
+        }
+      }
+    },
+    "account.signIn.apple" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in with Apple"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通过 Apple 登录"
+          }
+        }
+      }
+    },
+    "account.signIn.failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in failed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登录失败"
+          }
+        }
+      }
+    },
+    "account.signIn.wechat" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in with WeChat"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "微信登录"
+          }
+        }
+      }
+    },
+    "account.signOut" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign out"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "退出登录"
+          }
+        }
+      }
+    },
+    "account.wechat.backendFailed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WeChat backend error: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "微信登录服务端错误：%@"
+          }
+        }
+      }
+    },
+    "account.wechat.backendRequired" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configure AUTH_BACKEND_URL to exchange the WeChat code on your server."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请配置 AUTH_BACKEND_URL，由服务端用 code 换取微信用户信息。"
+          }
+        }
+      }
+    },
+    "account.wechat.missingCode" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WeChat did not return an authorization code."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "微信未返回授权 code。"
+          }
+        }
+      }
+    },
+    "account.wechat.notConfigured" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set WECHAT_APP_ID and WECHAT_UNIVERSAL_LINK in Info.plist."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请在 Info.plist 配置 WECHAT_APP_ID 与 WECHAT_UNIVERSAL_LINK。"
+          }
+        }
+      }
+    },
+    "account.wechat.notInstalled" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WeChat is not installed on this device."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未安装微信客户端。"
+          }
+        }
+      }
+    },
+    "account.wechat.sdkNotLinked" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Link WechatOpenSDK to enable WeChat sign in. See docs/AUTH_SETUP.md."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请接入 WechatOpenSDK 后使用微信登录，详见 docs/AUTH_SETUP.md。"
+          }
+        }
+      }
     },
     "apkg.export.empty" : {
       "localizations" : {
@@ -149,6 +479,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "该备份词库了"
+          }
+        }
+      }
+    },
+    "brand.name.en" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KnoWell"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KnoWell"
+          }
+        }
+      }
+    },
+    "brand.name.zh" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "致知"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "致知"
           }
         }
       }
@@ -442,6 +804,38 @@
         }
       }
     },
+    "create.addWord" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add word"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加生词"
+          }
+        }
+      }
+    },
+    "create.aiGenerate" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generate cards"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI 一键生成"
+          }
+        }
+      }
+    },
     "create.defaultKey" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -663,6 +1057,38 @@
         }
       }
     },
+    "create.manageDeck" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manage decks"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "管理词库"
+          }
+        }
+      }
+    },
+    "create.pastePlaceholder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste English text or book passages"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粘贴英文段落、书籍文本"
+          }
+        }
+      }
+    },
     "create.pending.action" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -765,6 +1191,38 @@
         }
       }
     },
+    "create.quickCapture.paste" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste text"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粘贴句子"
+          }
+        }
+      }
+    },
+    "create.quickCapture.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quick capture"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速拾起"
+          }
+        }
+      }
+    },
     "create.source" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -822,7 +1280,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Drag to select text, then add it as vocabulary. Safari supports Share; for Apple Books and similar apps, copy text and open VocabFlow."
+            "value" : "Drag to select text, then add it as vocabulary. Safari supports Share; for Apple Books and similar apps, copy text and open KnoWell."
           }
         },
         "zh-Hans" : {
@@ -1180,6 +1638,134 @@
         }
       }
     },
+    "deck.catalog.subtitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open source packs and community imports"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开源词库与社区导入"
+          }
+        }
+      }
+    },
+    "deck.catalog.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More decks"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "获取更多词库"
+          }
+        }
+      }
+    },
+    "deck.clear" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清空"
+          }
+        }
+      }
+    },
+    "deck.clear.complete" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deck cleared"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已清空"
+          }
+        }
+      }
+    },
+    "deck.clear.failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear failed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清空失败"
+          }
+        }
+      }
+    },
+    "deck.clear.message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All cards in “%@” will be permanently deleted. The deck itself will remain."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将永久删除「%@」中的所有卡片，词库本身会保留。"
+          }
+        }
+      }
+    },
+    "deck.clear.result" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removed %2$d cards from “%1$@”."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已从「%1$@」移除 %2$d 张卡片。"
+          }
+        }
+      }
+    },
+    "deck.clear.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear deck contents?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清空词库内容？"
+          }
+        }
+      }
+    },
     "deck.community.advancedVocab.detail" : {
       "localizations" : {
         "en" : {
@@ -1265,13 +1851,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Opens AnkiWeb in Safari. Download the .apkg, then import it in VocabFlow. Community decks are shared by users; check each deck's license."
+            "value" : "Opens AnkiWeb in Safari. Download the .apkg, then import it in KnoWell. Community decks are shared by users; check each deck's license."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在 Safari 打开 AnkiWeb 下载 .apkg，再回到 VocabFlow 导入。社区词库由用户分享，请注意各 deck 的使用条款。"
+            "value" : "在 Safari 打开 AnkiWeb 下载 .apkg，再回到 KnoWell 导入。社区词库由用户分享，请注意各 deck 的使用条款。"
           }
         }
       }
@@ -1484,30 +2070,6 @@
         }
       }
     },
-    "deck.edit" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "编辑" } }
-      }
-    },
-    "deck.edit.title" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit Deck" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "编辑词库" } }
-      }
-    },
-    "deck.edit.failed" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit Failed" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "编辑失败" } }
-      }
-    },
-    "deck.save" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Save" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "保存" } }
-      }
-    },
     "deck.default.detail" : {
       "localizations" : {
         "en" : {
@@ -1570,42 +2132,6 @@
             "value" : "删除词库失败"
           }
         }
-      }
-    },
-    "deck.clear" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "清空" } }
-      }
-    },
-    "deck.clear.title" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear deck contents?" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "清空词库内容？" } }
-      }
-    },
-    "deck.clear.message" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "All cards in “%@” will be permanently deleted. The deck itself will remain." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将永久删除「%@」中的所有卡片，词库本身会保留。" } }
-      }
-    },
-    "deck.clear.complete" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Deck cleared" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已清空" } }
-      }
-    },
-    "deck.clear.failed" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear failed" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "清空失败" } }
-      }
-    },
-    "deck.clear.result" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Removed %2$d cards from “%1$@”." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已从「%1$@」移除 %2$d 张卡片。" } }
       }
     },
     "deck.deselectAll" : {
@@ -1736,6 +2262,54 @@
         }
       }
     },
+    "deck.edit" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编辑"
+          }
+        }
+      }
+    },
+    "deck.edit.failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit Failed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编辑失败"
+          }
+        }
+      }
+    },
+    "deck.edit.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit Deck"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编辑词库"
+          }
+        }
+      }
+    },
     "deck.empty" : {
       "localizations" : {
         "en" : {
@@ -1770,8 +2344,18 @@
     },
     "deck.error.invalidName" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Deck name cannot be empty" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "词库名称不能为空" } }
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deck name cannot be empty"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "词库名称不能为空"
+          }
+        }
       }
     },
     "deck.error.missingStarterPack" : {
@@ -1878,13 +2462,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open VocabFlow once, then try Share again."
+            "value" : "Open KnoWell once, then try Share again."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "请先打开 VocabFlow 主 App 一次，再使用共享制卡。"
+            "value" : "请先打开 KnoWell 主 App 一次，再使用共享制卡。"
           }
         }
       }
@@ -1894,13 +2478,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Matches the deck selected in the main app. Open VocabFlow to manage decks."
+            "value" : "Matches the deck selected in the main app. Open KnoWell to manage decks."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "与主 App 制卡页的目标词库同步。可在 VocabFlow 中管理词库。"
+            "value" : "与主 App 制卡页的目标词库同步。可在 KnoWell 中管理词库。"
           }
         }
       }
@@ -1937,6 +2521,22 @@
         }
       }
     },
+    "deck.import.apkgIncompleteResult" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$d cards with incomplete fields → “%1$@”."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$d 张字段不完整的卡片 → 「%1$@」。"
+          }
+        }
+      }
+    },
     "deck.import.apkgMultiResult" : {
       "localizations" : {
         "en" : {
@@ -1953,42 +2553,6 @@
         }
       }
     },
-    "deck.import.apkgUnmappedResult" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%2$d cards without deck info → “%1$@”." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%2$d 张无词库信息的卡片 → 「%1$@」。" } }
-      }
-    },
-    "deck.import.apkgIncompleteResult" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%2$d cards with incomplete fields → “%1$@”." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%2$d 张字段不完整的卡片 → 「%1$@」。" } }
-      }
-    },
-    "deck.import.fallback.unmappedName" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Anki Import (Unknown Deck)" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Anki 导入（未知词库）" } }
-      }
-    },
-    "deck.import.fallback.incompleteName" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Anki Import (Incomplete)" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Anki 导入（字段不完整）" } }
-      }
-    },
-    "deck.import.emptyCardPlaceholder" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "(Empty card)" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "（空卡片）" } }
-      }
-    },
-    "deck.import.missingBackPlaceholder" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "(No back field)" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "（无背面字段）" } }
-      }
-    },
     "deck.import.apkgResult" : {
       "localizations" : {
         "en" : {
@@ -2001,6 +2565,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已向「%1$@」导入 %2$d 张 Anki 卡片。"
+          }
+        }
+      }
+    },
+    "deck.import.apkgUnmappedResult" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$d cards without deck info → “%1$@”."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$d 张无词库信息的卡片 → 「%1$@」。"
           }
         }
       }
@@ -2069,6 +2649,22 @@
         }
       }
     },
+    "deck.import.emptyCardPlaceholder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(Empty card)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "（空卡片）"
+          }
+        }
+      }
+    },
     "deck.import.emptyFile" : {
       "localizations" : {
         "en" : {
@@ -2101,6 +2697,38 @@
         }
       }
     },
+    "deck.import.fallback.incompleteName" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anki Import (Incomplete)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anki 导入（字段不完整）"
+          }
+        }
+      }
+    },
+    "deck.import.fallback.unmappedName" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anki Import (Unknown Deck)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anki 导入（未知词库）"
+          }
+        }
+      }
+    },
     "deck.import.intoSelectedDecksResult" : {
       "localizations" : {
         "en" : {
@@ -2122,13 +2750,29 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This JSON file is not a supported VocabFlow format."
+            "value" : "This JSON file is not a supported KnoWell format."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "这不是 VocabFlow 支持的 JSON 格式。"
+            "value" : "这不是 KnoWell 支持的 JSON 格式。"
+          }
+        }
+      }
+    },
+    "deck.import.missingBackPlaceholder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(No back field)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "（无背面字段）"
           }
         }
       }
@@ -2269,13 +2913,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This is a VocabFlow backup file. Use Restore backup instead of Import pack."
+            "value" : "This is a KnoWell backup file. Use Restore backup instead of Import pack."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "这是 VocabFlow 备份文件，请用「恢复备份」而不是「导入词库包」。"
+            "value" : "这是 KnoWell 备份文件，请用「恢复备份」而不是「导入词库包」。"
           }
         }
       }
@@ -2285,13 +2929,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "JSON format mismatch. Restore backup needs a VocabFlow backup (.json with exportedAt). Deck packs should use Import pack."
+            "value" : "JSON format mismatch. Restore backup needs a KnoWell backup (.json with exportedAt). Deck packs should use Import pack."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "JSON 格式不匹配。恢复备份需要含 exportedAt 的 VocabFlow 备份；词库包请用「导入词库包」。"
+            "value" : "JSON 格式不匹配。恢复备份需要含 exportedAt 的 KnoWell 备份；词库包请用「导入词库包」。"
           }
         }
       }
@@ -3117,6 +3761,22 @@
         }
       }
     },
+    "deck.save" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存"
+          }
+        }
+      }
+    },
     "deck.section" : {
       "localizations" : {
         "en" : {
@@ -3471,13 +4131,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Could not read text. Copy it and open VocabFlow instead."
+            "value" : "Could not read text. Copy it and open KnoWell instead."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "未读到文字内容，请用「拷贝」后打开 VocabFlow"
+            "value" : "未读到文字内容，请用「拷贝」后打开 KnoWell"
           }
         }
       }
@@ -3529,6 +4189,86 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "至少填写一个生词。生成结果将通过通知告知。"
+          }
+        }
+      }
+    },
+    "home.recentDecks" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recent"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近词库"
+          }
+        }
+      }
+    },
+    "home.stat.due" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Due today"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今日待复习"
+          }
+        }
+      }
+    },
+    "home.stat.newQuota" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New quota"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新词配额"
+          }
+        }
+      }
+    },
+    "home.stat.streak" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Streak"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连续学习"
+          }
+        }
+      }
+    },
+    "home.stat.streakValue" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld d"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 天"
           }
         }
       }
@@ -4012,6 +4752,22 @@
         }
       }
     },
+    "library.filter.menu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "筛选"
+          }
+        }
+      }
+    },
     "library.filter.title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4432,13 +5188,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Generated %lld cards. Open VocabFlow to preview and save."
+            "value" : "Generated %lld cards. Open KnoWell to preview and save."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已生成 %lld 张卡片，打开 VocabFlow 预览并保存"
+            "value" : "已生成 %lld 张卡片，打开 KnoWell 预览并保存"
           }
         }
       }
@@ -4449,7 +5205,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Shared content saved. Open VocabFlow to continue."
+            "value" : "Shared content saved. Open KnoWell to continue."
           }
         },
         "zh-Hans" : {
@@ -4797,13 +5553,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VocabFlow stores your flashcards on device. This summary explains how data is handled."
+            "value" : "KnoWell stores your flashcards on device. This summary explains how data is handled."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VocabFlow 将闪卡数据保存在本机。以下为数据处理方式摘要。"
+            "value" : "KnoWell 将闪卡数据保存在本机。以下为数据处理方式摘要。"
           }
         }
       }
@@ -5143,6 +5899,134 @@
         }
       }
     },
+    "review.home.back" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back to home"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "回到首页"
+          }
+        }
+      }
+    },
+    "review.home.continueDeck" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "续上：%@"
+          }
+        }
+      }
+    },
+    "review.home.doneToday" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You're done for today"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今日复习已完成"
+          }
+        }
+      }
+    },
+    "review.home.dueCount" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld cards due today"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今天 %lld 张待复习"
+          }
+        }
+      }
+    },
+    "review.home.quickCapture" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quick capture"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速拾起"
+          }
+        }
+      }
+    },
+    "review.home.quotaLink" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today's quota"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今日配额"
+          }
+        }
+      }
+    },
+    "review.home.recentDecks" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recent decks"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近词库"
+          }
+        }
+      }
+    },
+    "review.home.start" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Review"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始复习"
+          }
+        }
+      }
+    },
     "review.learning.wait.message" : {
       "localizations" : {
         "en" : {
@@ -5412,6 +6296,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "你有 %d 张卡片待复习"
+          }
+        }
+      }
+    },
+    "review.session.done" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成"
           }
         }
       }
@@ -5875,13 +6775,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Anki sync: import .apkg decks from Decks page, review in VocabFlow, export .apkg back to AnkiMobile via Files or AirDrop."
+            "value" : "Anki sync: import .apkg decks from Decks page, review in KnoWell, export .apkg back to AnkiMobile via Files or AirDrop."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Anki 同步：在「词库包」导入 .apkg，在 VocabFlow 复习，再通过文件/AirDrop 导出 .apkg 到 AnkiMobile。"
+            "value" : "Anki 同步：在「词库包」导入 .apkg，在 KnoWell 复习，再通过文件/AirDrop 导出 .apkg 到 AnkiMobile。"
           }
         }
       }
@@ -5909,13 +6809,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Share extension: share text from Safari or Books to VocabFlow. Clipboard import works when you open the app after copying."
+            "value" : "Share extension: share text from Safari or Books to KnoWell. Clipboard import works when you open the app after copying."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "分享扩展：从 Safari、图书等分享文本到 VocabFlow。复制后打开 App 也会提示剪贴板导入。"
+            "value" : "分享扩展：从 Safari、图书等分享文本到 KnoWell。复制后打开 App 也会提示剪贴板导入。"
           }
         }
       }
@@ -5960,13 +6860,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "These apps don't expose the system share sheet to third-party extensions. Copy text and open VocabFlow to create cards."
+            "value" : "These apps don't expose the system share sheet to third-party extensions. Copy text and open KnoWell to create cards."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "这些 App 不使用 iOS 系统分享，第三方扩展无法出现在菜单里。这是 App 和系统的限制，不是 VocabFlow 的配置问题。拷贝后打开本 App 即可制卡。"
+            "value" : "这些 App 不使用 iOS 系统分享，第三方扩展无法出现在菜单里。这是 App 和系统的限制，不是 KnoWell 的配置问题。拷贝后打开本 App 即可制卡。"
           }
         }
       }
@@ -6028,13 +6928,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open VocabFlow → auto-fill"
+            "value" : "Open KnoWell → auto-fill"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "打开 VocabFlow → 自动填入"
+            "value" : "打开 KnoWell → 自动填入"
           }
         }
       }
@@ -6179,13 +7079,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Choose VocabFlow in the share sheet"
+            "value" : "Choose KnoWell in the share sheet"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "分享面板选 VocabFlow"
+            "value" : "分享面板选 KnoWell"
           }
         }
       }

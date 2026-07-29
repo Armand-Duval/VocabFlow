@@ -80,7 +80,7 @@ class ExtensionImportViewController: UIViewController {
         ])
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
-            let error = NSError(domain: "VocabFlowShare", code: 1, userInfo: [
+            let error = NSError(domain: "KnoWellShare", code: 1, userInfo: [
                 NSLocalizedDescriptionKey: message
             ])
             self?.extensionContext?.cancelRequest(withError: error)

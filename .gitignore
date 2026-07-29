@@ -4,6 +4,6 @@ DerivedData/
 *.xcuserstate
 
 # API Keys — 切勿提交
-VocabFlow/Services/DefaultAPIKey.swift
+KnoWell/Services/DefaultAPIKey.swift
 moonshot API key.json
 *API*key*.json

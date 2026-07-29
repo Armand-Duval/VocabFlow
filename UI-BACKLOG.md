@@ -1,4 +1,4 @@
-# VocabFlow Backlog
+# KnoWell Backlog
 
 > 校准分 ~78/100。双主线：**SRS 算法** + **Demo 感消除**（文字驱动 → 视觉优先）。  
 > 状态：`[ ]` 待做 · `[~]` 进行中 · `[x]` 已完成
@@ -68,8 +68,9 @@
 | P2-6 | 动态字体 | [ ] | Accessibility |
 | P2-7 | AI 生成骨架屏 + 进度 | [ ] | 替代纯 ProgressView |
 | P2-8 | 长按按钮 Tooltip | [ ] | 替代常驻说明 |
-| P2-9 | 品牌主色 + 卡片阴影 | [~] | AppSurfaceCard 已上；固定 accent 待做 |
+| P2-9 | 品牌主色 + 卡片阴影 | [x] | Teal accent + AppSurfaceCard 全站推广 |
 | P2-10 | 导入进度条细化 | [ ] | current/total |
+| P2-11 | 账号系统（Apple / 微信） | [x] | 设置页 AccountSettingsCard；见 `docs/AUTH_SETUP.md` |
 | T-C2 | FlashCardDetail 阅读态去重复 label | [ ] | |
 | T-C3 | Settings 卡片化（与 Create 统一） | [x] | ScrollView + AppSurfaceCard；底部 Save 栏 |
 
@@ -77,6 +78,7 @@
 
 ## 变更日志
 
+- **2026-07-29** 致知 (KnoWell) 三 Tab 重构：设置进齿轮、三栏数据卡、线性紧凑图标、品牌色 `#239678`
 - **2026-07-27** Deck 导入导出重构：当前词库 vs 全部词库；JSON 导入到选中 deck；修复 fileExporter 弹窗
 - **2026-07-27** P0-1～3：SRS 毕业梯度、复习按钮语义色、无限复习 Toggle
 - **2026-07-27** 导航标题最终方案固化；Create 顶距 -20%、Library 搜索顶格、#666 规范

@@ -36,8 +36,8 @@ extension ShareImportPayload {
 }
 
 enum ShareImportStore {
-    static let appGroupID = "group.com.vocabflow.app1"
-    static let createURLString = "vocabflow://create"
+    static let appGroupID = "group.com.knowell.app1"
+    static let createURLString = "knowell://create"
     private static let payloadFileName = "share-import.json"
     private static let draftsFileName = "share-drafts.json"
     private static let generationJobFileName = "share-generation-job.json"
@@ -272,7 +272,7 @@ enum ShareImportStore {
 }
 
 enum ShareExtensionNotifier {
-    private static let notificationPrefix = "vocabflow-share"
+    private static let notificationPrefix = "knowell-share"
 
     static func requestAuthorizationIfNeeded() async -> Bool {
         let center = UNUserNotificationCenter.current()
@@ -352,7 +352,7 @@ enum ShareExtensionNotifier {
             }
 
             let content = UNMutableNotificationContent()
-            content.title = "VocabFlow"
+            content.title = "KnoWell"
             content.body = body
             content.sound = .default
 
