@@ -307,8 +307,7 @@ struct CompactIconAction: View {
 
 struct BrandMark: View {
     var body: some View {
-        // Quiet wordmark — no fill chip; keep left corner light.
-        Text(L10n.brandNameZH)
+        Text(L10n.brandName)
             .font(.system(size: 15, weight: .medium))
             .foregroundStyle(AppColor.textSecondary)
             .lineLimit(1)

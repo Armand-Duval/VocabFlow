@@ -145,6 +145,15 @@ struct FlashCardDetailView: View {
                 if let source = card.sourceAttribution, !source.isEmpty {
                     DetailField(label: L10n.cardSourceLabel, value: source)
                 }
+                if card.sourceImagePath != nil {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(L10n.cardSourceImageLabel)
+                            .font(AppFont.caption())
+                            .foregroundStyle(.secondary)
+                        CardSourceImageThumbnail(relativePath: card.sourceImagePath, maxHeight: 200)
+                    }
+                    .padding(.vertical, 4)
+                }
                 DetailField(label: L10n.frontLabel, value: card.front)
                 DetailField(label: L10n.backLabel, value: card.displayBack)
             }

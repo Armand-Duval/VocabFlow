@@ -15,6 +15,9 @@ enum L10n {
     static var tabSettings: String { tr("tab.settings") }
     static var brandNameZH: String { tr("brand.name.zh") }
     static var brandNameEN: String { tr("brand.name.en") }
+    /// Locale-aware display brand: 致知 / KnoWell.
+    static var brandName: String { tr("brand.name") }
+    static var brandActionName: String { tr("brand.name.action") }
     static var homeStatDue: String { tr("home.stat.due") }
     static var homeStatNewQuota: String { tr("home.stat.newQuota") }
     static var homeStatStreak: String { tr("home.stat.streak") }
@@ -60,6 +63,24 @@ enum L10n {
         tf("create.generate.successSkipped", saved, skipped)
     }
     static var createGenerateAllDuplicates: String { tr("create.generate.allDuplicates") }
+    static var createQueueTitle: String { tr("create.queue.title") }
+    static var createQueueEmptyTitle: String { tr("create.queue.emptyTitle") }
+    static var createQueueEmptyBody: String { tr("create.queue.emptyBody") }
+    static var createQueueBannerOne: String { tr("create.queue.bannerOne") }
+    static func createQueueBannerMany(_ count: Int) -> String { tf("create.queue.bannerMany", count) }
+    static var createQueueViewAction: String { tr("create.queue.viewAction") }
+    static var createQueueClearFinished: String { tr("create.queue.clearFinished") }
+    static var createQueueStatusQueued: String { tr("create.queue.status.queued") }
+    static var createQueueStatusRunning: String { tr("create.queue.status.running") }
+    static var createQueueStatusSucceeded: String { tr("create.queue.status.succeeded") }
+    static var createQueueStatusFailed: String { tr("create.queue.status.failed") }
+    static var createQueueWordPending: String { tr("create.queue.word.pending") }
+    static var createQueueWordRunning: String { tr("create.queue.word.running") }
+    static var createQueueWordDone: String { tr("create.queue.word.done") }
+    static var createQueueWordFailed: String { tr("create.queue.word.failed") }
+    static var createQueueWordSkipped: String { tr("create.queue.word.skipped") }
+    static func createQueueSkipped(_ count: Int) -> String { tf("create.queue.skipped", count) }
+    static var createQueuedToast: String { tr("create.queue.enqueued") }
     static func createCharCount(_ count: Int) -> String { tf("create.source.charCount", count) }
     static var createSourceEmptyHint: String { tr("create.source.emptyHint") }
     static var createSourceFooterHint: String { tr("create.source.footerHint") }
@@ -71,6 +92,9 @@ enum L10n {
     static var createLongTextSplitWords: String { tr("create.longText.splitWords") }
     static var createLongTextSplitFallback: String { tr("create.longText.splitFallback") }
     static var generating: String { tr("create.generating") }
+    static func generatingProgress(_ completed: Int, _ total: Int) -> String {
+        tf("create.generating.progress", completed, total)
+    }
     static var usingDefaultKey: String { tr("create.defaultKey") }
     static var createTipTitle: String { tr("create.tip.title") }
     static var createTipBody: String { tr("create.tip.body") }
@@ -90,6 +114,8 @@ enum L10n {
 
     static var generateFailedTitle: String { tr("create.error.title") }
     static var generateEmptyError: String { tr("create.error.empty") }
+    static var generateTimeoutError: String { tr("create.error.timeout") }
+    static var generateFormatErrorDetail: String { tr("create.error.formatDetail") }
 
     // MARK: - Words editor
 
@@ -126,6 +152,7 @@ enum L10n {
     static var cardTranslationHighlightMissing: String { tr("card.translationHighlight.missing") }
     static var cardTranslationHighlightPreview: String { tr("card.translationHighlight.preview") }
     static var cardSourceLabel: String { tr("card.source") }
+    static var cardSourceImageLabel: String { tr("card.sourceImage") }
     static func cardSource(_ value: String) -> String { tf("card.source.value", value) }
     static func saveCount(_ count: Int) -> String { tf("preview.save", count) }
     static var savedTitle: String { tr("preview.saved.title") }

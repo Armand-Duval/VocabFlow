@@ -4,6 +4,7 @@ struct ImportCardsFormView: View {
     let onSubmit: () -> Void
     let onCancel: () -> Void
     private let sourceHint: String?
+    private let sourceImagePath: String?
 
     @State private var sentence: String
     @State private var words: [String]
@@ -18,12 +19,14 @@ struct ImportCardsFormView: View {
         sentence: String,
         selectedWord: String? = nil,
         sourceHint: String? = nil,
+        sourceImagePath: String? = nil,
         onSubmit: @escaping () -> Void,
         onCancel: @escaping () -> Void
     ) {
         self.onSubmit = onSubmit
         self.onCancel = onCancel
         self.sourceHint = sourceHint
+        self.sourceImagePath = sourceImagePath
         _sentence = State(initialValue: sentence)
         _words = State(initialValue: selectedWord.map { VocabularyWords.parse(from: $0) } ?? [])
     }
@@ -31,6 +34,12 @@ struct ImportCardsFormView: View {
     var body: some View {
         NavigationStack {
             Form {
+                if sourceImagePath != nil {
+                    Section {
+                        CardSourceImageThumbnail(relativePath: sourceImagePath, maxHeight: 120)
+                    }
+                }
+
                 Section {
                     ZStack(alignment: .topLeading) {
                         SelectableTextEditor(
@@ -59,11 +68,7 @@ struct ImportCardsFormView: View {
                         feedbackMessage: $wordFeedbackMessage,
                         feedbackIsError: $wordFeedbackIsError,
                         deckContainsWord: { word in
-                            SharedDedupeIndex.contains(
-                                deckID: selectedDeckID,
-                                word: word,
-                                sentence: trimmedSentence
-                            )
+                            wordExistsInSelectedDeck(word)
                         }
                     )
                 }
@@ -97,6 +102,24 @@ struct ImportCardsFormView: View {
 
     private var trimmedSentence: String {
         sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func wordExistsInSelectedDeck(_ word: String) -> Bool {
+        let units = KimiCardGenerator.makeGenerationUnits(sentence: trimmedSentence, words: [word])
+        if units.isEmpty {
+            return SharedDedupeIndex.contains(
+                deckID: selectedDeckID,
+                word: word,
+                sentence: trimmedSentence
+            )
+        }
+        return units.contains {
+            SharedDedupeIndex.contains(
+                deckID: selectedDeckID,
+                word: word,
+                sentence: $0.sentence
+            )
+        }
     }
 
     private func appendSelectionToWords() {
@@ -138,6 +161,7 @@ struct ImportCardsFormView: View {
             sentence: trimmedSentence,
             words: words,
             sourceHint: sourceHint,
+            sourceImagePath: sourceImagePath,
             targetDeckID: selectedDeckID,
             exitExtension: onSubmit
         )

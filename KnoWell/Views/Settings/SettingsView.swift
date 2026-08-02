@@ -110,6 +110,8 @@ struct SettingsView: View {
             }
             .loadingOverlay(isPresented: isMigratingCards, message: L10n.settingsMigrateCardsRunning)
         }
+        // Sheet covers ContentView’s toast host — host toasts here so Save / API test are visible.
+        .appToast(bottomPadding: 108)
     }
 
     private var saveFooter: some View {
@@ -284,9 +286,14 @@ struct SettingsView: View {
 
     private var liveProviderDescription: String {
         let trimmed = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmed.isEmpty,
-           !DefaultAPIKey.kimi.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return AIProvider.moonshot.displayName
+        if trimmed.isEmpty {
+            if !DefaultAPIKey.deepseek.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+               selectedProvider == .deepseek {
+                return AIProvider.deepseek.displayName
+            }
+            if !DefaultAPIKey.kimi.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                return AIProvider.moonshot.displayName
+            }
         }
         return selectedProvider.displayName
     }
@@ -294,7 +301,10 @@ struct SettingsView: View {
     private var liveKeySourceDescription: String {
         let trimmed = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmed.isEmpty { return L10n.keySourceUser }
-        // Default AI is available whenever the bundled key exists — not tied to provider picker.
+        if selectedProvider == .deepseek,
+           !DefaultAPIKey.deepseek.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return L10n.keySourceDefault
+        }
         if !DefaultAPIKey.kimi.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             return L10n.keySourceDefault
         }
@@ -303,9 +313,11 @@ struct SettingsView: View {
 
     private var canTestCurrentAI: Bool {
         let trimmedKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
-        let hasDefault = !DefaultAPIKey.kimi.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         if trimmedKey.isEmpty {
-            return hasDefault
+            if selectedProvider == .deepseek {
+                return !DefaultAPIKey.deepseek.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            }
+            return !DefaultAPIKey.kimi.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
         if selectedProvider == .custom {
             return !customBaseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty

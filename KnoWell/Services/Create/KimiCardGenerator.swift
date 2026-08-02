@@ -5,6 +5,7 @@ enum KimiCardGeneratorError: LocalizedError {
     case invalidResponse
     case apiError(String)
     case parseError(String)
+    case timedOut
     /// All requested words already exist in the target deck for this sentence.
     case allDuplicates
 
@@ -18,6 +19,8 @@ enum KimiCardGeneratorError: LocalizedError {
             message
         case .parseError(let message):
             L10n.parseError(message)
+        case .timedOut:
+            L10n.generateTimeoutError
         case .allDuplicates:
             L10n.createGenerateAllDuplicates
         }
@@ -25,53 +28,181 @@ enum KimiCardGeneratorError: LocalizedError {
 }
 
 enum KimiCardGenerator {
+    /// Keep each model reply small enough to finish within timeout and avoid truncated JSON.
+    private static let maxWordsPerRequest = 3
+    /// Cap parallel Moonshot calls — enough speedup without tripping rate limits.
+    private static let maxConcurrentRequests = 3
+    private static let requestTimeout: TimeInterval = 90
+    private static let maxOutputTokens = 6_000
+
+    private struct GenerationJob: Sendable {
+        let sentence: String
+        let words: [String]
+    }
+
+    /// Split multi-sentence imports so each word is generated with only its own sentence.
+    static func makeGenerationUnits(sentence: String, words: [String]) -> [OCRImportUnit] {
+        generationUnits(sentence: sentence, words: words)
+    }
+
+    /// Prepare units + batch count after optional deck-scoped dedupe (unit sentence keys).
+    static func prepareGeneration(
+        sentence: String,
+        words: [String],
+        skipExistingInDeckID: UUID? = nil
+    ) throws -> (units: [OCRImportUnit], skippedCount: Int, batchCount: Int) {
+        let units = generationUnits(sentence: sentence, words: words)
+        let prepared: (units: [OCRImportUnit], skippedCount: Int)
+        if let deckID = skipExistingInDeckID {
+            prepared = SharedDedupeIndex.filterNewUnits(units, deckID: deckID)
+            guard !prepared.units.isEmpty else {
+                throw KimiCardGeneratorError.allDuplicates
+            }
+        } else {
+            prepared = (units, 0)
+        }
+
+        let batchCount = prepared.units.reduce(0) { partial, unit in
+            partial + unit.words.chunked(into: maxWordsPerRequest).count
+        }
+        return (prepared.units, prepared.skippedCount, batchCount)
+    }
+
     /// - Parameter skipExistingInDeckID: When set, drop word+sentence pairs already in that deck
     ///   before calling the model. Use for **new** cards only — regenerators must leave this `nil`.
+    /// - Parameter onProgress: Invoked on the main actor as each batch finishes `(completed, total)`.
+    /// - Parameter onBatchFinished: Per-batch word outcomes for queue / progress UIs.
     static func generate(
         sentence: String,
         words: [String],
         sourceHint: String? = nil,
         deckName: String? = nil,
-        skipExistingInDeckID: UUID? = nil
+        skipExistingInDeckID: UUID? = nil,
+        onProgress: (@MainActor (Int, Int) -> Void)? = nil,
+        onBatchFinished: (@MainActor (_ sentence: String, _ words: [String], _ drafts: [GeneratedCardDraft], _ error: Error?) -> Void)? = nil
     ) async throws -> [GeneratedCardDraft] {
         guard APISettings.canUseAI else {
             throw KimiCardGeneratorError.missingAPIKey
         }
 
-        let wordsForAI: [String]
-        if let deckID = skipExistingInDeckID {
-            let filtered = SharedDedupeIndex.filterNewWords(
-                words,
-                deckID: deckID,
-                sentence: sentence
-            )
-            guard !filtered.kept.isEmpty else {
-                throw KimiCardGeneratorError.allDuplicates
-            }
-            wordsForAI = filtered.kept
-        } else {
-            wordsForAI = words
-        }
+        let prepared = try prepareGeneration(
+            sentence: sentence,
+            words: words,
+            skipExistingInDeckID: skipExistingInDeckID
+        )
+        return try await generate(
+            units: prepared.units,
+            sourceHint: sourceHint,
+            deckName: deckName,
+            onProgress: onProgress,
+            onBatchFinished: onBatchFinished
+        )
+    }
 
-        let units = generationUnits(sentence: sentence, words: wordsForAI)
+    static func generate(
+        units: [OCRImportUnit],
+        sourceHint: String? = nil,
+        deckName: String? = nil,
+        onProgress: (@MainActor (Int, Int) -> Void)? = nil,
+        onBatchFinished: (@MainActor (_ sentence: String, _ words: [String], _ drafts: [GeneratedCardDraft], _ error: Error?) -> Void)? = nil
+    ) async throws -> [GeneratedCardDraft] {
+        guard APISettings.canUseAI else {
+            throw KimiCardGeneratorError.missingAPIKey
+        }
         guard !units.isEmpty else { return [] }
+
         let hint = sourceHint?
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .nilIfEmpty
         let deck = usefulDeckName(deckName)
 
-        // One API call per sentence-context so each card front stays that word's sentence only.
-        var allDrafts: [GeneratedCardDraft] = []
+        var jobs: [GenerationJob] = []
         for unit in units {
-            let drafts = try await generateForSingleContext(
-                sentence: unit.sentence,
-                words: unit.words,
-                sourceHint: hint,
-                deckName: deck
-            )
-            allDrafts.append(contentsOf: drafts)
+            for batch in unit.words.chunked(into: maxWordsPerRequest) {
+                jobs.append(GenerationJob(sentence: unit.sentence, words: batch))
+            }
         }
-        return allDrafts
+        guard !jobs.isEmpty else { return [] }
+
+        let total = jobs.count
+        await MainActor.run { onProgress?(0, total) }
+
+        let collected = await runJobsInParallel(
+            jobs,
+            sourceHint: hint,
+            deckName: deck,
+            onProgress: onProgress,
+            onBatchFinished: onBatchFinished
+        )
+
+        if !collected.drafts.isEmpty {
+            return collected.drafts
+        }
+        throw collected.lastError
+            ?? KimiCardGeneratorError.parseError(L10n.generateFormatErrorDetail)
+    }
+
+    private static func runJobsInParallel(
+        _ jobs: [GenerationJob],
+        sourceHint: String?,
+        deckName: String?,
+        onProgress: (@MainActor (Int, Int) -> Void)?,
+        onBatchFinished: (@MainActor (_ sentence: String, _ words: [String], _ drafts: [GeneratedCardDraft], _ error: Error?) -> Void)?
+    ) async -> (drafts: [GeneratedCardDraft], lastError: Error?) {
+        let total = jobs.count
+        var allDrafts: [GeneratedCardDraft] = []
+        allDrafts.reserveCapacity(total * maxWordsPerRequest * 2)
+        var lastError: Error?
+        var completed = 0
+
+        await withTaskGroup(of: (job: GenerationJob, result: Result<[GeneratedCardDraft], Error>).self) { group in
+            var nextIndex = 0
+            var inFlight = 0
+
+            func enqueueAvailable() {
+                while inFlight < maxConcurrentRequests, nextIndex < jobs.count {
+                    let job = jobs[nextIndex]
+                    nextIndex += 1
+                    inFlight += 1
+                    group.addTask {
+                        do {
+                            let drafts = try await generateForSingleContext(
+                                sentence: job.sentence,
+                                words: job.words,
+                                sourceHint: sourceHint,
+                                deckName: deckName
+                            )
+                            return (job, .success(drafts))
+                        } catch {
+                            return (job, .failure(mapTransportError(error)))
+                        }
+                    }
+                }
+            }
+
+            enqueueAvailable()
+
+            for await item in group {
+                inFlight -= 1
+                switch item.result {
+                case .success(let drafts):
+                    allDrafts.append(contentsOf: drafts)
+                    await MainActor.run {
+                        onBatchFinished?(item.job.sentence, item.job.words, drafts, nil)
+                    }
+                case .failure(let error):
+                    lastError = error
+                    await MainActor.run {
+                        onBatchFinished?(item.job.sentence, item.job.words, [], error)
+                    }
+                }
+                completed += 1
+                await MainActor.run { onProgress?(completed, total) }
+                enqueueAvailable()
+            }
+        }
+
+        return (allDrafts, lastError)
     }
 
     /// Skip generic default decks — they add noise, not context.
@@ -114,7 +245,9 @@ enum KimiCardGenerator {
         guard !missing.isEmpty else { return extracted }
 
         var units = extracted
-        units[0].words.append(contentsOf: missing)
+        // Attach unmatched words to the shortest sentence unit to limit front-text bloat.
+        let targetIndex = units.indices.min(by: { units[$0].sentence.count < units[$1].sentence.count }) ?? 0
+        units[targetIndex].words.append(contentsOf: missing)
         return units
     }
 
@@ -124,13 +257,74 @@ enum KimiCardGenerator {
         sourceHint: String?,
         deckName: String?
     ) async throws -> [GeneratedCardDraft] {
-        let content = try await requestCards(
-            sentence: sentence,
-            words: words,
-            sourceHint: sourceHint,
-            deckName: deckName
-        )
-        return try parseCards(from: content, sentence: sentence)
+        try await withRetry(attempts: 2) {
+            let content = try await requestCards(
+                sentence: sentence,
+                words: words,
+                sourceHint: sourceHint,
+                deckName: deckName
+            )
+            return try parseCards(from: content, sentence: sentence)
+        }
+    }
+
+    private static func withRetry<T>(
+        attempts: Int,
+        operation: () async throws -> T
+    ) async throws -> T {
+        var lastError: Error?
+        for attempt in 1...max(attempts, 1) {
+            do {
+                return try await operation()
+            } catch {
+                let mapped = mapTransportError(error)
+                lastError = mapped
+                let retryable = shouldRetry(mapped)
+                if !retryable || attempt == attempts {
+                    throw mapped
+                }
+                try? await Task.sleep(for: .milliseconds(400 * attempt))
+            }
+        }
+        throw lastError ?? KimiCardGeneratorError.invalidResponse
+    }
+
+    private static func shouldRetry(_ error: Error) -> Bool {
+        if let kimi = error as? KimiCardGeneratorError {
+            switch kimi {
+            case .timedOut, .parseError, .invalidResponse:
+                return true
+            case .apiError(let message):
+                let lower = message.lowercased()
+                return lower.contains("timeout")
+                    || lower.contains("timed out")
+                    || lower.contains("rate")
+                    || lower.contains("429")
+                    || lower.contains("503")
+                    || lower.contains("502")
+            case .missingAPIKey, .allDuplicates:
+                return false
+            }
+        }
+        if let url = error as? URLError {
+            return url.code == .timedOut
+                || url.code == .networkConnectionLost
+                || url.code == .notConnectedToInternet
+        }
+        return false
+    }
+
+    private static func mapTransportError(_ error: Error) -> Error {
+        if let kimi = error as? KimiCardGeneratorError {
+            return kimi
+        }
+        if let url = error as? URLError, url.code == .timedOut {
+            return KimiCardGeneratorError.timedOut
+        }
+        if error is DecodingError {
+            return KimiCardGeneratorError.parseError(L10n.generateFormatErrorDetail)
+        }
+        return error
     }
 
     private static func requestCards(
@@ -147,7 +341,7 @@ enum KimiCardGenerator {
         request.httpMethod = "POST"
         request.setValue("Bearer \(APISettings.effectiveAPIKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.timeoutInterval = 60
+        request.timeoutInterval = requestTimeout
         applyProviderHeaders(to: &request)
 
         let wordsList = words.joined(separator: ", ")
@@ -180,6 +374,7 @@ enum KimiCardGenerator {
         8. 原文是什么语言，front 中的句子就保持什么语言，不要擅自翻译原句
         9. source：若能从原文、页面提示、词库名称或公认名句较有把握地判断出处（书名、篇章名、作者），填写简洁标注，如「Poor Charlie's Almanack · Charles T. Munger」；无把握必须返回空字符串，禁止编造
         10. 若提供了词库名称：把它当作主题/书名/学习范围线索，优先按该语境理解生词与【】译法；词库名 alone 不足以确定出处时不要编造 source
+        11. 本次只处理用户列出的生词，数量通常很少；请输出完整合法 JSON，不要截断
         """
 
         var userPrompt = """
@@ -199,7 +394,8 @@ enum KimiCardGenerator {
                 ["role": "system", "content": systemPrompt],
                 ["role": "user", "content": userPrompt]
             ],
-            "temperature": 0.3,
+            "temperature": APISettings.chatTemperature(preferred: 0.3),
+            "max_tokens": maxOutputTokens,
             "response_format": ["type": "json_object"]
         ]
 
@@ -224,6 +420,12 @@ enum KimiCardGenerator {
             let content = message["content"] as? String
         else {
             throw KimiCardGeneratorError.invalidResponse
+        }
+
+        // Truncated completions often yield broken JSON → surface as format error / retry.
+        if let finish = first["finish_reason"] as? String,
+           finish == "length" {
+            throw KimiCardGeneratorError.parseError(L10n.generateFormatErrorDetail)
         }
 
         return content
@@ -271,10 +473,15 @@ enum KimiCardGenerator {
     private static func parseCards(from content: String, sentence: String) throws -> [GeneratedCardDraft] {
         let jsonString = extractJSON(from: content)
         guard let data = jsonString.data(using: .utf8) else {
-            throw KimiCardGeneratorError.parseError("无法读取 JSON 文本")
+            throw KimiCardGeneratorError.parseError(L10n.generateFormatErrorDetail)
         }
 
-        let response = try JSONDecoder().decode(KimiCardsResponse.self, from: data)
+        let response: KimiCardsResponse
+        do {
+            response = try JSONDecoder().decode(KimiCardsResponse.self, from: data)
+        } catch {
+            throw KimiCardGeneratorError.parseError(L10n.generateFormatErrorDetail)
+        }
         let source = response.source?
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .nilIfEmpty
@@ -305,7 +512,7 @@ enum KimiCardGenerator {
         }
 
         guard !drafts.isEmpty else {
-            throw KimiCardGeneratorError.parseError("未生成任何卡片")
+            throw KimiCardGeneratorError.parseError(L10n.generateFormatErrorDetail)
         }
 
         // Cloze/definition pair: copy phonetic if one sibling omitted it.
@@ -396,5 +603,20 @@ private extension Array where Element: Hashable {
     func uniqued() -> [Element] {
         var seen = Set<Element>()
         return filter { seen.insert($0).inserted }
+    }
+}
+
+private extension Array {
+    func chunked(into size: Int) -> [[Element]] {
+        guard size > 0, !isEmpty else { return isEmpty ? [] : [self] }
+        var result: [[Element]] = []
+        result.reserveCapacity((count + size - 1) / size)
+        var index = startIndex
+        while index < endIndex {
+            let next = self.index(index, offsetBy: size, limitedBy: endIndex) ?? endIndex
+            result.append(Array(self[index..<next]))
+            index = next
+        }
+        return result
     }
 }

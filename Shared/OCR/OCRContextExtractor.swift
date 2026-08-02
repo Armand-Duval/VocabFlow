@@ -114,22 +114,34 @@ enum OCRContextExtractor {
     static func sentenceContaining(_ word: String, in text: String) -> String? {
         guard let match = rangeOfWord(word, in: text) else { return nil }
 
-        let terminators: Set<Character> = [".", "!", "?", "。", "！", "？", "…"]
         var start = match.lowerBound
         while start > text.startIndex {
             let prev = text.index(before: start)
-            if terminators.contains(text[prev]) {
+            if isSentenceTerminator(at: prev, in: text) {
                 start = text.index(after: prev)
                 break
             }
             start = prev
         }
+        // Skip closing punctuation left after a terminator: `exams.) In fact` → `In fact`
+        while start < text.endIndex, isTrailingCloser(text[start]) {
+            start = text.index(after: start)
+        }
+        while start < text.endIndex, text[start].isWhitespace {
+            start = text.index(after: start)
+        }
 
         var end = match.upperBound
         while end < text.endIndex {
-            let ch = text[end]
+            if isSentenceTerminator(at: end, in: text) {
+                end = text.index(after: end)
+                // Include trailing quote/paren after the stop: `grateful."`
+                while end < text.endIndex, isTrailingCloser(text[end]) {
+                    end = text.index(after: end)
+                }
+                break
+            }
             end = text.index(after: end)
-            if terminators.contains(ch) { break }
         }
 
         let sentence = String(text[start..<end])
@@ -140,6 +152,26 @@ enum OCRContextExtractor {
             return windowAround(match, in: text, radius: 160)
         }
         return sentence
+    }
+
+    /// `.` / `。` etc., but not the dots inside an ellipsis (`...` / `…`).
+    private static func isSentenceTerminator(at index: String.Index, in text: String) -> Bool {
+        let ch = text[index]
+        let terminators: Set<Character> = [".", "!", "?", "。", "！", "？", "…"]
+        guard terminators.contains(ch) else { return false }
+        if ch == "." {
+            if index > text.startIndex {
+                let prev = text.index(before: index)
+                if text[prev] == "." { return false }
+            }
+            let next = text.index(after: index)
+            if next < text.endIndex, text[next] == "." { return false }
+        }
+        return true
+    }
+
+    private static func isTrailingCloser(_ ch: Character) -> Bool {
+        [")", "]", "}", "\"", "'", "”", "’", "»"].contains(ch)
     }
 
     private static func shouldBreakParagraph(before line: String, after buffer: String) -> Bool {
@@ -155,8 +187,17 @@ enum OCRContextExtractor {
     }
 
     private static func endsWithSentenceTerminator(_ text: String) -> Bool {
-        guard let last = text.last else { return false }
-        return [".", "!", "?", "。", "！", "？", "…"].contains(last)
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let last = trimmed.indices.last else { return false }
+        // Allow `grateful."` / `exams.)` as paragraph ends.
+        if isTrailingCloser(trimmed[last]) {
+            var idx = last
+            while idx > trimmed.startIndex, isTrailingCloser(trimmed[idx]) {
+                idx = trimmed.index(before: idx)
+            }
+            return isSentenceTerminator(at: idx, in: trimmed)
+        }
+        return isSentenceTerminator(at: last, in: trimmed)
     }
 
     private static func rangeOfWord(_ word: String, in text: String) -> Range<String.Index>? {

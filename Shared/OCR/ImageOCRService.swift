@@ -53,16 +53,20 @@ enum ImageOCRService {
             fullText: vision.fullText,
             highlightedWords: highlighted
         )
-        log("""
-        5) highlightedWords=\(highlighted)
-        6) importUnits=\(units.map { "[\($0.words.joined(separator: ", "))] \($0.sentence.prefix(72))" })
-        ——— OCR end ———
-        """)
-        return OCRResult(
+        let raw = OCRResult(
             fullText: vision.fullText,
             highlightedWords: highlighted,
-            importUnits: units
+            importUnits: units,
+            sourceImagePath: nil
         )
+        let result = raw.sanitizedForImport()
+        log("""
+        5) highlightedWords=\(highlighted) → sanitized=\(result.highlightedWords)
+        6) importUnits=\(units.map { "[\($0.words.joined(separator: ", "))] \($0.sentence.prefix(72))" })
+           sanitizedUnits=\(result.importUnits.count) preferHighlight=\(result.hasHighlightContext)
+        ——— OCR end ———
+        """)
+        return result
         #else
         _ = image
         return .empty

@@ -56,7 +56,7 @@ enum ReviewReminderService {
             guard settings.authorizationStatus == .authorized else { return }
 
             let content = UNMutableNotificationContent()
-            content.title = "KnoWell"
+            content.title = L10n.brandName
             content.body = L10n.reviewReminderBody(dueCount)
             content.sound = .default
 

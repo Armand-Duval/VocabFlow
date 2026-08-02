@@ -38,6 +38,11 @@ enum CardContentSync {
            !source.isEmpty {
             card.sourceAttribution = source
         }
+
+        if let imagePath = draft.sourceImagePath?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !imagePath.isEmpty {
+            card.sourceImagePath = imagePath
+        }
     }
 
     @MainActor

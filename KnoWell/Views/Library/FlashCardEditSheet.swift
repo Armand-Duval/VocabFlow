@@ -88,6 +88,7 @@ struct FlashCardEditFields: Equatable {
 struct FlashCardEditorForm: View {
     @Binding var fields: FlashCardEditFields
     let decks: [Deck]
+    var cardSourceImagePath: String? = nil
 
     var body: some View {
         Form {
@@ -114,6 +115,15 @@ struct FlashCardEditorForm: View {
                 }
 
                 labeledField(L10n.cardSourceLabel, text: $fields.sourceAttribution, prompt: L10n.cardSourceLabel)
+
+                if let path = cardSourceImagePath {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(L10n.cardSourceImageLabel)
+                            .font(AppFont.caption())
+                            .foregroundStyle(.secondary)
+                        CardSourceImageThumbnail(relativePath: path, maxHeight: 160)
+                    }
+                }
             } header: {
                 Text(L10n.libraryEditBasics)
             }
@@ -245,7 +255,11 @@ struct FlashCardEditSheet: View {
 
     var body: some View {
         NavigationStack {
-            FlashCardEditorForm(fields: $fields, decks: decks)
+            FlashCardEditorForm(
+                fields: $fields,
+                decks: decks,
+                cardSourceImagePath: card.sourceImagePath
+            )
                 .navigationTitle(editNavigationTitle)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {

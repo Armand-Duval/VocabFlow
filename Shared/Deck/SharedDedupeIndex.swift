@@ -58,6 +58,43 @@ enum SharedDedupeIndex {
         return (kept, skipped)
     }
 
+    /// Dedupe against each unit's own sentence (must match keys written at save time).
+    static func filterNewUnits(
+        _ units: [OCRImportUnit],
+        deckID: UUID
+    ) -> (units: [OCRImportUnit], skippedCount: Int) {
+        var result: [OCRImportUnit] = []
+        var skipped = 0
+        var seenKeys = Set<String>()
+
+        for unit in units {
+            let sentence = unit.sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !sentence.isEmpty else { continue }
+
+            var keptWords: [String] = []
+            for word in unit.words {
+                let trimmed = word.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !trimmed.isEmpty else { continue }
+                guard let key = key(deckID: deckID, word: trimmed, sentence: sentence) else { continue }
+                guard !seenKeys.contains(key) else {
+                    skipped += 1
+                    continue
+                }
+                seenKeys.insert(key)
+
+                if contains(deckID: deckID, word: trimmed, sentence: sentence) {
+                    skipped += 1
+                } else {
+                    keptWords.append(trimmed)
+                }
+            }
+            if !keptWords.isEmpty {
+                result.append(OCRImportUnit(sentence: sentence, words: keptWords))
+            }
+        }
+        return (result, skipped)
+    }
+
     static func replaceAll(keys: Set<String>) {
         saveKeys(keys)
     }

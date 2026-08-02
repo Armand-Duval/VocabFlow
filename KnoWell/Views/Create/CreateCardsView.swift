@@ -14,8 +14,9 @@ struct CreateCardsView: View {
     @State private var words: [String] = []
     @State private var drafts: [GeneratedCardDraft] = []
     @State private var selectedDeckID: UUID?
-    @State private var isGenerating = false
+    @ObservedObject private var generationQueue = CardGenerationQueue.shared
     @State private var showPreview = false
+    @State private var showGenerationQueue = false
     @State private var errorMessage: String?
     @State private var importBannerMessage: String?
     @State private var selectedText = ""
@@ -30,6 +31,7 @@ struct CreateCardsView: View {
     @State private var longTextChoiceMade = false
     @State private var isManualEditing = false
     @State private var sourceHint: String?
+    @State private var sourceImagePath: String?
     @State private var todayCaptureTip: String?
     @State private var isSourceFocused = false
 
@@ -42,7 +44,7 @@ struct CreateCardsView: View {
     }
 
     private var generateDisabledHint: String? {
-        guard !canGenerate, !isGenerating else { return nil }
+        guard !canGenerate else { return nil }
         if trimmedSentence.isEmpty && words.isEmpty {
             return L10n.createGenerateNeedBoth
         }
@@ -74,15 +76,29 @@ struct CreateCardsView: View {
                 }
                 .dismissKeyboardOnScroll()
                 .keyboardDoneButton()
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    if generationQueue.hasActiveJobs || !generationQueue.jobs.isEmpty {
+                        generationQueueBanner
+                    }
+                }
                 .safeAreaInset(edge: .bottom, spacing: 0) {
                     generateFooter
                 }
-                .loadingOverlay(isPresented: isGenerating, message: L10n.generating)
                 .loadingOverlay(isPresented: isRecognizingPhoto, message: L10n.recognizingPhoto)
                 .navigationDestination(isPresented: $showPreview) {
                     CardPreviewView(drafts: drafts, selectedDeckID: $selectedDeckID) {
                         showPreview = false
                     }
+                }
+                .sheet(isPresented: $showGenerationQueue) {
+                    CardGenerationQueueView(queue: generationQueue)
+                }
+                .onChange(of: generationQueue.readyPreview) { _, preview in
+                    guard let preview else { return }
+                    selectedDeckID = preview.deckID
+                    drafts = preview.drafts
+                    showPreview = true
+                    generationQueue.dismissReadyPreview()
                 }
                 .modifier(CreateCardsAlertsModifier(errorMessage: $errorMessage))
                 .modifier(CreateCardsLifecycleModifier(
@@ -311,6 +327,35 @@ struct CreateCardsView: View {
         .appSoftShadow()
     }
 
+    private var generationQueueBanner: some View {
+        Button {
+            showGenerationQueue = true
+        } label: {
+            HStack(spacing: AppSpacing.sm) {
+                if generationQueue.hasActiveJobs {
+                    ProgressView()
+                        .controlSize(.small)
+                } else {
+                    Image(systemName: "checklist")
+                }
+                Text(generationQueue.hasActiveJobs
+                     ? generationQueue.activeSummary
+                     : L10n.createQueueTitle)
+                    .font(AppFont.helper())
+                    .foregroundStyle(AppColor.textPrimary)
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+                Text(L10n.createQueueViewAction)
+                    .font(AppFont.helper().weight(.semibold))
+                    .foregroundStyle(AppColor.accent)
+            }
+            .padding(.horizontal, AppSpacing.md)
+            .padding(.vertical, AppSpacing.sm)
+            .background(AppColor.surface)
+        }
+        .buttonStyle(.plain)
+    }
+
     private var generateFooter: some View {
         VStack(spacing: AppSpacing.xs) {
             if let generateDisabledHint {
@@ -322,17 +367,11 @@ struct CreateCardsView: View {
                     .transition(.opacity)
             }
 
-            Button(action: generateCards) {
-                HStack(spacing: AppSpacing.xs) {
-                    if isGenerating {
-                        ProgressView()
-                            .tint(.white)
-                    }
-                    Text(isGenerating ? L10n.generating : L10n.createAIGenerate)
-                }
+            Button(action: enqueueGeneration) {
+                Text(L10n.createAIGenerate)
             }
             .buttonStyle(PrimaryButtonStyle(prominent: true))
-            .disabled(isGenerating || !canGenerate)
+            .disabled(!canGenerate)
             .padding(.horizontal, AppSpacing.md)
         }
         .padding(.top, AppSpacing.sm)
@@ -390,6 +429,7 @@ struct CreateCardsView: View {
             // Highlight hits → word + containing sentence only (not the whole page).
             sentence = importSentence
             sourceHint = OCRContextExtractor.sourceHint(from: result.fullText)
+            sourceImagePath = CardSourceImageStore.saveJPEG(image)
             if result.hasHighlightContext {
                 words = []
             }
@@ -455,12 +495,23 @@ struct CreateCardsView: View {
     private func wordExistsInSelectedDeck(_ word: String) -> Bool {
         guard !trimmedSentence.isEmpty else { return false }
         let deck = DeckService.resolvedDeck(id: selectedDeckID, in: modelContext)
-        return FlashCardDeduper.contains(
-            word: word,
-            sentence: trimmedSentence,
-            in: deck,
-            context: modelContext
-        )
+        let units = KimiCardGenerator.makeGenerationUnits(sentence: trimmedSentence, words: [word])
+        if units.isEmpty {
+            return FlashCardDeduper.contains(
+                word: word,
+                sentence: trimmedSentence,
+                in: deck,
+                context: modelContext
+            )
+        }
+        return units.contains {
+            FlashCardDeduper.contains(
+                word: word,
+                sentence: $0.sentence,
+                in: deck,
+                context: modelContext
+            )
+        }
     }
 
     private func clearFeedbackLater() {
@@ -492,62 +543,27 @@ struct CreateCardsView: View {
         }
     }
 
-    private func generateCards() {
+    private func enqueueGeneration() {
         errorMessage = nil
-        isGenerating = true
+        SharedDedupeSync.rebuild(in: modelContext)
+        let deck = DeckService.resolvedDeck(id: selectedDeckID, in: modelContext)
+        if selectedDeckID == nil {
+            selectedDeckID = deck.id
+        }
 
-        Task {
-            do {
-                let prep = await MainActor.run { () -> (deckID: UUID, deckName: String?, kept: [String], skipped: Int) in
-                    SharedDedupeSync.rebuild(in: modelContext)
-                    let deck = DeckService.resolvedDeck(id: selectedDeckID, in: modelContext)
-                    if selectedDeckID == nil {
-                        selectedDeckID = deck.id
-                    }
-                    let filtered = SharedDedupeIndex.filterNewWords(
-                        words,
-                        deckID: deck.id,
-                        sentence: sentence
-                    )
-                    return (deck.id, deck.name, filtered.kept, filtered.skippedCount)
-                }
-
-                guard !prep.kept.isEmpty else {
-                    await MainActor.run {
-                        isGenerating = false
-                        errorMessage = L10n.createGenerateAllDuplicates
-                    }
-                    return
-                }
-
-                let generated = try await KimiCardGenerator.generate(
-                    sentence: sentence,
-                    words: prep.kept,
-                    sourceHint: sourceHint,
-                    deckName: prep.deckName,
-                    skipExistingInDeckID: prep.deckID
-                )
-
-                await MainActor.run {
-                    isGenerating = false
-                    if generated.isEmpty {
-                        errorMessage = L10n.generateEmptyError
-                    } else {
-                        drafts = generated
-                        showPreview = true
-                        if prep.skipped > 0 {
-                            showToast(L10n.createGenerateSuccessSkipped(generated.count, prep.skipped))
-                        } else {
-                            showToast(L10n.createGenerateSuccess(generated.count))
-                        }
-                    }
-                }
-            } catch {
-                await MainActor.run {
-                    isGenerating = false
-                    errorMessage = error.localizedDescription
-                }
-            }
+        do {
+            _ = try generationQueue.enqueue(
+                sentence: sentence,
+                words: words,
+                deckID: deck.id,
+                deckName: deck.name,
+                sourceHint: sourceHint,
+                sourceImagePath: sourceImagePath
+            )
+            words = []
+            showToast(L10n.createQueuedToast)
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 }

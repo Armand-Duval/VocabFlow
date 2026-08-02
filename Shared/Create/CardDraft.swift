@@ -23,6 +23,8 @@ struct GeneratedCardDraft: Identifiable, Equatable {
     var contextNote: String?
     /// Book / article / author when AI (or page header) can identify it.
     var sourceAttribution: String?
+    /// App Group relative path to the source screenshot / photo, if any.
+    var sourceImagePath: String? = nil
     var isSelected: Bool = true
 }
 

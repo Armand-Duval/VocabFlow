@@ -57,6 +57,7 @@ enum ShareImportStore {
         let back: String
         let contextNote: String?
         let sourceAttribution: String?
+        let sourceImagePath: String?
 
         init(from draft: GeneratedCardDraft) {
             word = draft.word
@@ -67,10 +68,11 @@ enum ShareImportStore {
             back = draft.back
             contextNote = draft.contextNote
             sourceAttribution = draft.sourceAttribution
+            sourceImagePath = draft.sourceImagePath
         }
 
         enum CodingKeys: String, CodingKey {
-            case word, phonetic, sentence, cardTypeRaw, front, back, contextNote, sourceAttribution
+            case word, phonetic, sentence, cardTypeRaw, front, back, contextNote, sourceAttribution, sourceImagePath
         }
 
         init(from decoder: Decoder) throws {
@@ -83,6 +85,7 @@ enum ShareImportStore {
             back = try container.decode(String.self, forKey: .back)
             contextNote = try container.decodeIfPresent(String.self, forKey: .contextNote)
             sourceAttribution = try container.decodeIfPresent(String.self, forKey: .sourceAttribution)
+            sourceImagePath = try container.decodeIfPresent(String.self, forKey: .sourceImagePath)
         }
 
         func encode(to encoder: Encoder) throws {
@@ -95,6 +98,7 @@ enum ShareImportStore {
             try container.encode(back, forKey: .back)
             try container.encodeIfPresent(contextNote, forKey: .contextNote)
             try container.encodeIfPresent(sourceAttribution, forKey: .sourceAttribution)
+            try container.encodeIfPresent(sourceImagePath, forKey: .sourceImagePath)
         }
     }
 
@@ -112,16 +116,24 @@ enum ShareImportStore {
         let sentence: String
         let words: [String]
         let sourceHint: String?
+        let sourceImagePath: String?
         var status: GenerationJobStatus
 
         enum CodingKeys: String, CodingKey {
-            case sentence, words, sourceHint, status
+            case sentence, words, sourceHint, sourceImagePath, status
         }
 
-        init(sentence: String, words: [String], sourceHint: String? = nil, status: GenerationJobStatus) {
+        init(
+            sentence: String,
+            words: [String],
+            sourceHint: String? = nil,
+            sourceImagePath: String? = nil,
+            status: GenerationJobStatus
+        ) {
             self.sentence = sentence
             self.words = words
             self.sourceHint = sourceHint
+            self.sourceImagePath = sourceImagePath
             self.status = status
         }
 
@@ -130,6 +142,7 @@ enum ShareImportStore {
             sentence = try container.decode(String.self, forKey: .sentence)
             words = try container.decode([String].self, forKey: .words)
             sourceHint = try container.decodeIfPresent(String.self, forKey: .sourceHint)
+            sourceImagePath = try container.decodeIfPresent(String.self, forKey: .sourceImagePath)
             status = try container.decode(GenerationJobStatus.self, forKey: .status)
         }
     }
@@ -221,7 +234,8 @@ enum ShareImportStore {
                 front: stored.front,
                 back: stored.back,
                 contextNote: stored.contextNote,
-                sourceAttribution: stored.sourceAttribution
+                sourceAttribution: stored.sourceAttribution,
+                sourceImagePath: stored.sourceImagePath
             )
         }
     }
@@ -234,12 +248,14 @@ enum ShareImportStore {
     static func savePendingGenerationJob(
         sentence: String,
         words: [String],
-        sourceHint: String? = nil
+        sourceHint: String? = nil,
+        sourceImagePath: String? = nil
     ) {
         let job = StoredGenerationJob(
             sentence: sentence,
             words: words,
             sourceHint: sourceHint,
+            sourceImagePath: sourceImagePath,
             status: .pending
         )
         guard let url = generationJobURL,
@@ -249,7 +265,12 @@ enum ShareImportStore {
         try? data.write(to: url, options: .atomic)
     }
 
-    static func claimPendingGenerationJob() -> (sentence: String, words: [String], sourceHint: String?)? {
+    static func claimPendingGenerationJob() -> (
+        sentence: String,
+        words: [String],
+        sourceHint: String?,
+        sourceImagePath: String?
+    )? {
         guard let url = generationJobURL,
               let data = try? Data(contentsOf: url),
               var job = try? JSONDecoder().decode(StoredGenerationJob.self, from: data) else {
@@ -274,7 +295,7 @@ enum ShareImportStore {
             return nil
         }
 
-        return (sentence, words, job.sourceHint)
+        return (sentence, words, job.sourceHint, job.sourceImagePath)
     }
 
     static func clearGenerationJob() {
@@ -398,7 +419,7 @@ enum ShareExtensionNotifier {
             }
 
             let content = UNMutableNotificationContent()
-            content.title = "KnoWell"
+            content.title = L10n.brandName
             content.body = body
             content.sound = .default
 

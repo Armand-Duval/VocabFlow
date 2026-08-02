@@ -120,11 +120,11 @@ enum HighlightMaskDetector {
         let h = hsv.h
         let yellowChroma = ((r + g) * 0.5) - b
         let yellow = h >= 36 && h <= 74 && hsv.s >= 0.22 && yellowChroma >= 0.06
-        let green = h >= 72 && h <= 158 && hsv.s >= 0.20
-        let cyanBlue = h >= 165 && h <= 230 && hsv.s >= 0.22
+        // Skip teal/cyan — App accent + tab chrome false-positive as highlighter on screenshots.
+        let green = h >= 72 && h <= 150 && hsv.s >= 0.22
         let pink = (h >= 300 || h <= 20) && hsv.s >= 0.22
         let orange = h >= 15 && h <= 40 && hsv.s >= 0.26 && yellowChroma >= 0.06
-        return yellow || green || cyanBlue || pink || orange
+        return yellow || green || pink || orange
     }
 
     private static func rgbToHSV(r: Double, g: Double, b: Double) -> (h: Double, s: Double, v: Double) {

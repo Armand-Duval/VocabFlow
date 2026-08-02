@@ -3,6 +3,7 @@ import UIKit
 
 class ExtensionImportViewController: UIViewController {
     private var hostingController: UIHostingController<AnyView>?
+    private var didFinishRequest = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -39,13 +40,15 @@ class ExtensionImportViewController: UIViewController {
                 for: ocr.preferredImportSentence,
                 highlightedWords: ocr.preferredImportWords,
                 sourceHint: hint,
+                sourceImagePath: ocr.sourceImagePath,
                 replaceSentence: true
             )
         } else {
             presentImportForm(
                 for: ocr.fullText,
                 highlightedWords: ocr.highlightedWords,
-                sourceHint: hint
+                sourceHint: hint,
+                sourceImagePath: ocr.sourceImagePath
             )
         }
     }
@@ -54,6 +57,7 @@ class ExtensionImportViewController: UIViewController {
         for text: String,
         highlightedWords: [String] = [],
         sourceHint: String? = nil,
+        sourceImagePath: String? = nil,
         replaceSentence: Bool = false
     ) {
         let parsed = ImportTextAnalyzer.parse(text)
@@ -71,11 +75,12 @@ class ExtensionImportViewController: UIViewController {
             sentence: sentence,
             selectedWord: prefilled.isEmpty ? nil : VocabularyWords.join(prefilled),
             sourceHint: sourceHint,
+            sourceImagePath: sourceImagePath,
             onSubmit: { [weak self] in
-                self?.extensionContext?.completeRequest(returningItems: nil)
+                self?.finishAfterQueued()
             },
             onCancel: { [weak self] in
-                self?.extensionContext?.completeRequest(returningItems: nil)
+                self?.completeExtension()
             }
         )
 
@@ -94,6 +99,26 @@ class ExtensionImportViewController: UIViewController {
 
         hosting.didMove(toParent: self)
         hostingController = hosting
+    }
+
+    private func finishAfterQueued() {
+        // Wake the host app so Share / Action pending jobs enter CardGenerationQueue immediately.
+        if let url = URL(string: ShareImportStore.createURLString) {
+            extensionContext?.open(url) { [weak self] _ in
+                self?.completeExtension()
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
+                self?.completeExtension()
+            }
+            return
+        }
+        completeExtension()
+    }
+
+    private func completeExtension() {
+        guard !didFinishRequest else { return }
+        didFinishRequest = true
+        extensionContext?.completeRequest(returningItems: nil)
     }
 
     private func finishWithError(_ message: String) {

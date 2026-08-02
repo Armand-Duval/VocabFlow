@@ -45,17 +45,27 @@ enum APISettings {
     }
 
     /// Effective model ID (picker selection or custom model override).
-    /// Default-key fallback always uses a Moonshot model.
+    /// Default-key fallback uses a model that matches the effective provider.
     static var effectiveModel: String {
         if isUsingDefaultKey {
-            if AIProvider.moonshot.suggestedModels.contains(kimiModel) {
+            let fallbackProvider = effectiveProvider
+            if fallbackProvider.suggestedModels.contains(kimiModel) {
                 return kimiModel
             }
-            return AIProvider.moonshot.defaultModel
+            return fallbackProvider.defaultModel
         }
         let custom = customModelID
         if !custom.isEmpty { return custom }
         return kimiModel
+    }
+
+    /// Moonshot Kimi K2.5 / K2.6 only accept `temperature: 1`.
+    static func chatTemperature(preferred: Double) -> Double {
+        let model = effectiveModel.lowercased()
+        if model.contains("kimi-k2") || model.contains("kimi/k2") {
+            return 1
+        }
+        return preferred
     }
 
     static var customModelID: String {
@@ -72,27 +82,42 @@ enum APISettings {
         !kimiAPIKey.isEmpty
     }
 
-    /// Bundled default key exists (not tied to the provider picker).
+    /// Bundled default key for a provider (empty if unsupported / not configured).
+    static func defaultAPIKey(for provider: AIProvider) -> String {
+        switch provider {
+        case .moonshot:
+            DefaultAPIKey.kimi.trimmingCharacters(in: .whitespacesAndNewlines)
+        case .deepseek:
+            DefaultAPIKey.deepseek.trimmingCharacters(in: .whitespacesAndNewlines)
+        default:
+            ""
+        }
+    }
+
+    /// Any bundled default key exists (Moonshot and/or DeepSeek).
     static var hasDefaultAPIKey: Bool {
-        !DefaultAPIKey.kimi.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        !defaultAPIKey(for: .moonshot).isEmpty || !defaultAPIKey(for: .deepseek).isEmpty
     }
 
-    /// Empty user key → use bundled default AI (Moonshot key + endpoint).
+    /// Empty user key → using a bundled default for the effective provider.
     static var isUsingDefaultKey: Bool {
-        !hasUserAPIKey && hasDefaultAPIKey
+        !hasUserAPIKey && !defaultAPIKey(for: effectiveProvider).isEmpty
     }
 
-    /// Prefer user key; if empty, fall back to bundled default key regardless of picker.
+    /// Prefer user key; otherwise provider-specific default (DeepSeek / Moonshot).
     static var effectiveAPIKey: String {
         if hasUserAPIKey { return kimiAPIKey }
-        return DefaultAPIKey.kimi.trimmingCharacters(in: .whitespacesAndNewlines)
+        let forProvider = defaultAPIKey(for: provider)
+        if !forProvider.isEmpty { return forProvider }
+        return defaultAPIKey(for: .moonshot)
     }
 
-    /// Requests use the selected provider only when the user supplied a key.
-    /// Otherwise route to default AI (Moonshot) so the default key matches the endpoint.
+    /// Requests use the selected provider when the user supplied a key, or when that
+    /// provider has a bundled default. Otherwise fall back to Moonshot + its default key.
     static var effectiveProvider: AIProvider {
         if hasUserAPIKey { return provider }
-        if hasDefaultAPIKey { return .moonshot }
+        if !defaultAPIKey(for: provider).isEmpty { return provider }
+        if !defaultAPIKey(for: .moonshot).isEmpty { return .moonshot }
         return provider
     }
 
@@ -104,7 +129,7 @@ enum APISettings {
 
     static var keySourceDescription: String {
         if hasUserAPIKey { return L10n.keySourceUser }
-        if hasDefaultAPIKey { return L10n.keySourceDefault }
+        if isUsingDefaultKey { return L10n.keySourceDefault }
         return L10n.keySourceMissing
     }
 

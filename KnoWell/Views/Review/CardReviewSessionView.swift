@@ -382,6 +382,8 @@ struct CardReviewSessionView: View {
                         .font(AppFont.weak())
                         .foregroundStyle(AppColor.textTertiary)
                 }
+
+                CardSourceImageThumbnail(relativePath: card.sourceImagePath, maxHeight: 140)
             }
         } else {
             VStack(alignment: .leading, spacing: AppSpacing.sm) {
@@ -395,6 +397,8 @@ struct CardReviewSessionView: View {
                         .font(AppFont.weak())
                         .foregroundStyle(AppColor.textTertiary)
                 }
+
+                CardSourceImageThumbnail(relativePath: card.sourceImagePath, maxHeight: 140)
             }
         }
     }

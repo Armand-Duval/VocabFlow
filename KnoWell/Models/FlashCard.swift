@@ -13,6 +13,8 @@ final class FlashCard {
     var contextNote: String?
     /// Book / article / author attribution when known.
     var sourceAttribution: String?
+    /// App Group relative path (`card-images/….jpg`) for the shared / captured source image.
+    var sourceImagePath: String?
     var createdAt: Date
     var nextReviewDate: Date
     var intervalDays: Double
@@ -51,6 +53,7 @@ final class FlashCard {
         back: String,
         contextNote: String? = nil,
         sourceAttribution: String? = nil,
+        sourceImagePath: String? = nil,
         phonetic: String? = nil,
         deck: Deck? = nil
     ) {
@@ -63,6 +66,7 @@ final class FlashCard {
         self.back = back
         self.contextNote = contextNote
         self.sourceAttribution = sourceAttribution
+        self.sourceImagePath = sourceImagePath
         self.deck = deck
         self.createdAt = Date()
         self.nextReviewDate = Date()

@@ -51,6 +51,7 @@ extension View {
 
 struct LoadingOverlay: View {
     let message: String
+    var progress: (completed: Int, total: Int)? = nil
 
     var body: some View {
         ZStack {
@@ -66,14 +67,24 @@ struct LoadingOverlay: View {
                 .redacted(reason: .placeholder)
                 .shimmering()
 
-                ProgressView()
-                    .controlSize(.regular)
+                if let progress, progress.total > 0 {
+                    ProgressView(
+                        value: Double(min(progress.completed, progress.total)),
+                        total: Double(progress.total)
+                    )
                     .tint(AppColor.accent)
+                    .frame(maxWidth: 220)
+                } else {
+                    ProgressView()
+                        .controlSize(.regular)
+                        .tint(AppColor.accent)
+                }
 
                 Text(message)
                     .font(AppFont.caption())
                     .foregroundStyle(AppColor.textSecondary)
                     .multilineTextAlignment(.center)
+                    .animation(.easeInOut(duration: 0.15), value: message)
             }
             .padding(AppSpacing.lg)
             .background(AppColor.surface, in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
@@ -113,18 +124,23 @@ private extension View {
 struct LoadingOverlayModifier: ViewModifier {
     let isPresented: Bool
     let message: String
+    var progress: (completed: Int, total: Int)? = nil
 
     func body(content: Content) -> some View {
         content.overlay {
             if isPresented {
-                LoadingOverlay(message: message)
+                LoadingOverlay(message: message, progress: progress)
             }
         }
     }
 }
 
 extension View {
-    func loadingOverlay(isPresented: Bool, message: String) -> some View {
-        modifier(LoadingOverlayModifier(isPresented: isPresented, message: message))
+    func loadingOverlay(
+        isPresented: Bool,
+        message: String,
+        progress: (completed: Int, total: Int)? = nil
+    ) -> some View {
+        modifier(LoadingOverlayModifier(isPresented: isPresented, message: message, progress: progress))
     }
 }

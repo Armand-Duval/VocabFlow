@@ -43,6 +43,8 @@
 		DEDIDX0010000000000000004 /* SharedDedupeSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEDIDX0010000000000000011 /* SharedDedupeSync.swift */; };
 		AA0000010000000000000024 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000014 /* ContentView.swift */; };
 		AA0000010000000000000025 /* CreateCardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000015 /* CreateCardsView.swift */; };
+		QUEUE00100000000000000001 /* CardGenerationQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = QUEUE00100000000000000010 /* CardGenerationQueue.swift */; };
+		QUEUE00100000000000000002 /* CardGenerationQueueView.swift in Sources */ = {isa = PBXBuildFile; fileRef = QUEUE00100000000000000011 /* CardGenerationQueueView.swift */; };
 		AA0000010000000000000026 /* CardPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000016 /* CardPreviewView.swift */; };
 		AA0000010000000000000027 /* ReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000017 /* ReviewView.swift */; };
 		AA0000010000000000000028 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000018 /* LibraryView.swift */; };
@@ -89,6 +91,9 @@
 		HH000001000000000000000A /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = HH0000010000000000000013 /* Localizable.xcstrings */; };
 		HH000001000000000000000B /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = HH0000010000000000000013 /* Localizable.xcstrings */; };
 		HH000001000000000000000C /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = HH0000010000000000000013 /* Localizable.xcstrings */; };
+		IPL00100000000000000002 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = IPL00100000000000000001 /* InfoPlist.xcstrings */; };
+		IPL00100000000000000004 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = IPL00100000000000000003 /* InfoPlist.xcstrings */; };
+		IPL00100000000000000006 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = IPL00100000000000000005 /* InfoPlist.xcstrings */; };
 		FF0000010000000000000003 /* SelectableTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000010000000000000010 /* SelectableTextEditor.swift */; };
 		JJ0000010000000000000001 /* ScrollKeyboardDismiss.swift in Sources */ = {isa = PBXBuildFile; fileRef = JJ0000010000000000000010 /* ScrollKeyboardDismiss.swift */; };
 		JJ0000010000000000000002 /* ScrollKeyboardDismiss.swift in Sources */ = {isa = PBXBuildFile; fileRef = JJ0000010000000000000010 /* ScrollKeyboardDismiss.swift */; };
@@ -166,6 +171,12 @@
 		DD000001000000000000000C /* ShareTextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000010000000000000015 /* ShareTextExtractor.swift */; };
 		DD000001000000000000000D /* ExtensionImportViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000010000000000000016 /* ExtensionImportViewController.swift */; };
 		EE0000010000000000000001 /* ExtensionImportViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000010000000000000016 /* ExtensionImportViewController.swift */; };
+		IMGSRC001000000000000001 /* CardSourceImageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = IMGSRC001000000000000010 /* CardSourceImageStore.swift */; };
+		IMGSRC001000000000000002 /* CardSourceImageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = IMGSRC001000000000000010 /* CardSourceImageStore.swift */; };
+		IMGSRC001000000000000003 /* CardSourceImageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = IMGSRC001000000000000010 /* CardSourceImageStore.swift */; };
+		IMGSRC001000000000000004 /* CardSourceImageThumbnail.swift in Sources */ = {isa = PBXBuildFile; fileRef = IMGSRC001000000000000011 /* CardSourceImageThumbnail.swift */; };
+		IMGSRC001000000000000005 /* CardSourceImageThumbnail.swift in Sources */ = {isa = PBXBuildFile; fileRef = IMGSRC001000000000000011 /* CardSourceImageThumbnail.swift */; };
+		IMGSRC001000000000000006 /* CardSourceImageThumbnail.swift in Sources */ = {isa = PBXBuildFile; fileRef = IMGSRC001000000000000011 /* CardSourceImageThumbnail.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -194,6 +205,8 @@
 		DEDIDX0010000000000000011 /* SharedDedupeSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedDedupeSync.swift; sourceTree = "<group>"; };
 		AA0000010000000000000014 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		AA0000010000000000000015 /* CreateCardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateCardsView.swift; sourceTree = "<group>"; };
+		QUEUE00100000000000000010 /* CardGenerationQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardGenerationQueue.swift; sourceTree = "<group>"; };
+		QUEUE00100000000000000011 /* CardGenerationQueueView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardGenerationQueueView.swift; sourceTree = "<group>"; };
 		AA0000010000000000000016 /* CardPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardPreviewView.swift; sourceTree = "<group>"; };
 		AA0000010000000000000017 /* ReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewView.swift; sourceTree = "<group>"; };
 		AA0000010000000000000018 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
@@ -218,6 +231,9 @@
 		WW0000010000000000000012 /* ToastCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastCenter.swift; sourceTree = "<group>"; };
 		XX0000010000000000000010 /* LibraryCardStatusChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryCardStatusChip.swift; sourceTree = "<group>"; };
 		HH0000010000000000000013 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		IPL00100000000000000001 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
+		IPL00100000000000000003 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
+		IPL00100000000000000005 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		AA0000010000000000000051 /* FlashCardBackup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashCardBackup.swift; sourceTree = "<group>"; };
 		AA0000010000000000000053 /* BackupDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupDocument.swift; sourceTree = "<group>"; };
 		AA0000010000000000000055 /* BackupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupService.swift; sourceTree = "<group>"; };
@@ -277,6 +293,8 @@
 		DD0000010000000000000014 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		DD0000010000000000000015 /* KnoWellAction.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = KnoWellAction.entitlements; sourceTree = "<group>"; };
 		DD0000010000000000000016 /* ExtensionImportViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionImportViewController.swift; sourceTree = "<group>"; };
+		IMGSRC001000000000000010 /* CardSourceImageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardSourceImageStore.swift; sourceTree = "<group>"; };
+		IMGSRC001000000000000011 /* CardSourceImageThumbnail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardSourceImageThumbnail.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -339,6 +357,7 @@
 				AA0000010000000000000010 /* KnoWellApp.swift */,
 				BB0000010000000000000016 /* KnoWell.entitlements */,
 				BB0000010000000000000017 /* Info.plist */,
+				IPL00100000000000000001 /* InfoPlist.xcstrings */,
 				AA0000010000000000000031 /* Models */,
 				AA0000010000000000000032 /* Services */,
 				AA0000010000000000000033 /* Views */,
@@ -434,6 +453,7 @@
 			isa = PBXGroup;
 			children = (
 				AA0000010000000000000037 /* KimiCardGenerator.swift */,
+				QUEUE00100000000000000010 /* CardGenerationQueue.swift */,
 				CC0000010000000000000013 /* FlashCardSaver.swift */,
 				DEDUP00100000000000000010 /* FlashCardDeduper.swift */,
 				DEDIDX0010000000000000011 /* SharedDedupeSync.swift */,
@@ -503,6 +523,7 @@
 			isa = PBXGroup;
 			children = (
 				AA0000010000000000000015 /* CreateCardsView.swift */,
+				QUEUE00100000000000000011 /* CardGenerationQueueView.swift */,
 				AA0000010000000000000016 /* CardPreviewView.swift */,
 			);
 			path = Create;
@@ -531,6 +552,7 @@
 			children = (
 				BB0000010000000000000013 /* ShareViewController.swift */,
 				BB0000010000000000000014 /* Info.plist */,
+				IPL00100000000000000003 /* InfoPlist.xcstrings */,
 				BB0000010000000000000015 /* KnoWellShare.entitlements */,
 			);
 			path = KnoWellShare;
@@ -541,6 +563,7 @@
 			children = (
 				DD0000010000000000000013 /* ActionViewController.swift */,
 				DD0000010000000000000014 /* Info.plist */,
+				IPL00100000000000000005 /* InfoPlist.xcstrings */,
 				DD0000010000000000000015 /* KnoWellAction.entitlements */,
 			);
 			path = KnoWellAction;
@@ -597,6 +620,8 @@
 			children = (
 				CC0000010000000000000011 /* CardDraft.swift */,
 				HH0000010000000000000012 /* CreateCardsUI.swift */,
+				IMGSRC001000000000000010 /* CardSourceImageStore.swift */,
+				IMGSRC001000000000000011 /* CardSourceImageThumbnail.swift */,
 				GG0000010000000000000010 /* VocabularyWordsEditor.swift */,
 				FF0000010000000000000010 /* SelectableTextEditor.swift */,
 				VV0000010000000000000010 /* CameraImagePicker.swift */,
@@ -747,6 +772,7 @@
 			files = (
 				AA0000010000000000000029 /* Assets.xcassets in Resources */,
 				HH000001000000000000000A /* Localizable.xcstrings in Resources */,
+				IPL00100000000000000002 /* InfoPlist.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -766,6 +792,8 @@
 				HH0000010000000000000002 /* L10n.swift in Sources */,
 				HH0000010000000000000005 /* ImportTextAnalyzer.swift in Sources */,
 				HH0000010000000000000008 /* CreateCardsUI.swift in Sources */,
+				IMGSRC001000000000000002 /* CardSourceImageStore.swift in Sources */,
+				IMGSRC001000000000000005 /* CardSourceImageThumbnail.swift in Sources */,
 				VV0000010000000000000002 /* CameraImagePicker.swift in Sources */,
 				WW0000010000000000000004 /* AppComponents.swift in Sources */,
 				SHEET00100000000000000002 /* AppActionSheet.swift in Sources */,
@@ -803,6 +831,8 @@
 				HH0000010000000000000003 /* L10n.swift in Sources */,
 				HH0000010000000000000006 /* ImportTextAnalyzer.swift in Sources */,
 				HH0000010000000000000009 /* CreateCardsUI.swift in Sources */,
+				IMGSRC001000000000000003 /* CardSourceImageStore.swift in Sources */,
+				IMGSRC001000000000000006 /* CardSourceImageThumbnail.swift in Sources */,
 				VV0000010000000000000003 /* CameraImagePicker.swift in Sources */,
 				WW0000010000000000000007 /* AppComponents.swift in Sources */,
 				SHEET00100000000000000003 /* AppActionSheet.swift in Sources */,
@@ -852,6 +882,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				HH000001000000000000000B /* Localizable.xcstrings in Resources */,
+				IPL00100000000000000004 /* InfoPlist.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -860,6 +891,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				HH000001000000000000000C /* Localizable.xcstrings in Resources */,
+				IPL00100000000000000006 /* InfoPlist.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -891,12 +923,14 @@
 				OCRHL0010000000000000013 /* HighlightPhraseMerger.swift in Sources */,
 				AA0000010000000000000024 /* ContentView.swift in Sources */,
 				AA0000010000000000000025 /* CreateCardsView.swift in Sources */,
+				QUEUE00100000000000000002 /* CardGenerationQueueView.swift in Sources */,
 				AA0000010000000000000026 /* CardPreviewView.swift in Sources */,
 				AA0000010000000000000027 /* ReviewView.swift in Sources */,
 				AA0000010000000000000028 /* LibraryView.swift in Sources */,
 				AA0000010000000000000034 /* APISettings.swift in Sources */,
 				AIPROV0010000000000000001 /* AIProvider.swift in Sources */,
 				AA0000010000000000000036 /* KimiCardGenerator.swift in Sources */,
+				QUEUE00100000000000000001 /* CardGenerationQueue.swift in Sources */,
 				AA0000010000000000000038 /* SettingsView.swift in Sources */,
 				AA0000010000000000000046 /* DefaultAPIKey.swift in Sources */,
 				AA0000010000000000000048 /* KeyboardDismiss.swift in Sources */,
@@ -906,6 +940,8 @@
 				HH0000010000000000000001 /* L10n.swift in Sources */,
 				HH0000010000000000000004 /* ImportTextAnalyzer.swift in Sources */,
 				HH0000010000000000000007 /* CreateCardsUI.swift in Sources */,
+				IMGSRC001000000000000001 /* CardSourceImageStore.swift in Sources */,
+				IMGSRC001000000000000004 /* CardSourceImageThumbnail.swift in Sources */,
 				VV0000010000000000000001 /* CameraImagePicker.swift in Sources */,
 				WW0000010000000000000001 /* AppComponents.swift in Sources */,
 				SHEET00100000000000000001 /* AppActionSheet.swift in Sources */,
@@ -1029,7 +1065,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = KnoWell/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "致知";
+				INFOPLIST_KEY_CFBundleDisplayName = KnoWell;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -1061,7 +1097,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = KnoWell/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "致知";
+				INFOPLIST_KEY_CFBundleDisplayName = KnoWell;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -1090,7 +1126,7 @@
 				DEVELOPMENT_TEAM = ALYZC7B762;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = KnoWellShare/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "致知";
+				INFOPLIST_KEY_CFBundleDisplayName = KnoWell;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1117,7 +1153,7 @@
 				DEVELOPMENT_TEAM = ALYZC7B762;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = KnoWellShare/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "致知";
+				INFOPLIST_KEY_CFBundleDisplayName = KnoWell;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1144,7 +1180,7 @@
 				DEVELOPMENT_TEAM = ALYZC7B762;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = KnoWellAction/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "KnoWell 制卡";
+				INFOPLIST_KEY_CFBundleDisplayName = "KnoWell Create";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1171,7 +1207,7 @@
 				DEVELOPMENT_TEAM = ALYZC7B762;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = KnoWellAction/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "KnoWell 制卡";
+				INFOPLIST_KEY_CFBundleDisplayName = "KnoWell Create";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

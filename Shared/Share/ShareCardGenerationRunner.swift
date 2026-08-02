@@ -4,91 +4,60 @@ import UIKit
 #endif
 
 enum ShareCardGenerationRunner {
+    /// Persist a pending job for the main app queue, then exit the extension immediately.
+    static func prepareShareJob(
+        sentence: String,
+        words: [String],
+        sourceHint: String? = nil,
+        sourceImagePath: String? = nil,
+        targetDeckID: UUID
+    ) throws -> (keptWords: [String], skippedCount: Int) {
+        SharedDeckStore.lastSelectedDeckID = targetDeckID
+        SharedDeckStore.pendingTargetDeckID = targetDeckID
+
+        let prepared = try KimiCardGenerator.prepareGeneration(
+            sentence: sentence,
+            words: words,
+            skipExistingInDeckID: targetDeckID
+        )
+        let keptWords = prepared.units.flatMap(\.words)
+        ShareImportStore.savePendingGenerationJob(
+            sentence: sentence,
+            words: keptWords,
+            sourceHint: sourceHint,
+            sourceImagePath: sourceImagePath
+        )
+        #if canImport(UIKit)
+        UIPasteboard.general.string = sentence
+        #endif
+        return (keptWords, prepared.skippedCount)
+    }
+
     static func submitFromShareExtension(
         sentence: String,
         words: [String],
         sourceHint: String? = nil,
+        sourceImagePath: String? = nil,
         targetDeckID: UUID,
         exitExtension: @escaping () -> Void
     ) {
-        SharedDeckStore.lastSelectedDeckID = targetDeckID
-        SharedDeckStore.pendingTargetDeckID = targetDeckID
-
-        // Early exit before queuing work / “generating” notification.
-        let filtered = SharedDedupeIndex.filterNewWords(
-            words,
-            deckID: targetDeckID,
-            sentence: sentence
-        )
-        guard !filtered.kept.isEmpty else {
+        do {
+            _ = try prepareShareJob(
+                sentence: sentence,
+                words: words,
+                sourceHint: sourceHint,
+                sourceImagePath: sourceImagePath,
+                targetDeckID: targetDeckID
+            )
+        } catch {
             ShareExtensionNotifier.scheduleNoticeNotification(
-                body: L10n.createGenerateAllDuplicates
+                body: error.localizedDescription
             )
             exitExtension()
             return
         }
 
-        ShareImportStore.savePendingGenerationJob(
-            sentence: sentence,
-            words: filtered.kept,
-            sourceHint: sourceHint
-        )
-        UIPasteboard.general.string = sentence
-        ShareExtensionNotifier.scheduleGeneratingNotification()
-
+        ShareExtensionNotifier.scheduleNoticeNotification(body: L10n.createQueuedToast)
         exitExtension()
-
-        Task {
-            await processPendingJobIfNeeded(resetStale: false)
-        }
-    }
-
-    static func processPendingJobIfNeeded(resetStale: Bool = false) async {
-        if resetStale {
-            ShareImportStore.resetStaleProcessingJob()
-        }
-        guard let job = ShareImportStore.claimPendingGenerationJob() else { return }
-
-        let deckID = SharedDeckStore.pendingTargetDeckID
-            ?? SharedDeckStore.lastSelectedDeckID
-
-        do {
-            let deckName = SharedDeckStore.loadCatalog()
-                .first(where: { $0.id == SharedDeckStore.lastSelectedDeckID })?
-                .name
-            let drafts = try await KimiCardGenerator.generate(
-                sentence: job.sentence,
-                words: job.words,
-                sourceHint: job.sourceHint,
-                deckName: deckName,
-                skipExistingInDeckID: deckID
-            )
-
-            guard !drafts.isEmpty else {
-                ShareImportStore.clearGenerationJob()
-                ShareExtensionNotifier.scheduleFailureNotification(
-                    message: L10n.generateEmptyError
-                )
-                return
-            }
-
-            ShareImportStore.saveGeneratedDrafts(drafts)
-            ShareImportStore.clearGenerationJob()
-            ShareExtensionNotifier.scheduleImportReadyNotification(cardCount: drafts.count)
-        } catch let error as KimiCardGeneratorError {
-            ShareImportStore.clearGenerationJob()
-            if case .allDuplicates = error {
-                ShareExtensionNotifier.scheduleNoticeNotification(
-                    body: L10n.createGenerateAllDuplicates
-                )
-            } else {
-                ShareExtensionNotifier.scheduleFailureNotification(
-                    message: error.localizedDescription
-                )
-            }
-        } catch {
-            ShareImportStore.clearGenerationJob()
-            ShareExtensionNotifier.scheduleFailureNotification(message: error.localizedDescription)
-        }
     }
 }

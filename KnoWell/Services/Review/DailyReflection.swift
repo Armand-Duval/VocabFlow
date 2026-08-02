@@ -129,7 +129,7 @@ enum DailyReflectionService {
                 ["role": "system", "content": systemPrompt],
                 ["role": "user", "content": userPrompt]
             ],
-            "temperature": 0.7,
+            "temperature": APISettings.chatTemperature(preferred: 0.7),
             "response_format": ["type": "json_object"]
         ]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)

@@ -217,6 +217,15 @@ struct DraftPreviewCard: View {
                 )
             }
 
+            if draft.sourceImagePath != nil {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(L10n.cardSourceImageLabel)
+                        .font(AppFont.caption())
+                        .foregroundStyle(.tertiary)
+                    CardSourceImageThumbnail(relativePath: draft.sourceImagePath, maxHeight: 140)
+                }
+            }
+
             Picker(L10n.typeLabel, selection: $draft.cardType) {
                 ForEach(CardType.allCases, id: \.self) { type in
                     Text(type.displayName).tag(type)

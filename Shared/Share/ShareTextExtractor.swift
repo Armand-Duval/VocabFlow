@@ -160,6 +160,7 @@ enum ShareTextExtractor {
         let providers = extensionItems.flatMap { $0.attachments ?? [] }
         for provider in providers {
             guard let image = await loadUIImage(from: provider) else { continue }
+            let sourceImagePath = CardSourceImageStore.saveJPEG(image)
             guard let result = try? await ImageOCRService.recognize(in: image) else { continue }
             guard let cleanedText = cleaned(result.fullText) else { continue }
             return OCRResult(
@@ -170,7 +171,8 @@ enum ShareTextExtractor {
                         fullText: cleanedText,
                         highlightedWords: result.highlightedWords
                     )
-                    : result.importUnits
+                    : result.importUnits,
+                sourceImagePath: sourceImagePath
             )
         }
         return nil

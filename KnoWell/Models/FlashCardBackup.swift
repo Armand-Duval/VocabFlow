@@ -17,6 +17,7 @@ struct FlashCardBackup: Codable {
     let back: String
     let contextNote: String?
     let sourceAttribution: String?
+    let sourceImagePath: String?
     let createdAt: Date
     let nextReviewDate: Date
     let intervalDays: Double
@@ -29,6 +30,7 @@ struct FlashCardBackup: Codable {
 
     enum CodingKeys: String, CodingKey {
         case id, word, phonetic, sentence, cardTypeRaw, front, back, contextNote, sourceAttribution
+        case sourceImagePath
         case createdAt, nextReviewDate, intervalDays, easeFactor, repetitions, reviewCount, learningStep
         case isSuspended, deckId
     }
@@ -43,6 +45,7 @@ struct FlashCardBackup: Codable {
         back = card.back
         contextNote = card.contextNote
         sourceAttribution = card.sourceAttribution
+        sourceImagePath = card.sourceImagePath
         createdAt = card.createdAt
         nextReviewDate = card.nextReviewDate
         intervalDays = card.intervalDays
@@ -65,6 +68,7 @@ struct FlashCardBackup: Codable {
         back = try container.decode(String.self, forKey: .back)
         contextNote = try container.decodeIfPresent(String.self, forKey: .contextNote)
         sourceAttribution = try container.decodeIfPresent(String.self, forKey: .sourceAttribution)
+        sourceImagePath = try container.decodeIfPresent(String.self, forKey: .sourceImagePath)
         createdAt = try container.decode(Date.self, forKey: .createdAt)
         nextReviewDate = try container.decode(Date.self, forKey: .nextReviewDate)
         intervalDays = try container.decode(Double.self, forKey: .intervalDays)
@@ -87,6 +91,7 @@ struct FlashCardBackup: Codable {
         try container.encode(back, forKey: .back)
         try container.encode(contextNote, forKey: .contextNote)
         try container.encodeIfPresent(sourceAttribution, forKey: .sourceAttribution)
+        try container.encodeIfPresent(sourceImagePath, forKey: .sourceImagePath)
         try container.encode(createdAt, forKey: .createdAt)
         try container.encode(nextReviewDate, forKey: .nextReviewDate)
         try container.encode(intervalDays, forKey: .intervalDays)
@@ -107,6 +112,7 @@ struct FlashCardBackup: Codable {
         card.back = back
         card.contextNote = contextNote
         card.sourceAttribution = sourceAttribution
+        card.sourceImagePath = sourceImagePath
         card.createdAt = createdAt
         card.nextReviewDate = nextReviewDate
         card.intervalDays = intervalDays
@@ -131,6 +137,7 @@ struct FlashCardBackup: Codable {
             back: back,
             contextNote: contextNote,
             sourceAttribution: sourceAttribution,
+            sourceImagePath: sourceImagePath,
             phonetic: phonetic
         )
         card.id = id
