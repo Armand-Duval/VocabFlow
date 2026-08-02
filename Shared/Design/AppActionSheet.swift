@@ -176,10 +176,10 @@ struct AppConfirmSheet: View {
             Group {
                 if confirmRole == .destructive {
                     Button {
+                        // Run confirm before dismiss — callers often bind isPresented to the
+                        // same optional payload; dismissing first would nil it out.
+                        onConfirm()
                         dismiss()
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.28) {
-                            onConfirm()
-                        }
                     } label: {
                         Text(confirmTitle)
                             .frame(maxWidth: .infinity)
@@ -187,10 +187,8 @@ struct AppConfirmSheet: View {
                     .buttonStyle(DestructiveSheetButtonStyle())
                 } else {
                     Button {
+                        onConfirm()
                         dismiss()
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.28) {
-                            onConfirm()
-                        }
                     } label: {
                         Text(confirmTitle)
                             .frame(maxWidth: .infinity)

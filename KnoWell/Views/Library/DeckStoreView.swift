@@ -150,9 +150,8 @@ struct DeckStoreView: View {
             confirmTitle: L10n.deckClear,
             confirmRole: .destructive
         ) {
-            if let deck = deckPendingClear {
-                clearDeck(deck)
-            }
+            guard let deck = deckPendingClear else { return }
+            clearDeck(deck)
             deckPendingClear = nil
         }
         .onAppear {
