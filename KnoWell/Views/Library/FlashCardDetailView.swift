@@ -8,107 +8,112 @@ struct FlashCardDetailView: View {
 
     @Bindable var card: FlashCard
 
-    @Query(sort: [SortDescriptor(\Deck.sortOrder), SortDescriptor(\Deck.createdAt)])
-    private var decks: [Deck]
-
-    @State private var isEditing = false
+    @State private var showEditSheet = false
+    @State private var showMoreActions = false
     @State private var showDeleteConfirm = false
     @State private var showResetConfirm = false
+    @State private var showRegenerateConfirm = false
+    @State private var isRegenerating = false
     @State private var apkgDocument: ApkgDocument?
     @State private var showApkgExporter = false
     @State private var apkgExportFilename = ApkgExportService.defaultFilename
-
-    @State private var editWord = ""
-    @State private var editPhonetic = ""
-    @State private var editSentence = ""
-    @State private var editCardType: CardType = .definition
-    @State private var editFront = ""
-    @State private var editBack = ""
-    @State private var editContextNote = ""
-    @State private var editSourceAttribution = ""
-    @State private var editDeckID = UUID()
+    @State private var contentRevision = 0
 
     var body: some View {
-        Group {
-            if isEditing {
-                editForm
-            } else {
-                detailContent
-            }
-        }
-        .navigationTitle(card.word)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                if isEditing {
-                    Button(L10n.cancel) { cancelEditing() }
-                }
-            }
-            ToolbarItemGroup(placement: .topBarTrailing) {
-                if isEditing {
-                    Button(L10n.done) { saveEdits() }
-                        .fontWeight(.semibold)
-                } else {
-                    Button(L10n.libraryEdit) { beginEditing() }
-                    Menu {
-                        Button {
-                            exportCardApkg()
-                        } label: {
-                            Label(L10n.cardExportApkg, systemImage: "square.and.arrow.up")
-                        }
-
-                        Button {
-                            toggleSuspended()
-                        } label: {
-                            Label(
-                                card.isSuspended ? L10n.cardUnsuspend : L10n.cardSuspend,
-                                systemImage: card.isSuspended ? "play.circle" : "pause.circle"
-                            )
-                        }
-
-                        Button {
-                            showResetConfirm = true
-                        } label: {
-                            Label(L10n.libraryResetSRS, systemImage: "arrow.counterclockwise")
-                        }
-                        .disabled(card.isSuspended)
-
-                        Button(role: .destructive) {
-                            showDeleteConfirm = true
-                        } label: {
-                            Label(L10n.libraryDeleteCard, systemImage: "trash")
-                        }
+        detailContent
+            .id(contentRevision)
+            .navigationTitle(card.word)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    Button(L10n.libraryEdit) { showEditSheet = true }
+                    Button {
+                        showMoreActions = true
                     } label: {
                         AppIcon.symbol("ellipsis.circle")
                     }
+                    .accessibilityLabel(L10n.libraryEdit)
                 }
             }
-        }
-        .fileExporter(
-            isPresented: $showApkgExporter,
-            document: apkgDocument,
-            contentType: .apkg,
-            defaultFilename: apkgExportFilename
-        ) { _ in }
-        .confirmationDialog(L10n.libraryDeleteCard, isPresented: $showDeleteConfirm, titleVisibility: .visible) {
-            Button(L10n.libraryDeleteCard, role: .destructive) {
+            .sheet(isPresented: $showEditSheet) {
+                FlashCardEditSheet(card: card) {
+                    contentRevision &+= 1
+                }
+            }
+            .appActionSheet(isPresented: $showMoreActions, actions: moreActions)
+            .appConfirmSheet(
+                isPresented: $showRegenerateConfirm,
+                title: L10n.cardRegenerate,
+                message: L10n.cardRegenerateMessage,
+                confirmTitle: L10n.cardRegenerate,
+                confirmRole: .accent
+            ) {
+                Task { await regenerateCard() }
+            }
+            .appConfirmSheet(
+                isPresented: $showDeleteConfirm,
+                title: L10n.libraryDeleteCard,
+                message: L10n.libraryDeleteCardMessage,
+                confirmTitle: L10n.libraryDeleteCard,
+                confirmRole: .destructive
+            ) {
                 modelContext.delete(card)
                 DeckCardCountService.notifyDataMaintenance()
                 dismiss()
             }
-            Button(L10n.cancel, role: .cancel) {}
-        } message: {
-            Text(L10n.libraryDeleteCardMessage)
-        }
-        .confirmationDialog(L10n.libraryResetSRS, isPresented: $showResetConfirm, titleVisibility: .visible) {
-            Button(L10n.libraryResetSRS) {
+            .appConfirmSheet(
+                isPresented: $showResetConfirm,
+                title: L10n.libraryResetSRS,
+                message: L10n.libraryResetSRSMessage,
+                confirmTitle: L10n.libraryResetSRS,
+                confirmRole: .accent
+            ) {
                 ReviewScheduler.resetProgress(for: card)
                 DeckCardCountService.notifyCatalogChanged()
             }
-            Button(L10n.cancel, role: .cancel) {}
-        } message: {
-            Text(L10n.libraryResetSRSMessage)
-        }
+            .loadingOverlay(isPresented: isRegenerating, message: L10n.cardRegenerateRunning)
+            .fileExporter(
+                isPresented: $showApkgExporter,
+                document: apkgDocument,
+                contentType: .apkg,
+                defaultFilename: apkgExportFilename
+            ) { _ in }
+    }
+
+    private var moreActions: [AppSheetAction] {
+        [
+            AppSheetAction(
+                title: L10n.cardRegenerate,
+                systemImage: "sparkles",
+                role: .accent,
+                isEnabled: APISettings.canUseAI && !isRegenerating
+            ) {
+                showRegenerateConfirm = true
+            },
+            AppSheetAction(title: L10n.cardExportApkg, systemImage: "square.and.arrow.up") {
+                exportCardApkg()
+            },
+            AppSheetAction(
+                title: card.isSuspended ? L10n.cardUnsuspend : L10n.cardSuspend,
+                systemImage: card.isSuspended ? "play.circle" : "pause.circle"
+            ) {
+                toggleSuspended()
+            },
+            AppSheetAction(
+                title: L10n.libraryResetSRS,
+                systemImage: "arrow.counterclockwise",
+                isEnabled: !card.isSuspended
+            ) {
+                showResetConfirm = true
+            },
+            AppSheetAction(
+                title: L10n.libraryDeleteCard,
+                systemImage: "trash",
+                role: .destructive
+            ) {
+                showDeleteConfirm = true
+            }
+        ]
     }
 
     private var detailContent: some View {
@@ -160,35 +165,6 @@ struct FlashCardDetailView: View {
         }
     }
 
-    private var editForm: some View {
-        Form {
-            Section(L10n.libraryDetailContent) {
-                Picker(L10n.deckTarget, selection: $editDeckID) {
-                    ForEach(decks) { deck in
-                        Text(deck.name).tag(deck.id)
-                    }
-                }
-                TextField(L10n.wordLabel, text: $editWord)
-                TextField(L10n.phoneticPlaceholder, text: $editPhonetic)
-                Picker(L10n.typeLabel, selection: $editCardType) {
-                    ForEach(CardType.allCases, id: \.self) { type in
-                        Text(type.displayName).tag(type)
-                    }
-                }
-                TextField(L10n.sourceText, text: $editSentence, axis: .vertical)
-                    .lineLimit(3...8)
-                TextField(L10n.frontLabel, text: $editFront, axis: .vertical)
-                    .lineLimit(3...10)
-                TextField(L10n.backLabel, text: $editBack, axis: .vertical)
-                    .lineLimit(3...10)
-                TextField(L10n.libraryContextNote, text: $editContextNote, axis: .vertical)
-                    .lineLimit(2...6)
-                TextField(L10n.cardSourceLabel, text: $editSourceAttribution)
-            }
-        }
-        .dismissKeyboardOnScroll()
-    }
-
     private var srsStatusChip: some View {
         Group {
             if card.isSuspended {
@@ -228,37 +204,16 @@ struct FlashCardDetailView: View {
         }
     }
 
-    private func beginEditing() {
-        editWord = card.word
-        editPhonetic = card.phonetic ?? ""
-        editSentence = card.sentence
-        editCardType = card.cardType
-        editFront = card.front
-        editBack = card.back
-        editContextNote = card.contextNote ?? ""
-        editSourceAttribution = card.sourceAttribution ?? ""
-        editDeckID = card.deck?.id ?? DeckService.fetchOrCreateDefault(in: modelContext).id
-        isEditing = true
-    }
-
-    private func cancelEditing() {
-        isEditing = false
-    }
-
-    private func saveEdits() {
-        card.word = editWord.trimmingCharacters(in: .whitespacesAndNewlines)
-        let phonetic = editPhonetic.trimmingCharacters(in: .whitespacesAndNewlines)
-        card.phonetic = phonetic.isEmpty ? nil : phonetic
-        card.sentence = editSentence.trimmingCharacters(in: .whitespacesAndNewlines)
-        card.cardType = editCardType
-        card.front = editFront.trimmingCharacters(in: .whitespacesAndNewlines)
-        card.back = editBack.trimmingCharacters(in: .whitespacesAndNewlines)
-        let note = editContextNote.trimmingCharacters(in: .whitespacesAndNewlines)
-        card.contextNote = note.isEmpty ? nil : note
-        let source = editSourceAttribution.trimmingCharacters(in: .whitespacesAndNewlines)
-        card.sourceAttribution = source.isEmpty ? nil : source
-        card.deck = DeckService.resolvedDeck(id: editDeckID, in: modelContext)
-        isEditing = false
-        DeckCardCountService.notifyCatalogChanged()
+    @MainActor
+    private func regenerateCard() async {
+        isRegenerating = true
+        defer { isRegenerating = false }
+        do {
+            try await CardContentRegenerator.regenerate(card)
+            contentRevision &+= 1
+            ToastCenter.shared.show(L10n.cardRegenerateDone)
+        } catch {
+            ToastCenter.shared.show(error.localizedDescription)
+        }
     }
 }

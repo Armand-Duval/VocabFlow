@@ -82,6 +82,28 @@ enum CardContentFormatter {
         return result
     }
 
+    /// First 【…】 / 「…」 span in a context note, if any.
+    static func primaryHighlightTerm(from contextNote: String?) -> String {
+        extractMarkedTerms(from: trimmed(contextNote)).first ?? ""
+    }
+
+    /// Rebuild translation with a single 【term】 marker (replaces any prior markers).
+    static func applyHighlightMarker(to translation: String, term: String) -> String {
+        let plain = stripHighlightMarkers(translation).trimmingCharacters(in: .whitespacesAndNewlines)
+        let gloss = term.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !plain.isEmpty else { return "" }
+        guard !gloss.isEmpty else { return plain }
+        guard let range = plain.range(of: gloss) else { return plain }
+        return plain.replacingCharacters(in: range, with: "【\(gloss)】")
+    }
+
+    static func highlightTermIsPresent(in translation: String, term: String) -> Bool {
+        let plain = stripHighlightMarkers(translation)
+        let gloss = term.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !gloss.isEmpty else { return true }
+        return plain.contains(gloss)
+    }
+
     private static func extractMarkedTerms(from text: String) -> [String] {
         guard !text.isEmpty else { return [] }
         var terms: [String] = []

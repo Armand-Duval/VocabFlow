@@ -35,6 +35,7 @@ struct DeckStoreView: View {
     @State private var isPreparingExport = false
     @State private var showApkgImportGuide = false
     @State private var deckPendingClear: Deck?
+    @State private var deckPendingActions: Deck?
     @Environment(\.openURL) private var openURL
 
     private var isImportBusy: Bool {
@@ -132,27 +133,27 @@ struct DeckStoreView: View {
         } message: {
             Text(L10n.deckCommunityImportGuideBody)
         }
-        .confirmationDialog(
-            L10n.deckClearTitle,
+        .appActionSheet(
+            isPresented: Binding(
+                get: { deckPendingActions != nil },
+                set: { if !$0 { deckPendingActions = nil } }
+            ),
+            actions: deckActionItems
+        )
+        .appConfirmSheet(
             isPresented: Binding(
                 get: { deckPendingClear != nil },
                 set: { if !$0 { deckPendingClear = nil } }
             ),
-            titleVisibility: .visible
+            title: L10n.deckClearTitle,
+            message: deckPendingClear.map { L10n.deckClearMessage($0.name) },
+            confirmTitle: L10n.deckClear,
+            confirmRole: .destructive
         ) {
-            Button(L10n.deckClear, role: .destructive) {
-                if let deck = deckPendingClear {
-                    clearDeck(deck)
-                }
-                deckPendingClear = nil
-            }
-            Button(L10n.cancel, role: .cancel) {
-                deckPendingClear = nil
-            }
-        } message: {
             if let deck = deckPendingClear {
-                Text(L10n.deckClearMessage(deck.name))
+                clearDeck(deck)
             }
+            deckPendingClear = nil
         }
         .onAppear {
             reloadDecks()
@@ -161,6 +162,29 @@ struct DeckStoreView: View {
         .onReceive(NotificationCenter.default.publisher(for: .libraryCatalogDidChange)) { _ in
             reloadDecks()
         }
+    }
+
+    private var deckActionItems: [AppSheetAction] {
+        guard let deck = deckPendingActions else { return [] }
+        var items: [AppSheetAction] = [
+            AppSheetAction(title: L10n.deckEdit, systemImage: "pencil") {
+                editingDeck = deck
+            }
+        ]
+        if DeckService.canDelete(deck) {
+            items.append(
+                AppSheetAction(title: L10n.deckDelete, systemImage: "trash", role: .destructive) {
+                    deleteDeck(deck)
+                }
+            )
+        } else if deck.cardCount > 0 {
+            items.append(
+                AppSheetAction(title: L10n.deckClear, systemImage: "xmark.circle", role: .destructive) {
+                    deckPendingClear = deck
+                }
+            )
+        }
+        return items
     }
 
     private func seedCheckedDecksIfNeeded() {
@@ -267,30 +291,13 @@ struct DeckStoreView: View {
                 .foregroundStyle(AppColor.textSecondary)
                 .monospacedDigit()
 
-            Menu {
-                Button {
-                    editingDeck = deck
-                } label: {
-                    Label(L10n.deckEdit, systemImage: "pencil")
-                }
-
-                if DeckService.canDelete(deck) {
-                    Button(role: .destructive) {
-                        deleteDeck(deck)
-                    } label: {
-                        Label(L10n.deckDelete, systemImage: "trash")
-                    }
-                } else if deck.cardCount > 0 {
-                    Button(role: .destructive) {
-                        deckPendingClear = deck
-                    } label: {
-                        Label(L10n.deckClear, systemImage: "xmark.circle")
-                    }
-                }
+            Button {
+                deckPendingActions = deck
             } label: {
                 AppIcon.symbol("ellipsis.circle")
                     .foregroundStyle(AppColor.textSecondary)
             }
+            .buttonStyle(.plain)
 
             NavigationLink {
                 DeckStatisticsView(deck: deck)

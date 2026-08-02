@@ -106,9 +106,16 @@ struct CreateDeckPickerCard: View {
 
     @State private var cachedDecks: [Deck] = []
     @State private var hasAttemptedLoad = false
+    @State private var showDeckPicker = false
 
     private var decks: [Deck] {
         queriedDecks.isEmpty ? cachedDecks : queriedDecks
+    }
+
+    private var selectedDeckName: String {
+        decks.first(where: { $0.id == selectedDeckID })?.name
+            ?? decks.first?.name
+            ?? L10n.deckDefaultName
     }
 
     var body: some View {
@@ -122,12 +129,27 @@ struct CreateDeckPickerCard: View {
                         .font(AppFont.secondary())
                         .foregroundStyle(.secondary)
                 } else {
-                    Picker(L10n.deckTarget, selection: deckSelection) {
-                        ForEach(decks) { deck in
-                            Text(deckLabel(deck)).tag(deck.id)
+                    Button {
+                        showDeckPicker = true
+                    } label: {
+                        HStack(spacing: AppSpacing.sm) {
+                            Text(L10n.deckTarget)
+                                .font(AppFont.secondary())
+                                .foregroundStyle(AppColor.textSecondary)
+                            Spacer(minLength: 0)
+                            Text(selectedDeckName)
+                                .font(AppFont.secondary().weight(.medium))
+                                .foregroundStyle(AppColor.textPrimary)
+                                .lineLimit(1)
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(AppColor.textTertiary)
                         }
+                        .padding(.horizontal, AppSpacing.sm)
+                        .padding(.vertical, 12)
+                        .background(AppColor.surfaceMuted, in: RoundedRectangle(cornerRadius: AppRadius.input, style: .continuous))
                     }
-                    .pickerStyle(.menu)
+                    .buttonStyle(.plain)
                 }
 
                 NavigationLink {
@@ -137,6 +159,14 @@ struct CreateDeckPickerCard: View {
                         .font(AppFont.secondary())
                 }
             }
+        }
+        .appSelectionSheet(
+            isPresented: $showDeckPicker,
+            title: L10n.deckTarget,
+            options: decks.map { AppSelectionOption(id: $0.id, title: deckLabel($0)) },
+            selectedID: selectedDeckID ?? decks.first?.id
+        ) { newValue in
+            deckSelection.wrappedValue = newValue
         }
         .task {
             await reloadDecks()

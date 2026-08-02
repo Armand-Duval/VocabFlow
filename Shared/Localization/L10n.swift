@@ -31,6 +31,7 @@ enum L10n {
     static var cancel: String { tr("common.cancel") }
     static var close: String { tr("common.close") }
     static var done: String { tr("common.done") }
+    static var back: String { tr("common.back") }
     static var clear: String { tr("common.clear") }
     static var add: String { tr("common.add") }
 
@@ -112,6 +113,10 @@ enum L10n {
     static var backLabel: String { tr("preview.back") }
     static var backPlaceholder: String { tr("preview.back.placeholder") }
     static var cardSentenceTranslation: String { tr("card.sentenceTranslation") }
+    static var cardTranslationHighlight: String { tr("card.translationHighlight") }
+    static var cardTranslationHighlightFooter: String { tr("card.translationHighlight.footer") }
+    static var cardTranslationHighlightMissing: String { tr("card.translationHighlight.missing") }
+    static var cardTranslationHighlightPreview: String { tr("card.translationHighlight.preview") }
     static var cardSourceLabel: String { tr("card.source") }
     static func cardSource(_ value: String) -> String { tf("card.source.value", value) }
     static func saveCount(_ count: Int) -> String { tf("preview.save", count) }
@@ -196,6 +201,18 @@ enum L10n {
     }
 
     static var libraryEdit: String { tr("library.edit") }
+    static func libraryEditTitle(_ word: String) -> String { tf("library.edit.title", word) }
+    static var libraryEditBasics: String { tr("library.edit.basics") }
+    static var libraryEditFrontSection: String { tr("library.edit.frontSection") }
+    static var libraryEditBackSection: String { tr("library.edit.backSection") }
+    static var libraryEditFrontFooter: String { tr("library.edit.frontFooter") }
+    static var libraryEditBackFooter: String { tr("library.edit.backFooter") }
+    static var cardRegenerate: String { tr("card.regenerate") }
+    static var cardRegenerateMessage: String { tr("card.regenerate.message") }
+    static var cardRegenerateEditMessage: String { tr("card.regenerate.editMessage") }
+    static var cardRegenerateRunning: String { tr("card.regenerate.running") }
+    static var cardRegenerateDone: String { tr("card.regenerate.done") }
+    static var cardRegenerateNoMatch: String { tr("card.regenerate.noMatch") }
     static var libraryResetSRS: String { tr("library.resetSRS") }
     static var libraryResetSRSMessage: String { tr("library.resetSRS.message") }
     static var libraryDeleteCard: String { tr("library.deleteCard") }

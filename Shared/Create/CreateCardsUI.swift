@@ -170,12 +170,38 @@ struct DraftPreviewCard: View {
                 TextField(
                     L10n.cardSentenceTranslation,
                     text: Binding(
-                        get: { draft.contextNote ?? "" },
-                        set: { draft.contextNote = $0.nilIfEmpty }
+                        get: { CardContentFormatter.stripHighlightMarkers(draft.contextNote ?? "") },
+                        set: { newPlain in
+                            let term = CardContentFormatter.primaryHighlightTerm(from: draft.contextNote)
+                            draft.contextNote = CardContentFormatter
+                                .applyHighlightMarker(to: newPlain, term: term)
+                                .nilIfEmpty
+                        }
                     ),
                     axis: .vertical
                 )
                 .lineLimit(2...8)
+
+                Text(L10n.cardTranslationHighlight)
+                    .font(AppFont.caption())
+                    .foregroundStyle(.tertiary)
+                TextField(
+                    L10n.cardTranslationHighlight,
+                    text: Binding(
+                        get: { CardContentFormatter.primaryHighlightTerm(from: draft.contextNote) },
+                        set: { newTerm in
+                            let plain = CardContentFormatter.stripHighlightMarkers(draft.contextNote ?? "")
+                            draft.contextNote = CardContentFormatter
+                                .applyHighlightMarker(to: plain, term: newTerm)
+                                .nilIfEmpty
+                        }
+                    )
+                )
+                .textInputAutocapitalization(.never)
+
+                Text(L10n.cardTranslationHighlightFooter)
+                    .font(AppFont.helper())
+                    .foregroundStyle(.tertiary)
             }
 
             VStack(alignment: .leading, spacing: 6) {

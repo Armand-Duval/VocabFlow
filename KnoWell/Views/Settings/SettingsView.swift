@@ -90,21 +90,23 @@ struct SettingsView: View {
             } message: {
                 Text(maintenanceAlertMessage)
             }
-            .confirmationDialog(L10n.settingsResetAllSRS, isPresented: $showResetAllConfirm, titleVisibility: .visible) {
-                Button(L10n.settingsResetAllSRS) {
-                    resetAllProgress()
-                }
-                Button(L10n.cancel, role: .cancel) {}
-            } message: {
-                Text(L10n.settingsResetAllSRSMessage)
+            .appConfirmSheet(
+                isPresented: $showResetAllConfirm,
+                title: L10n.settingsResetAllSRS,
+                message: L10n.settingsResetAllSRSMessage,
+                confirmTitle: L10n.settingsResetAllSRS,
+                confirmRole: .destructive
+            ) {
+                resetAllProgress()
             }
-            .confirmationDialog(L10n.settingsMigrateCards, isPresented: $showMigrateCardsConfirm, titleVisibility: .visible) {
-                Button(L10n.settingsMigrateCards) {
-                    Task { await migrateCardContent() }
-                }
-                Button(L10n.cancel, role: .cancel) {}
-            } message: {
-                Text(L10n.settingsMigrateCardsMessage)
+            .appConfirmSheet(
+                isPresented: $showMigrateCardsConfirm,
+                title: L10n.settingsMigrateCards,
+                message: L10n.settingsMigrateCardsMessage,
+                confirmTitle: L10n.settingsMigrateCards,
+                confirmRole: .accent
+            ) {
+                Task { await migrateCardContent() }
             }
             .loadingOverlay(isPresented: isMigratingCards, message: L10n.settingsMigrateCardsRunning)
         }

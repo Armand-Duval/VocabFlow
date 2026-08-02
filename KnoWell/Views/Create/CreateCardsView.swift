@@ -27,6 +27,7 @@ struct CreateCardsView: View {
     @State private var showCamera = false
     @State private var showLongTextPrompt = false
     @State private var pendingLongText = ""
+    @State private var longTextChoiceMade = false
     @State private var isManualEditing = false
     @State private var sourceHint: String?
 
@@ -92,22 +93,30 @@ struct CreateCardsView: View {
                     }
                     .ignoresSafeArea()
                 }
-                .confirmationDialog(
-                    L10n.createLongTextTitle,
+                .appActionSheet(
                     isPresented: $showLongTextPrompt,
-                    titleVisibility: .visible
-                ) {
-                    Button(L10n.createLongTextKeepSentence) {
-                        applyLongTextSuggestion(.keepSingleSentence)
+                    title: L10n.createLongTextTitle,
+                    message: L10n.createLongTextMessage,
+                    actions: [
+                        AppSheetAction(title: L10n.createLongTextKeepSentence, systemImage: "text.alignleft") {
+                            longTextChoiceMade = true
+                            applyLongTextSuggestion(.keepSingleSentence)
+                        },
+                        AppSheetAction(title: L10n.createLongTextSplitWords, systemImage: "list.bullet") {
+                            longTextChoiceMade = true
+                            applyLongTextSuggestion(.splitIntoWords)
+                        }
+                    ]
+                )
+                .onChange(of: showLongTextPrompt) { _, isPresented in
+                    if !isPresented {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                            if !longTextChoiceMade {
+                                pendingLongText = ""
+                            }
+                            longTextChoiceMade = false
+                        }
                     }
-                    Button(L10n.createLongTextSplitWords) {
-                        applyLongTextSuggestion(.splitIntoWords)
-                    }
-                    Button(L10n.cancel, role: .cancel) {
-                        pendingLongText = ""
-                    }
-                } message: {
-                    Text(L10n.createLongTextMessage)
                 }
         }
     }

@@ -16,26 +16,57 @@ struct CardReviewSessionView: View {
     @State private var showBack = false
     @State private var now = Date()
     @State private var dragOffset: CGSize = .zero
+    @State private var editingCard: FlashCard?
+    @State private var showCardActions = false
+    @State private var showRegenerateConfirm = false
+    @State private var isRegenerating = false
+    /// Bumps when card content changes so the face re-renders without resetting the queue.
+    @State private var contentRevision = 0
 
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     private let swipeThreshold: CGFloat = 72
+
+    /// Library push uses dismiss; Review tab uses onSessionComplete — both get the same back chrome.
+    private var canLeaveSession: Bool { dismissWhenComplete || onSessionComplete != nil }
 
     var body: some View {
         Group {
             if let card = currentCard {
                 reviewContent(for: card)
+                    .id("\(card.id)-\(contentRevision)")
             } else if let nextLearningDate = pendingLearning.map(\.availableAt).min() {
                 learningWaitState(nextAvailable: nextLearningDate)
             } else {
-                AppEmptyState(
-                    title: L10n.noCardsToReview,
-                    message: L10n.reviewEmptyDone,
-                    systemImage: "checkmark.circle",
-                    actionTitle: onSessionComplete == nil ? nil : L10n.reviewHomeBack,
-                    action: onSessionComplete
-                )
+                sessionFinishedState
             }
         }
+        // One shared study chrome: never use the system nav title (avoids Library showing the word as page title).
+        .toolbar(.hidden, for: .navigationBar)
+        .navigationBarBackButtonHidden(true)
+        .sheet(isPresented: Binding(
+            get: { editingCard != nil },
+            set: { if !$0 { editingCard = nil } }
+        )) {
+            if let card = editingCard {
+                FlashCardEditSheet(card: card) {
+                    contentRevision &+= 1
+                }
+            }
+        }
+        .appActionSheet(
+            isPresented: $showCardActions,
+            actions: currentCardActions
+        )
+        .appConfirmSheet(
+            isPresented: $showRegenerateConfirm,
+            title: L10n.cardRegenerate,
+            message: L10n.cardRegenerateMessage,
+            confirmTitle: L10n.cardRegenerate,
+            confirmRole: .accent
+        ) {
+            Task { await regenerateCurrentCard() }
+        }
+        .loadingOverlay(isPresented: isRegenerating, message: L10n.cardRegenerateRunning)
         .onAppear {
             syncSessionQueue(with: cards)
         }
@@ -48,6 +79,30 @@ struct CardReviewSessionView: View {
         }
     }
 
+    @ViewBuilder
+    private var sessionFinishedState: some View {
+        VStack(spacing: AppSpacing.md) {
+            if canLeaveSession {
+                sessionTopBar(trailing: EmptyView())
+            }
+            AppEmptyState(
+                title: L10n.noCardsToReview,
+                message: L10n.reviewEmptyDone,
+                systemImage: "checkmark.circle",
+                actionTitle: canLeaveSession ? (dismissWhenComplete ? L10n.done : L10n.reviewHomeBack) : nil,
+                action: canLeaveSession ? { leaveSession() } : nil
+            )
+        }
+    }
+
+    private func leaveSession() {
+        if dismissWhenComplete {
+            dismiss()
+        } else {
+            onSessionComplete?()
+        }
+    }
+
     private var currentCard: FlashCard? {
         guard sessionQueue.indices.contains(currentIndex) else { return nil }
         return sessionQueue[currentIndex]
@@ -55,22 +110,25 @@ struct CardReviewSessionView: View {
 
     private func reviewContent(for card: FlashCard) -> some View {
         VStack(spacing: AppSpacing.sm) {
-            progressHeader(for: card)
+            sessionTopBar(trailing: cardActions(for: card))
 
+            // Word sits directly above the card (study content), not in nav chrome.
             HStack(alignment: .center, spacing: AppSpacing.sm) {
                 if showBack || card.cardType == .definition {
-                    // Definition: word title + sentence body. Cloze: hide word until revealed.
                     wordHeader(for: card)
+                        .transition(.opacity.combined(with: .move(edge: .leading)))
                 } else {
                     Text(L10n.cardTypeCloze)
                         .font(AppFont.caption())
                         .foregroundStyle(AppColor.textTertiary)
+                        .transition(.opacity)
                 }
 
                 Spacer(minLength: 0)
                 speakButton(for: card)
             }
             .padding(.horizontal, AppSpacing.md)
+            .animation(Self.cardFlipAnimation, value: showBack)
 
             if showDeckName, let deckName = card.deck?.name, !deckName.isEmpty {
                 Text(deckName)
@@ -88,18 +146,108 @@ struct CardReviewSessionView: View {
             if showBack {
                 ratingButtons(for: card)
                     .padding(.bottom, AppSpacing.xs)
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
             } else {
                 Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        showBack = true
-                    }
+                    flipCard(toBack: true)
                 } label: {
                     Label(L10n.showAnswer, systemImage: "eye")
                 }
                 .buttonStyle(RevealAnswerButtonStyle())
                 .padding(.horizontal, AppSpacing.md)
                 .padding(.bottom, AppSpacing.sm)
+                .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
+        }
+        .animation(Self.cardFlipAnimation, value: showBack)
+    }
+
+    private static let cardFlipAnimation: Animation = .spring(response: 0.48, dampingFraction: 0.86)
+
+    private func flipCard(toBack: Bool? = nil) {
+        withAnimation(Self.cardFlipAnimation) {
+            if let toBack {
+                showBack = toBack
+            } else {
+                showBack.toggle()
+            }
+        }
+    }
+
+    private func sessionTopBar<Trailing: View>(trailing: Trailing) -> some View {
+        HStack(spacing: AppSpacing.sm) {
+            if canLeaveSession {
+                Button {
+                    leaveSession()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(AppColor.textPrimary)
+                        .frame(width: 36, height: 36)
+                        .background(AppColor.surface, in: Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(L10n.back)
+            }
+
+            Text(L10n.reviewProgress(currentIndex + 1, max(sessionQueue.count, 1)))
+                .font(AppFont.weak())
+                .foregroundStyle(AppColor.textTertiary)
+
+            Spacer(minLength: 0)
+            trailing
+        }
+        .padding(.horizontal, AppSpacing.md)
+        .padding(.top, AppSpacing.sm)
+    }
+
+    private func cardActions(for card: FlashCard) -> some View {
+        HStack(spacing: AppSpacing.sm) {
+            Text(card.cardType.displayName)
+                .font(AppFont.weak())
+                .foregroundStyle(AppColor.textTertiary)
+
+            Button {
+                showCardActions = true
+            } label: {
+                Image(systemName: "ellipsis.circle")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(AppColor.textPrimary)
+                    .frame(width: 36, height: 36)
+                    .background(AppColor.surface, in: Circle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(L10n.libraryEdit)
+        }
+    }
+
+    private var currentCardActions: [AppSheetAction] {
+        [
+            AppSheetAction(title: L10n.libraryEdit, systemImage: "pencil") {
+                editingCard = currentCard
+            },
+            AppSheetAction(
+                title: L10n.cardRegenerate,
+                systemImage: "sparkles",
+                role: .accent,
+                isEnabled: APISettings.canUseAI && !isRegenerating
+            ) {
+                showRegenerateConfirm = true
+            }
+        ]
+    }
+
+    @MainActor
+    private func regenerateCurrentCard() async {
+        guard let card = currentCard else { return }
+        isRegenerating = true
+        defer { isRegenerating = false }
+        do {
+            try await CardContentRegenerator.regenerate(card)
+            contentRevision &+= 1
+            ToastCenter.shared.show(L10n.cardRegenerateDone)
+        } catch {
+            ToastCenter.shared.show(error.localizedDescription)
         }
     }
 
@@ -120,22 +268,6 @@ struct CardReviewSessionView: View {
         }
     }
 
-    private func progressHeader(for card: FlashCard) -> some View {
-        HStack {
-            Text(L10n.reviewProgress(currentIndex + 1, sessionQueue.count))
-                .font(AppFont.weak())
-                .foregroundStyle(AppColor.textTertiary)
-
-            Spacer()
-
-            Text(card.cardType.displayName)
-                .font(AppFont.weak())
-                .foregroundStyle(AppColor.textTertiary)
-        }
-        .padding(.horizontal, AppSpacing.md)
-        .padding(.top, AppSpacing.sm)
-    }
-
     private func speakButton(for card: FlashCard) -> some View {
         Button {
             SpeechService.speak(card.word)
@@ -151,36 +283,62 @@ struct CardReviewSessionView: View {
     }
 
     private func cardFace(_ card: FlashCard) -> some View {
-        ScrollView {
-            Group {
-                if showBack {
-                    cardBackContent(for: card)
-                } else if card.cardType == .definition {
-                    HighlightedText(
-                        text: card.displayFront,
-                        query: card.word,
-                        font: AppFont.body()
-                    )
-                    .foregroundStyle(AppColor.textPrimary)
-                } else {
-                    Text(card.displayFront)
-                        .font(AppFont.body())
-                        .foregroundStyle(AppColor.textPrimary)
-                }
+        ZStack {
+            cardFacePanel {
+                cardFrontContent(for: card)
             }
-            .lineSpacing(8)
-            .frame(maxWidth: .infinity, minHeight: 220, alignment: .topLeading)
-            .textSelection(.enabled)
-            .contentTransition(.opacity)
-            .padding(AppSpacing.lg)
+            .opacity(showBack ? 0 : 1)
+            .rotation3DEffect(
+                .degrees(showBack ? 180 : 0),
+                axis: (x: 0, y: 1, z: 0),
+                perspective: 0.65
+            )
+            .allowsHitTesting(!showBack)
+
+            cardFacePanel {
+                cardBackContent(for: card)
+            }
+            .opacity(showBack ? 1 : 0)
+            .rotation3DEffect(
+                .degrees(showBack ? 0 : -180),
+                axis: (x: 0, y: 1, z: 0),
+                perspective: 0.65
+            )
+            .allowsHitTesting(showBack)
+        }
+        .padding(.horizontal, AppSpacing.md)
+        .onTapGesture {
+            flipCard()
+        }
+        .accessibilityAddTraits(.isButton)
+        .accessibilityLabel(showBack ? L10n.backLabel : L10n.frontLabel)
+    }
+
+    private func cardFacePanel<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        ScrollView {
+            content()
+                .lineSpacing(8)
+                .frame(maxWidth: .infinity, minHeight: 220, alignment: .topLeading)
+                .textSelection(.enabled)
+                .padding(AppSpacing.lg)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(AppColor.surface, in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
-        .padding(.horizontal, AppSpacing.md)
-        .onTapGesture {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                showBack.toggle()
-            }
+    }
+
+    @ViewBuilder
+    private func cardFrontContent(for card: FlashCard) -> some View {
+        if card.cardType == .definition {
+            HighlightedText(
+                text: card.displayFront,
+                query: card.word,
+                font: AppFont.body()
+            )
+            .foregroundStyle(AppColor.textPrimary)
+        } else {
+            Text(card.displayFront)
+                .font(AppFont.body())
+                .foregroundStyle(AppColor.textPrimary)
         }
     }
 
@@ -261,11 +419,18 @@ struct CardReviewSessionView: View {
     }
 
     private func learningWaitState(nextAvailable: Date) -> some View {
-        AppEmptyState(
-            title: L10n.reviewLearningWaitTitle,
-            message: L10n.reviewLearningWaitMessage(ReviewScheduler.formatInterval(from: now, to: nextAvailable)),
-            systemImage: "clock"
-        )
+        VStack(spacing: AppSpacing.md) {
+            if canLeaveSession {
+                sessionTopBar(trailing: EmptyView())
+            }
+            AppEmptyState(
+                title: L10n.reviewLearningWaitTitle,
+                message: L10n.reviewLearningWaitMessage(ReviewScheduler.formatInterval(from: now, to: nextAvailable)),
+                systemImage: "clock",
+                actionTitle: canLeaveSession ? (dismissWhenComplete ? L10n.done : L10n.reviewHomeBack) : nil,
+                action: canLeaveSession ? { leaveSession() } : nil
+            )
+        }
     }
 
     private func ratingButtons(for card: FlashCard) -> some View {

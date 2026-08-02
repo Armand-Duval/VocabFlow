@@ -31,6 +31,7 @@ struct LibraryView: View {
     @State private var hasAnyCards = true
     @State private var forceGrouped = false
     @State private var cardFilter: LibraryCardFilter = .all
+    @State private var showCardFilterSheet = false
     @State private var showDeckStore = false
     @State private var searchDebounceTask: Task<Void, Never>?
 
@@ -185,16 +186,24 @@ struct LibraryView: View {
 
     @ViewBuilder
     private var cardFilterMenu: some View {
-        Menu {
-            Picker(L10n.libraryFilterMenu, selection: $cardFilter) {
-                ForEach(LibraryCardFilter.allCases) { filter in
-                    Text(filter.title).tag(filter)
-                }
-            }
+        Button {
+            showCardFilterSheet = true
         } label: {
             AppIcon.symbol(cardFilter == .all ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
         }
         .accessibilityLabel(L10n.libraryFilterMenu)
+        .appSelectionSheet(
+            isPresented: $showCardFilterSheet,
+            title: L10n.libraryFilterMenu,
+            options: LibraryCardFilter.allCases.map {
+                AppSelectionOption(id: $0.rawValue, title: $0.title)
+            },
+            selectedID: cardFilter.rawValue
+        ) { selectedID in
+            if let filter = LibraryCardFilter(rawValue: selectedID) {
+                cardFilter = filter
+            }
+        }
     }
 
     @ViewBuilder
@@ -352,8 +361,6 @@ private struct LibraryGroupedList: View {
                             Section {
                                 NavigationLink {
                                     CardReviewSessionView(cards: dueCards, dismissWhenComplete: true)
-                                        .navigationTitle(deck.name)
-                                        .navigationBarTitleDisplayMode(.inline)
                                 } label: {
                                     Label(L10n.libraryReviewDeck(deck.name, count: dueCards.count), systemImage: "brain.head.profile")
                                 }
@@ -383,8 +390,6 @@ private struct LibraryGroupedList: View {
                                    let reviewCards = resolvedCards(for: group.cardIDs) {
                                     NavigationLink {
                                         CardReviewSessionView(cards: reviewCards, dismissWhenComplete: true)
-                                            .navigationTitle(group.word)
-                                            .navigationBarTitleDisplayMode(.inline)
                                     } label: {
                                         Label(
                                             L10n.reviewAll(group.word, count: group.cardIDs.count),
