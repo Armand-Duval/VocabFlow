@@ -14,15 +14,19 @@ struct ReviewView: View {
     @State private var showQuotaDetail = false
     @State private var isSessionActive = false
 
-    private var refreshToken: Int {
-        reviewSettings.revision
+    private var activeDeckID: UUID? {
+        DeckSettings.lastSelectedDeckID
+    }
+
+    private var refreshToken: String {
+        "\(reviewSettings.revision)|\(activeDeckID?.uuidString ?? "all")"
     }
 
     private var sessionSignature: String {
         guard let plan else { return "loading" }
         let sessionCards = plan.sessionCards
         let head = sessionCards.prefix(3).map(\.id.uuidString).joined(separator: ",")
-        return "\(reviewSettings.revision)-\(sessionCards.count)-\(head)"
+        return "\(refreshToken)-\(sessionCards.count)-\(head)"
     }
 
     var body: some View {
@@ -40,41 +44,27 @@ struct ReviewView: View {
                             plan: plan,
                             hasAnyCards: hasAnyCards,
                             decks: decks,
-                            activeDeckID: reviewSettings.reviewDeckID ?? DeckSettings.lastSelectedDeckID,
                             onStartReview: { isSessionActive = true },
-                            onShowQuota: { showQuotaDetail = true },
-                            onSelectDeck: { deckID in
-                                reviewSettings.setReviewDeckID(deckID)
-                            }
+                            onShowQuota: { showQuotaDetail = true }
                         )
                     }
                 }
             }
             .appPageBackground()
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar(isSessionActive ? .hidden : .automatic, for: .navigationBar)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    if isSessionActive {
-                        reviewDeckMenu
-                    } else {
+                if !isSessionActive {
+                    ToolbarItem(placement: .topBarLeading) {
                         BrandMark()
                     }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    if isSessionActive {
-                        Button(L10n.reviewSessionDone) {
-                            finishSession()
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            AppTab.requestSettings()
+                        } label: {
+                            AppIcon.symbol("gearshape")
                         }
-                    } else {
-                        HStack(spacing: 14) {
-                            reviewDeckMenu
-                            Button {
-                                AppTab.requestSettings()
-                            } label: {
-                                AppIcon.symbol("gearshape")
-                            }
-                            .accessibilityLabel(L10n.settingsTitle)
-                        }
+                        .accessibilityLabel(L10n.settingsTitle)
                     }
                 }
             }
@@ -90,13 +80,16 @@ struct ReviewView: View {
         .onReceive(NotificationCenter.default.publisher(for: .reviewQueueDidChange)) { _ in
             Task { await loadPlan() }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .activeDeckDidChange)) { _ in
+            Task { await loadPlan() }
+        }
     }
 
     @ViewBuilder
     private func sessionContent(plan: ReviewQueuePlan) -> some View {
         CardReviewSessionView(
             cards: plan.sessionCards,
-            showDeckName: reviewSettings.reviewDeckID == nil,
+            showDeckName: activeDeckID == nil,
             onSessionComplete: { finishSession() }
         )
         .id(sessionSignature)
@@ -105,42 +98,6 @@ struct ReviewView: View {
     private func finishSession() {
         isSessionActive = false
         Task { await loadPlan() }
-    }
-
-    private var reviewDeckMenu: some View {
-        Menu {
-            Button {
-                reviewSettings.setReviewDeckID(nil)
-            } label: {
-                if reviewSettings.reviewDeckID == nil {
-                    Label(L10n.reviewDeckFilterAll, systemImage: "checkmark")
-                } else {
-                    Text(L10n.reviewDeckFilterAll)
-                }
-            }
-
-            ForEach(decks) { deck in
-                Button {
-                    reviewSettings.setReviewDeckID(deck.id)
-                } label: {
-                    if reviewSettings.reviewDeckID == deck.id {
-                        Label(deck.name, systemImage: "checkmark")
-                    } else {
-                        Text(deck.name)
-                    }
-                }
-            }
-        } label: {
-            Label(reviewDeckMenuTitle, systemImage: "books.vertical")
-        }
-    }
-
-    private var reviewDeckMenuTitle: String {
-        if let deckID = reviewSettings.reviewDeckID,
-           let deck = decks.first(where: { $0.id == deckID }) {
-            return deck.name
-        }
-        return L10n.reviewDeckFilterAll
     }
 
     @MainActor
@@ -167,7 +124,7 @@ struct ReviewView: View {
             return
         }
 
-        let cards = ReviewQueueBuilder.cards(in: reviewSettings.reviewDeckID, from: allCards)
+        let cards = ReviewQueueBuilder.cards(in: activeDeckID, from: allCards)
 
         plan = ReviewQueueBuilder.plan(
             from: cards,
@@ -188,10 +145,8 @@ private struct ReviewHomeView: View {
     let plan: ReviewQueuePlan
     let hasAnyCards: Bool
     let decks: [Deck]
-    let activeDeckID: UUID?
     let onStartReview: () -> Void
     let onShowQuota: () -> Void
-    let onSelectDeck: (UUID?) -> Void
 
     private var dueCount: Int { plan.sessionCards.count }
 
@@ -206,7 +161,7 @@ private struct ReviewHomeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppSpacing.xl) {
-                statsCard
+                heroStats
 
                 if !hasAnyCards {
                     emptyCTA
@@ -227,51 +182,43 @@ private struct ReviewHomeView: View {
                 }
             }
             .padding(.horizontal, AppSpacing.md)
-            .padding(.top, AppSpacing.md)
+            .padding(.top, AppSpacing.lg)
             .padding(.bottom, AppSpacing.lg)
         }
     }
 
-    private var statsCard: some View {
-        AppSurfaceCard {
-            VStack(spacing: AppSpacing.md) {
-                HStack(spacing: 0) {
-                    statColumn(value: "\(dueCount)", label: L10n.homeStatDue)
-                    Divider().frame(height: 36)
-                    statColumn(value: newQuotaDisplay, label: L10n.homeStatNewQuota)
-                    Divider().frame(height: 36)
-                    statColumn(
-                        value: L10n.homeStatStreakValue(StudyStreakStore.currentStreak),
-                        label: L10n.homeStatStreak
-                    )
-                }
+    private var heroStats: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+            Text(L10n.homeStatDue)
+                .font(AppFont.caption())
+                .foregroundStyle(AppColor.textTertiary)
 
-                if plan.hasDeferredCards {
-                    Button(action: onShowQuota) {
-                        Text(L10n.reviewQuotaReachedMessage(plan.deferredTotalCount))
-                            .font(AppFont.weak())
-                            .foregroundStyle(AppColor.textTertiary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .buttonStyle(.plain)
+            Text("\(dueCount)")
+                .font(AppFont.heroValue())
+                .foregroundStyle(AppColor.textPrimary)
+                .contentTransition(.numericText())
+
+            Text(metaLine)
+                .font(AppFont.caption())
+                .foregroundStyle(AppColor.textTertiary)
+
+            if plan.hasDeferredCards {
+                Button(action: onShowQuota) {
+                    Text(L10n.reviewQuotaReachedMessage(plan.deferredTotalCount))
+                        .font(AppFont.weak())
+                        .foregroundStyle(AppColor.textTertiary.opacity(0.85))
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .buttonStyle(.plain)
+                .padding(.top, 2)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func statColumn(value: String, label: String) -> some View {
-        VStack(spacing: 4) {
-            Text(value)
-                .font(AppFont.statValue())
-                .foregroundStyle(AppColor.textPrimary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-            Text(label)
-                .font(AppFont.weak())
-                .foregroundStyle(AppColor.textTertiary.opacity(0.72))
-                .lineLimit(1)
-        }
-        .frame(maxWidth: .infinity)
+    private var metaLine: String {
+        let streak = L10n.homeStatStreakValue(StudyStreakStore.currentStreak)
+        return "\(L10n.homeStatNewQuota) \(newQuotaDisplay) · \(L10n.homeStatStreak) \(streak)"
     }
 
     private var emptyCTA: some View {
@@ -301,26 +248,37 @@ private struct ReviewHomeView: View {
     }
 
     private var quickCaptureRow: some View {
-        HStack(spacing: AppSpacing.sm) {
-            CompactIconAction(systemImage: "camera", title: nil) {
-                AppTab.request(.create)
-            }
-            .accessibilityLabel(L10n.importFromCamera)
+        HStack(spacing: 6) {
+            Text(L10n.createQuickCaptureTitle)
+                .font(AppFont.weak())
+                .foregroundStyle(AppColor.textTertiary)
 
-            CompactIconAction(systemImage: "photo", title: nil) {
-                AppTab.request(.create)
-            }
-            .accessibilityLabel(L10n.importFromPhoto)
+            Spacer(minLength: AppSpacing.sm)
 
-            CompactIconAction(systemImage: "doc.on.clipboard", title: nil) {
+            TextLinkAction(title: L10n.createQuickCamera) {
                 AppTab.request(.create)
             }
-            .accessibilityLabel(L10n.createQuickPaste)
+
+            Text("·")
+                .font(AppFont.weak())
+                .foregroundStyle(AppColor.textTertiary.opacity(0.45))
+
+            TextLinkAction(title: L10n.createQuickPhoto) {
+                AppTab.request(.create)
+            }
+
+            Text("·")
+                .font(AppFont.weak())
+                .foregroundStyle(AppColor.textTertiary.opacity(0.45))
+
+            TextLinkAction(title: L10n.createQuickPaste) {
+                AppTab.request(.create)
+            }
         }
     }
 
     private var recentDecksSection: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
             Text(L10n.homeRecentDecks)
                 .font(AppFont.weak())
                 .foregroundStyle(AppColor.textTertiary)
@@ -328,7 +286,7 @@ private struct ReviewHomeView: View {
             VStack(spacing: 0) {
                 ForEach(Array(recentDecks.enumerated()), id: \.element.id) { index, deck in
                     Button {
-                        onSelectDeck(deck.id)
+                        DeckSettings.lastSelectedDeckID = deck.id
                         AppTab.request(.library)
                     } label: {
                         HStack {
@@ -340,16 +298,18 @@ private struct ReviewHomeView: View {
                                 .font(AppFont.caption())
                                 .foregroundStyle(AppColor.textTertiary)
                         }
-                        .padding(.vertical, 10)
+                        .padding(.vertical, 11)
                     }
                     .buttonStyle(.plain)
 
                     if index < recentDecks.count - 1 {
-                        Divider().opacity(0.6)
+                        Divider()
+                            .overlay(AppColor.borderSubtle)
                     }
                 }
             }
         }
+        .padding(.top, AppSpacing.xs)
     }
 }
 

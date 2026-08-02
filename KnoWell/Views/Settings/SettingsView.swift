@@ -9,7 +9,10 @@ struct SettingsView: View {
     var isPresentedAsSheet: Bool = false
 
     @State private var apiKey = APISettings.kimiAPIKey
+    @State private var selectedProvider = APISettings.provider
     @State private var selectedModel = APISettings.kimiModel
+    @State private var customBaseURL = APISettings.customBaseURL
+    @State private var customModelID = APISettings.customModelID
     @State private var showKey = false
     @State private var hasAnyCards = false
     @State private var isTestingAPI = false
@@ -22,6 +25,8 @@ struct SettingsView: View {
     @State private var showDeckStore = false
 
     @State private var showResetAllConfirm = false
+    @State private var showMigrateCardsConfirm = false
+    @State private var isMigratingCards = false
     @State private var maintenanceAlertTitle = ""
     @State private var maintenanceAlertMessage = ""
     @State private var showMaintenanceAlert = false
@@ -65,6 +70,11 @@ struct SettingsView: View {
             }
             .onAppear {
                 reviewSettings.reloadFromPersistence()
+                selectedProvider = APISettings.provider
+                selectedModel = APISettings.kimiModel
+                customBaseURL = APISettings.customBaseURL
+                customModelID = APISettings.customModelID
+                apiKey = APISettings.kimiAPIKey
             }
             .task {
                 await refreshHasAnyCards()
@@ -88,6 +98,15 @@ struct SettingsView: View {
             } message: {
                 Text(L10n.settingsResetAllSRSMessage)
             }
+            .confirmationDialog(L10n.settingsMigrateCards, isPresented: $showMigrateCardsConfirm, titleVisibility: .visible) {
+                Button(L10n.settingsMigrateCards) {
+                    Task { await migrateCardContent() }
+                }
+                Button(L10n.cancel, role: .cancel) {}
+            } message: {
+                Text(L10n.settingsMigrateCardsMessage)
+            }
+            .loadingOverlay(isPresented: isMigratingCards, message: L10n.settingsMigrateCardsRunning)
         }
     }
 
@@ -152,15 +171,43 @@ struct SettingsView: View {
     private var aiCard: some View {
         AppSurfaceCard {
             VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                Picker(L10n.aiProviderSection, selection: $selectedProvider) {
+                    ForEach(AIProvider.allCases) { provider in
+                        Text(provider.displayName).tag(provider)
+                    }
+                }
+                .font(AppFont.secondary())
+                .onChange(of: selectedProvider) { _, provider in
+                    if customModelID.isEmpty,
+                       !provider.suggestedModels.contains(selectedModel) {
+                        selectedModel = provider.defaultModel
+                    }
+                }
+
+                if selectedProvider.supportsCustomBaseURL {
+                    SettingsDivider()
+                    TextField(L10n.aiCustomBaseURLPlaceholder, text: $customBaseURL)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .keyboardType(.URL)
+                        .textContentType(.URL)
+                        .font(AppFont.secondary())
+                    Text(L10n.aiCustomBaseURLFooter)
+                        .font(AppFont.weak())
+                        .foregroundStyle(AppColor.textTertiary)
+                }
+
+                SettingsDivider()
+
                 HStack(spacing: AppSpacing.sm) {
                     Group {
                         if showKey {
-                            TextField(L10n.apiKeyPlaceholder, text: $apiKey)
+                            TextField(selectedProvider.apiKeyPlaceholder, text: $apiKey)
                                 .textInputAutocapitalization(.never)
                                 .autocorrectionDisabled()
                                 .submitLabel(.done)
                         } else {
-                            SecureField(L10n.apiKeyPlaceholder, text: $apiKey)
+                            SecureField(selectedProvider.apiKeyPlaceholder, text: $apiKey)
                                 .textInputAutocapitalization(.never)
                                 .autocorrectionDisabled()
                                 .submitLabel(.done)
@@ -178,14 +225,26 @@ struct SettingsView: View {
                     .buttonStyle(.plain)
                 }
 
-                SettingsDivider()
-
-                Picker(L10n.modelSection, selection: $selectedModel) {
-                    ForEach(APISettings.availableModels, id: \.self) { model in
-                        Text(model).tag(model)
+                if !selectedProvider.suggestedModels.isEmpty {
+                    SettingsDivider()
+                    Picker(L10n.modelSection, selection: $selectedModel) {
+                        ForEach(selectedProvider.suggestedModels, id: \.self) { model in
+                            Text(model).tag(model)
+                        }
                     }
+                    .font(AppFont.secondary())
+                    .disabled(!customModelID.isEmpty)
+                    .opacity(customModelID.isEmpty ? 1 : 0.45)
                 }
-                .font(AppFont.secondary())
+
+                SettingsDivider()
+                TextField(L10n.aiCustomModelPlaceholder, text: $customModelID)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .font(AppFont.secondary())
+                Text(L10n.aiCustomModelFooter)
+                    .font(AppFont.weak())
+                    .foregroundStyle(AppColor.textTertiary)
 
                 SettingsDivider()
 
@@ -208,12 +267,49 @@ struct SettingsView: View {
                 HStack(alignment: .top, spacing: AppSpacing.sm) {
                     Image(systemName: statusIcon)
                         .foregroundStyle(statusColor)
-                    Text(APISettings.keySourceDescription)
-                        .font(AppFont.caption())
-                        .foregroundStyle(APISettings.canUseKimi ? .secondary : AppColor.warning)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(liveProviderDescription)
+                            .font(AppFont.caption())
+                            .foregroundStyle(AppColor.textSecondary)
+                        Text(liveKeySourceDescription)
+                            .font(AppFont.caption())
+                            .foregroundStyle(canTestCurrentAI ? .secondary : AppColor.warning)
+                    }
                 }
             }
         }
+    }
+
+    private var liveProviderDescription: String {
+        let trimmed = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty,
+           !DefaultAPIKey.kimi.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return AIProvider.moonshot.displayName
+        }
+        return selectedProvider.displayName
+    }
+
+    private var liveKeySourceDescription: String {
+        let trimmed = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmed.isEmpty { return L10n.keySourceUser }
+        // Default AI is available whenever the bundled key exists — not tied to provider picker.
+        if !DefaultAPIKey.kimi.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return L10n.keySourceDefault
+        }
+        return L10n.keySourceMissing
+    }
+
+    private var canTestCurrentAI: Bool {
+        let trimmedKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        let hasDefault = !DefaultAPIKey.kimi.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        if trimmedKey.isEmpty {
+            return hasDefault
+        }
+        if selectedProvider == .custom {
+            return !customBaseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+        let model = customModelID.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !model.isEmpty || !selectedModel.isEmpty
     }
 
     private var importExportCard: some View {
@@ -254,6 +350,20 @@ struct SettingsView: View {
         AppSurfaceCard {
             VStack(alignment: .leading, spacing: AppSpacing.sm) {
                 Button {
+                    showMigrateCardsConfirm = true
+                } label: {
+                    SettingsNavigationRow(
+                        title: L10n.settingsMigrateCards,
+                        systemImage: "text.badge.checkmark"
+                    )
+                }
+                .buttonStyle(.plain)
+                .disabled(!hasAnyCards || isMigratingCards)
+                .opacity(hasAnyCards ? 1 : 0.45)
+
+                SettingsDivider()
+
+                Button {
                     showResetAllConfirm = true
                 } label: {
                     SettingsNavigationRow(
@@ -262,7 +372,7 @@ struct SettingsView: View {
                     )
                 }
                 .buttonStyle(.plain)
-                .disabled(!hasAnyCards)
+                .disabled(!hasAnyCards || isMigratingCards)
                 .opacity(hasAnyCards ? 1 : 0.45)
             }
         }
@@ -320,16 +430,19 @@ struct SettingsView: View {
     }
 
     private var statusIcon: String {
-        if APISettings.canUseKimi { "checkmark.circle.fill" }
+        if canTestCurrentAI { "checkmark.circle.fill" }
         else { "exclamationmark.circle" }
     }
 
     private var statusColor: Color {
-        if APISettings.canUseKimi { AppColor.success }
+        if canTestCurrentAI { AppColor.success }
         else { AppColor.warning }
     }
 
     private func saveSettings() {
+        APISettings.provider = selectedProvider
+        APISettings.customBaseURL = customBaseURL
+        APISettings.customModelID = customModelID
         APISettings.kimiAPIKey = apiKey
         APISettings.kimiModel = selectedModel
         reviewSettings.persist()
@@ -346,15 +459,28 @@ struct SettingsView: View {
         isTestingAPI = true
         defer { isTestingAPI = false }
 
+        // Persist provider/base URL first so the probe hits the selected endpoint.
+        APISettings.provider = selectedProvider
+        APISettings.customBaseURL = customBaseURL
+        APISettings.customModelID = customModelID
+        APISettings.kimiModel = selectedModel
+
         let key = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         let testKey = key.isEmpty ? APISettings.effectiveAPIKey : key
         guard !testKey.isEmpty else {
             ToastCenter.shared.show(L10n.settingsTestAPIFailed(L10n.missingAPIKeyError))
             return
         }
+        if selectedProvider == .custom, APISettings.baseURL.isEmpty {
+            ToastCenter.shared.show(L10n.settingsTestAPIFailed(L10n.aiCustomBaseURLMissing))
+            return
+        }
 
         do {
-            try await KimiCardGenerator.testConnection(apiKey: testKey, model: selectedModel)
+            try await KimiCardGenerator.testConnection(
+                apiKey: testKey,
+                model: APISettings.effectiveModel
+            )
             ToastCenter.shared.show(L10n.settingsTestAPISuccess)
         } catch {
             ToastCenter.shared.show(L10n.settingsTestAPIFailed(error.localizedDescription))
@@ -377,6 +503,20 @@ struct SettingsView: View {
         fetchAllCards().forEach { ReviewScheduler.resetProgress(for: $0) }
         DeckCardCountService.notifyDataMaintenance()
         showMaintenanceResult(title: L10n.settingsResetAllSRSDone, message: L10n.settingsResetAllSRSDoneMessage)
+    }
+
+    @MainActor
+    private func migrateCardContent() async {
+        isMigratingCards = true
+        defer { isMigratingCards = false }
+        let report = await CardContentMigrationService.migrate(
+            in: modelContext,
+            useAI: APISettings.canUseAI
+        )
+        showMaintenanceResult(
+            title: L10n.settingsMigrateCardsDone,
+            message: report.summaryMessage
+        )
     }
 
     private func showMaintenanceResult(title: String, message: String) {

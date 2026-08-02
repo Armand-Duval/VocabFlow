@@ -11,6 +11,8 @@ final class FlashCard {
     var front: String
     var back: String
     var contextNote: String?
+    /// Book / article / author attribution when known.
+    var sourceAttribution: String?
     var createdAt: Date
     var nextReviewDate: Date
     var intervalDays: Double
@@ -26,6 +28,16 @@ final class FlashCard {
         set { cardTypeRaw = newValue.rawValue }
     }
 
+    /// 复习正面：释义卡用完整原句（兼容旧数据里 front 只有单词）
+    var displayFront: String {
+        CardContentFormatter.displayFront(
+            front: front,
+            sentence: sentence,
+            word: word,
+            cardType: cardType
+        )
+    }
+
     /// 复习时显示的背面：合并 back 与 contextNote（兼容旧数据）
     var displayBack: String {
         CardContentFormatter.displayBack(back: back, contextNote: contextNote)
@@ -38,6 +50,7 @@ final class FlashCard {
         front: String,
         back: String,
         contextNote: String? = nil,
+        sourceAttribution: String? = nil,
         phonetic: String? = nil,
         deck: Deck? = nil
     ) {
@@ -49,6 +62,7 @@ final class FlashCard {
         self.front = front
         self.back = back
         self.contextNote = contextNote
+        self.sourceAttribution = sourceAttribution
         self.deck = deck
         self.createdAt = Date()
         self.nextReviewDate = Date()

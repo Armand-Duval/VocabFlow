@@ -10,16 +10,14 @@ enum StatusChipStyle {
 
     var foreground: Color {
         switch self {
-        case .due: AppColor.warning
-        case .new, .cardType: AppColor.accent
+        case .due, .new, .cardType: AppColor.accentStrong
         case .scheduled, .neutral, .suspended: AppColor.textTertiary
         }
     }
 
     var background: Color {
         switch self {
-        case .due: AppColor.warningBackground(0.12)
-        case .new, .cardType: AppColor.accentBackground(0.10)
+        case .due, .new, .cardType: AppColor.accentBackground(0.08)
         case .scheduled, .neutral, .suspended: AppColor.surfaceMuted
         }
     }
@@ -31,15 +29,11 @@ struct StatusChip: View {
 
     var body: some View {
         Text(text)
-            .font(AppFont.weak())
+            .font(AppFont.weak().weight(style == .due ? .medium : .regular))
             .foregroundStyle(style.foreground)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3)
-            .background(
-                style.background,
-                // Match card radius (12) — avoid capsule vs card mismatch.
-                in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-            )
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(style.background, in: RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous))
     }
 }
 

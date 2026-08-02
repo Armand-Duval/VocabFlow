@@ -29,8 +29,8 @@
 
 | ID | 项 | 状态 | 说明 |
 |----|----|------|------|
-| P0-1 | SRS 首次毕业 + Hard/Good 梯度 | [x] | `ReviewScheduler.mutate`：Again 10min → Hard 1d → Good 3d → Easy 7d |
-| P0-2 | 复习按钮语义底色 + 着色边框 | [x] | Again 浅红 / Hard 浅黄 / Good 白 / Easy 浅绿 |
+| P0-1 | SRS 首次毕业 + Good/Easy 梯度 | [x] | UI 三档：不会(Again 短间隔) / 良好 3d / 简单 7d；Hard 并入不会 |
+| P0-2 | 复习按钮语义底色 + 着色边框 | [x] | 不会浅红 / 良好中性 / 简单浅绿 |
 | P0-3 | Settings「无限复习」Toggle | [x] | 一键同步 new + review limit 为 0 |
 | P0-4 | 精简 Create 页常驻说明文字 | [x] | 移除 section footer 大段 hint；空态仅留占位一行 |
 | P0-5 | 核心 CTA 图标 + 短标签 | [x] | 生成/导入/导出统一「图标 + 1～2 字」；DeckStore 文字列表改快捷 chip |
@@ -78,7 +78,8 @@
 
 ## 变更日志
 
-- **2026-07-29** 致知 (KnoWell) 三 Tab 重构：设置进齿轮、三栏数据卡、线性紧凑图标、品牌色 `#239678`
+- **2026-07-29** Ink & Sage 视觉跃迁：暖纸色板、首页大数字、减边框、文字链快捷入口、词库状态色点
+- **2026-07-29** 致知 (KnoWell) 三 Tab 重构：设置进齿轮、三栏数据卡、线性紧凑图标、品牌色 `#1E6B5C`
 - **2026-07-27** Deck 导入导出重构：当前词库 vs 全部词库；JSON 导入到选中 deck；修复 fileExporter 弹窗
 - **2026-07-27** P0-1～3：SRS 毕业梯度、复习按钮语义色、无限复习 Toggle
 - **2026-07-27** 导航标题最终方案固化；Create 顶距 -20%、Library 搜索顶格、#666 规范

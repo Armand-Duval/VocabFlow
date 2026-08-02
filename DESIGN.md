@@ -1,7 +1,7 @@
 # KnoWell Design System
 
 > 工程代号 **KnoWell** · 品牌 **致知 (KnoWell)**  
-> **Calm Study UI** — 三 Tab · 极简克制 · Teal `#239678`  
+> **Calm Study UI** — 三 Tab · Ink & Sage · 纸感极简  
 > UX 全文见 **[docs/UX_SPEC.md](docs/UX_SPEC.md)**
 
 ---
@@ -58,19 +58,19 @@
 
 | Token | Light | 用途 |
 |-------|-------|------|
-| `accent` | `#2DB5A9` | 主色、选中、进度、单词高亮 |
-| `accentStrong` | `#179487` | 主按钮、选中 Chip 文字 |
-| `pageBackground` | `#F5F7FA` | 页面底 |
-| `surface` | `#FFFFFF` | 卡片面 |
-| `surfaceMuted` | `#F2F4F7` | 次要按钮、未选中 Chip |
-| `border` | black 6% | 卡片描边 |
-| `textPrimary` | `#1F2937` | 正文 |
-| `textSecondary` | `#6B7280` | 说明、导航标题 |
-| `success` | `#22C55E` | Easy / 掌握 |
-| `warning` | `#FA8C3E` | Hard / 模糊 |
-| `danger` | `#F0544F` | Again / 忘记 |
+| `accent` / `accentStrong` | `#1E6B5C` Sage | 主色、CTA、选中 |
+| `pageBackground` | `#F6F5F2` | 暖纸白页面底 |
+| `surface` | `#FFFFFF` | 卡片/输入白面 |
+| `surfaceMuted` | `#F1F0EA` | 次级纸色块 |
+| `border` | black 8% | 仅 `bordered:` 卡片 |
+| `textPrimary` | `#1A1A1A` Ink | 主文、大数字 |
+| `textSecondary` | `#6B6660` | 说明 |
+| `textTertiary` | `#8A8780` Muted | 弱文案 |
+| `success` | `#6B9E7A` | Easy / 掌握（≠品牌色） |
+| `warning` | `#B8893D` | 保留色板（UI 已无 Hard 档） |
+| `danger` | `#C45C54` | 不会 / Forgot |
 
-Dark Mode：见 `Shared/AppComponents.swift` 中 `Color.adaptive(light:dark:)`。
+Dark Mode：见 `Shared/Design/AppComponents.swift` 中 `Color.adaptive(light:dark:)`。
 
 ---
 
@@ -118,7 +118,7 @@ AppRadius:  card=16  button=12  chip=999(capsule)
 ### 复习（Review）
 - 顶部：进度 `2/10` + 可选 deck 名
 - 中部：Teal 大号单词 + 音标 + 白卡片（正面/背面）
-- 底部：「查看答案」→ 四档评分（带间隔预览）
+- 底部：「查看答案」→ 三档评分：不会 / 良好 / 简单（带间隔预览）
 
 ### 列表（Library / DeckStore）
 - `ScrollView` + `AppSurfaceCard` 分区（避免纯系统 List 设置风）

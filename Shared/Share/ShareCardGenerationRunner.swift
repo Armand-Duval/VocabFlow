@@ -7,12 +7,17 @@ enum ShareCardGenerationRunner {
     static func submitFromShareExtension(
         sentence: String,
         words: [String],
+        sourceHint: String? = nil,
         targetDeckID: UUID,
         exitExtension: @escaping () -> Void
     ) {
         SharedDeckStore.lastSelectedDeckID = targetDeckID
         SharedDeckStore.pendingTargetDeckID = targetDeckID
-        ShareImportStore.savePendingGenerationJob(sentence: sentence, words: words)
+        ShareImportStore.savePendingGenerationJob(
+            sentence: sentence,
+            words: words,
+            sourceHint: sourceHint
+        )
         UIPasteboard.general.string = sentence
         ShareExtensionNotifier.scheduleGeneratingNotification()
 
@@ -32,7 +37,8 @@ enum ShareCardGenerationRunner {
         do {
             let drafts = try await KimiCardGenerator.generate(
                 sentence: job.sentence,
-                words: job.words
+                words: job.words,
+                sourceHint: job.sourceHint
             )
 
             guard !drafts.isEmpty else {

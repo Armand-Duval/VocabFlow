@@ -268,9 +268,8 @@ struct LibraryView: View {
                 withTransaction(transaction) {
                     filterDeckID = deckID
                 }
-                if let deckID {
-                    DeckSettings.lastSelectedDeckID = deckID
-                }
+                // Shared current deck: nil = all decks (Review / badge use the same value).
+                DeckSettings.lastSelectedDeckID = deckID
             }
         )
     }
@@ -598,8 +597,9 @@ private struct LibraryCardRow: View {
 
             LibraryCardStatusChip(card: card)
         }
-        .padding(.vertical, 4)
-        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+        .padding(.vertical, 6)
+        .listRowInsets(EdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16))
+        .listRowSeparatorTint(AppColor.borderSubtle)
     }
 
     private var contextLine: String {

@@ -21,27 +21,79 @@ enum KimiCardGeneratorError: LocalizedError {
 }
 
 enum KimiCardGenerator {
-    static func generate(sentence: String, words: [String]) async throws -> [GeneratedCardDraft] {
-        guard APISettings.canUseKimi else {
+    static func generate(
+        sentence: String,
+        words: [String],
+        sourceHint: String? = nil
+    ) async throws -> [GeneratedCardDraft] {
+        guard APISettings.canUseAI else {
             throw KimiCardGeneratorError.missingAPIKey
         }
 
+        let units = generationUnits(sentence: sentence, words: words)
+        guard !units.isEmpty else { return [] }
+        let hint = sourceHint?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .nilIfEmpty
+
+        // One API call per sentence-context so each card front stays that word's sentence only.
+        var allDrafts: [GeneratedCardDraft] = []
+        for unit in units {
+            let drafts = try await generateForSingleContext(
+                sentence: unit.sentence,
+                words: unit.words,
+                sourceHint: hint
+            )
+            allDrafts.append(contentsOf: drafts)
+        }
+        return allDrafts
+    }
+
+    /// Split multi-sentence imports so each word is generated with only its own sentence.
+    private static func generationUnits(sentence: String, words: [String]) -> [OCRImportUnit] {
         let trimmedSentence = sentence.trimmingCharacters(in: .whitespacesAndNewlines)
         let uniqueWords = words
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
             .uniqued()
+        guard !trimmedSentence.isEmpty, !uniqueWords.isEmpty else { return [] }
 
-        guard !trimmedSentence.isEmpty, !uniqueWords.isEmpty else {
-            return []
+        let extracted = OCRContextExtractor.importUnits(
+            fullText: trimmedSentence,
+            highlightedWords: uniqueWords
+        )
+        if extracted.isEmpty {
+            return [OCRImportUnit(sentence: trimmedSentence, words: uniqueWords)]
         }
 
-        let content = try await requestCards(sentence: trimmedSentence, words: uniqueWords)
-        return try parseCards(from: content, sentence: trimmedSentence)
+        let covered = Set(extracted.flatMap(\.words).map { $0.lowercased() })
+        let missing = uniqueWords.filter { !covered.contains($0.lowercased()) }
+        guard !missing.isEmpty else { return extracted }
+
+        var units = extracted
+        units[0].words.append(contentsOf: missing)
+        return units
     }
 
-    private static func requestCards(sentence: String, words: [String]) async throws -> String {
-        guard let url = URL(string: "\(APISettings.baseURL)/chat/completions") else {
+    private static func generateForSingleContext(
+        sentence: String,
+        words: [String],
+        sourceHint: String?
+    ) async throws -> [GeneratedCardDraft] {
+        let content = try await requestCards(
+            sentence: sentence,
+            words: words,
+            sourceHint: sourceHint
+        )
+        return try parseCards(from: content, sentence: sentence)
+    }
+
+    private static func requestCards(
+        sentence: String,
+        words: [String],
+        sourceHint: String?
+    ) async throws -> String {
+        guard let url = URL(string: APISettings.chatCompletionsURL) else {
             throw KimiCardGeneratorError.invalidResponse
         }
 
@@ -50,6 +102,7 @@ enum KimiCardGenerator {
         request.setValue("Bearer \(APISettings.effectiveAPIKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.timeoutInterval = 60
+        applyProviderHeaders(to: &request)
 
         let wordsList = words.joined(separator: ", ")
         let systemPrompt = """
@@ -57,32 +110,39 @@ enum KimiCardGenerator {
         必须只返回 JSON，不要 markdown，不要额外说明。
         JSON 格式：
         {
+          "source": "出处（书名/文章/作者等；不确定则空字符串）",
           "cards": [
             {
               "word": "生词",
-              "phonetic": "IPA 音标或读法，无则空字符串",
+              "phonetic": "音标（英文必须给 IPA，用 /.../ 包裹；其它语言给读法；实在没有才空字符串）",
               "type": "cloze 或 definition",
               "front": "卡片正面",
-              "back": "卡片背面（含释义、词性、语境说明，音标已在 phonetic 字段则 back 不必重复）",
-              "context_note": ""
+              "back": "释义及解释（词性 + 结合语境的中文释义）",
+              "context_note": "整句中文翻译（目标词对应译法用【】标出）"
             }
           ]
         }
         规则：
-        1. 每个生词生成 2 张卡：一张 cloze（在原句中把该词替换为 ______，保持原文语言），一张 definition（问该词/短语在此句中的意思）
-        2. 释义必须结合原句语境，不要只给词典通用释义
-        3. 所有中文解释和语境说明都写在 back 里；back 用中文解释；phonetic 字段单独输出 IPA/罗马音/读法；注明词性
-        4. 原文是什么语言，front 中的句子就保持什么语言，不要擅自翻译原句
-        5. context_note 留空字符串，不要把语境说明单独输出
+        1. 每个生词生成 2 张卡：一张 cloze，一张 definition
+        2. cloze 的 front：完整原句，仅把目标词/短语替换为 ______（保持原文语言）
+        3. definition 的 front：必须是完整原句且保留目标词，禁止只写单词，禁止写成「xxx 是什么意思」之类提问
+        4. back：只写释义及解释（注明词性，结合该句语境；不要只给脱离语境的词典义）；不要把整句翻译写进 back
+        5. context_note：必须是整句中文翻译（完整一句，对应原文）。其中与目标词对应的译法必须用【】标出，且只标这一处；例：政府试图【缓解】其影响。不要标整句，不要用其它括号代替
+        6. phonetic：每个 card 都必须填写；拉丁字母词用 IPA（例 /ˈtren.tʃənt/），日语用假名/罗马音，其它语言给常用注音；禁止把音标写进 back/front
+        7. 原文是什么语言，front 中的句子就保持什么语言，不要擅自翻译原句
+        8. source：若能从原文、页面提示或公认名句较有把握地判断出处（书名、篇章名、作者），填写简洁标注，如「Poor Charlie's Almanack · Charles T. Munger」；无把握必须返回空字符串，禁止编造
         """
 
-        let userPrompt = """
+        var userPrompt = """
         原文：\(sentence)
         生词：\(wordsList)
         """
+        if let sourceHint, !sourceHint.isEmpty {
+            userPrompt += "\n页面提示（可能含书名/标题/作者，供判断出处）：\(sourceHint)"
+        }
 
         let body: [String: Any] = [
-            "model": APISettings.kimiModel,
+            "model": APISettings.effectiveModel,
             "messages": [
                 ["role": "system", "content": systemPrompt],
                 ["role": "user", "content": userPrompt]
@@ -123,7 +183,7 @@ enum KimiCardGenerator {
             throw KimiCardGeneratorError.missingAPIKey
         }
 
-        guard let url = URL(string: "\(APISettings.baseURL)/models") else {
+        guard let url = URL(string: APISettings.modelsURL) else {
             throw KimiCardGeneratorError.invalidResponse
         }
 
@@ -131,6 +191,7 @@ enum KimiCardGenerator {
         request.httpMethod = "GET"
         request.setValue("Bearer \(trimmedKey)", forHTTPHeaderField: "Authorization")
         request.timeoutInterval = 20
+        applyProviderHeaders(to: &request)
 
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse else {
@@ -145,6 +206,16 @@ enum KimiCardGenerator {
         _ = model
     }
 
+    private static func applyProviderHeaders(to request: inout URLRequest) {
+        switch APISettings.effectiveProvider {
+        case .openrouter:
+            request.setValue("https://knowell.app", forHTTPHeaderField: "HTTP-Referer")
+            request.setValue("KnoWell", forHTTPHeaderField: "X-Title")
+        case .moonshot, .openai, .deepseek, .custom:
+            break
+        }
+    }
+
     private static func parseCards(from content: String, sentence: String) throws -> [GeneratedCardDraft] {
         let jsonString = extractJSON(from: content)
         guard let data = jsonString.data(using: .utf8) else {
@@ -152,16 +223,28 @@ enum KimiCardGenerator {
         }
 
         let response = try JSONDecoder().decode(KimiCardsResponse.self, from: data)
-        let drafts = response.cards.compactMap { item -> GeneratedCardDraft? in
+        let source = response.source?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .nilIfEmpty
+        var drafts = response.cards.compactMap { item -> GeneratedCardDraft? in
             guard let type = CardType(rawValue: item.type.lowercased()) else { return nil }
+            let word = item.word.trimmingCharacters(in: .whitespacesAndNewlines)
             return GeneratedCardDraft(
-                word: item.word,
-                phonetic: item.phonetic?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty,
+                word: word,
+                phonetic: normalizedPhonetic(item.phonetic),
                 sentence: sentence,
                 cardType: type,
-                front: item.front,
-                back: CardContentFormatter.mergedBack(back: item.back, contextNote: item.contextNote),
-                contextNote: nil
+                front: CardContentFormatter.normalizedFront(
+                    front: item.front,
+                    sentence: sentence,
+                    word: word,
+                    cardType: type
+                ),
+                back: item.back.trimmingCharacters(in: .whitespacesAndNewlines),
+                contextNote: item.contextNote?
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                    .nilIfEmpty,
+                sourceAttribution: source
             )
         }
 
@@ -169,7 +252,33 @@ enum KimiCardGenerator {
             throw KimiCardGeneratorError.parseError("未生成任何卡片")
         }
 
+        // Cloze/definition pair: copy phonetic if one sibling omitted it.
+        var phoneticByWord: [String: String] = [:]
+        for draft in drafts {
+            if let phonetic = draft.phonetic, !phonetic.isEmpty {
+                phoneticByWord[draft.word.lowercased()] = phonetic
+            }
+        }
+        for index in drafts.indices {
+            if drafts[index].phonetic == nil,
+               let shared = phoneticByWord[drafts[index].word.lowercased()] {
+                drafts[index].phonetic = shared
+            }
+        }
+
         return drafts
+    }
+
+    private static func normalizedPhonetic(_ raw: String?) -> String? {
+        guard var value = raw?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !value.isEmpty else { return nil }
+        // Strip accidental wrappers like "IPA: ..."
+        if let colon = value.firstIndex(of: ":"),
+           value[..<colon].lowercased().contains("ipa") {
+            value = String(value[value.index(after: colon)...])
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        return value.nilIfEmpty
     }
 
     private static func extractJSON(from content: String) -> String {
@@ -202,6 +311,7 @@ enum KimiCardGenerator {
 }
 
 private struct KimiCardsResponse: Decodable {
+    let source: String?
     let cards: [KimiCardItem]
 }
 

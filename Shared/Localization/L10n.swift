@@ -111,6 +111,9 @@ enum L10n {
     static var frontLabel: String { tr("preview.front") }
     static var backLabel: String { tr("preview.back") }
     static var backPlaceholder: String { tr("preview.back.placeholder") }
+    static var cardSentenceTranslation: String { tr("card.sentenceTranslation") }
+    static var cardSourceLabel: String { tr("card.source") }
+    static func cardSource(_ value: String) -> String { tf("card.source.value", value) }
     static func saveCount(_ count: Int) -> String { tf("preview.save", count) }
     static var savedTitle: String { tr("preview.saved.title") }
     static var savedMessage: String { tr("preview.saved.message") }
@@ -125,6 +128,12 @@ enum L10n {
     static var recognizingPhoto: String { tr("import.photo.recognizing") }
     static var ocrEmpty: String { tr("import.ocr.empty") }
     static var ocrFailed: String { tr("import.ocr.failed") }
+    static func ocrHighlightDetected(_ count: Int) -> String {
+        tf("import.ocr.highlightDetected", count)
+    }
+    static func ocrHighlightContext(_ wordCount: Int, _ sentenceCount: Int) -> String {
+        tf("import.ocr.highlightContext", wordCount, sentenceCount)
+    }
 
     // MARK: - Card types
 
@@ -289,6 +298,20 @@ enum L10n {
     static var settingsResetAllSRSMessage: String { tr("settings.resetAllSRS.message") }
     static var settingsResetAllSRSDone: String { tr("settings.resetAllSRS.done") }
     static var settingsResetAllSRSDoneMessage: String { tr("settings.resetAllSRS.doneMessage") }
+    static var settingsMigrateCards: String { tr("settings.migrateCards") }
+    static var settingsMigrateCardsMessage: String { tr("settings.migrateCards.message") }
+    static var settingsMigrateCardsRunning: String { tr("settings.migrateCards.running") }
+    static var settingsMigrateCardsDone: String { tr("settings.migrateCards.done") }
+    static func settingsMigrateCardsDoneMessage(
+        _ fronts: Int,
+        _ backs: Int,
+        _ phonetics: Int,
+        _ sources: Int,
+        _ ai: Int,
+        _ failures: Int
+    ) -> String {
+        tf("settings.migrateCards.doneMessage", fronts, backs, phonetics, sources, ai, failures)
+    }
     static var settingsDeleteAllCards: String { tr("settings.deleteAllCards") }
     static var settingsDeleteAllCardsMessage: String { tr("settings.deleteAllCards.message") }
     static var settingsDeleteAllDone: String { tr("settings.deleteAllCards.done") }
@@ -297,6 +320,27 @@ enum L10n {
     static var apiKeyPlaceholder: String { tr("settings.apiKey.placeholder") }
     static var apiKeyFooter: String { tr("settings.apiKey.footer") }
     static var modelSection: String { tr("settings.model") }
+    static var aiProviderSection: String { tr("settings.ai.provider") }
+    static var aiProviderMoonshot: String { tr("settings.ai.provider.moonshot") }
+    static var aiProviderOpenAI: String { tr("settings.ai.provider.openai") }
+    static var aiProviderDeepSeek: String { tr("settings.ai.provider.deepseek") }
+    static var aiProviderOpenRouter: String { tr("settings.ai.provider.openrouter") }
+    static var aiProviderCustom: String { tr("settings.ai.provider.custom") }
+    static var aiProviderOpenAIKeyPlaceholder: String { tr("settings.ai.provider.openai.keyPlaceholder") }
+    static var aiProviderDeepSeekKeyPlaceholder: String { tr("settings.ai.provider.deepseek.keyPlaceholder") }
+    static var aiProviderOpenRouterKeyPlaceholder: String { tr("settings.ai.provider.openrouter.keyPlaceholder") }
+    static var aiProviderCustomKeyPlaceholder: String { tr("settings.ai.provider.custom.keyPlaceholder") }
+    static var aiCustomBaseURLPlaceholder: String { tr("settings.ai.customBaseURL.placeholder") }
+    static var aiCustomBaseURLFooter: String { tr("settings.ai.customBaseURL.footer") }
+    static var aiCustomBaseURLMissing: String { tr("settings.ai.customBaseURL.missing") }
+    static var aiCustomModelPlaceholder: String { tr("settings.ai.customModel.placeholder") }
+    static var aiCustomModelFooter: String { tr("settings.ai.customModel.footer") }
+    static var aiModelOpenAI4oMiniDetail: String { tr("settings.ai.model.openai.4oMini") }
+    static var aiModelOpenAI4oDetail: String { tr("settings.ai.model.openai.4o") }
+    static var aiModelDeepSeekChatDetail: String { tr("settings.ai.model.deepseek.chat") }
+    static var aiModelDeepSeekReasonerDetail: String { tr("settings.ai.model.deepseek.reasoner") }
+    static var aiModelOpenRouterDetail: String { tr("settings.ai.model.openrouter") }
+    static var aiModelCustomDetail: String { tr("settings.ai.model.custom") }
     static var saveSettings: String { tr("settings.save") }
     static var statusSection: String { tr("settings.status") }
     static var statusReady: String { tr("settings.status.ready") }

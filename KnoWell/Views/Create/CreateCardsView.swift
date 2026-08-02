@@ -28,6 +28,7 @@ struct CreateCardsView: View {
     @State private var showLongTextPrompt = false
     @State private var pendingLongText = ""
     @State private var isManualEditing = false
+    @State private var sourceHint: String?
 
     private var trimmedSentence: String {
         sentence.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -131,37 +132,7 @@ struct CreateCardsView: View {
                     )
                 }
 
-                HStack(spacing: 24) {
-                    CompactIconAction(
-                        systemImage: "photo",
-                        isDisabled: isRecognizingPhoto,
-                        expands: false
-                    ) {
-                        showPhotoLibrary = true
-                    }
-                    .accessibilityLabel(L10n.importFromPhoto)
-
-                    if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                        CompactIconAction(
-                            systemImage: "camera",
-                            isDisabled: isRecognizingPhoto,
-                            expands: false
-                        ) {
-                            showCamera = true
-                        }
-                        .accessibilityLabel(L10n.importFromCamera)
-                    }
-
-                    CompactIconAction(
-                        systemImage: "doc.on.clipboard",
-                        expands: false
-                    ) {
-                        pasteFromClipboard()
-                    }
-                    .accessibilityLabel(L10n.createQuickPaste)
-
-                    Spacer(minLength: 0)
-                }
+                quickCaptureRow
 
                 sourceEditor
 
@@ -188,6 +159,42 @@ struct CreateCardsView: View {
         }
     }
 
+    private var quickCaptureRow: some View {
+        HStack(spacing: 6) {
+            Text(L10n.createQuickCaptureTitle)
+                .font(AppFont.weak())
+                .foregroundStyle(AppColor.textTertiary)
+
+            Spacer(minLength: AppSpacing.sm)
+
+            TextLinkAction(title: L10n.createQuickPhoto) {
+                showPhotoLibrary = true
+            }
+            .disabled(isRecognizingPhoto)
+            .opacity(isRecognizingPhoto ? 0.45 : 1)
+
+            if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                Text("·")
+                    .font(AppFont.weak())
+                    .foregroundStyle(AppColor.textTertiary.opacity(0.45))
+
+                TextLinkAction(title: L10n.createQuickCamera) {
+                    showCamera = true
+                }
+                .disabled(isRecognizingPhoto)
+                .opacity(isRecognizingPhoto ? 0.45 : 1)
+            }
+
+            Text("·")
+                .font(AppFont.weak())
+                .foregroundStyle(AppColor.textTertiary.opacity(0.45))
+
+            TextLinkAction(title: L10n.createQuickPaste) {
+                pasteFromClipboard()
+            }
+        }
+    }
+
     private var sourceEditor: some View {
         ZStack(alignment: .topLeading) {
             SelectableTextEditor(
@@ -198,14 +205,10 @@ struct CreateCardsView: View {
             )
             .frame(minHeight: 160)
             .padding(AppSpacing.sm)
-            .background(AppColor.surface, in: RoundedRectangle(cornerRadius: AppRadius.input, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: AppRadius.input, style: .continuous)
-                    .strokeBorder(
-                        sentence.isEmpty ? AppColor.borderSubtle : AppColor.borderFocus,
-                        lineWidth: 0.8
-                    )
-            }
+            .background(
+                AppColor.surfaceMuted,
+                in: RoundedRectangle(cornerRadius: AppRadius.input, style: .continuous)
+            )
 
             if sentence.isEmpty {
                 Text(L10n.createPastePlaceholder)
@@ -237,18 +240,23 @@ struct CreateCardsView: View {
     }
 
     private var wordsCard: some View {
-        VocabularyWordsEditor(
-            words: $words,
-            feedbackMessage: $wordFeedbackMessage,
-            feedbackIsError: $wordFeedbackIsError
-        )
+        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+            Text(L10n.wordsSection)
+                .font(AppFont.weak())
+                .foregroundStyle(AppColor.textTertiary)
+
+            VocabularyWordsEditor(
+                words: $words,
+                feedbackMessage: $wordFeedbackMessage,
+                feedbackIsError: $wordFeedbackIsError
+            )
+        }
         .padding(AppSpacing.sm)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AppColor.surfaceMuted, in: RoundedRectangle(cornerRadius: AppRadius.input, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: AppRadius.input, style: .continuous)
-                .strokeBorder(AppColor.borderFocus, lineWidth: 1)
-        }
+        .background(
+            AppColor.surface,
+            in: RoundedRectangle(cornerRadius: AppRadius.input, style: .continuous)
+        )
     }
 
     private var generateFooter: some View {
@@ -310,15 +318,42 @@ struct CreateCardsView: View {
     @MainActor
     private func recognizeImage(_ image: UIImage, successBanner: String) async {
         do {
-            let text = try await ImageOCRService.recognizeText(in: image)
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !text.isEmpty else {
+            let result = try await ImageOCRService.recognize(in: image)
+            let importSentence = result.preferredImportSentence
+            guard !importSentence.isEmpty else {
                 errorMessage = L10n.ocrEmpty
                 return
             }
-            sentence = text
-            importBannerMessage = successBanner
-            showToast(successBanner)
+
+            // Highlight hits → word + containing sentence only (not the whole page).
+            sentence = importSentence
+            sourceHint = OCRContextExtractor.sourceHint(from: result.fullText)
+            if result.hasHighlightContext {
+                words = []
+            }
+
+            var addedHighlights = 0
+            for word in result.preferredImportWords {
+                if case .added = VocabularyWords.append(word, to: &words) {
+                    addedHighlights += 1
+                }
+            }
+
+            if result.hasHighlightContext {
+                let message = L10n.ocrHighlightContext(
+                    addedHighlights,
+                    result.importUnits.count
+                )
+                importBannerMessage = message
+                showToast(message)
+            } else if addedHighlights > 0 {
+                let message = L10n.ocrHighlightDetected(addedHighlights)
+                importBannerMessage = message
+                showToast(message)
+            } else {
+                importBannerMessage = successBanner
+                showToast(successBanner)
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -368,7 +403,11 @@ struct CreateCardsView: View {
 
         Task {
             do {
-                let generated = try await KimiCardGenerator.generate(sentence: sentence, words: words)
+                let generated = try await KimiCardGenerator.generate(
+                    sentence: sentence,
+                    words: words,
+                    sourceHint: sourceHint
+                )
 
                 await MainActor.run {
                     isGenerating = false

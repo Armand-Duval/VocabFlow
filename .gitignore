@@ -4,6 +4,7 @@ DerivedData/
 *.xcuserstate
 
 # API Keys — 切勿提交
-KnoWell/Services/DefaultAPIKey.swift
+KnoWell/Services/Settings/DefaultAPIKey.swift
+**/DefaultAPIKey.swift
 moonshot API key.json
 *API*key*.json

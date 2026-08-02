@@ -3,6 +3,7 @@ import SwiftUI
 struct ImportCardsFormView: View {
     let onSubmit: () -> Void
     let onCancel: () -> Void
+    private let sourceHint: String?
 
     @State private var sentence: String
     @State private var words: [String]
@@ -16,11 +17,13 @@ struct ImportCardsFormView: View {
     init(
         sentence: String,
         selectedWord: String? = nil,
+        sourceHint: String? = nil,
         onSubmit: @escaping () -> Void,
         onCancel: @escaping () -> Void
     ) {
         self.onSubmit = onSubmit
         self.onCancel = onCancel
+        self.sourceHint = sourceHint
         _sentence = State(initialValue: sentence)
         _words = State(initialValue: selectedWord.map { VocabularyWords.parse(from: $0) } ?? [])
     }
@@ -127,6 +130,7 @@ struct ImportCardsFormView: View {
         ShareCardGenerationRunner.submitFromShareExtension(
             sentence: trimmedSentence,
             words: words,
+            sourceHint: sourceHint,
             targetDeckID: selectedDeckID,
             exitExtension: onSubmit
         )

@@ -55,6 +55,8 @@ enum ShareImportStore {
         let cardTypeRaw: String
         let front: String
         let back: String
+        let contextNote: String?
+        let sourceAttribution: String?
 
         init(from draft: GeneratedCardDraft) {
             word = draft.word
@@ -63,10 +65,12 @@ enum ShareImportStore {
             cardTypeRaw = draft.cardType.rawValue
             front = draft.front
             back = draft.back
+            contextNote = draft.contextNote
+            sourceAttribution = draft.sourceAttribution
         }
 
         enum CodingKeys: String, CodingKey {
-            case word, phonetic, sentence, cardTypeRaw, front, back
+            case word, phonetic, sentence, cardTypeRaw, front, back, contextNote, sourceAttribution
         }
 
         init(from decoder: Decoder) throws {
@@ -77,6 +81,8 @@ enum ShareImportStore {
             cardTypeRaw = try container.decode(String.self, forKey: .cardTypeRaw)
             front = try container.decode(String.self, forKey: .front)
             back = try container.decode(String.self, forKey: .back)
+            contextNote = try container.decodeIfPresent(String.self, forKey: .contextNote)
+            sourceAttribution = try container.decodeIfPresent(String.self, forKey: .sourceAttribution)
         }
 
         func encode(to encoder: Encoder) throws {
@@ -87,6 +93,8 @@ enum ShareImportStore {
             try container.encode(cardTypeRaw, forKey: .cardTypeRaw)
             try container.encode(front, forKey: .front)
             try container.encode(back, forKey: .back)
+            try container.encodeIfPresent(contextNote, forKey: .contextNote)
+            try container.encodeIfPresent(sourceAttribution, forKey: .sourceAttribution)
         }
     }
 
@@ -103,7 +111,27 @@ enum ShareImportStore {
     private struct StoredGenerationJob: Codable {
         let sentence: String
         let words: [String]
+        let sourceHint: String?
         var status: GenerationJobStatus
+
+        enum CodingKeys: String, CodingKey {
+            case sentence, words, sourceHint, status
+        }
+
+        init(sentence: String, words: [String], sourceHint: String? = nil, status: GenerationJobStatus) {
+            self.sentence = sentence
+            self.words = words
+            self.sourceHint = sourceHint
+            self.status = status
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            sentence = try container.decode(String.self, forKey: .sentence)
+            words = try container.decode([String].self, forKey: .words)
+            sourceHint = try container.decodeIfPresent(String.self, forKey: .sourceHint)
+            status = try container.decode(GenerationJobStatus.self, forKey: .status)
+        }
     }
 
     private static var payloadURL: URL? {
@@ -192,7 +220,8 @@ enum ShareImportStore {
                 cardType: type,
                 front: stored.front,
                 back: stored.back,
-                contextNote: nil
+                contextNote: stored.contextNote,
+                sourceAttribution: stored.sourceAttribution
             )
         }
     }
@@ -202,10 +231,15 @@ enum ShareImportStore {
         try? FileManager.default.removeItem(at: url)
     }
 
-    static func savePendingGenerationJob(sentence: String, words: [String]) {
+    static func savePendingGenerationJob(
+        sentence: String,
+        words: [String],
+        sourceHint: String? = nil
+    ) {
         let job = StoredGenerationJob(
             sentence: sentence,
             words: words,
+            sourceHint: sourceHint,
             status: .pending
         )
         guard let url = generationJobURL,
@@ -215,7 +249,7 @@ enum ShareImportStore {
         try? data.write(to: url, options: .atomic)
     }
 
-    static func claimPendingGenerationJob() -> (sentence: String, words: [String])? {
+    static func claimPendingGenerationJob() -> (sentence: String, words: [String], sourceHint: String?)? {
         guard let url = generationJobURL,
               let data = try? Data(contentsOf: url),
               var job = try? JSONDecoder().decode(StoredGenerationJob.self, from: data) else {
@@ -240,7 +274,7 @@ enum ShareImportStore {
             return nil
         }
 
-        return (sentence, words)
+        return (sentence, words, job.sourceHint)
     }
 
     static func clearGenerationJob() {

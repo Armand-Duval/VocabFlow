@@ -25,6 +25,7 @@ struct FlashCardDetailView: View {
     @State private var editFront = ""
     @State private var editBack = ""
     @State private var editContextNote = ""
+    @State private var editSourceAttribution = ""
     @State private var editDeckID = UUID()
 
     var body: some View {
@@ -136,6 +137,9 @@ struct FlashCardDetailView: View {
                 }
                 LabeledContent(L10n.typeLabel, value: card.cardType.displayName)
                 DetailField(label: L10n.sourceText, value: card.sentence)
+                if let source = card.sourceAttribution, !source.isEmpty {
+                    DetailField(label: L10n.cardSourceLabel, value: source)
+                }
                 DetailField(label: L10n.frontLabel, value: card.front)
                 DetailField(label: L10n.backLabel, value: card.displayBack)
             }
@@ -179,6 +183,7 @@ struct FlashCardDetailView: View {
                     .lineLimit(3...10)
                 TextField(L10n.libraryContextNote, text: $editContextNote, axis: .vertical)
                     .lineLimit(2...6)
+                TextField(L10n.cardSourceLabel, text: $editSourceAttribution)
             }
         }
         .dismissKeyboardOnScroll()
@@ -231,6 +236,7 @@ struct FlashCardDetailView: View {
         editFront = card.front
         editBack = card.back
         editContextNote = card.contextNote ?? ""
+        editSourceAttribution = card.sourceAttribution ?? ""
         editDeckID = card.deck?.id ?? DeckService.fetchOrCreateDefault(in: modelContext).id
         isEditing = true
     }
@@ -249,6 +255,8 @@ struct FlashCardDetailView: View {
         card.back = editBack.trimmingCharacters(in: .whitespacesAndNewlines)
         let note = editContextNote.trimmingCharacters(in: .whitespacesAndNewlines)
         card.contextNote = note.isEmpty ? nil : note
+        let source = editSourceAttribution.trimmingCharacters(in: .whitespacesAndNewlines)
+        card.sourceAttribution = source.isEmpty ? nil : source
         card.deck = DeckService.resolvedDeck(id: editDeckID, in: modelContext)
         isEditing = false
         DeckCardCountService.notifyCatalogChanged()

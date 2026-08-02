@@ -75,6 +75,9 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .reviewQueueDidChange)) { _ in
             scheduleDueCountRefresh(delayMilliseconds: 300)
         }
+        .onReceive(NotificationCenter.default.publisher(for: .activeDeckDidChange)) { _ in
+            scheduleDueCountRefresh(delayMilliseconds: 0)
+        }
         .onReceive(NotificationCenter.default.publisher(for: .requestSettings)) { _ in
             showSettings = true
         }
@@ -100,6 +103,7 @@ struct ContentView: View {
         }
         .onAppear {
             DeckService.bootstrap(in: modelContext)
+            CardContentMigrationService.migrateLocallyIfNeeded(in: modelContext)
             shareImport.refreshAll()
             focusCreateTabForPendingShareWork()
             scheduleDueCountRefresh(delayMilliseconds: 800)
@@ -152,7 +156,7 @@ struct ContentView: View {
         let descriptor = FetchDescriptor<FlashCard>()
         guard let cards = try? modelContext.fetch(descriptor) else { return }
 
-        let scoped = ReviewQueueBuilder.cards(in: reviewSettings.reviewDeckID, from: cards)
+        let scoped = ReviewQueueBuilder.cards(in: DeckSettings.lastSelectedDeckID, from: cards)
 
         let count = ReviewQueueBuilder.sessionDueCount(
             from: scoped,

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		MIGRATE0010000000000000001 /* CardContentMigrationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = MIGRATE0010000000000000010 /* CardContentMigrationService.swift */; };
 		AA0000010000000000000020 /* KnoWellApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000010 /* KnoWellApp.swift */; };
 		AA0000010000000000000021 /* FlashCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000011 /* FlashCard.swift */; };
 		AA0000010000000000000023 /* ReviewScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000013 /* ReviewScheduler.swift */; };
@@ -21,6 +22,15 @@
 		NN0000010000000000000001 /* ImageOCRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = NN0000010000000000000010 /* ImageOCRService.swift */; };
 		NN0000010000000000000002 /* ImageOCRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = NN0000010000000000000010 /* ImageOCRService.swift */; };
 		NN0000010000000000000003 /* ImageOCRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = NN0000010000000000000010 /* ImageOCRService.swift */; };
+		OCRHL0010000000000000001 /* OCRResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRHL0010000000000000010 /* OCRResult.swift */; };
+		OCRHL0010000000000000002 /* OCRResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRHL0010000000000000010 /* OCRResult.swift */; };
+		OCRHL0010000000000000003 /* OCRResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRHL0010000000000000010 /* OCRResult.swift */; };
+		OCRHL0010000000000000004 /* HighlightMaskDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRHL0010000000000000011 /* HighlightMaskDetector.swift */; };
+		OCRHL0010000000000000005 /* HighlightMaskDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRHL0010000000000000011 /* HighlightMaskDetector.swift */; };
+		OCRHL0010000000000000006 /* HighlightMaskDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRHL0010000000000000011 /* HighlightMaskDetector.swift */; };
+		OCRHL0010000000000000007 /* OCRContextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRHL0010000000000000012 /* OCRContextExtractor.swift */; };
+		OCRHL0010000000000000008 /* OCRContextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRHL0010000000000000012 /* OCRContextExtractor.swift */; };
+		OCRHL0010000000000000009 /* OCRContextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRHL0010000000000000012 /* OCRContextExtractor.swift */; };
 		AA0000010000000000000024 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000014 /* ContentView.swift */; };
 		AA0000010000000000000025 /* CreateCardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000015 /* CreateCardsView.swift */; };
 		AA0000010000000000000026 /* CardPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000016 /* CardPreviewView.swift */; };
@@ -28,6 +38,9 @@
 		AA0000010000000000000028 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000018 /* LibraryView.swift */; };
 		AA0000010000000000000029 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000019 /* Assets.xcassets */; };
 		AA0000010000000000000034 /* APISettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000035 /* APISettings.swift */; };
+		AIPROV0010000000000000001 /* AIProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AIPROV0010000000000000010 /* AIProvider.swift */; };
+		AIPROV0010000000000000002 /* AIProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AIPROV0010000000000000010 /* AIProvider.swift */; };
+		AIPROV0010000000000000003 /* AIProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AIPROV0010000000000000010 /* AIProvider.swift */; };
 		AA0000010000000000000036 /* KimiCardGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000037 /* KimiCardGenerator.swift */; };
 		AA0000010000000000000038 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000045 /* SettingsView.swift */; };
 		AA0000010000000000000046 /* DefaultAPIKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000047 /* DefaultAPIKey.swift */; };
@@ -116,6 +129,7 @@
 		BB0000010000000000000007 /* ImportCardsFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000010000000000000018 /* ImportCardsFormView.swift */; };
 		CC0000010000000000000001 /* ClipboardImportCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000010000000000000010 /* ClipboardImportCoordinator.swift */; };
 		CC0000010000000000000009 /* FlashCardSaver.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000010000000000000013 /* FlashCardSaver.swift */; };
+		SYNC00100000000000000001 /* CardContentSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = SYNC00100000000000000010 /* CardContentSync.swift */; };
 		CC0000010000000000000002 /* CardDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000010000000000000011 /* CardDraft.swift */; };
 		CC0000010000000000000003 /* CardDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000010000000000000011 /* CardDraft.swift */; };
 		CC0000010000000000000004 /* KimiCardGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000037 /* KimiCardGenerator.swift */; };
@@ -139,6 +153,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		MIGRATE0010000000000000010 /* CardContentMigrationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardContentMigrationService.swift; sourceTree = "<group>"; };
 		AA0000010000000000000005 /* KnoWell.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KnoWell.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA0000010000000000000010 /* KnoWellApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnoWellApp.swift; sourceTree = "<group>"; };
 		AA0000010000000000000011 /* FlashCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashCard.swift; sourceTree = "<group>"; };
@@ -152,6 +167,9 @@
 		MM0000010000000000000010 /* SpeechService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechService.swift; sourceTree = "<group>"; };
 		MM0000010000000000000011 /* SpeakButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeakButton.swift; sourceTree = "<group>"; };
 		NN0000010000000000000010 /* ImageOCRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageOCRService.swift; sourceTree = "<group>"; };
+		OCRHL0010000000000000010 /* OCRResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRResult.swift; sourceTree = "<group>"; };
+		OCRHL0010000000000000011 /* HighlightMaskDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightMaskDetector.swift; sourceTree = "<group>"; };
+		OCRHL0010000000000000012 /* OCRContextExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRContextExtractor.swift; sourceTree = "<group>"; };
 		AA0000010000000000000014 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		AA0000010000000000000015 /* CreateCardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateCardsView.swift; sourceTree = "<group>"; };
 		AA0000010000000000000016 /* CardPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardPreviewView.swift; sourceTree = "<group>"; };
@@ -159,6 +177,7 @@
 		AA0000010000000000000018 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		AA0000010000000000000019 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AA0000010000000000000035 /* APISettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APISettings.swift; sourceTree = "<group>"; };
+		AIPROV0010000000000000010 /* AIProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIProvider.swift; sourceTree = "<group>"; };
 		AA0000010000000000000037 /* KimiCardGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KimiCardGenerator.swift; sourceTree = "<group>"; };
 		AA0000010000000000000045 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		AA0000010000000000000047 /* DefaultAPIKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultAPIKey.swift; sourceTree = "<group>"; };
@@ -170,8 +189,8 @@
 		HH0000010000000000000011 /* ImportTextAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportTextAnalyzer.swift; sourceTree = "<group>"; };
 		HH0000010000000000000012 /* CreateCardsUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateCardsUI.swift; sourceTree = "<group>"; };
 		VV0000010000000000000010 /* CameraImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraImagePicker.swift; sourceTree = "<group>"; };
-		WW0000010000000000000015 /* AppComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/AppComponents.swift; sourceTree = SOURCE_ROOT; };
-		WW0000010000000000000016 /* AppNavigation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/AppNavigation.swift; sourceTree = SOURCE_ROOT; };
+		WW0000010000000000000015 /* AppComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppComponents.swift; sourceTree = "<group>"; };
+		WW0000010000000000000016 /* AppNavigation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNavigation.swift; sourceTree = "<group>"; };
 		WW0000010000000000000011 /* StatusChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusChip.swift; sourceTree = "<group>"; };
 		WW0000010000000000000012 /* ToastCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastCenter.swift; sourceTree = "<group>"; };
 		XX0000010000000000000010 /* LibraryCardStatusChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryCardStatusChip.swift; sourceTree = "<group>"; };
@@ -225,6 +244,7 @@
 		CC0000010000000000000011 /* CardDraft.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardDraft.swift; sourceTree = "<group>"; };
 		CC0000010000000000000012 /* ShareCardGenerationRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCardGenerationRunner.swift; sourceTree = "<group>"; };
 		CC0000010000000000000013 /* FlashCardSaver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashCardSaver.swift; sourceTree = "<group>"; };
+		SYNC00100000000000000010 /* CardContentSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardContentSync.swift; sourceTree = "<group>"; };
 		CC0000010000000000000015 /* ShareTextExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareTextExtractor.swift; sourceTree = "<group>"; };
 		DD0000010000000000000010 /* KnoWellAction.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = KnoWellAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		DD0000010000000000000013 /* ActionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionViewController.swift; sourceTree = "<group>"; };
@@ -328,66 +348,149 @@
 		AA0000010000000000000032 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				SVCGRP0000000000000000001 /* Core */,
+				SVCGRP0000000000000000002 /* Review */,
+				SVCGRP0000000000000000003 /* Library */,
+				SVCGRP0000000000000000004 /* Create */,
+				SVCGRP0000000000000000005 /* Settings */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		SVCGRP0000000000000000001 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				ZZ0000010000000000000010 /* AppModelContainer.swift */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		SVCGRP0000000000000000002 /* Review */ = {
+			isa = PBXGroup;
+			children = (
 				AA0000010000000000000013 /* ReviewScheduler.swift */,
-				STREAK00100000000000000001 /* StudyStreakStore.swift */,
+				KK0000010000000000000011 /* ReviewQueueBuilder.swift */,
 				KK0000010000000000000010 /* ReviewSettings.swift */,
 				KK0000010000000000000012 /* ReviewSettingsStore.swift */,
-				KK0000010000000000000011 /* ReviewQueueBuilder.swift */,
 				LL0000010000000000000010 /* ReviewReminderService.swift */,
 				LL0000010000000000000011 /* ReviewStatusStore.swift */,
+				STREAK00100000000000000001 /* StudyStreakStore.swift */,
 				MM0000010000000000000010 /* SpeechService.swift */,
-				AA0000010000000000000035 /* APISettings.swift */,
-				AA0000010000000000000037 /* KimiCardGenerator.swift */,
-				AA0000010000000000000047 /* DefaultAPIKey.swift */,
-				AA0000010000000000000055 /* BackupService.swift */,
-				PP0000010000000000000012 /* ApkgExportService.swift */,
-				PP0000010000000000000013 /* MinimalZipWriter.swift */,
+			);
+			path = Review;
+			sourceTree = "<group>";
+		};
+		SVCGRP0000000000000000003 /* Library */ = {
+			isa = PBXGroup;
+			children = (
+				TT0000010000000000000010 /* LibraryCardGrouper.swift */,
+				UU0000010000000000000011 /* LibraryCatalogCache.swift */,
 				QQ0000010000000000000012 /* DeckService.swift */,
-				ZZ0000010000000000000010 /* AppModelContainer.swift */,
 				QQ0000010000000000000013 /* DeckCatalog.swift */,
 				QQ0000010000000000000025 /* DeckCommunityCatalog.swift */,
 				QQ0000010000000000000026 /* DeckRemoteCatalog.swift */,
 				QQ0000010000000000000027 /* DeckPackConverter.swift */,
 				QQ0000010000000000000028 /* DeckDownloadService.swift */,
-				TT0000010000000000000010 /* LibraryCardGrouper.swift */,
 				UU0000010000000000000010 /* DeckCardCountService.swift */,
-				UU0000010000000000000011 /* LibraryCatalogCache.swift */,
-				UU0000010000000000000012 /* BackupReminderService.swift */,
 				UU0000010000000000000013 /* DeckStatisticsService.swift */,
-				QQ0000010000000000000015 /* MinimalZipReader.swift */,
 				QQ0000010000000000000016 /* ApkgImportService.swift */,
+				PP0000010000000000000012 /* ApkgExportService.swift */,
+				QQ0000010000000000000015 /* MinimalZipReader.swift */,
+				PP0000010000000000000013 /* MinimalZipWriter.swift */,
+			);
+			path = Library;
+			sourceTree = "<group>";
+		};
+		SVCGRP0000000000000000004 /* Create */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000010000000000000037 /* KimiCardGenerator.swift */,
+				CC0000010000000000000013 /* FlashCardSaver.swift */,
+				SYNC00100000000000000010 /* CardContentSync.swift */,
 				BB0000010000000000000012 /* ShareImportCoordinator.swift */,
 				CC0000010000000000000010 /* ClipboardImportCoordinator.swift */,
-				CC0000010000000000000013 /* FlashCardSaver.swift */,
+			);
+			path = Create;
+			sourceTree = "<group>";
+		};
+		SVCGRP0000000000000000005 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				MIGRATE0010000000000000010 /* CardContentMigrationService.swift */,
+				AIPROV0010000000000000010 /* AIProvider.swift */,
+				AA0000010000000000000035 /* APISettings.swift */,
+				AA0000010000000000000047 /* DefaultAPIKey.swift */,
+				AA0000010000000000000055 /* BackupService.swift */,
+				UU0000010000000000000012 /* BackupReminderService.swift */,
 				AUTH0010000000000000000012 /* AccountAuthConfig.swift */,
 				AUTH0010000000000000000013 /* AccountStore.swift */,
 				AUTH0010000000000000000014 /* AppleSignInService.swift */,
 				AUTH0010000000000000000015 /* WeChatSignInService.swift */,
 			);
-			path = Services;
+			path = Settings;
 			sourceTree = "<group>";
 		};
 		AA0000010000000000000033 /* Views */ = {
 			isa = PBXGroup;
 			children = (
 				AA0000010000000000000014 /* ContentView.swift */,
-				AA0000010000000000000015 /* CreateCardsView.swift */,
-				AA0000010000000000000016 /* CardPreviewView.swift */,
-				AA0000010000000000000017 /* ReviewView.swift */,
-				AA0000010000000000000018 /* LibraryView.swift */,
-				AA0000010000000000000045 /* SettingsView.swift */,
-				AA0000010000000000000049 /* KeyboardDismiss.swift */,
-				AA0000010000000000000058 /* CardReviewSessionView.swift */,
-				PP0000010000000000000010 /* FlashCardDetailView.swift */,
-				PP0000010000000000000011 /* PrivacyPolicyView.swift */,
-				QQ0000010000000000000017 /* DeckPickerSection.swift */,
-				QQ0000010000000000000018 /* DeckStoreView.swift */,
-				AUTH0010000000000000000016 /* AccountSettingsCard.swift */,
-				UU0000010000000000000014 /* DeckStatisticsView.swift */,
-				XX0000010000000000000010 /* LibraryCardStatusChip.swift */,
-				MM0000010000000000000011 /* SpeakButton.swift */,
+				VIEWGRP000000000000000001 /* Review */,
+				VIEWGRP000000000000000002 /* Library */,
+				VIEWGRP000000000000000003 /* Create */,
+				VIEWGRP000000000000000004 /* Settings */,
+				VIEWGRP000000000000000005 /* Common */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		VIEWGRP000000000000000001 /* Review */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000010000000000000017 /* ReviewView.swift */,
+				AA0000010000000000000058 /* CardReviewSessionView.swift */,
+				MM0000010000000000000011 /* SpeakButton.swift */,
+			);
+			path = Review;
+			sourceTree = "<group>";
+		};
+		VIEWGRP000000000000000002 /* Library */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000010000000000000018 /* LibraryView.swift */,
+				XX0000010000000000000010 /* LibraryCardStatusChip.swift */,
+				PP0000010000000000000010 /* FlashCardDetailView.swift */,
+				QQ0000010000000000000018 /* DeckStoreView.swift */,
+				UU0000010000000000000014 /* DeckStatisticsView.swift */,
+				QQ0000010000000000000017 /* DeckPickerSection.swift */,
+			);
+			path = Library;
+			sourceTree = "<group>";
+		};
+		VIEWGRP000000000000000003 /* Create */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000010000000000000015 /* CreateCardsView.swift */,
+				AA0000010000000000000016 /* CardPreviewView.swift */,
+			);
+			path = Create;
+			sourceTree = "<group>";
+		};
+		VIEWGRP000000000000000004 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000010000000000000045 /* SettingsView.swift */,
+				AUTH0010000000000000000016 /* AccountSettingsCard.swift */,
+				PP0000010000000000000011 /* PrivacyPolicyView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		VIEWGRP000000000000000005 /* Common */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000010000000000000049 /* KeyboardDismiss.swift */,
+			);
+			path = Common;
 			sourceTree = "<group>";
 		};
 		BB0000010000000000000040 /* KnoWellShare */ = {
@@ -413,29 +516,80 @@
 		BB0000010000000000000041 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
-				BB0000010000000000000011 /* ShareImportStore.swift */,
-				BB0000010000000000000018 /* ImportCardsFormView.swift */,
-				FF0000010000000000000010 /* SelectableTextEditor.swift */,
-				JJ0000010000000000000010 /* ScrollKeyboardDismiss.swift */,
-				GG0000010000000000000010 /* VocabularyWordsEditor.swift */,
-				HH0000010000000000000010 /* L10n.swift */,
-				HH0000010000000000000011 /* ImportTextAnalyzer.swift */,
-				HH0000010000000000000012 /* CreateCardsUI.swift */,
-				VV0000010000000000000010 /* CameraImagePicker.swift */,
+				SHRDGRP000000000000000001 /* Design */,
+				SHRDGRP000000000000000002 /* Localization */,
+				SHRDGRP000000000000000003 /* OCR */,
+				SHRDGRP000000000000000004 /* Create */,
+				SHRDGRP000000000000000005 /* Share */,
+				SHRDGRP000000000000000006 /* Deck */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		SHRDGRP000000000000000001 /* Design */ = {
+			isa = PBXGroup;
+			children = (
 				WW0000010000000000000015 /* AppComponents.swift */,
 				WW0000010000000000000016 /* AppNavigation.swift */,
 				WW0000010000000000000011 /* StatusChip.swift */,
 				WW0000010000000000000012 /* ToastCenter.swift */,
+			);
+			path = Design;
+			sourceTree = "<group>";
+		};
+		SHRDGRP000000000000000002 /* Localization */ = {
+			isa = PBXGroup;
+			children = (
+				HH0000010000000000000010 /* L10n.swift */,
 				HH0000010000000000000013 /* Localizable.xcstrings */,
+			);
+			path = Localization;
+			sourceTree = "<group>";
+		};
+		SHRDGRP000000000000000003 /* OCR */ = {
+			isa = PBXGroup;
+			children = (
 				NN0000010000000000000010 /* ImageOCRService.swift */,
+				OCRHL0010000000000000010 /* OCRResult.swift */,
+				OCRHL0010000000000000011 /* HighlightMaskDetector.swift */,
+				OCRHL0010000000000000012 /* OCRContextExtractor.swift */,
+			);
+			path = OCR;
+			sourceTree = "<group>";
+		};
+		SHRDGRP000000000000000004 /* Create */ = {
+			isa = PBXGroup;
+			children = (
 				CC0000010000000000000011 /* CardDraft.swift */,
-				CC0000010000000000000012 /* ShareCardGenerationRunner.swift */,
+				HH0000010000000000000012 /* CreateCardsUI.swift */,
+				GG0000010000000000000010 /* VocabularyWordsEditor.swift */,
+				FF0000010000000000000010 /* SelectableTextEditor.swift */,
+				VV0000010000000000000010 /* CameraImagePicker.swift */,
+				HH0000010000000000000011 /* ImportTextAnalyzer.swift */,
+				BB0000010000000000000018 /* ImportCardsFormView.swift */,
+				JJ0000010000000000000010 /* ScrollKeyboardDismiss.swift */,
+			);
+			path = Create;
+			sourceTree = "<group>";
+		};
+		SHRDGRP000000000000000005 /* Share */ = {
+			isa = PBXGroup;
+			children = (
+				BB0000010000000000000011 /* ShareImportStore.swift */,
 				CC0000010000000000000015 /* ShareTextExtractor.swift */,
+				CC0000010000000000000012 /* ShareCardGenerationRunner.swift */,
 				DD0000010000000000000016 /* ExtensionImportViewController.swift */,
+			);
+			path = Share;
+			sourceTree = "<group>";
+		};
+		SHRDGRP000000000000000006 /* Deck */ = {
+			isa = PBXGroup;
+			children = (
 				RR0000010000000000000010 /* SharedDeckStore.swift */,
 				RR0000010000000000000011 /* SharedDeckPickerSection.swift */,
 			);
-			path = Shared;
+			path = Deck;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -581,9 +735,13 @@
 				WW0000010000000000000005 /* StatusChip.swift in Sources */,
 				WW0000010000000000000006 /* ToastCenter.swift in Sources */,
 				NN0000010000000000000002 /* ImageOCRService.swift in Sources */,
+				OCRHL0010000000000000002 /* OCRResult.swift in Sources */,
+				OCRHL0010000000000000005 /* HighlightMaskDetector.swift in Sources */,
+				OCRHL0010000000000000008 /* OCRContextExtractor.swift in Sources */,
 				CC0000010000000000000003 /* CardDraft.swift in Sources */,
 				CC0000010000000000000004 /* KimiCardGenerator.swift in Sources */,
 				CC0000010000000000000005 /* APISettings.swift in Sources */,
+				AIPROV0010000000000000002 /* AIProvider.swift in Sources */,
 				CC0000010000000000000006 /* DefaultAPIKey.swift in Sources */,
 				CC0000010000000000000007 /* ShareCardGenerationRunner.swift in Sources */,
 				CC0000010000000000000014 /* ShareTextExtractor.swift in Sources */,
@@ -611,9 +769,13 @@
 				WW0000010000000000000008 /* StatusChip.swift in Sources */,
 				WW0000010000000000000009 /* ToastCenter.swift in Sources */,
 				NN0000010000000000000003 /* ImageOCRService.swift in Sources */,
+				OCRHL0010000000000000003 /* OCRResult.swift in Sources */,
+				OCRHL0010000000000000006 /* HighlightMaskDetector.swift in Sources */,
+				OCRHL0010000000000000009 /* OCRContextExtractor.swift in Sources */,
 				DD0000010000000000000007 /* CardDraft.swift in Sources */,
 				DD0000010000000000000008 /* KimiCardGenerator.swift in Sources */,
 				DD0000010000000000000009 /* APISettings.swift in Sources */,
+				AIPROV0010000000000000003 /* AIProvider.swift in Sources */,
 				DD000001000000000000000A /* DefaultAPIKey.swift in Sources */,
 				DD000001000000000000000B /* ShareCardGenerationRunner.swift in Sources */,
 				DD000001000000000000000C /* ShareTextExtractor.swift in Sources */,
@@ -678,12 +840,16 @@
 				MM0000010000000000000001 /* SpeechService.swift in Sources */,
 				MM0000010000000000000002 /* SpeakButton.swift in Sources */,
 				NN0000010000000000000001 /* ImageOCRService.swift in Sources */,
+				OCRHL0010000000000000001 /* OCRResult.swift in Sources */,
+				OCRHL0010000000000000004 /* HighlightMaskDetector.swift in Sources */,
+				OCRHL0010000000000000007 /* OCRContextExtractor.swift in Sources */,
 				AA0000010000000000000024 /* ContentView.swift in Sources */,
 				AA0000010000000000000025 /* CreateCardsView.swift in Sources */,
 				AA0000010000000000000026 /* CardPreviewView.swift in Sources */,
 				AA0000010000000000000027 /* ReviewView.swift in Sources */,
 				AA0000010000000000000028 /* LibraryView.swift in Sources */,
 				AA0000010000000000000034 /* APISettings.swift in Sources */,
+				AIPROV0010000000000000001 /* AIProvider.swift in Sources */,
 				AA0000010000000000000036 /* KimiCardGenerator.swift in Sources */,
 				AA0000010000000000000038 /* SettingsView.swift in Sources */,
 				AA0000010000000000000046 /* DefaultAPIKey.swift in Sources */,
@@ -709,6 +875,7 @@
 				BB0000010000000000000006 /* ImportCardsFormView.swift in Sources */,
 				CC0000010000000000000001 /* ClipboardImportCoordinator.swift in Sources */,
 				CC0000010000000000000009 /* FlashCardSaver.swift in Sources */,
+				SYNC00100000000000000001 /* CardContentSync.swift in Sources */,
 				CC0000010000000000000002 /* CardDraft.swift in Sources */,
 				CC0000010000000000000008 /* ShareCardGenerationRunner.swift in Sources */,
 				PP0000010000000000000001 /* FlashCardDetailView.swift in Sources */,
@@ -740,6 +907,7 @@
 				AUTH0010000000000000000003 /* AccountStore.swift in Sources */,
 				AUTH0010000000000000000004 /* AppleSignInService.swift in Sources */,
 				AUTH0010000000000000000005 /* WeChatSignInService.swift in Sources */,
+				MIGRATE0010000000000000001 /* CardContentMigrationService.swift in Sources */,
 				AUTH0010000000000000000006 /* AccountSettingsCard.swift in Sources */,
 				QQ0000010000000000000008 /* DeckPickerSection.swift in Sources */,
 				QQ0000010000000000000009 /* DeckStoreView.swift in Sources */,

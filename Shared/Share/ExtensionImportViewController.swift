@@ -24,21 +24,53 @@ class ExtensionImportViewController: UIViewController {
         Task { @MainActor in
             if let text = await ShareTextExtractor.loadText(from: inputItems) {
                 presentImportForm(for: text)
-            } else if let text = await ShareTextExtractor.loadTextFromImages(from: inputItems) {
-                presentImportForm(for: text)
+            } else if let ocr = await ShareTextExtractor.loadOCRFromImages(from: inputItems) {
+                presentImportForm(ocr: ocr)
             } else {
                 finishWithError(L10n.extensionNoText)
             }
         }
     }
 
-    private func presentImportForm(for text: String) {
+    private func presentImportForm(ocr: OCRResult) {
+        let hint = OCRContextExtractor.sourceHint(from: ocr.fullText)
+        if ocr.hasHighlightContext {
+            presentImportForm(
+                for: ocr.preferredImportSentence,
+                highlightedWords: ocr.preferredImportWords,
+                sourceHint: hint,
+                replaceSentence: true
+            )
+        } else {
+            presentImportForm(
+                for: ocr.fullText,
+                highlightedWords: ocr.highlightedWords,
+                sourceHint: hint
+            )
+        }
+    }
+
+    private func presentImportForm(
+        for text: String,
+        highlightedWords: [String] = [],
+        sourceHint: String? = nil,
+        replaceSentence: Bool = false
+    ) {
         let parsed = ImportTextAnalyzer.parse(text)
+        var prefilled = replaceSentence ? [] : parsed.prefilledWords
+        for word in highlightedWords {
+            _ = VocabularyWords.append(word, to: &prefilled)
+        }
+        let sentence: String
+        if replaceSentence {
+            sentence = text
+        } else {
+            sentence = parsed.sentence.isEmpty ? text : parsed.sentence
+        }
         let formView = ImportCardsFormView(
-            sentence: parsed.sentence,
-            selectedWord: parsed.prefilledWords.isEmpty
-                ? nil
-                : VocabularyWords.join(parsed.prefilledWords),
+            sentence: sentence,
+            selectedWord: prefilled.isEmpty ? nil : VocabularyWords.join(prefilled),
+            sourceHint: sourceHint,
             onSubmit: { [weak self] in
                 self?.extensionContext?.completeRequest(returningItems: nil)
             },

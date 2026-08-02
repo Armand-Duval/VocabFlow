@@ -4,6 +4,9 @@
     "" : {
 
     },
+    "·" : {
+
+    },
     "%@ %@" : {
       "localizations" : {
         "en" : {
@@ -668,6 +671,57 @@
         }
       }
     },
+    "card.source" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Source"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "出处"
+          }
+        }
+      }
+    },
+    "card.source.value" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Source · %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "出处 · %@"
+          }
+        }
+      }
+    },
+    "card.sentenceTranslation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sentence translation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "句子翻译"
+          }
+        }
+      }
+    },
     "common.add" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1218,7 +1272,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "快速拾起"
+            "value" : "快速收录"
           }
         }
       }
@@ -4358,6 +4412,40 @@
         }
       }
     },
+    "import.ocr.highlightContext" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imported %d word(s) from %d sentence(s)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已导入 %d 个高亮词（%d 句）"
+          }
+        }
+      }
+    },
+    "import.ocr.highlightDetected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recognized %d highlighted word(s)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已识别 %d 个高亮词"
+          }
+        }
+      }
+    },
     "import.ocr.empty" : {
       "localizations" : {
         "en" : {
@@ -4525,13 +4613,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Context Note"
+            "value" : "Sentence translation"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "语境备注"
+            "value" : "句子翻译"
           }
         }
       }
@@ -5239,13 +5327,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Back"
+            "value" : "Meaning"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "背面"
+            "value" : "释义及解释"
           }
         }
       }
@@ -5256,13 +5344,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Meaning, part of speech, notes"
+            "value" : "Part of speech + meaning in this sentence"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "释义、词性、语境说明"
+            "value" : "词性 + 结合语境的释义"
           }
         }
       }
@@ -5650,13 +5738,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Again"
+            "value" : "Forgot"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "重来"
+            "value" : "不会"
           }
         }
       }
@@ -5974,7 +6062,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "快速拾起"
+            "value" : "快速收录"
           }
         }
       }
@@ -6356,13 +6444,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Swipe left Again · right Easy · up Hard · down Good"
+            "value" : "Swipe left Forgot · right Easy · down Good"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "左滑重来 · 右滑简单 · 上滑困难 · 下滑良好"
+            "value" : "左滑不会 · 右滑简单 · 下滑良好"
           }
         }
       }
@@ -6466,6 +6554,363 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "AI 制卡"
+          }
+        }
+      }
+    },
+    "settings.ai.customBaseURL.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenAI-compatible base URL ending with /v1"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "兼容 OpenAI 的 Base URL，以 /v1 结尾"
+          }
+        }
+      }
+    },
+    "settings.ai.customBaseURL.missing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom provider requires a Base URL"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自定义接口需要填写 Base URL"
+          }
+        }
+      }
+    },
+    "settings.ai.customBaseURL.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "https://api.example.com/v1"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "https://api.example.com/v1"
+          }
+        }
+      }
+    },
+    "settings.ai.customModel.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optional. Overrides the model picker when set."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可选。填写后优先使用此模型 ID"
+          }
+        }
+      }
+    },
+    "settings.ai.customModel.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom model ID (optional)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自定义模型 ID（可选）"
+          }
+        }
+      }
+    },
+    "settings.ai.model.custom" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use the model ID from your provider"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用你的接口提供的模型 ID"
+          }
+        }
+      }
+    },
+    "settings.ai.model.deepseek.chat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DeepSeek Chat — fast and capable"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DeepSeek Chat — 速度快、能力强"
+          }
+        }
+      }
+    },
+    "settings.ai.model.deepseek.reasoner" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DeepSeek Reasoner — stronger reasoning"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DeepSeek Reasoner — 更强推理"
+          }
+        }
+      }
+    },
+    "settings.ai.model.openai.4o" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GPT-4o — higher quality"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GPT-4o — 更高质量"
+          }
+        }
+      }
+    },
+    "settings.ai.model.openai.4oMini" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GPT-4o mini — good balance"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GPT-4o mini — 性价比高"
+          }
+        }
+      }
+    },
+    "settings.ai.model.openrouter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Routed via OpenRouter"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通过 OpenRouter 路由"
+          }
+        }
+      }
+    },
+    "settings.ai.provider" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI Provider"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI 服务商"
+          }
+        }
+      }
+    },
+    "settings.ai.provider.custom" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom (OpenAI-compatible)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自定义（OpenAI 兼容）"
+          }
+        }
+      }
+    },
+    "settings.ai.provider.custom.keyPlaceholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API key"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API Key"
+          }
+        }
+      }
+    },
+    "settings.ai.provider.deepseek" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DeepSeek"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DeepSeek"
+          }
+        }
+      }
+    },
+    "settings.ai.provider.deepseek.keyPlaceholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DeepSeek API key"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DeepSeek API Key"
+          }
+        }
+      }
+    },
+    "settings.ai.provider.moonshot" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moonshot / Kimi"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moonshot / Kimi"
+          }
+        }
+      }
+    },
+    "settings.ai.provider.openai" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenAI"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenAI"
+          }
+        }
+      }
+    },
+    "settings.ai.provider.openai.keyPlaceholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenAI API key"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenAI API Key"
+          }
+        }
+      }
+    },
+    "settings.ai.provider.openrouter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenRouter"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenRouter"
+          }
+        }
+      }
+    },
+    "settings.ai.provider.openrouter.keyPlaceholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenRouter API key"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenRouter API Key"
           }
         }
       }
@@ -7390,6 +7835,91 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "读取失败"
+          }
+        }
+      }
+    },
+    "settings.migrateCards" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upgrade Card Content"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "整理旧卡片内容"
+          }
+        }
+      }
+    },
+    "settings.migrateCards.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Re-run the same latest AI card rules used for new cards (sense, translation with 【marks】, phonetics, source, etc.). Review progress and decks are kept. Future fields follow the generator automatically."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用与「新建卡片」相同的最新 AI 规则重生成内容（释义、翻译【标注】、音标、出处等），复习进度与牌组保留。后续新字段会随制卡规则自动生效。"
+          }
+        }
+      }
+    },
+    "settings.migrateCards.running" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upgrading cards…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在整理卡片…"
+          }
+        }
+      }
+    },
+    "settings.migrateCards.done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cards Upgraded"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "整理完成"
+          }
+        }
+      }
+    },
+    "settings.migrateCards.doneMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fronts updated: %lld\nBacks split: %lld\nPhonetics filled: %lld\nSources filled: %lld\nContent refreshed: %lld\nAI failures: %lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正面已更新：%lld\n背面已拆分：%lld\n音标已补全：%lld\n出处已补全：%lld\n内容已按新规则刷新：%lld\nAI 失败：%lld"
           }
         }
       }

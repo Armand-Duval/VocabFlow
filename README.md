@@ -55,14 +55,25 @@ xcodebuild -scheme KnoWell -destination 'platform=iOS Simulator,name=iPhone 16' 
 
 ## 项目结构
 
+目录与 Tab / 跳转一致（一级 = 入口域，二级 = 该域页面与服务）：
+
 ```
 KnoWell/
-├── KnoWellApp.swift          # App 入口 + SwiftData
-├── Models/FlashCard.swift      # 卡片数据模型
-├── Services/
-│   ├── KimiCardGenerator.swift # AI 制卡
-│   └── ReviewScheduler.swift   # 间隔重复调度
-└── Views/                      # SwiftUI 界面
+├── KnoWellApp.swift
+├── Models/
+├── Views/
+│   ├── ContentView.swift          # Tab 壳：复习 / 词库 / 制卡 → Settings Sheet
+│   ├── Review/                    # Tab1 + 复习会话
+│   ├── Library/                   # Tab2 → 卡片详情 / 词库管理 / 统计
+│   ├── Create/                    # Tab3 → 预览保存
+│   ├── Settings/                  # 设置 Sheet → 账号 / 隐私
+│   └── Common/
+└── Services/
+    ├── Core/                      # SwiftData 容器等
+    ├── Review/                    # 队列 / SRS / 提醒
+    ├── Library/                   # Deck / apkg / 列表缓存
+    ├── Create/                    # AI 制卡 / 分享导入
+    └── Settings/                  # 账号 / 备份 / API Key
 ```
 
 ## 数据备份与同步

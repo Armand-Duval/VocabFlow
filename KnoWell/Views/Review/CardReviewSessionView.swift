@@ -54,63 +54,68 @@ struct CardReviewSessionView: View {
     }
 
     private func reviewContent(for card: FlashCard) -> some View {
-        VStack(spacing: AppSpacing.md) {
+        VStack(spacing: AppSpacing.sm) {
             progressHeader(for: card)
 
-            VStack(spacing: AppSpacing.sm) {
-                HStack(alignment: .firstTextBaseline, spacing: AppSpacing.sm) {
-                    Text(card.word)
-                        .font(AppFont.studyWord())
-                        .foregroundStyle(AppColor.accent)
-
-                    if let phonetic = card.phonetic, !phonetic.isEmpty {
-                        Text(phonetic)
-                            .font(AppFont.secondary())
-                            .foregroundStyle(AppColor.textSecondary)
-                    }
-
-                    Spacer(minLength: 0)
-
-                    speakButton(for: card)
-                }
-
-                if showDeckName, let deckName = card.deck?.name, !deckName.isEmpty {
-                    Text(deckName)
+            HStack(alignment: .center, spacing: AppSpacing.sm) {
+                if showBack || card.cardType == .definition {
+                    // Definition: word title + sentence body. Cloze: hide word until revealed.
+                    wordHeader(for: card)
+                } else {
+                    Text(L10n.cardTypeCloze)
                         .font(AppFont.caption())
-                        .foregroundStyle(AppColor.textSecondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .foregroundStyle(AppColor.textTertiary)
                 }
+
+                Spacer(minLength: 0)
+                speakButton(for: card)
             }
             .padding(.horizontal, AppSpacing.md)
 
+            if showDeckName, let deckName = card.deck?.name, !deckName.isEmpty {
+                Text(deckName)
+                    .font(AppFont.caption())
+                    .foregroundStyle(AppColor.textSecondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, AppSpacing.md)
+            }
+
             cardFace(card)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .offset(x: dragOffset.width * 0.25)
                 .gesture(swipeGesture(for: card))
 
             if showBack {
                 ratingButtons(for: card)
-                Text(L10n.reviewSwipeHint)
-                    .font(AppFont.caption())
-                    .foregroundStyle(AppColor.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, AppSpacing.md)
+                    .padding(.bottom, AppSpacing.xs)
             } else {
-                VStack(spacing: AppSpacing.xs) {
-                    Text(L10n.tapToReveal)
-                        .font(AppFont.caption())
-                        .foregroundStyle(AppColor.textSecondary)
-
-                    Button {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            showBack = true
-                        }
-                    } label: {
-                        Label(L10n.showAnswer, systemImage: "eye")
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        showBack = true
                     }
-                    .buttonStyle(RevealAnswerButtonStyle())
+                } label: {
+                    Label(L10n.showAnswer, systemImage: "eye")
                 }
+                .buttonStyle(RevealAnswerButtonStyle())
                 .padding(.horizontal, AppSpacing.md)
-                .padding(.bottom, AppSpacing.xs)
+                .padding(.bottom, AppSpacing.sm)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func wordHeader(for card: FlashCard) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(card.word)
+                .font(AppFont.studyWord())
+                .foregroundStyle(AppColor.accent)
+
+            if let phonetic = card.phonetic?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !phonetic.isEmpty {
+                Text(phonetic.hasPrefix("/") || phonetic.hasPrefix("[") ? phonetic : "/\(phonetic)/")
+                    .font(AppFont.secondary())
+                    .foregroundStyle(AppColor.textSecondary)
+                    .textSelection(.enabled)
             }
         }
     }
@@ -118,25 +123,22 @@ struct CardReviewSessionView: View {
     private func progressHeader(for card: FlashCard) -> some View {
         HStack {
             Text(L10n.reviewProgress(currentIndex + 1, sessionQueue.count))
-                .font(AppFont.captionSecondary())
-                .foregroundStyle(AppColor.textSecondary)
+                .font(AppFont.weak())
+                .foregroundStyle(AppColor.textTertiary)
 
             Spacer()
 
-            CardTypeChip(title: card.cardType.displayName)
+            Text(card.cardType.displayName)
+                .font(AppFont.weak())
+                .foregroundStyle(AppColor.textTertiary)
         }
         .padding(.horizontal, AppSpacing.md)
-        .padding(.top, AppSpacing.xs)
+        .padding(.top, AppSpacing.sm)
     }
 
     private func speakButton(for card: FlashCard) -> some View {
-        Menu {
-            Button(L10n.speakWord) {
-                SpeechService.speak(card.word)
-            }
-            Button(L10n.speakSentence) {
-                SpeechService.speak(card.sentence)
-            }
+        Button {
+            SpeechService.speak(card.word)
         } label: {
             Image(systemName: "speaker.wave.2.fill")
                 .font(.title3)
@@ -144,32 +146,92 @@ struct CardReviewSessionView: View {
                 .foregroundStyle(AppColor.accent)
                 .background(AppColor.accentBackground(0.12), in: Circle())
         }
+        .buttonStyle(.plain)
         .accessibilityLabel(L10n.speakWord)
     }
 
     private func cardFace(_ card: FlashCard) -> some View {
         ScrollView {
-            Text(showBack ? card.displayBack : card.front)
-                .font(AppFont.body())
-                .foregroundStyle(AppColor.textPrimary)
-                .lineSpacing(8)
-                .frame(maxWidth: .infinity, minHeight: 180, alignment: .topLeading)
-                .fixedSize(horizontal: false, vertical: true)
-                .textSelection(.enabled)
-                .contentTransition(.opacity)
-                .padding(AppSpacing.lg)
+            Group {
+                if showBack {
+                    cardBackContent(for: card)
+                } else if card.cardType == .definition {
+                    HighlightedText(
+                        text: card.displayFront,
+                        query: card.word,
+                        font: AppFont.body()
+                    )
+                    .foregroundStyle(AppColor.textPrimary)
+                } else {
+                    Text(card.displayFront)
+                        .font(AppFont.body())
+                        .foregroundStyle(AppColor.textPrimary)
+                }
+            }
+            .lineSpacing(8)
+            .frame(maxWidth: .infinity, minHeight: 220, alignment: .topLeading)
+            .textSelection(.enabled)
+            .contentTransition(.opacity)
+            .padding(AppSpacing.lg)
         }
-        .frame(maxHeight: 360)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(AppColor.surface, in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                .strokeBorder(AppColor.border, lineWidth: 1)
-        }
-        .shadow(color: .black.opacity(0.03), radius: 10, y: 3)
         .padding(.horizontal, AppSpacing.md)
         .onTapGesture {
             withAnimation(.easeInOut(duration: 0.2)) {
                 showBack.toggle()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func cardBackContent(for card: FlashCard) -> some View {
+        let sense = CardContentFormatter.senseText(card.back)
+        let translation = CardContentFormatter.sentenceTranslation(card.contextNote)
+        let highlightTerms = CardContentFormatter.translationHighlightTerms(
+            contextNote: card.contextNote,
+            sense: sense
+        )
+
+        if let translation, !sense.isEmpty {
+            VStack(alignment: .leading, spacing: AppSpacing.md) {
+                Text(sense)
+                    .font(AppFont.body())
+                    .foregroundStyle(AppColor.textPrimary)
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(L10n.cardSentenceTranslation)
+                        .font(AppFont.weak())
+                        .foregroundStyle(AppColor.textTertiary)
+                    HighlightedText(
+                        text: translation,
+                        terms: highlightTerms,
+                        font: AppFont.body(),
+                        emphasizeForeground: true
+                    )
+                    .foregroundStyle(AppColor.textBody)
+                }
+
+                if let source = card.sourceAttribution?
+                    .trimmingCharacters(in: .whitespacesAndNewlines),
+                   !source.isEmpty {
+                    Text(L10n.cardSource(source))
+                        .font(AppFont.weak())
+                        .foregroundStyle(AppColor.textTertiary)
+                }
+            }
+        } else {
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                Text(card.displayBack)
+                    .font(AppFont.body())
+                    .foregroundStyle(AppColor.textPrimary)
+                if let source = card.sourceAttribution?
+                    .trimmingCharacters(in: .whitespacesAndNewlines),
+                   !source.isEmpty {
+                    Text(L10n.cardSource(source))
+                        .font(AppFont.weak())
+                        .foregroundStyle(AppColor.textTertiary)
+                }
             }
         }
     }
@@ -192,8 +254,6 @@ struct CardReviewSessionView: View {
                     submit(rating: .again, for: card)
                 } else if value.translation.width >= swipeThreshold {
                     submit(rating: .easy, for: card)
-                } else if value.translation.height <= -swipeThreshold {
-                    submit(rating: .hard, for: card)
                 } else if value.translation.height >= swipeThreshold {
                     submit(rating: .good, for: card)
                 }
@@ -209,29 +269,22 @@ struct CardReviewSessionView: View {
     }
 
     private func ratingButtons(for card: FlashCard) -> some View {
-        VStack(spacing: AppSpacing.sm) {
-            HStack(spacing: AppSpacing.sm) {
-                ForEach(ReviewRating.allCases, id: \.rawValue) { rating in
-                    Button {
-                        submit(rating: rating, for: card)
-                    } label: {
-                        VStack(spacing: 4) {
-                            Text(rating.title)
-                                .font(.subheadline.weight(.semibold))
-                            Text(ReviewScheduler.intervalLabel(for: card, rating: rating, now: now))
-                                .font(AppFont.caption())
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, AppSpacing.sm)
+        HStack(spacing: AppSpacing.sm) {
+            ForEach(ReviewRating.userChoices, id: \.rawValue) { rating in
+                Button {
+                    submit(rating: rating, for: card)
+                } label: {
+                    VStack(spacing: 4) {
+                        Text(rating.title)
+                            .font(.subheadline.weight(.semibold))
+                        Text(ReviewScheduler.intervalLabel(for: card, rating: rating, now: now))
+                            .font(AppFont.caption())
                     }
-                    .buttonStyle(ReviewRatingButtonStyle(rating: rating))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, AppSpacing.sm)
                 }
+                .buttonStyle(ReviewRatingButtonStyle(rating: rating))
             }
-
-            Text(L10n.reviewRatingHint)
-                .font(AppFont.caption())
-                .foregroundStyle(AppColor.textSecondary)
-                .multilineTextAlignment(.center)
         }
         .padding(.horizontal, AppSpacing.md)
         .padding(.bottom, AppSpacing.xs)

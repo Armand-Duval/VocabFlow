@@ -1,5 +1,10 @@
 import Foundation
 
+extension Notification.Name {
+    /// Shared current deck changed (`lastSelectedDeckID`). `nil` = all decks.
+    static let activeDeckDidChange = Notification.Name("com.knowell.activeDeckDidChange")
+}
+
 struct SharedDeckEntry: Codable, Identifiable, Hashable {
     let id: UUID
     let name: String
@@ -22,8 +27,10 @@ enum SharedDeckStore {
         get { loadPrefs().lastSelectedDeckID }
         set {
             var prefs = loadPrefs()
+            guard prefs.lastSelectedDeckID != newValue else { return }
             prefs.lastSelectedDeckID = newValue
             savePrefs(prefs)
+            NotificationCenter.default.post(name: .activeDeckDidChange, object: nil)
         }
     }
 
@@ -109,6 +116,7 @@ enum SharedDeckStore {
 }
 
 enum DeckSettings {
+    /// Shared current deck across Review / Library / Create. `nil` means all decks.
     static var lastSelectedDeckID: UUID? {
         get { SharedDeckStore.lastSelectedDeckID }
         set { SharedDeckStore.lastSelectedDeckID = newValue }

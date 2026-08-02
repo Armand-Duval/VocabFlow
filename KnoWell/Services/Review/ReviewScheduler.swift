@@ -6,6 +6,9 @@ enum ReviewRating: Int, CaseIterable {
     case good = 2
     case easy = 3
 
+    /// Visible review choices — Hard is folded into Again (short relearn).
+    static var userChoices: [ReviewRating] { [.again, .good, .easy] }
+
     var title: String {
         switch self {
         case .again: L10n.ratingAgain

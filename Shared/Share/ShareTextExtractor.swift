@@ -153,13 +153,25 @@ enum ShareTextExtractor {
     ]
 
     static func loadTextFromImages(from extensionItems: [NSExtensionItem]) async -> String? {
+        await loadOCRFromImages(from: extensionItems)?.fullText
+    }
+
+    static func loadOCRFromImages(from extensionItems: [NSExtensionItem]) async -> OCRResult? {
         let providers = extensionItems.flatMap { $0.attachments ?? [] }
         for provider in providers {
             guard let image = await loadUIImage(from: provider) else { continue }
-            guard let text = try? await ImageOCRService.recognizeText(in: image) else { continue }
-            if let cleaned = cleaned(text) {
-                return cleaned
-            }
+            guard let result = try? await ImageOCRService.recognize(in: image) else { continue }
+            guard let cleanedText = cleaned(result.fullText) else { continue }
+            return OCRResult(
+                fullText: cleanedText,
+                highlightedWords: result.highlightedWords,
+                importUnits: result.importUnits.isEmpty
+                    ? OCRContextExtractor.importUnits(
+                        fullText: cleanedText,
+                        highlightedWords: result.highlightedWords
+                    )
+                    : result.importUnits
+            )
         }
         return nil
     }

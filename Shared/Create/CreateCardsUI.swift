@@ -123,8 +123,9 @@ struct DraftPreviewCard: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(draft.word)
                         .font(AppFont.sectionTitle())
-                    if let phonetic = draft.phonetic, !phonetic.isEmpty {
-                        Text(phonetic)
+                    if let phonetic = draft.phonetic?.trimmingCharacters(in: .whitespacesAndNewlines),
+                       !phonetic.isEmpty {
+                        Text(phonetic.hasPrefix("/") || phonetic.hasPrefix("[") ? phonetic : "/\(phonetic)/")
                             .font(AppFont.secondary())
                             .foregroundStyle(.secondary)
                     }
@@ -160,6 +161,34 @@ struct DraftPreviewCard: View {
                     .foregroundStyle(.tertiary)
                 TextField(L10n.backPlaceholder, text: $draft.back, axis: .vertical)
                     .lineLimit(3...12)
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(L10n.cardSentenceTranslation)
+                    .font(AppFont.caption())
+                    .foregroundStyle(.tertiary)
+                TextField(
+                    L10n.cardSentenceTranslation,
+                    text: Binding(
+                        get: { draft.contextNote ?? "" },
+                        set: { draft.contextNote = $0.nilIfEmpty }
+                    ),
+                    axis: .vertical
+                )
+                .lineLimit(2...8)
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(L10n.cardSourceLabel)
+                    .font(AppFont.caption())
+                    .foregroundStyle(.tertiary)
+                TextField(
+                    L10n.cardSourceLabel,
+                    text: Binding(
+                        get: { draft.sourceAttribution ?? "" },
+                        set: { draft.sourceAttribution = $0.nilIfEmpty }
+                    )
+                )
             }
 
             Picker(L10n.typeLabel, selection: $draft.cardType) {

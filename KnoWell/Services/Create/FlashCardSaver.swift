@@ -9,16 +9,7 @@ enum FlashCardSaver {
         guard !selected.isEmpty else { return 0 }
 
         for draft in selected {
-            let card = FlashCard(
-                word: draft.word,
-                sentence: draft.sentence,
-                cardType: draft.cardType,
-                front: draft.front,
-                back: CardContentFormatter.mergedBack(back: draft.back, contextNote: draft.contextNote),
-                contextNote: nil,
-                phonetic: draft.phonetic,
-                deck: deck
-            )
+            let card = CardContentSync.makeCard(from: draft, deck: deck)
             context.insert(card)
         }
 

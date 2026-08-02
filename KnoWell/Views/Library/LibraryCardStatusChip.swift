@@ -5,9 +5,18 @@ struct LibraryCardStatusChip: View {
 
     var body: some View {
         if card.isSuspended {
-            StatusChip(text: L10n.cardSuspendedStatus, style: .suspended)
+            Text(L10n.cardSuspendedStatus)
+                .font(AppFont.weak())
+                .foregroundStyle(AppColor.textTertiary)
         } else if ReviewScheduler.isDue(card) {
-            StatusChip(text: L10n.dueForReview, style: .due)
+            HStack(spacing: 5) {
+                Circle()
+                    .fill(AppColor.accent)
+                    .frame(width: 5, height: 5)
+                Text(L10n.dueForReview)
+                    .font(AppFont.weak().weight(.medium))
+                    .foregroundStyle(AppColor.accentStrong)
+            }
         }
     }
 }

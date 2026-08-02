@@ -1,21 +1,21 @@
 import SwiftUI
 
 enum AppColor {
-    // #239678 — low-saturation deep mint (brand)
-    private static let brandLight = Color(red: 0.137, green: 0.588, blue: 0.471)
-    private static let brandDark = Color(red: 0.20, green: 0.70, blue: 0.58)
+    // Ink & Sage — warm paper + deep sage accent (#1E6B5C)
+    private static let sageLight = Color(red: 0.118, green: 0.420, blue: 0.361)
+    private static let sageDark = Color(red: 0.28, green: 0.62, blue: 0.52)
 
-    static var accent: Color { Color.adaptive(light: brandLight, dark: brandDark) }
-    static var accentStrong: Color { Color.adaptive(light: brandLight, dark: brandDark) }
-    // #f2a868
-    static var warning: Color { Color(red: 0.949, green: 0.659, blue: 0.408) }
-    static var success: Color { brandLight }
-    static var danger: Color { Color(red: 0.94, green: 0.33, blue: 0.31) }
+    static var accent: Color { Color.adaptive(light: sageLight, dark: sageDark) }
+    static var accentStrong: Color { Color.adaptive(light: sageLight, dark: sageDark) }
+    // Rating-only — not used for status chips
+    static var warning: Color { Color(red: 0.722, green: 0.537, blue: 0.239) }
+    static var success: Color { Color(red: 0.42, green: 0.62, blue: 0.48) }
+    static var danger: Color { Color(red: 0.769, green: 0.361, blue: 0.329) }
 
     static var pageBackground: Color {
-        // #f8f9fa
+        // #F6F5F2 warm paper
         Color.adaptive(
-            light: Color(red: 0.973, green: 0.976, blue: 0.980),
+            light: Color(red: 0.965, green: 0.961, blue: 0.949),
             dark: Color(red: 0.07, green: 0.08, blue: 0.09)
         )
     }
@@ -29,61 +29,58 @@ enum AppColor {
 
     static var surfaceMuted: Color {
         Color.adaptive(
-            light: Color(red: 0.95, green: 0.96, blue: 0.97),
+            light: Color(red: 0.945, green: 0.941, blue: 0.929),
             dark: Color(red: 0.14, green: 0.15, blue: 0.17)
         )
     }
 
     static var border: Color {
-        // #eeeeee
         Color.adaptive(
-            light: Color(red: 0.933, green: 0.933, blue: 0.933),
+            light: Color.black.opacity(0.08),
             dark: Color.white.opacity(0.08)
         )
     }
 
-    /// Soft idle input border — less gray/cheap than full `border`.
     static var borderSubtle: Color {
         Color.adaptive(
-            light: Color.black.opacity(0.06),
-            dark: Color.white.opacity(0.06)
+            light: Color.black.opacity(0.04),
+            dark: Color.white.opacity(0.05)
         )
     }
 
     static var borderFocus: Color {
         Color.adaptive(
-            light: Color.black.opacity(0.14),
-            dark: Color.white.opacity(0.18)
+            light: Color.black.opacity(0.12),
+            dark: Color.white.opacity(0.16)
         )
     }
 
     static var textPrimary: Color {
-        // #111111 / #333333 for body via textBody
+        // Ink #1A1A1A
         Color.adaptive(
-            light: Color(red: 0.067, green: 0.067, blue: 0.067),
+            light: Color(red: 0.102, green: 0.102, blue: 0.102),
             dark: Color(red: 0.95, green: 0.96, blue: 0.97)
         )
     }
 
     static var textBody: Color {
         Color.adaptive(
-            light: Color(red: 0.2, green: 0.2, blue: 0.2),
+            light: Color(red: 0.18, green: 0.18, blue: 0.18),
             dark: Color(red: 0.90, green: 0.91, blue: 0.92)
         )
     }
 
     static var textSecondary: Color {
-        // #666666
         Color.adaptive(
-            light: Color(red: 0.4, green: 0.4, blue: 0.4),
+            light: Color(red: 0.42, green: 0.40, blue: 0.38),
             dark: Color(red: 0.65, green: 0.68, blue: 0.72)
         )
     }
 
     static var textTertiary: Color {
-        // #999999
+        // Muted #8A8780
         Color.adaptive(
-            light: Color(red: 0.6, green: 0.6, blue: 0.6),
+            light: Color(red: 0.541, green: 0.529, blue: 0.502),
             dark: Color(red: 0.55, green: 0.58, blue: 0.62)
         )
     }
@@ -146,6 +143,7 @@ enum AppFont {
     static func weak() -> Font { .system(size: 11, weight: .light) }
     static func navTitle() -> Font { .system(size: 14, weight: .medium) }
     static func statValue() -> Font { .system(size: 22, weight: .semibold) }
+    static func heroValue() -> Font { .system(size: 40, weight: .semibold) }
     static func statLabel() -> Font { .system(size: 12, weight: .regular) }
 }
 
@@ -182,11 +180,26 @@ struct PrimaryButtonStyle: ButtonStyle {
     private func backgroundColor(isPressed: Bool) -> Color {
         guard isEnabled else {
             return Color.adaptive(
-                light: Color(red: 0.93, green: 0.94, blue: 0.95),
+                light: Color(red: 0.90, green: 0.91, blue: 0.89),
                 dark: Color.white.opacity(0.10)
             )
         }
-        return AppColor.accentStrong.opacity(isPressed ? 0.85 : 1)
+        return AppColor.accentStrong.opacity(isPressed ? 0.88 : 1)
+    }
+}
+
+/// Inline text action — Ink & Sage quick links (no icon circles).
+struct TextLinkAction: View {
+    let title: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(AppFont.caption().weight(.medium))
+                .foregroundStyle(AppColor.accentStrong)
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -304,10 +317,6 @@ struct RevealAnswerButtonStyle: ButtonStyle {
                 RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
                     .fill(AppColor.surfaceMuted.opacity(configuration.isPressed ? 0.92 : 1))
             )
-            .overlay {
-                RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
-                    .strokeBorder(AppColor.border, lineWidth: 1)
-            }
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
     }
 }
@@ -411,6 +420,7 @@ private struct AppNavTitleModifier: ViewModifier {
 
 struct AppSurfaceCard<Content: View>: View {
     var padding: CGFloat = AppSpacing.md
+    var bordered: Bool = false
     @ViewBuilder var content: () -> Content
 
     var body: some View {
@@ -419,10 +429,11 @@ struct AppSurfaceCard<Content: View>: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(AppColor.surface, in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                    .strokeBorder(AppColor.border, lineWidth: 1)
+                if bordered {
+                    RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                        .strokeBorder(AppColor.border, lineWidth: 1)
+                }
             }
-            .shadow(color: .black.opacity(0.03), radius: 8, y: 2)
     }
 }
 
@@ -446,18 +457,46 @@ struct AppStatTile: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(AppSpacing.md)
         .background(AppColor.surface, in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                .strokeBorder(AppColor.border, lineWidth: 1)
-        }
     }
 }
 
 struct HighlightedText: View {
     let text: String
-    let query: String
+    let terms: [String]
     var font: Font = AppFont.body()
     var lineLimit: Int?
+    var emphasizeForeground: Bool = false
+
+    init(
+        text: String,
+        query: String,
+        font: Font = AppFont.body(),
+        lineLimit: Int? = nil,
+        emphasizeForeground: Bool = false
+    ) {
+        self.text = text
+        self.terms = query
+            .split(whereSeparator: \.isWhitespace)
+            .map(String.init)
+            .filter { !$0.isEmpty }
+        self.font = font
+        self.lineLimit = lineLimit
+        self.emphasizeForeground = emphasizeForeground
+    }
+
+    init(
+        text: String,
+        terms: [String],
+        font: Font = AppFont.body(),
+        lineLimit: Int? = nil,
+        emphasizeForeground: Bool = false
+    ) {
+        self.text = text
+        self.terms = terms.filter { !$0.isEmpty }
+        self.font = font
+        self.lineLimit = lineLimit
+        self.emphasizeForeground = emphasizeForeground
+    }
 
     var body: some View {
         Text(highlighted)
@@ -467,18 +506,18 @@ struct HighlightedText: View {
 
     private var highlighted: AttributedString {
         var result = AttributedString(text)
-        let terms = query
-            .split(whereSeparator: \.isWhitespace)
-            .map(String.init)
-            .filter { !$0.isEmpty }
         guard !terms.isEmpty else { return result }
 
-        for term in terms {
+        // Longer terms first to prefer fuller matches.
+        for term in terms.sorted(by: { $0.count > $1.count }) {
             var searchStart = result.startIndex
             while searchStart < result.endIndex,
                   let found = result[searchStart...].range(of: term, options: .caseInsensitive) {
                 result[found].backgroundColor = AppColor.accentBackground(0.24)
                 result[found].font = font.weight(.semibold)
+                if emphasizeForeground {
+                    result[found].foregroundColor = AppColor.accent
+                }
                 searchStart = found.upperBound
             }
         }
@@ -502,7 +541,7 @@ struct AppSectionHeader: View {
     var body: some View {
         Text(title)
             .font(AppFont.weak())
-            .foregroundStyle(AppColor.textTertiary.opacity(0.75))
+            .foregroundStyle(AppColor.textTertiary.opacity(0.55))
             .textCase(nil)
     }
 }
