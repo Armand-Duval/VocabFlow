@@ -266,12 +266,8 @@ enum L10n {
 
     static var settingsReviewSection: String { tr("settings.review.section") }
     static var settingsReviewUnlimited: String { tr("settings.review.unlimited") }
-    static func settingsReviewNewLimit(_ limit: Int) -> String {
-        tf("settings.review.newLimit", limitDisplay(limit))
-    }
-    static func settingsReviewReviewLimit(_ limit: Int) -> String {
-        tf("settings.review.reviewLimit", limitDisplay(limit))
-    }
+    static var settingsReviewNewLimitLabel: String { tr("settings.review.newLimit") }
+    static var settingsReviewReviewLimitLabel: String { tr("settings.review.reviewLimit") }
     static var settingsReviewFooter: String { tr("settings.review.footer") }
     static var settingsReviewReminderEnabled: String { tr("settings.review.reminder.enabled") }
     static var settingsReviewReminderTime: String { tr("settings.review.reminder.time") }

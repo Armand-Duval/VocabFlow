@@ -134,15 +134,15 @@ struct SettingsView: View {
 
                 if !isUnlimitedReview {
                     SettingsDivider()
-                    Stepper(value: dailyNewLimit, in: 0...999) {
-                        Text(L10n.settingsReviewNewLimit(dailyNewLimit.wrappedValue))
-                            .font(AppFont.secondary())
-                    }
+                    DailyLimitInputRow(
+                        title: L10n.settingsReviewNewLimitLabel,
+                        value: dailyNewLimit
+                    )
                     SettingsDivider()
-                    Stepper(value: dailyReviewLimit, in: 0...999) {
-                        Text(L10n.settingsReviewReviewLimit(dailyReviewLimit.wrappedValue))
-                            .font(AppFont.secondary())
-                    }
+                    DailyLimitInputRow(
+                        title: L10n.settingsReviewReviewLimitLabel,
+                        value: dailyReviewLimit
+                    )
                 }
 
                 SettingsDivider()
@@ -525,6 +525,62 @@ struct SettingsView: View {
         maintenanceAlertTitle = title
         maintenanceAlertMessage = message
         showMaintenanceAlert = true
+    }
+}
+
+private struct DailyLimitInputRow: View {
+    let title: String
+    @Binding var value: Int
+
+    @State private var draft = ""
+    @FocusState private var isFocused: Bool
+
+    private let range = 0...999
+
+    var body: some View {
+        HStack(spacing: AppSpacing.sm) {
+            Text(title)
+                .font(AppFont.secondary())
+                .foregroundStyle(AppColor.textPrimary)
+
+            Spacer(minLength: AppSpacing.sm)
+
+            TextField("0", text: $draft)
+                .font(AppFont.secondary().monospacedDigit())
+                .keyboardType(.numberPad)
+                .multilineTextAlignment(.trailing)
+                .focused($isFocused)
+                .frame(width: 72)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 7)
+                .background(AppColor.surfaceMuted, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .onAppear { draft = String(value) }
+                .onChange(of: value) { _, newValue in
+                    guard !isFocused else { return }
+                    draft = String(newValue)
+                }
+                .onChange(of: isFocused) { _, focused in
+                    if focused {
+                        draft = String(value)
+                    } else {
+                        commit()
+                    }
+                }
+                .onChange(of: draft) { _, newValue in
+                    let digits = newValue.filter(\.isNumber)
+                    if digits != newValue {
+                        draft = digits
+                    }
+                }
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private func commit() {
+        let parsed = Int(draft.filter(\.isNumber)) ?? 0
+        let clamped = min(range.upperBound, max(range.lowerBound, parsed))
+        value = clamped
+        draft = String(clamped)
     }
 }
 

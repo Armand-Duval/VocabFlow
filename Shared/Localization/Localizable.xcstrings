@@ -8298,13 +8298,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "New cards per day: %@"
+            "value" : "New cards per day"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "每日新词：%@"
+            "value" : "每日新词"
           }
         }
       }
@@ -8346,13 +8346,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reviews per day: %@"
+            "value" : "Reviews per day"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "每日复习：%@"
+            "value" : "每日复习"
           }
         }
       }
