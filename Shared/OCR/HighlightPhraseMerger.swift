@@ -43,7 +43,19 @@ enum HighlightPhraseMerger {
     static func merge(tokens: [Token], hitThreshold: Double = hitThreshold) -> [String] {
         guard !tokens.isEmpty else { return [] }
 
-        let hard = tokens.map { $0.coverage >= hitThreshold }
+        // Never seed on glue — yellow bleed often paints "of"/"my" more than the headword.
+        let hard: [Bool] = tokens.map { token in
+            let key = normalizedGlueKey(token.text)
+            if glueWords.contains(key) { return false }
+            if token.coverage >= hitThreshold { return true }
+            // Mid ink on a real content word (e.g. clincher ~0.22) still counts as a marker.
+            if token.coverage >= 0.22,
+               token.text.count >= 4,
+               !glueWords.contains(key) {
+                return true
+            }
+            return false
+        }
         guard hard.contains(true) else { return [] }
 
         let hardCount = hard.filter { $0 }.count

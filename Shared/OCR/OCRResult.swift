@@ -19,20 +19,14 @@ struct OCRResult: Equatable, Sendable {
     static let empty = OCRResult(fullText: "", highlightedWords: [], importUnits: [], sourceImagePath: nil)
 
     /// Sentence field for the single-box create UI.
+    /// Highlight imports: one block per marked sentence (not the whole page).
     var preferredImportSentence: String {
         if importUnits.isEmpty {
             return fullText.trimmingCharacters(in: .whitespacesAndNewlines)
         }
-        // Single marker → just that sentence (keeps imports tight).
-        if importUnits.count == 1 {
-            return importUnits[0].sentence
-        }
-        // Several markers on one page → keep full reading-order prose so mid/bottom
-        // paragraphs are not dropped when a later highlight fails phrase matching.
-        let joined = OCRContextExtractor.softJoinLines(fullText)
-        return joined.isEmpty
-            ? importUnits.map(\.sentence).joined(separator: "\n\n")
-            : joined
+        return importUnits
+            .map(\.sentence)
+            .joined(separator: "\n\n")
     }
 
     var preferredImportWords: [String] {
@@ -79,15 +73,23 @@ struct OCRResult: Equatable, Sendable {
         return result
     }
 
-    /// Highlight path only kept a thin UI strip while Vision saw a much longer page.
+    /// Only drop highlight context when it looks like App / share-sheet chrome —
+    /// not when a few real book sentences sit on a longer page (that ratio is normal).
     private var shouldDiscardHighlightContext: Bool {
         guard hasHighlightContext else { return false }
-        let preferred = preferredImportSentence.trimmingCharacters(in: .whitespacesAndNewlines)
-        let full = fullText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !preferred.isEmpty, full.count >= 80 else { return false }
+        let unitText = importUnits
+            .map(\.sentence)
+            .joined(separator: "\n")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !unitText.isEmpty else { return false }
 
-        if preferred.count * 5 < full.count { return true }
-        if OCRChromeFilter.looksLikeChromeBlob(preferred) { return true }
+        if OCRChromeFilter.looksLikeChromeBlob(unitText) { return true }
+
+        // Extremely short chrome strip vs long OCR page (e.g. nav labels only).
+        let full = fullText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if full.count >= 120, unitText.count < 36, unitText.count * 15 < full.count {
+            return true
+        }
         return false
     }
 }

@@ -40,15 +40,18 @@ enum OCRContextExtractor {
         var wordsBySentence: [String: [String]] = [:]
 
         for word in words {
-            guard let sentence = sentenceContaining(word, in: normalized) else { continue }
-            if wordsBySentence[sentence] == nil {
-                sentenceOrder.append(sentence)
-                wordsBySentence[sentence] = []
-            }
-            var list = wordsBySentence[sentence] ?? []
-            if !list.contains(where: { $0.caseInsensitiveCompare(word) == .orderedSame }) {
-                list.append(word)
-                wordsBySentence[sentence] = list
+            let sentences = sentencesContainingHighlight(word, in: normalized)
+            guard !sentences.isEmpty else { continue }
+            for sentence in sentences {
+                if wordsBySentence[sentence] == nil {
+                    sentenceOrder.append(sentence)
+                    wordsBySentence[sentence] = []
+                }
+                var list = wordsBySentence[sentence] ?? []
+                if !list.contains(where: { $0.caseInsensitiveCompare(word) == .orderedSame }) {
+                    list.append(word)
+                    wordsBySentence[sentence] = list
+                }
             }
         }
 
@@ -56,6 +59,29 @@ enum OCRContextExtractor {
             guard let list = wordsBySentence[sentence], !list.isEmpty else { return nil }
             return OCRImportUnit(sentence: sentence, words: list)
         }
+    }
+
+    /// Locate every sentence that contains this highlight (phrase, or significant tokens if phrase OCR-mismatched).
+    private static func sentencesContainingHighlight(_ highlight: String, in text: String) -> [String] {
+        if let sentence = sentenceContaining(highlight, in: text) {
+            return [sentence]
+        }
+
+        // Multi-word highlighter phrases often diverge slightly from OCR spacing/hyphens.
+        let parts = highlight
+            .split(whereSeparator: { $0.isWhitespace || $0 == "-" || $0 == "‐" })
+            .map { String($0).trimmingCharacters(in: .punctuationCharacters) }
+            .filter { $0.count >= 4 }
+        var found: [String] = []
+        var seen = Set<String>()
+        for part in parts {
+            guard let sentence = sentenceContaining(part, in: text) else { continue }
+            let key = sentence.lowercased()
+            guard !seen.contains(key) else { continue }
+            seen.insert(key)
+            found.append(sentence)
+        }
+        return found
     }
 
     /// Join OCR line wraps into reading order without treating every newline as a sentence end.
