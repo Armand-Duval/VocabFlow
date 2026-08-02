@@ -3,6 +3,7 @@ import SwiftUI
 enum VocabularyWordAddResult: Equatable {
     case added(String)
     case duplicate(String)
+    case existsInDeck(String)
     case empty
 }
 
@@ -33,6 +34,8 @@ struct VocabularyWordsEditor: View {
     @Binding var words: [String]
     @Binding var feedbackMessage: String?
     @Binding var feedbackIsError: Bool
+    /// Returns true when the word + current sentence already exist in the selected deck.
+    var deckContainsWord: ((String) -> Bool)? = nil
 
     @State private var manualInput = ""
     @FocusState private var isManualInputFocused: Bool
@@ -76,7 +79,15 @@ struct VocabularyWordsEditor: View {
     }
 
     func addWord(_ word: String) -> VocabularyWordAddResult {
-        let result = VocabularyWords.append(word, to: &words)
+        let trimmed = word.trimmingCharacters(in: .whitespacesAndNewlines)
+        let result: VocabularyWordAddResult
+        if trimmed.isEmpty {
+            result = .empty
+        } else if deckContainsWord?(trimmed) == true {
+            result = .existsInDeck(trimmed)
+        } else {
+            result = VocabularyWords.append(trimmed, to: &words)
+        }
         VocabularyWordFeedback.apply(result, message: &feedbackMessage, isError: &feedbackIsError)
         clearFeedbackLater()
         return result

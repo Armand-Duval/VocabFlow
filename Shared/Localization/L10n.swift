@@ -92,6 +92,7 @@ enum L10n {
     static var selectionEmpty: String { tr("words.selectionEmpty") }
     static func wordAdded(_ word: String) -> String { tf("words.added", word) }
     static func wordDuplicate(_ word: String) -> String { tf("words.duplicate", word) }
+    static func wordExistsInDeck(_ word: String) -> String { tf("words.existsInDeck", word) }
     static var addToVocabulary: String { tr("words.addToVocabulary") }
 
     // MARK: - Extension form
@@ -123,6 +124,11 @@ enum L10n {
     static func saveCount(_ count: Int) -> String { tf("preview.save", count) }
     static var savedTitle: String { tr("preview.saved.title") }
     static var savedMessage: String { tr("preview.saved.message") }
+    static var saveAllDuplicatesTitle: String { tr("preview.save.allDuplicates.title") }
+    static var saveAllDuplicatesMessage: String { tr("preview.save.allDuplicates.message") }
+    static func savePartialDuplicates(_ saved: Int, skipped: Int) -> String {
+        tf("preview.save.partialDuplicates", saved, skipped)
+    }
     static var phoneticLabel: String { tr("preview.phonetic") }
     static var phoneticPlaceholder: String { tr("preview.phonetic.placeholder") }
     static var speakWord: String { tr("speech.word") }
@@ -681,6 +687,12 @@ enum VocabularyWordFeedback {
             #endif
         case let .duplicate(word):
             message = L10n.wordDuplicate(word)
+            isError = true
+            #if canImport(UIKit)
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            #endif
+        case let .existsInDeck(word):
+            message = L10n.wordExistsInDeck(word)
             isError = true
             #if canImport(UIKit)
             UIImpactFeedbackGenerator(style: .medium).impactOccurred()

@@ -135,6 +135,7 @@
 		BB0000010000000000000007 /* ImportCardsFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000010000000000000018 /* ImportCardsFormView.swift */; };
 		CC0000010000000000000001 /* ClipboardImportCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000010000000000000010 /* ClipboardImportCoordinator.swift */; };
 		CC0000010000000000000009 /* FlashCardSaver.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000010000000000000013 /* FlashCardSaver.swift */; };
+		DEDUP00100000000000000001 /* FlashCardDeduper.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEDUP00100000000000000010 /* FlashCardDeduper.swift */; };
 		SYNC00100000000000000001 /* CardContentSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = SYNC00100000000000000010 /* CardContentSync.swift */; };
 		CC0000010000000000000002 /* CardDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000010000000000000011 /* CardDraft.swift */; };
 		CC0000010000000000000003 /* CardDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000010000000000000011 /* CardDraft.swift */; };
@@ -254,6 +255,7 @@
 		CC0000010000000000000011 /* CardDraft.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardDraft.swift; sourceTree = "<group>"; };
 		CC0000010000000000000012 /* ShareCardGenerationRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCardGenerationRunner.swift; sourceTree = "<group>"; };
 		CC0000010000000000000013 /* FlashCardSaver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashCardSaver.swift; sourceTree = "<group>"; };
+		DEDUP00100000000000000010 /* FlashCardDeduper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashCardDeduper.swift; sourceTree = "<group>"; };
 		SYNC00100000000000000010 /* CardContentSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardContentSync.swift; sourceTree = "<group>"; };
 		CC0000010000000000000015 /* ShareTextExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareTextExtractor.swift; sourceTree = "<group>"; };
 		DD0000010000000000000010 /* KnoWellAction.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = KnoWellAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -417,6 +419,7 @@
 			children = (
 				AA0000010000000000000037 /* KimiCardGenerator.swift */,
 				CC0000010000000000000013 /* FlashCardSaver.swift */,
+				DEDUP00100000000000000010 /* FlashCardDeduper.swift */,
 				SYNC00100000000000000010 /* CardContentSync.swift */,
 				REGEN00100000000000000010 /* CardContentRegenerator.swift */,
 				BB0000010000000000000012 /* ShareImportCoordinator.swift */,
@@ -893,6 +896,7 @@
 				BB0000010000000000000006 /* ImportCardsFormView.swift in Sources */,
 				CC0000010000000000000001 /* ClipboardImportCoordinator.swift in Sources */,
 				CC0000010000000000000009 /* FlashCardSaver.swift in Sources */,
+				DEDUP00100000000000000001 /* FlashCardDeduper.swift in Sources */,
 				SYNC00100000000000000001 /* CardContentSync.swift in Sources */,
 				CC0000010000000000000002 /* CardDraft.swift in Sources */,
 				CC0000010000000000000008 /* ShareCardGenerationRunner.swift in Sources */,

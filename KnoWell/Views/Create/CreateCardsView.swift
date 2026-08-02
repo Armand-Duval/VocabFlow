@@ -248,7 +248,10 @@ struct CreateCardsView: View {
             VocabularyWordsEditor(
                 words: $words,
                 feedbackMessage: $wordFeedbackMessage,
-                feedbackIsError: $wordFeedbackIsError
+                feedbackIsError: $wordFeedbackIsError,
+                deckContainsWord: { word in
+                    wordExistsInSelectedDeck(word)
+                }
             )
         }
     }
@@ -292,7 +295,7 @@ struct CreateCardsView: View {
             let parsed = ImportTextAnalyzer.parse(sentence)
             if !parsed.prefilledWords.isEmpty {
                 for word in parsed.prefilledWords {
-                    _ = VocabularyWords.append(word, to: &words)
+                    _ = appendCreateWord(word)
                 }
             } else {
                 showToast(L10n.createLongTextSplitFallback)
@@ -326,7 +329,7 @@ struct CreateCardsView: View {
 
             var addedHighlights = 0
             for word in result.preferredImportWords {
-                if case .added = VocabularyWords.append(word, to: &words) {
+                if case .added = appendCreateWord(word) {
                     addedHighlights += 1
                 }
             }
@@ -359,14 +362,38 @@ struct CreateCardsView: View {
             return
         }
 
-        let result = VocabularyWords.append(trimmed, to: &words)
+        let result = appendCreateWord(trimmed)
         if case .added = result {
             selectionClearNonce += 1
         } else if case .duplicate = result {
             selectionClearNonce += 1
+        } else if case .existsInDeck = result {
+            selectionClearNonce += 1
         }
         VocabularyWordFeedback.apply(result, message: &wordFeedbackMessage, isError: &wordFeedbackIsError)
         clearFeedbackLater()
+    }
+
+    @MainActor
+    private func appendCreateWord(_ word: String) -> VocabularyWordAddResult {
+        let trimmed = word.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return .empty }
+        if wordExistsInSelectedDeck(trimmed) {
+            return .existsInDeck(trimmed)
+        }
+        return VocabularyWords.append(trimmed, to: &words)
+    }
+
+    @MainActor
+    private func wordExistsInSelectedDeck(_ word: String) -> Bool {
+        guard !trimmedSentence.isEmpty else { return false }
+        let deck = DeckService.resolvedDeck(id: selectedDeckID, in: modelContext)
+        return FlashCardDeduper.contains(
+            word: word,
+            sentence: trimmedSentence,
+            in: deck,
+            context: modelContext
+        )
     }
 
     private func clearFeedbackLater() {

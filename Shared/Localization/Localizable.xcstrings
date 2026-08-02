@@ -5801,6 +5801,57 @@
         }
       }
     },
+    "preview.save.allDuplicates.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Already in deck"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "词库中已有"
+          }
+        }
+      }
+    },
+    "preview.save.allDuplicates.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selected cards already exist in this deck for the same word and sentence."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所选卡片的词与句子在该词库中已存在。"
+          }
+        }
+      }
+    },
+    "preview.save.partialDuplicates" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved %lld cards, skipped %lld duplicates."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已保存 %lld 张，跳过 %lld 张重复。"
+          }
+        }
+      }
+    },
     "preview.title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8882,6 +8933,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "「%@」已在生词列表中"
+          }
+        }
+      }
+    },
+    "words.existsInDeck" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"%@\" already has this sentence in the selected deck"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」在该词库中已有此句卡片"
           }
         }
       }
