@@ -1253,6 +1253,40 @@
         }
       }
     },
+    "create.generate.successSkipped" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generated %1$lld cards, skipped %2$lld already in deck"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已生成 %1$lld 张，跳过 %2$lld 个词库中已有"
+          }
+        }
+      }
+    },
+    "create.generate.allDuplicates" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These words already have cards for this sentence in the selected deck."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所选词库中已有这些词的同句卡片，无需再生成。"
+          }
+        }
+      }
+    },
     "create.generating" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6582,6 +6616,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "近 %1$lld 天温习了 %2$lld 个词 · %3$lld 句"
+          }
+        }
+      }
+    },
+    "review.home.captureToday" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today you saved %1$lld words · %2$lld lines"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今天收录了 %1$lld 个词 · %2$lld 句"
           }
         }
       }

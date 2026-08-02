@@ -55,6 +55,15 @@ enum FlashCardSaver {
         DeckSettings.lastSelectedDeckID = deck.id
         DeckCardCountService.adjust(deck: deck, by: savedCount, in: context)
         DeckCardCountService.notifyCatalogChanged()
+        SharedDedupeIndex.insert(
+            deckID: deck.id,
+            pairs: selected.compactMap { draft in
+                let word = draft.word.trimmingCharacters(in: .whitespacesAndNewlines)
+                let sentence = draft.sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !word.isEmpty, !sentence.isEmpty else { return nil }
+                return (word, sentence)
+            }
+        )
         return FlashCardSaveResult(savedCount: savedCount, skippedDuplicateCount: skippedDuplicateCount)
     }
 

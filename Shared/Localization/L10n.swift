@@ -56,6 +56,10 @@ enum L10n {
     static var createPendingAction: String { tr("create.pending.action") }
     static var createGenerateHint: String { tr("create.generate.hint") }
     static func createGenerateSuccess(_ count: Int) -> String { tf("create.generate.success", count) }
+    static func createGenerateSuccessSkipped(_ saved: Int, _ skipped: Int) -> String {
+        tf("create.generate.successSkipped", saved, skipped)
+    }
+    static var createGenerateAllDuplicates: String { tr("create.generate.allDuplicates") }
     static func createCharCount(_ count: Int) -> String { tf("create.source.charCount", count) }
     static var createSourceEmptyHint: String { tr("create.source.emptyHint") }
     static var createSourceFooterHint: String { tr("create.source.footerHint") }
@@ -185,6 +189,9 @@ enum L10n {
     }
     static func reviewHomeActivityRecent(_ days: Int, _ words: Int, _ sentences: Int) -> String {
         tf("review.home.activityRecent", days, words, sentences)
+    }
+    static func reviewHomeCaptureToday(_ words: Int, _ sentences: Int) -> String {
+        tf("review.home.captureToday", words, sentences)
     }
     static var reviewDailyTitle: String { tr("review.daily.title") }
     static var reviewDailyFromLibrary: String { tr("review.daily.fromLibrary") }

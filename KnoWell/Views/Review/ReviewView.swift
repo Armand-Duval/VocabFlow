@@ -12,6 +12,7 @@ struct ReviewView: View {
     @State private var showQuotaDetail = false
     @State private var isSessionActive = false
     @State private var dailyReflection: DailyReflection?
+    @State private var todayCapture: CaptureStatsStore.Summary?
 
     private var activeDeckID: UUID? {
         DeckSettings.lastSelectedDeckID
@@ -43,6 +44,7 @@ struct ReviewView: View {
                             plan: plan,
                             hasAnyCards: hasAnyCards,
                             dailyReflection: dailyReflection,
+                            todayCapture: todayCapture,
                             onStartReview: { isSessionActive = true },
                             onShowQuota: { showQuotaDetail = true },
                             onCollectReflection: { reflection in
@@ -91,6 +93,9 @@ struct ReviewView: View {
         .onReceive(NotificationCenter.default.publisher(for: .activeDeckDidChange)) { _ in
             Task { await loadPlan() }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .libraryCatalogDidChange)) { _ in
+            Task { await loadPlan() }
+        }
     }
 
     @ViewBuilder
@@ -119,6 +124,7 @@ struct ReviewView: View {
         var emptyDescriptor = FetchDescriptor<FlashCard>()
         emptyDescriptor.fetchLimit = 1
         hasAnyCards = !((try? modelContext.fetch(emptyDescriptor)) ?? []).isEmpty
+        todayCapture = CaptureStatsStore.todaySummary(in: modelContext)
 
         let dueDate = Date.now
         let descriptor = FetchDescriptor<FlashCard>(
@@ -167,6 +173,7 @@ private struct ReviewHomeView: View {
     let plan: ReviewQueuePlan
     let hasAnyCards: Bool
     let dailyReflection: DailyReflection?
+    let todayCapture: CaptureStatsStore.Summary?
     let onStartReview: () -> Void
     let onShowQuota: () -> Void
     let onCollectReflection: (DailyReflection) -> Void
@@ -197,20 +204,27 @@ private struct ReviewHomeView: View {
     }
 
     private var dueZone: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.md) {
+        VStack(alignment: .leading, spacing: AppSpacing.lg) {
             if !hasAnyCards {
-                compactHeroStats
-                activityTip
+                statusHeader(compact: true)
                 emptyCTA
             } else if dueCount == 0 {
-                compactHeroStats
-                activityTip
-                Text(L10n.reviewHomeDoneToday)
-                    .font(AppFont.caption())
-                    .foregroundStyle(AppColor.textTertiary)
+                statusHeader(compact: true)
+                doneStatusBlock
             } else {
-                heroStats
-                activityTip
+                statusHeader(compact: false)
+                if let tip = activityTipText {
+                    homeTip(tip)
+                }
+                if plan.hasDeferredCards {
+                    Button(action: onShowQuota) {
+                        Text(L10n.reviewQuotaReachedMessage(plan.deferredTotalCount))
+                            .font(AppFont.weak())
+                            .foregroundStyle(AppColor.textTertiary.opacity(0.75))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .buttonStyle(.plain)
+                }
                 Button(action: onStartReview) {
                     Text(L10n.reviewHomeStart)
                         .frame(maxWidth: .infinity)
@@ -220,18 +234,74 @@ private struct ReviewHomeView: View {
         }
     }
 
-    @ViewBuilder
-    private var activityTip: some View {
-        if let tip = activityTipText {
-            Text(tip)
+    /// Number + one meta line (+ optional deferred). Keeps grey noise out of the status story.
+    private func statusHeader(compact: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if compact {
+                HStack(alignment: .firstTextBaseline, spacing: AppSpacing.sm) {
+                    Text("0")
+                        .font(AppFont.heroValueCompact())
+                        .foregroundStyle(AppColor.textPrimary)
+                    Text(L10n.homeStatDue)
+                        .font(AppFont.caption())
+                        .foregroundStyle(AppColor.textTertiary)
+                    Spacer(minLength: 0)
+                }
+            } else {
+                Text(L10n.homeStatDue)
+                    .font(AppFont.caption())
+                    .foregroundStyle(AppColor.textTertiary)
+
+                Text("\(dueCount)")
+                    .font(AppFont.heroValue())
+                    .foregroundStyle(AppColor.textPrimary)
+                    .contentTransition(.numericText())
+            }
+
+            Text(metaLine)
                 .font(AppFont.weak())
-                .foregroundStyle(AppColor.textTertiary)
-                .fixedSize(horizontal: false, vertical: true)
-                .accessibilityLabel(tip)
+                .foregroundStyle(AppColor.textTertiary.opacity(0.9))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Done-for-today: closing line leads; tip / deferred stay as footnotes.
+    private var doneStatusBlock: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+            Text(L10n.reviewHomeDoneToday)
+                .font(AppFont.secondary())
+                .foregroundStyle(AppColor.textSecondary)
+
+            if let tip = activityTipText {
+                homeTip(tip)
+            }
+
+            if plan.hasDeferredCards {
+                Button(action: onShowQuota) {
+                    Text(L10n.reviewQuotaReachedMessage(plan.deferredTotalCount))
+                        .font(AppFont.weak())
+                        .foregroundStyle(AppColor.textTertiary.opacity(0.75))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(.plain)
+            }
         }
     }
 
+    private func homeTip(_ tip: String) -> some View {
+        Text(tip)
+            .font(AppFont.weak())
+            .foregroundStyle(AppColor.textTertiary)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityLabel(tip)
+    }
+
     private var activityTipText: String? {
+        // One soft tip: prefer today’s capture, else recent review warmth.
+        if let capture = todayCapture,
+           capture.uniqueWords > 0 || capture.uniqueSentences > 0 {
+            return L10n.reviewHomeCaptureToday(capture.uniqueWords, capture.uniqueSentences)
+        }
         guard hasAnyCards,
               let summary = StudyActivityStore.recentSummary(),
               summary.uniqueWords > 0 || summary.uniqueSentences > 0 else {
@@ -247,64 +317,6 @@ private struct ReviewHomeView: View {
         )
     }
 
-    private var compactHeroStats: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .firstTextBaseline, spacing: AppSpacing.sm) {
-                Text("0")
-                    .font(AppFont.heroValueCompact())
-                    .foregroundStyle(AppColor.textPrimary)
-                Text(L10n.homeStatDue)
-                    .font(AppFont.caption())
-                    .foregroundStyle(AppColor.textTertiary)
-                Spacer(minLength: 0)
-            }
-
-            Text(metaLine)
-                .font(AppFont.weak())
-                .foregroundStyle(AppColor.textTertiary)
-
-            if plan.hasDeferredCards {
-                Button(action: onShowQuota) {
-                    Text(L10n.reviewQuotaReachedMessage(plan.deferredTotalCount))
-                        .font(AppFont.weak())
-                        .foregroundStyle(AppColor.textTertiary.opacity(0.8))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var heroStats: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(L10n.homeStatDue)
-                .font(AppFont.caption())
-                .foregroundStyle(AppColor.textTertiary)
-
-            Text("\(dueCount)")
-                .font(AppFont.heroValue())
-                .foregroundStyle(AppColor.textPrimary)
-                .contentTransition(.numericText())
-
-            Text(metaLine)
-                .font(AppFont.weak())
-                .foregroundStyle(AppColor.textTertiary)
-
-            if plan.hasDeferredCards {
-                Button(action: onShowQuota) {
-                    Text(L10n.reviewQuotaReachedMessage(plan.deferredTotalCount))
-                        .font(AppFont.weak())
-                        .foregroundStyle(AppColor.textTertiary.opacity(0.85))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .buttonStyle(.plain)
-                .padding(.top, 2)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
     private var metaLine: String {
         let streak = L10n.homeStatStreakValue(StudyStreakStore.currentStreak)
         return "\(L10n.homeStatNewQuota) \(newQuotaDisplay) · \(L10n.homeStatStreak) \(streak)"
@@ -312,6 +324,10 @@ private struct ReviewHomeView: View {
 
     private var emptyCTA: some View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
+            if let tip = activityTipText {
+                homeTip(tip)
+            }
+
             Text(L10n.reviewEmptyAssistant)
                 .font(AppFont.secondary())
                 .foregroundStyle(AppColor.textSecondary)
@@ -330,6 +346,7 @@ private struct ReviewHomeView: View {
     private func reflectionSection(_ reflection: DailyReflection) -> some View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
             reflectionDivider
+                .padding(.top, dueCount == 0 && hasAnyCards ? AppSpacing.sm : 0)
             literaryReflection(reflection)
         }
     }

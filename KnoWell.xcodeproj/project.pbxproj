@@ -13,6 +13,7 @@
 		AA0000010000000000000023 /* ReviewScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000013 /* ReviewScheduler.swift */; };
 		STREAK00100000000000000002 /* StudyStreakStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = STREAK00100000000000000001 /* StudyStreakStore.swift */; };
 		ACTVTY00100000000000000002 /* StudyActivityStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACTVTY00100000000000000001 /* StudyActivityStore.swift */; };
+		CAPTUR00100000000000000002 /* CaptureStatsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAPTUR00100000000000000001 /* CaptureStatsStore.swift */; };
 		DAILY00100000000000000001 /* DailyReflection.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAILY00100000000000000010 /* DailyReflection.swift */; };
 		KK0000010000000000000001 /* ReviewSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = KK0000010000000000000010 /* ReviewSettings.swift */; };
 		KK0000010000000000000002 /* ReviewQueueBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = KK0000010000000000000011 /* ReviewQueueBuilder.swift */; };
@@ -33,6 +34,13 @@
 		OCRHL0010000000000000007 /* OCRContextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRHL0010000000000000012 /* OCRContextExtractor.swift */; };
 		OCRHL0010000000000000008 /* OCRContextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRHL0010000000000000012 /* OCRContextExtractor.swift */; };
 		OCRHL0010000000000000009 /* OCRContextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRHL0010000000000000012 /* OCRContextExtractor.swift */; };
+		OCRHL0010000000000000013 /* HighlightPhraseMerger.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRHL0010000000000000020 /* HighlightPhraseMerger.swift */; };
+		OCRHL0010000000000000014 /* HighlightPhraseMerger.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRHL0010000000000000020 /* HighlightPhraseMerger.swift */; };
+		OCRHL0010000000000000015 /* HighlightPhraseMerger.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRHL0010000000000000020 /* HighlightPhraseMerger.swift */; };
+		DEDIDX0010000000000000001 /* SharedDedupeIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEDIDX0010000000000000010 /* SharedDedupeIndex.swift */; };
+		DEDIDX0010000000000000002 /* SharedDedupeIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEDIDX0010000000000000010 /* SharedDedupeIndex.swift */; };
+		DEDIDX0010000000000000003 /* SharedDedupeIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEDIDX0010000000000000010 /* SharedDedupeIndex.swift */; };
+		DEDIDX0010000000000000004 /* SharedDedupeSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEDIDX0010000000000000011 /* SharedDedupeSync.swift */; };
 		AA0000010000000000000024 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000014 /* ContentView.swift */; };
 		AA0000010000000000000025 /* CreateCardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000015 /* CreateCardsView.swift */; };
 		AA0000010000000000000026 /* CardPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000016 /* CardPreviewView.swift */; };
@@ -168,6 +176,7 @@
 		AA0000010000000000000013 /* ReviewScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewScheduler.swift; sourceTree = "<group>"; };
 		STREAK00100000000000000001 /* StudyStreakStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyStreakStore.swift; sourceTree = "<group>"; };
 		ACTVTY00100000000000000001 /* StudyActivityStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyActivityStore.swift; sourceTree = "<group>"; };
+		CAPTUR00100000000000000001 /* CaptureStatsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureStatsStore.swift; sourceTree = "<group>"; };
 		DAILY00100000000000000010 /* DailyReflection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyReflection.swift; sourceTree = "<group>"; };
 		KK0000010000000000000010 /* ReviewSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewSettings.swift; sourceTree = "<group>"; };
 		KK0000010000000000000012 /* ReviewSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewSettingsStore.swift; sourceTree = "<group>"; };
@@ -180,6 +189,9 @@
 		OCRHL0010000000000000010 /* OCRResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRResult.swift; sourceTree = "<group>"; };
 		OCRHL0010000000000000011 /* HighlightMaskDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightMaskDetector.swift; sourceTree = "<group>"; };
 		OCRHL0010000000000000012 /* OCRContextExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRContextExtractor.swift; sourceTree = "<group>"; };
+		OCRHL0010000000000000020 /* HighlightPhraseMerger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightPhraseMerger.swift; sourceTree = "<group>"; };
+		DEDIDX0010000000000000010 /* SharedDedupeIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedDedupeIndex.swift; sourceTree = "<group>"; };
+		DEDIDX0010000000000000011 /* SharedDedupeSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedDedupeSync.swift; sourceTree = "<group>"; };
 		AA0000010000000000000014 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		AA0000010000000000000015 /* CreateCardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateCardsView.swift; sourceTree = "<group>"; };
 		AA0000010000000000000016 /* CardPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardPreviewView.swift; sourceTree = "<group>"; };
@@ -390,6 +402,7 @@
 				LL0000010000000000000011 /* ReviewStatusStore.swift */,
 				STREAK00100000000000000001 /* StudyStreakStore.swift */,
 				ACTVTY00100000000000000001 /* StudyActivityStore.swift */,
+				CAPTUR00100000000000000001 /* CaptureStatsStore.swift */,
 				DAILY00100000000000000010 /* DailyReflection.swift */,
 				MM0000010000000000000010 /* SpeechService.swift */,
 			);
@@ -423,6 +436,7 @@
 				AA0000010000000000000037 /* KimiCardGenerator.swift */,
 				CC0000010000000000000013 /* FlashCardSaver.swift */,
 				DEDUP00100000000000000010 /* FlashCardDeduper.swift */,
+				DEDIDX0010000000000000011 /* SharedDedupeSync.swift */,
 				SYNC00100000000000000010 /* CardContentSync.swift */,
 				REGEN00100000000000000010 /* CardContentRegenerator.swift */,
 				BB0000010000000000000012 /* ShareImportCoordinator.swift */,
@@ -573,6 +587,7 @@
 				OCRHL0010000000000000010 /* OCRResult.swift */,
 				OCRHL0010000000000000011 /* HighlightMaskDetector.swift */,
 				OCRHL0010000000000000012 /* OCRContextExtractor.swift */,
+				OCRHL0010000000000000020 /* HighlightPhraseMerger.swift */,
 			);
 			path = OCR;
 			sourceTree = "<group>";
@@ -608,6 +623,7 @@
 			children = (
 				RR0000010000000000000010 /* SharedDeckStore.swift */,
 				RR0000010000000000000011 /* SharedDeckPickerSection.swift */,
+				DEDIDX0010000000000000010 /* SharedDedupeIndex.swift */,
 			);
 			path = Deck;
 			sourceTree = "<group>";
@@ -759,6 +775,7 @@
 				OCRHL0010000000000000002 /* OCRResult.swift in Sources */,
 				OCRHL0010000000000000005 /* HighlightMaskDetector.swift in Sources */,
 				OCRHL0010000000000000008 /* OCRContextExtractor.swift in Sources */,
+				OCRHL0010000000000000014 /* HighlightPhraseMerger.swift in Sources */,
 				CC0000010000000000000003 /* CardDraft.swift in Sources */,
 				CC0000010000000000000004 /* KimiCardGenerator.swift in Sources */,
 				CC0000010000000000000005 /* APISettings.swift in Sources */,
@@ -768,6 +785,7 @@
 				CC0000010000000000000014 /* ShareTextExtractor.swift in Sources */,
 				EE0000010000000000000001 /* ExtensionImportViewController.swift in Sources */,
 				RR0000010000000000000003 /* SharedDeckStore.swift in Sources */,
+				DEDIDX0010000000000000002 /* SharedDedupeIndex.swift in Sources */,
 				RR0000010000000000000004 /* SharedDeckPickerSection.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -794,6 +812,7 @@
 				OCRHL0010000000000000003 /* OCRResult.swift in Sources */,
 				OCRHL0010000000000000006 /* HighlightMaskDetector.swift in Sources */,
 				OCRHL0010000000000000009 /* OCRContextExtractor.swift in Sources */,
+				OCRHL0010000000000000015 /* HighlightPhraseMerger.swift in Sources */,
 				DD0000010000000000000007 /* CardDraft.swift in Sources */,
 				DD0000010000000000000008 /* KimiCardGenerator.swift in Sources */,
 				DD0000010000000000000009 /* APISettings.swift in Sources */,
@@ -803,6 +822,7 @@
 				DD000001000000000000000C /* ShareTextExtractor.swift in Sources */,
 				DD000001000000000000000D /* ExtensionImportViewController.swift in Sources */,
 				RR0000010000000000000005 /* SharedDeckStore.swift in Sources */,
+				DEDIDX0010000000000000003 /* SharedDedupeIndex.swift in Sources */,
 				RR0000010000000000000006 /* SharedDeckPickerSection.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -855,6 +875,7 @@
 				AA0000010000000000000023 /* ReviewScheduler.swift in Sources */,
 				STREAK00100000000000000002 /* StudyStreakStore.swift in Sources */,
 				ACTVTY00100000000000000002 /* StudyActivityStore.swift in Sources */,
+				CAPTUR00100000000000000002 /* CaptureStatsStore.swift in Sources */,
 				DAILY00100000000000000001 /* DailyReflection.swift in Sources */,
 				KK0000010000000000000001 /* ReviewSettings.swift in Sources */,
 				KK0000010000000000000002 /* ReviewQueueBuilder.swift in Sources */,
@@ -867,6 +888,7 @@
 				OCRHL0010000000000000001 /* OCRResult.swift in Sources */,
 				OCRHL0010000000000000004 /* HighlightMaskDetector.swift in Sources */,
 				OCRHL0010000000000000007 /* OCRContextExtractor.swift in Sources */,
+				OCRHL0010000000000000013 /* HighlightPhraseMerger.swift in Sources */,
 				AA0000010000000000000024 /* ContentView.swift in Sources */,
 				AA0000010000000000000025 /* CreateCardsView.swift in Sources */,
 				AA0000010000000000000026 /* CardPreviewView.swift in Sources */,
@@ -901,6 +923,8 @@
 				CC0000010000000000000001 /* ClipboardImportCoordinator.swift in Sources */,
 				CC0000010000000000000009 /* FlashCardSaver.swift in Sources */,
 				DEDUP00100000000000000001 /* FlashCardDeduper.swift in Sources */,
+				DEDIDX0010000000000000004 /* SharedDedupeSync.swift in Sources */,
+				DEDIDX0010000000000000001 /* SharedDedupeIndex.swift in Sources */,
 				SYNC00100000000000000001 /* CardContentSync.swift in Sources */,
 				CC0000010000000000000002 /* CardDraft.swift in Sources */,
 				CC0000010000000000000008 /* ShareCardGenerationRunner.swift in Sources */,

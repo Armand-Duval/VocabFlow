@@ -46,6 +46,7 @@ struct KnoWellApp: App {
 
     @MainActor
     private func processShareWorkItems() async {
+        SharedDedupeSync.rebuild(in: AppModelContainer.shared.mainContext)
         if ShareImportStore.hasPendingGenerationJob {
             await ShareCardGenerationRunner.processPendingJobIfNeeded(resetStale: true)
         }

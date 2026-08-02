@@ -438,15 +438,34 @@ struct CreateCardsView: View {
 
         Task {
             do {
-                let deckName = await MainActor.run { () -> String? in
-                    guard let selectedDeckID else { return nil }
-                    return DeckService.resolvedDeck(id: selectedDeckID, in: modelContext).name
+                let prep = await MainActor.run { () -> (deckID: UUID, deckName: String?, kept: [String], skipped: Int) in
+                    SharedDedupeSync.rebuild(in: modelContext)
+                    let deck = DeckService.resolvedDeck(id: selectedDeckID, in: modelContext)
+                    if selectedDeckID == nil {
+                        selectedDeckID = deck.id
+                    }
+                    let filtered = SharedDedupeIndex.filterNewWords(
+                        words,
+                        deckID: deck.id,
+                        sentence: sentence
+                    )
+                    return (deck.id, deck.name, filtered.kept, filtered.skippedCount)
                 }
+
+                guard !prep.kept.isEmpty else {
+                    await MainActor.run {
+                        isGenerating = false
+                        errorMessage = L10n.createGenerateAllDuplicates
+                    }
+                    return
+                }
+
                 let generated = try await KimiCardGenerator.generate(
                     sentence: sentence,
-                    words: words,
+                    words: prep.kept,
                     sourceHint: sourceHint,
-                    deckName: deckName
+                    deckName: prep.deckName,
+                    skipExistingInDeckID: prep.deckID
                 )
 
                 await MainActor.run {
@@ -456,7 +475,11 @@ struct CreateCardsView: View {
                     } else {
                         drafts = generated
                         showPreview = true
-                        showToast(L10n.createGenerateSuccess(generated.count))
+                        if prep.skipped > 0 {
+                            showToast(L10n.createGenerateSuccessSkipped(generated.count, prep.skipped))
+                        } else {
+                            showToast(L10n.createGenerateSuccess(generated.count))
+                        }
                     }
                 }
             } catch {

@@ -372,6 +372,18 @@ enum ShareExtensionNotifier {
         )
     }
 
+    /// Soft notice (no "failed" prefix) — e.g. all words already in deck.
+    static func scheduleNoticeNotification(
+        body: String,
+        completion: ((Bool) -> Void)? = nil
+    ) {
+        scheduleNotification(
+            identifier: "\(notificationPrefix).notice",
+            body: body,
+            completion: completion
+        )
+    }
+
     private static func scheduleNotification(
         identifier: String,
         body: String,

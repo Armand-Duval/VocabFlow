@@ -72,6 +72,8 @@ enum OCRContextExtractor {
             if shouldBreakParagraph(before: line, after: buffer) {
                 parts.append(buffer)
                 buffer = line
+            } else if let joined = joinHyphenatedWrap(buffer: buffer, nextLine: line) {
+                buffer = joined
             } else if buffer.last.map({ $0.isWhitespace }) == true {
                 buffer += line
             } else {
@@ -83,7 +85,30 @@ enum OCRContextExtractor {
         return parts
             .joined(separator: " ")
             .replacingOccurrences(of: #"\s{2,}"#, with: " ", options: .regularExpression)
+            .replacingOccurrences(
+                // Book OCR wrap left mid-line: "pret- ty" → "pretty"
+                of: #"([A-Za-z])-\s+([a-z])"#,
+                with: "$1$2",
+                options: .regularExpression
+            )
             .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// `pret-` + `ty` / `pret` + `-ty` → `pretty` (common book OCR wrap).
+    private static func joinHyphenatedWrap(buffer: String, nextLine: String) -> String? {
+        let hyphen: Set<Character> = ["-", "‐", "‑", "–"]
+        if let last = buffer.last, hyphen.contains(last) {
+            let stem = String(buffer.dropLast())
+            let rest = String(nextLine.drop(while: { hyphen.contains($0) || $0.isWhitespace }))
+            guard stem.last?.isLetter == true, rest.first?.isLetter == true else { return nil }
+            return stem + rest
+        }
+        if let first = nextLine.first, hyphen.contains(first) {
+            let rest = String(nextLine.drop(while: { hyphen.contains($0) || $0.isWhitespace }))
+            guard buffer.last?.isLetter == true, rest.first?.isLetter == true else { return nil }
+            return buffer + rest
+        }
+        return nil
     }
 
     static func sentenceContaining(_ word: String, in text: String) -> String? {

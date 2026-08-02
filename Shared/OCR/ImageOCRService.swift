@@ -192,12 +192,11 @@ enum ImageOCRService {
         // True markers on this page land ~0.44 with mid-tight mask; prior bleed ("great")
         // no longer appears once HSV/morph are tightened — so 0.40 is safe here.
         // Do not require centerOn — glyph centers often sit on black strokes, not yellow ink.
-        let threshold = 0.40
+        let threshold = HighlightPhraseMerger.hitThreshold
         var coverageRows: [String] = []
-        let flagged = tokens.enumerated().map { index, token -> Bool in
+        let mergerTokens: [HighlightPhraseMerger.Token] = tokens.enumerated().map { index, token in
             let coverage = mask.highlightCoverage(ofNormalizedBox: token.boundingBox)
             let hit = coverage >= threshold
-            // Only print hits + near-misses to keep Console readable.
             if hit || coverage >= 0.20 {
                 coverageRows.append(
                     String(
@@ -214,78 +213,26 @@ enum ImageOCRService {
                     )
                 )
             }
-            return hit
+            return HighlightPhraseMerger.Token(
+                text: token.text,
+                lineIndex: token.lineIndex,
+                coverage: coverage,
+                minX: Double(token.boundingBox.minX),
+                maxX: Double(token.boundingBox.maxX)
+            )
         }
         log("""
         4) token×mask (threshold=\(threshold); show HIT + cov≥0.20)
         \(coverageRows.isEmpty ? "   (none)" : coverageRows.joined(separator: "\n"))
         """)
 
-        guard flagged.contains(true) else {
-            log("4b) no token passed coverage threshold")
-            return []
-        }
-
-        // If almost every token is flagged, user likely tinted the whole paragraph.
-        let flaggedCount = flagged.filter { $0 }.count
-        if Double(flaggedCount) / Double(max(tokens.count, 1)) >= 0.85, tokens.count >= 8 {
-            log("4b) skip: \(flaggedCount)/\(tokens.count) flagged (≥85%) → treat as whole-page tint")
-            return []
-        }
-
-        var phrases: [String] = []
-        var current: [String] = []
-        var lastLine = -1
-
-        for (index, token) in tokens.enumerated() {
-            guard flagged[index] else {
-                flushPhrase(&current, into: &phrases)
-                continue
-            }
-            if token.lineIndex != lastLine, !current.isEmpty {
-                flushPhrase(&current, into: &phrases)
-            }
-            current.append(token.text)
-            lastLine = token.lineIndex
-        }
-        flushPhrase(&current, into: &phrases)
-
-        log("4c) merged phrases before dedupe: \(phrases)")
-
-        var seen = Set<String>()
-        var unique: [String] = []
-        for phrase in phrases {
-            let key = phrase.lowercased()
-            guard !seen.contains(key) else { continue }
-            seen.insert(key)
-            unique.append(phrase)
+        let unique = HighlightPhraseMerger.merge(tokens: mergerTokens, hitThreshold: threshold)
+        if unique.isEmpty {
+            log("4b) no merged highlight phrases")
+        } else {
+            log("4c) merged phrases: \(unique)")
         }
         return unique
-    }
-
-    private static func flushPhrase(_ parts: inout [String], into phrases: inout [String]) {
-        defer { parts.removeAll(keepingCapacity: true) }
-        guard !parts.isEmpty else { return }
-        let joined: String
-        if parts.allSatisfy(isMostlyCJK) {
-            joined = parts.joined()
-        } else {
-            joined = parts.joined(separator: " ")
-        }
-        let trimmed = joined.trimmingCharacters(in: .whitespacesAndNewlines)
-        // Vocabulary-sized spans only.
-        guard trimmed.count >= 1, trimmed.count <= 40 else { return }
-        if trimmed.count >= 28, trimmed.contains(where: { $0.isWhitespace }) { return }
-        phrases.append(trimmed)
-    }
-
-    private static func isMostlyCJK(_ text: String) -> Bool {
-        let scalars = text.unicodeScalars
-        guard !scalars.isEmpty else { return false }
-        let cjk = scalars.filter { scalar in
-            (0x4E00...0x9FFF).contains(scalar.value) || (0x3400...0x4DBF).contains(scalar.value)
-        }.count
-        return Double(cjk) / Double(scalars.count) >= 0.6
     }
 
     private static func configure(_ request: VNRecognizeTextRequest) {
@@ -316,6 +263,12 @@ enum ImageOCRService {
             .filter { !$0.isEmpty }
             .joined(separator: "\n")
             .replacingOccurrences(of: #"\s{2,}"#, with: " ", options: .regularExpression)
+            // Book OCR: "pret-\nty" / "pret- ty" → "pretty"
+            .replacingOccurrences(
+                of: #"([A-Za-z])-\s*([a-z])"#,
+                with: "$1$2",
+                options: .regularExpression
+            )
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
     #endif

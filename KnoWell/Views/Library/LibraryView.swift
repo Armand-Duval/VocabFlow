@@ -58,6 +58,7 @@ struct LibraryView: View {
                         onCardsDeleted: {
                             LibraryCatalogCache.shared.invalidateListCache()
                             DeckCardCountService.notifyCatalogChanged()
+                            SharedDedupeSync.rebuild(in: modelContext)
                             Task { await refreshHasAnyCards() }
                         }
                     )

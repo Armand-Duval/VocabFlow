@@ -57,7 +57,14 @@ struct ImportCardsFormView: View {
                     VocabularyWordsEditor(
                         words: $words,
                         feedbackMessage: $wordFeedbackMessage,
-                        feedbackIsError: $wordFeedbackIsError
+                        feedbackIsError: $wordFeedbackIsError,
+                        deckContainsWord: { word in
+                            SharedDedupeIndex.contains(
+                                deckID: selectedDeckID,
+                                word: word,
+                                sentence: trimmedSentence
+                            )
+                        }
                     )
                 }
 

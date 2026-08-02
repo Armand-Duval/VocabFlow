@@ -5,6 +5,8 @@ enum KimiCardGeneratorError: LocalizedError {
     case invalidResponse
     case apiError(String)
     case parseError(String)
+    /// All requested words already exist in the target deck for this sentence.
+    case allDuplicates
 
     var errorDescription: String? {
         switch self {
@@ -16,22 +18,42 @@ enum KimiCardGeneratorError: LocalizedError {
             message
         case .parseError(let message):
             L10n.parseError(message)
+        case .allDuplicates:
+            L10n.createGenerateAllDuplicates
         }
     }
 }
 
 enum KimiCardGenerator {
+    /// - Parameter skipExistingInDeckID: When set, drop word+sentence pairs already in that deck
+    ///   before calling the model. Use for **new** cards only — regenerators must leave this `nil`.
     static func generate(
         sentence: String,
         words: [String],
         sourceHint: String? = nil,
-        deckName: String? = nil
+        deckName: String? = nil,
+        skipExistingInDeckID: UUID? = nil
     ) async throws -> [GeneratedCardDraft] {
         guard APISettings.canUseAI else {
             throw KimiCardGeneratorError.missingAPIKey
         }
 
-        let units = generationUnits(sentence: sentence, words: words)
+        let wordsForAI: [String]
+        if let deckID = skipExistingInDeckID {
+            let filtered = SharedDedupeIndex.filterNewWords(
+                words,
+                deckID: deckID,
+                sentence: sentence
+            )
+            guard !filtered.kept.isEmpty else {
+                throw KimiCardGeneratorError.allDuplicates
+            }
+            wordsForAI = filtered.kept
+        } else {
+            wordsForAI = words
+        }
+
+        let units = generationUnits(sentence: sentence, words: wordsForAI)
         guard !units.isEmpty else { return [] }
         let hint = sourceHint?
             .trimmingCharacters(in: .whitespacesAndNewlines)

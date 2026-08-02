@@ -4,14 +4,11 @@ import SwiftData
 /// Deck-scoped uniqueness for create flow: same word + sentence (+ optional card type).
 enum FlashCardDeduper {
     static func normalizedWord(_ value: String) -> String {
-        value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        SharedDedupeIndex.normalizedWord(value)
     }
 
     static func normalizedSentence(_ value: String) -> String {
-        value
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
-            .lowercased()
+        SharedDedupeIndex.normalizedSentence(value)
     }
 
     @MainActor
