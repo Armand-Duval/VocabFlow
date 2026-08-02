@@ -12,6 +12,7 @@
 		AA0000010000000000000021 /* FlashCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000011 /* FlashCard.swift */; };
 		AA0000010000000000000023 /* ReviewScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000013 /* ReviewScheduler.swift */; };
 		STREAK00100000000000000002 /* StudyStreakStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = STREAK00100000000000000001 /* StudyStreakStore.swift */; };
+		DAILY00100000000000000001 /* DailyReflection.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAILY00100000000000000010 /* DailyReflection.swift */; };
 		KK0000010000000000000001 /* ReviewSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = KK0000010000000000000010 /* ReviewSettings.swift */; };
 		KK0000010000000000000002 /* ReviewQueueBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = KK0000010000000000000011 /* ReviewQueueBuilder.swift */; };
 		TT0000010000000000000001 /* ReviewSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = KK0000010000000000000012 /* ReviewSettingsStore.swift */; };
@@ -164,6 +165,7 @@
 		AA0000010000000000000011 /* FlashCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashCard.swift; sourceTree = "<group>"; };
 		AA0000010000000000000013 /* ReviewScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewScheduler.swift; sourceTree = "<group>"; };
 		STREAK00100000000000000001 /* StudyStreakStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyStreakStore.swift; sourceTree = "<group>"; };
+		DAILY00100000000000000010 /* DailyReflection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyReflection.swift; sourceTree = "<group>"; };
 		KK0000010000000000000010 /* ReviewSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewSettings.swift; sourceTree = "<group>"; };
 		KK0000010000000000000012 /* ReviewSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewSettingsStore.swift; sourceTree = "<group>"; };
 		KK0000010000000000000011 /* ReviewQueueBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewQueueBuilder.swift; sourceTree = "<group>"; };
@@ -383,6 +385,7 @@
 				LL0000010000000000000010 /* ReviewReminderService.swift */,
 				LL0000010000000000000011 /* ReviewStatusStore.swift */,
 				STREAK00100000000000000001 /* StudyStreakStore.swift */,
+				DAILY00100000000000000010 /* DailyReflection.swift */,
 				MM0000010000000000000010 /* SpeechService.swift */,
 			);
 			path = Review;
@@ -845,6 +848,7 @@
 				AA0000010000000000000021 /* FlashCard.swift in Sources */,
 				AA0000010000000000000023 /* ReviewScheduler.swift in Sources */,
 				STREAK00100000000000000002 /* StudyStreakStore.swift in Sources */,
+				DAILY00100000000000000001 /* DailyReflection.swift in Sources */,
 				KK0000010000000000000001 /* ReviewSettings.swift in Sources */,
 				KK0000010000000000000002 /* ReviewQueueBuilder.swift in Sources */,
 				TT0000010000000000000001 /* ReviewSettingsStore.swift in Sources */,

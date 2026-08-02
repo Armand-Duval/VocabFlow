@@ -22,6 +22,7 @@ enum L10n {
     static var homeRecentDecks: String { tr("home.recentDecks") }
     static var createAIGenerate: String { tr("create.aiGenerate") }
     static var createPastePlaceholder: String { tr("create.pastePlaceholder") }
+    static var createLiteraryLead: String { tr("create.literaryLead") }
     static var createAddWord: String { tr("create.addWord") }
     static var createManageDeck: String { tr("create.manageDeck") }
 
@@ -151,6 +152,8 @@ enum L10n {
     static var reviewEmptyTitle: String { tr("review.empty.title") }
     static var reviewEmptyNoCards: String { tr("review.empty.noCards") }
     static var reviewEmptyGoCreate: String { tr("review.empty.goCreate") }
+    static var reviewEmptyAssistant: String { tr("review.empty.assistant") }
+    static var reviewEmptyStartCreate: String { tr("review.empty.startCreate") }
     static var reviewEmptyDone: String { tr("review.empty.done") }
     static var noCardsToReview: String { tr("review.noCards") }
     static var cardFront: String { tr("review.card.front") }
@@ -167,6 +170,11 @@ enum L10n {
     static var reviewHomeRecentDecks: String { tr("review.home.recentDecks") }
     static var reviewHomeBack: String { tr("review.home.back") }
     static var reviewHomeDoneToday: String { tr("review.home.doneToday") }
+    static var reviewHomeDoneHint: String { tr("review.home.doneHint") }
+    static var reviewHomeDoneOffer: String { tr("review.home.doneOffer") }
+    static var reviewDailyTitle: String { tr("review.daily.title") }
+    static var reviewDailyFromLibrary: String { tr("review.daily.fromLibrary") }
+    static var reviewDailyCollect: String { tr("review.daily.collect") }
     static var reviewSessionDone: String { tr("review.session.done") }
 
     static var ratingAgain: String { tr("rating.again") }

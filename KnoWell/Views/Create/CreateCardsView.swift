@@ -123,7 +123,7 @@ struct CreateCardsView: View {
 
     private var scrollContent: some View {
         ScrollView {
-            VStack(spacing: AppSpacing.sm) {
+            VStack(alignment: .leading, spacing: AppSpacing.lg) {
                 if hasPendingDrafts, let pendingDrafts = shareImport.pendingDrafts {
                     PendingCardsBannerView(
                         title: L10n.createPendingImportTitle,
@@ -141,7 +141,12 @@ struct CreateCardsView: View {
                     )
                 }
 
-                quickCaptureRow
+                if sentence.isEmpty && words.isEmpty {
+                    Text(L10n.createLiteraryLead)
+                        .font(AppFont.secondary())
+                        .foregroundStyle(AppColor.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
 
                 sourceEditor
 
@@ -158,82 +163,68 @@ struct CreateCardsView: View {
                     }
                 }
 
-                compactDeckRow
+                CreateDeckPickerCard(selectedDeckID: $selectedDeckID)
 
                 wordsCard
             }
             .padding(.horizontal, AppSpacing.md)
-            .padding(.top, AppSpacing.sm)
+            .padding(.top, AppSpacing.md)
             .padding(.bottom, AppSpacing.md)
         }
     }
 
-    private var quickCaptureRow: some View {
-        HStack(spacing: 6) {
-            Text(L10n.createQuickCaptureTitle)
-                .font(AppFont.weak())
-                .foregroundStyle(AppColor.textTertiary)
-
-            Spacer(minLength: AppSpacing.sm)
-
-            TextLinkAction(title: L10n.createQuickPhoto) {
-                showPhotoLibrary = true
-            }
-            .disabled(isRecognizingPhoto)
-            .opacity(isRecognizingPhoto ? 0.45 : 1)
-
-            if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                Text("·")
-                    .font(AppFont.weak())
-                    .foregroundStyle(AppColor.textTertiary.opacity(0.45))
-
-                TextLinkAction(title: L10n.createQuickCamera) {
-                    showCamera = true
+    private var sourceEditor: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+            HStack(spacing: 6) {
+                Spacer(minLength: 0)
+                TextLinkAction(title: L10n.createQuickPhoto) {
+                    showPhotoLibrary = true
                 }
                 .disabled(isRecognizingPhoto)
                 .opacity(isRecognizingPhoto ? 0.45 : 1)
+
+                if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                    Text("·")
+                        .font(AppFont.weak())
+                        .foregroundStyle(AppColor.textTertiary.opacity(0.45))
+                    TextLinkAction(title: L10n.createQuickCamera) {
+                        showCamera = true
+                    }
+                    .disabled(isRecognizingPhoto)
+                    .opacity(isRecognizingPhoto ? 0.45 : 1)
+                }
+
+                Text("·")
+                    .font(AppFont.weak())
+                    .foregroundStyle(AppColor.textTertiary.opacity(0.45))
+                TextLinkAction(title: L10n.createQuickPaste) {
+                    pasteFromClipboard()
+                }
             }
 
-            Text("·")
-                .font(AppFont.weak())
-                .foregroundStyle(AppColor.textTertiary.opacity(0.45))
+            ZStack(alignment: .topLeading) {
+                SelectableTextEditor(
+                    text: $sentence,
+                    selectedText: $selectedText,
+                    selectionClearNonce: $selectionClearNonce,
+                    onAddToVocabulary: appendSelectionToWords
+                )
+                .frame(minHeight: 180)
+                .padding(AppSpacing.sm)
 
-            TextLinkAction(title: L10n.createQuickPaste) {
-                pasteFromClipboard()
+                if sentence.isEmpty {
+                    Text(L10n.createPastePlaceholder)
+                        .font(AppFont.literaryQuote())
+                        .foregroundStyle(AppColor.textTertiary.opacity(0.72))
+                        .padding(.horizontal, AppSpacing.md)
+                        .padding(.top, AppSpacing.md + 2)
+                        .allowsHitTesting(false)
+                }
             }
-        }
-    }
-
-    private var sourceEditor: some View {
-        ZStack(alignment: .topLeading) {
-            SelectableTextEditor(
-                text: $sentence,
-                selectedText: $selectedText,
-                selectionClearNonce: $selectionClearNonce,
-                onAddToVocabulary: appendSelectionToWords
-            )
-            .frame(minHeight: 160)
-            .padding(AppSpacing.sm)
             .background(
-                AppColor.surfaceMuted,
-                in: RoundedRectangle(cornerRadius: AppRadius.input, style: .continuous)
+                AppColor.surface,
+                in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
             )
-
-            if sentence.isEmpty {
-                Text(L10n.createPastePlaceholder)
-                    .font(AppFont.secondary())
-                    .foregroundStyle(AppColor.textTertiary)
-                    .padding(.horizontal, AppSpacing.md)
-                    .padding(.top, AppSpacing.md)
-                    .allowsHitTesting(false)
-            }
-        }
-    }
-
-    private var compactDeckRow: some View {
-        HStack {
-            CreateDeckPickerCard(selectedDeckID: $selectedDeckID)
-            Spacer(minLength: 0)
         }
     }
 
@@ -260,12 +251,6 @@ struct CreateCardsView: View {
                 feedbackIsError: $wordFeedbackIsError
             )
         }
-        .padding(AppSpacing.sm)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            AppColor.surface,
-            in: RoundedRectangle(cornerRadius: AppRadius.input, style: .continuous)
-        )
     }
 
     private var generateFooter: some View {
@@ -274,10 +259,8 @@ struct CreateCardsView: View {
                 if isGenerating {
                     ProgressView()
                         .tint(.white)
-                } else {
-                    Image(systemName: "sparkles")
                 }
-                Text(L10n.createAIGenerate)
+                Text(isGenerating ? L10n.generating : L10n.createAIGenerate)
             }
         }
         .buttonStyle(PrimaryButtonStyle(prominent: true))
@@ -412,10 +395,15 @@ struct CreateCardsView: View {
 
         Task {
             do {
+                let deckName = await MainActor.run { () -> String? in
+                    guard let selectedDeckID else { return nil }
+                    return DeckService.resolvedDeck(id: selectedDeckID, in: modelContext).name
+                }
                 let generated = try await KimiCardGenerator.generate(
                     sentence: sentence,
                     words: words,
-                    sourceHint: sourceHint
+                    sourceHint: sourceHint,
+                    deckName: deckName
                 )
 
                 await MainActor.run {

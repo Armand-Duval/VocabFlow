@@ -119,44 +119,40 @@ struct CreateDeckPickerCard: View {
     }
 
     var body: some View {
-        AppSurfaceCard {
-            VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                if !hasAttemptedLoad && decks.isEmpty {
-                    ProgressView(L10n.deckLoading)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                } else if decks.isEmpty {
-                    Text(L10n.deckEmpty)
-                        .font(AppFont.secondary())
-                        .foregroundStyle(.secondary)
-                } else {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+            if !hasAttemptedLoad && decks.isEmpty {
+                ProgressView(L10n.deckLoading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else if decks.isEmpty {
+                Text(L10n.deckEmpty)
+                    .font(AppFont.secondary())
+                    .foregroundStyle(.secondary)
+            } else {
+                HStack(spacing: AppSpacing.sm) {
                     Button {
                         showDeckPicker = true
                     } label: {
-                        HStack(spacing: AppSpacing.sm) {
-                            Text(L10n.deckTarget)
-                                .font(AppFont.secondary())
-                                .foregroundStyle(AppColor.textSecondary)
-                            Spacer(minLength: 0)
+                        HStack(spacing: 6) {
                             Text(selectedDeckName)
                                 .font(AppFont.secondary().weight(.medium))
                                 .foregroundStyle(AppColor.textPrimary)
                                 .lineLimit(1)
-                            Image(systemName: "chevron.up.chevron.down")
-                                .font(.caption.weight(.semibold))
+                            Image(systemName: "chevron.down")
+                                .font(.caption2.weight(.semibold))
                                 .foregroundStyle(AppColor.textTertiary)
                         }
-                        .padding(.horizontal, AppSpacing.sm)
-                        .padding(.vertical, 12)
-                        .background(AppColor.surfaceMuted, in: RoundedRectangle(cornerRadius: AppRadius.input, style: .continuous))
                     }
                     .buttonStyle(.plain)
-                }
 
-                NavigationLink {
-                    DeckStoreView(selectedDeckID: $selectedDeckID)
-                } label: {
-                    Label(L10n.deckManage, systemImage: "books.vertical")
-                        .font(AppFont.secondary())
+                    Spacer(minLength: 0)
+
+                    NavigationLink {
+                        DeckStoreView(selectedDeckID: $selectedDeckID)
+                    } label: {
+                        Text(L10n.deckManage)
+                            .font(AppFont.caption())
+                            .foregroundStyle(AppColor.accent)
+                    }
                 }
             }
         }

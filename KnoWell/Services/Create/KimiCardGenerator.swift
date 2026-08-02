@@ -24,7 +24,8 @@ enum KimiCardGenerator {
     static func generate(
         sentence: String,
         words: [String],
-        sourceHint: String? = nil
+        sourceHint: String? = nil,
+        deckName: String? = nil
     ) async throws -> [GeneratedCardDraft] {
         guard APISettings.canUseAI else {
             throw KimiCardGeneratorError.missingAPIKey
@@ -35,6 +36,7 @@ enum KimiCardGenerator {
         let hint = sourceHint?
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .nilIfEmpty
+        let deck = usefulDeckName(deckName)
 
         // One API call per sentence-context so each card front stays that word's sentence only.
         var allDrafts: [GeneratedCardDraft] = []
@@ -42,11 +44,30 @@ enum KimiCardGenerator {
             let drafts = try await generateForSingleContext(
                 sentence: unit.sentence,
                 words: unit.words,
-                sourceHint: hint
+                sourceHint: hint,
+                deckName: deck
             )
             allDrafts.append(contentsOf: drafts)
         }
         return allDrafts
+    }
+
+    /// Skip generic default decks — they add noise, not context.
+    static func usefulDeckName(_ raw: String?) -> String? {
+        let name = raw?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .nilIfEmpty
+        guard let name else { return nil }
+        let defaults: Set<String> = [
+            L10n.deckDefaultName,
+            "默认词库",
+            "Default",
+            "Default Deck"
+        ]
+        if defaults.contains(where: { $0.caseInsensitiveCompare(name) == .orderedSame }) {
+            return nil
+        }
+        return name
     }
 
     /// Split multi-sentence imports so each word is generated with only its own sentence.
@@ -78,12 +99,14 @@ enum KimiCardGenerator {
     private static func generateForSingleContext(
         sentence: String,
         words: [String],
-        sourceHint: String?
+        sourceHint: String?,
+        deckName: String?
     ) async throws -> [GeneratedCardDraft] {
         let content = try await requestCards(
             sentence: sentence,
             words: words,
-            sourceHint: sourceHint
+            sourceHint: sourceHint,
+            deckName: deckName
         )
         return try parseCards(from: content, sentence: sentence)
     }
@@ -91,7 +114,8 @@ enum KimiCardGenerator {
     private static func requestCards(
         sentence: String,
         words: [String],
-        sourceHint: String?
+        sourceHint: String?,
+        deckName: String?
     ) async throws -> String {
         guard let url = URL(string: APISettings.chatCompletionsURL) else {
             throw KimiCardGeneratorError.invalidResponse
@@ -118,7 +142,8 @@ enum KimiCardGenerator {
               "type": "cloze 或 definition",
               "front": "卡片正面",
               "back": "释义及解释（词性 + 结合语境的中文释义）",
-              "context_note": "整句中文翻译（目标词对应译法用【】标出）"
+              "context_note": "整句中文翻译（目标词短译必须用【】标出）",
+              "highlight": "目标词在译文中的短译（须能在 context_note 中原样找到）"
             }
           ]
         }
@@ -127,16 +152,21 @@ enum KimiCardGenerator {
         2. cloze 的 front：完整原句，仅把目标词/短语替换为 ______（保持原文语言）
         3. definition 的 front：必须是完整原句且保留目标词，禁止只写单词，禁止写成「xxx 是什么意思」之类提问
         4. back：只写释义及解释（注明词性，结合该句语境；不要只给脱离语境的词典义）；不要把整句翻译写进 back
-        5. context_note：必须是整句中文翻译（完整一句，对应原文）。其中与目标词对应的译法必须用【】标出，且只标这一处；例：政府试图【缓解】其影响。不要标整句，不要用其它括号代替
-        6. phonetic：每个 card 都必须填写；拉丁字母词用 IPA（例 /ˈtren.tʃənt/），日语用假名/罗马音，其它语言给常用注音；禁止把音标写进 back/front
-        7. 原文是什么语言，front 中的句子就保持什么语言，不要擅自翻译原句
-        8. source：若能从原文、页面提示或公认名句较有把握地判断出处（书名、篇章名、作者），填写简洁标注，如「Poor Charlie's Almanack · Charles T. Munger」；无把握必须返回空字符串，禁止编造
+        5. context_note（硬性）：必须是完整一句中文翻译。目标词对应译法必须用全角【】标出，且只标一处；【】内通常 1–6 个汉字的短译，禁止标整句或整段结果状语。正确例：政府试图【缓解】其影响。/ 他【离开时】带着苦笑。错误例：未使用【】、用 []/**/「」、或【离开时不仅好笑还更聪明】这种过长标注
+        6. highlight（硬性）：填写与【】内相同的短译纯文本（不要带括号）；必须是 context_note 去掉【】后仍能原样找到的子串
+        7. phonetic：每个 card 都必须填写；拉丁字母词用 IPA（例 /ˈtren.tʃənt/），日语用假名/罗马音，其它语言给常用注音；禁止把音标写进 back/front
+        8. 原文是什么语言，front 中的句子就保持什么语言，不要擅自翻译原句
+        9. source：若能从原文、页面提示、词库名称或公认名句较有把握地判断出处（书名、篇章名、作者），填写简洁标注，如「Poor Charlie's Almanack · Charles T. Munger」；无把握必须返回空字符串，禁止编造
+        10. 若提供了词库名称：把它当作主题/书名/学习范围线索，优先按该语境理解生词与【】译法；词库名 alone 不足以确定出处时不要编造 source
         """
 
         var userPrompt = """
         原文：\(sentence)
         生词：\(wordsList)
         """
+        if let deckName, !deckName.isEmpty {
+            userPrompt += "\n词库名称（可能是书名、专题或学习范围；请作为释义语境与出处线索）：\(deckName)"
+        }
         if let sourceHint, !sourceHint.isEmpty {
             userPrompt += "\n页面提示（可能含书名/标题/作者，供判断出处）：\(sourceHint)"
         }
@@ -229,6 +259,12 @@ enum KimiCardGenerator {
         var drafts = response.cards.compactMap { item -> GeneratedCardDraft? in
             guard let type = CardType(rawValue: item.type.lowercased()) else { return nil }
             let word = item.word.trimmingCharacters(in: .whitespacesAndNewlines)
+            let back = item.back.trimmingCharacters(in: .whitespacesAndNewlines)
+            let contextNote = CardContentFormatter.ensureTranslationHighlight(
+                contextNote: item.contextNote,
+                sense: back,
+                explicitHighlight: item.highlight
+            )
             return GeneratedCardDraft(
                 word: word,
                 phonetic: normalizedPhonetic(item.phonetic),
@@ -240,10 +276,8 @@ enum KimiCardGenerator {
                     word: word,
                     cardType: type
                 ),
-                back: item.back.trimmingCharacters(in: .whitespacesAndNewlines),
-                contextNote: item.contextNote?
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                    .nilIfEmpty,
+                back: back,
+                contextNote: contextNote,
                 sourceAttribution: source
             )
         }
@@ -322,9 +356,10 @@ private struct KimiCardItem: Decodable {
     let front: String
     let back: String
     let contextNote: String?
+    let highlight: String?
 
     enum CodingKeys: String, CodingKey {
-        case word, phonetic, type, front, back
+        case word, phonetic, type, front, back, highlight
         case contextNote = "context_note"
     }
 }

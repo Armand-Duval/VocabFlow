@@ -84,13 +84,17 @@ enum CardContentMigrationService {
             let sourceHint = group
                 .compactMap { $0.sourceAttribution?.trimmingCharacters(in: .whitespacesAndNewlines) }
                 .first { !$0.isEmpty }
+            let deckName = group
+                .compactMap { $0.deck?.name.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .first { !$0.isEmpty }
 
             for wordBatch in words.chunked(into: wordsPerGenerateCall) {
                 do {
                     let drafts = try await KimiCardGenerator.generate(
                         sentence: group[0].sentence,
                         words: wordBatch,
-                        sourceHint: sourceHint
+                        sourceHint: sourceHint,
+                        deckName: deckName
                     )
                     let applied = applyDrafts(drafts, to: group)
                     report.contentRefreshed += applied.refreshed

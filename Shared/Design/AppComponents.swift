@@ -135,6 +135,10 @@ enum AppFont {
     static func pageTitle() -> Font { .system(size: 22, weight: .semibold) }
     static func sectionTitle() -> Font { .system(size: 17, weight: .semibold) }
     static func studyWord() -> Font { .system(size: 28, weight: .semibold) }
+    /// Quiet literary line — New York / SF Serif when available.
+    static func literaryQuote() -> Font {
+        .system(size: 18, weight: .regular, design: .serif)
+    }
     static func body() -> Font { .system(size: 16, weight: .regular) }
     static func secondary() -> Font { .system(size: 14, weight: .regular) }
     static func caption() -> Font { .system(size: 13, weight: .regular) }
@@ -144,6 +148,7 @@ enum AppFont {
     static func navTitle() -> Font { .system(size: 14, weight: .medium) }
     static func statValue() -> Font { .system(size: 22, weight: .semibold) }
     static func heroValue() -> Font { .system(size: 40, weight: .semibold) }
+    static func heroValueCompact() -> Font { .system(size: 28, weight: .semibold) }
     static func statLabel() -> Font { .system(size: 12, weight: .regular) }
 }
 

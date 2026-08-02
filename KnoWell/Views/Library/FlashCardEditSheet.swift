@@ -320,7 +320,8 @@ struct FlashCardEditSheet: View {
                 sourceHint: {
                     let hint = fields.sourceAttribution.trimmingCharacters(in: .whitespacesAndNewlines)
                     return hint.isEmpty ? nil : hint
-                }()
+                }(),
+                deckName: decks.first(where: { $0.id == fields.deckID })?.name
             )
             guard let draft = CardContentRegenerator.matchingDraft(
                 in: drafts,

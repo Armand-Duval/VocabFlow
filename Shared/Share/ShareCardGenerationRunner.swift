@@ -35,10 +35,14 @@ enum ShareCardGenerationRunner {
         guard let job = ShareImportStore.claimPendingGenerationJob() else { return }
 
         do {
+            let deckName = SharedDeckStore.loadCatalog()
+                .first(where: { $0.id == SharedDeckStore.lastSelectedDeckID })?
+                .name
             let drafts = try await KimiCardGenerator.generate(
                 sentence: job.sentence,
                 words: job.words,
-                sourceHint: job.sourceHint
+                sourceHint: job.sourceHint,
+                deckName: deckName
             )
 
             guard !drafts.isEmpty else {

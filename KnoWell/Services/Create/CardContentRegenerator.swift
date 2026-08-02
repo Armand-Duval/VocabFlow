@@ -24,7 +24,8 @@ enum CardContentRegenerator {
         let drafts = try await KimiCardGenerator.generate(
             sentence: sentence,
             words: [word],
-            sourceHint: card.sourceAttribution
+            sourceHint: card.sourceAttribution,
+            deckName: card.deck?.name
         )
         guard let draft = matchingDraft(in: drafts, word: word, cardType: card.cardType) else {
             throw CardContentRegeneratorError.noMatchingDraft

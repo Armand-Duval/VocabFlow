@@ -104,6 +104,96 @@ enum CardContentFormatter {
         return plain.contains(gloss)
     }
 
+    /// Ensure sentence translation has a short 【…】 mark for the target word.
+    /// Prefer AI markers; otherwise use explicit `highlight` / sense gloss fallback.
+    static func ensureTranslationHighlight(
+        contextNote: String?,
+        sense: String,
+        explicitHighlight: String? = nil
+    ) -> String? {
+        let raw = trimmed(contextNote)
+        guard !raw.isEmpty else { return nil }
+
+        var note = normalizeAlternateHighlightMarkers(raw)
+        let plain = stripHighlightMarkers(note)
+        guard !plain.isEmpty else { return nil }
+
+        let marked = extractMarkedTerms(from: note)
+        if let first = marked.first {
+            // AI sometimes wraps a whole clause; shrink when a short gloss fits inside.
+            if first.count > 10,
+               let shorter = preferredShortGloss(
+                plain: first,
+                sense: sense,
+                explicitHighlight: explicitHighlight
+               ),
+               first.contains(shorter) {
+                return applyHighlightMarker(to: plain, term: shorter)
+            }
+            if marked.count == 1 {
+                return note.contains("【") ? note : applyHighlightMarker(to: plain, term: first)
+            }
+            // Multiple marks → keep only the shortest reasonable one.
+            if let best = marked
+                .filter({ $0.count <= 12 })
+                .min(by: { $0.count < $1.count }) {
+                return applyHighlightMarker(to: plain, term: best)
+            }
+            return applyHighlightMarker(to: plain, term: first)
+        }
+
+        if let gloss = preferredShortGloss(
+            plain: plain,
+            sense: sense,
+            explicitHighlight: explicitHighlight
+        ) {
+            return applyHighlightMarker(to: plain, term: gloss)
+        }
+
+        return plain
+    }
+
+    /// Convert common wrong wrappers into 【】 before extraction.
+    private static func normalizeAlternateHighlightMarkers(_ text: String) -> String {
+        var result = text
+        let patterns = [
+            #"\[([^\[\]]{1,12})\]"#,
+            #"［([^］]{1,12})］"#,
+            #"\*\*([^*]{1,12})\*\*"#,
+            #"__([^_]{1,12})__"#
+        ]
+        for pattern in patterns {
+            guard let regex = try? NSRegularExpression(pattern: pattern) else { continue }
+            let range = NSRange(result.startIndex..., in: result)
+            result = regex.stringByReplacingMatches(
+                in: result,
+                range: range,
+                withTemplate: "【$1】"
+            )
+        }
+        return result
+    }
+
+    private static func preferredShortGloss(
+        plain: String,
+        sense: String,
+        explicitHighlight: String?
+    ) -> String? {
+        var candidates: [String] = []
+        let explicit = trimmed(explicitHighlight)
+        if !explicit.isEmpty {
+            candidates.append(explicit)
+        }
+        candidates.append(contentsOf: glossCandidates(from: sense))
+
+        let unique = uniqueTerms(candidates)
+        // Prefer shorter matches that actually appear in the translation.
+        return unique
+            .filter { $0.count <= 10 && plain.contains($0) }
+            .min(by: { $0.count < $1.count })
+            ?? unique.first { plain.contains($0) }
+    }
+
     private static func extractMarkedTerms(from text: String) -> [String] {
         guard !text.isEmpty else { return [] }
         var terms: [String] = []

@@ -4,6 +4,9 @@
     "" : {
 
     },
+    "—— %@" : {
+
+    },
     "·" : {
 
     },
@@ -18,6 +21,9 @@
       }
     },
     "%lld" : {
+
+    },
+    "0" : {
 
     },
     "account.apple.cancelled" : {
@@ -535,6 +541,159 @@
         }
       }
     },
+    "card.regenerate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regenerate with AI"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI 重新生成"
+          }
+        }
+      }
+    },
+    "card.regenerate.done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Card regenerated"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已重新生成"
+          }
+        }
+      }
+    },
+    "card.regenerate.editMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fill the form with the latest AI output. Review and tweak, then tap Done to save. Progress and deck stay the same."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将用最新 AI 结果填入表单，可再微调后点完成保存。复习进度与牌组保留。"
+          }
+        }
+      }
+    },
+    "card.regenerate.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rebuild this card with the latest AI rules. Review progress and deck stay the same."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用最新 AI 制卡规则重生成此卡内容，复习进度与牌组保留。"
+          }
+        }
+      }
+    },
+    "card.regenerate.noMatch" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI returned no matching card. Check the word and sentence."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI 未返回匹配卡片，请检查单词与原句。"
+          }
+        }
+      }
+    },
+    "card.regenerate.running" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regenerating…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在重新生成…"
+          }
+        }
+      }
+    },
+    "card.sentenceTranslation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sentence translation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "句子翻译"
+          }
+        }
+      }
+    },
+    "card.source" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Source"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "出处"
+          }
+        }
+      }
+    },
+    "card.source.value" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Source · %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "出处 · %@"
+          }
+        }
+      }
+    },
     "card.suspend" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -599,125 +758,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已暂停"
-          }
-        }
-      }
-    },
-    "card.unsuspend" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Resume review"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "恢复复习"
-          }
-        }
-      }
-    },
-    "card.unsuspended.done" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Card resumed"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已恢复复习"
-          }
-        }
-      }
-    },
-    "cardType.cloze" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cloze"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "挖空"
-          }
-        }
-      }
-    },
-    "cardType.definition" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Definition"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "释义"
-          }
-        }
-      }
-    },
-    "card.source" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Source"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "出处"
-          }
-        }
-      }
-    },
-    "card.source.value" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Source · %@"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "出处 · %@"
-          }
-        }
-      }
-    },
-    "card.sentenceTranslation" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sentence translation"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "句子翻译"
           }
         }
       }
@@ -790,6 +830,74 @@
         }
       }
     },
+    "card.unsuspend" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resume review"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恢复复习"
+          }
+        }
+      }
+    },
+    "card.unsuspended.done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Card resumed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已恢复复习"
+          }
+        }
+      }
+    },
+    "cardType.cloze" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloze"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "挖空"
+          }
+        }
+      }
+    },
+    "cardType.definition" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Definition"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "释义"
+          }
+        }
+      }
+    },
     "common.add" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -803,6 +911,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "添加"
+          }
+        }
+      }
+    },
+    "common.back" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "返回"
           }
         }
       }
@@ -854,23 +979,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "关闭"
-          }
-        }
-      }
-    },
-    "common.back" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Back"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "返回"
           }
         }
       }
@@ -970,7 +1078,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "AI 一键生成"
+            "value" : "生成卡片"
           }
         }
       }
@@ -1111,6 +1219,23 @@
         }
       }
     },
+    "create.literaryLead" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bring a line that stayed with you — I’ll help you keep it."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "放下一句想留住的话，我帮你收进可复习的卡片。"
+          }
+        }
+      }
+    },
     "create.longText.keepSentence" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1217,13 +1342,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Paste English text or book passages"
+            "value" : "A sentence from a book, an essay, a quiet note…"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "粘贴英文段落、书籍文本"
+            "value" : "书页、随笔、一句想留下的话…"
           }
         }
       }
@@ -4497,6 +4622,38 @@
         }
       }
     },
+    "import.ocr.empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No text found. Try a clearer screenshot."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未识别到文字，请换一张更清晰的截图"
+          }
+        }
+      }
+    },
+    "import.ocr.failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not read the image"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法读取图片"
+          }
+        }
+      }
+    },
     "import.ocr.highlightContext" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4527,38 +4684,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已识别 %d 个高亮词"
-          }
-        }
-      }
-    },
-    "import.ocr.empty" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No text found. Try a clearer screenshot."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "未识别到文字，请换一张更清晰的截图"
-          }
-        }
-      }
-    },
-    "import.ocr.failed" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Could not read the image"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "无法读取图片"
           }
         }
       }
@@ -4790,108 +4915,6 @@
         }
       }
     },
-    "card.regenerate" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Regenerate with AI"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AI 重新生成"
-          }
-        }
-      }
-    },
-    "card.regenerate.message" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rebuild this card with the latest AI rules. Review progress and deck stay the same."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "用最新 AI 制卡规则重生成此卡内容，复习进度与牌组保留。"
-          }
-        }
-      }
-    },
-    "card.regenerate.editMessage" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fill the form with the latest AI output. Review and tweak, then tap Done to save. Progress and deck stay the same."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "将用最新 AI 结果填入表单，可再微调后点完成保存。复习进度与牌组保留。"
-          }
-        }
-      }
-    },
-    "card.regenerate.running" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Regenerating…"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在重新生成…"
-          }
-        }
-      }
-    },
-    "card.regenerate.done" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Card regenerated"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已重新生成"
-          }
-        }
-      }
-    },
-    "card.regenerate.noMatch" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AI returned no matching card. Check the word and sentence."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AI 未返回匹配卡片，请检查单词与原句。"
-          }
-        }
-      }
-    },
     "library.edit" : {
       "localizations" : {
         "en" : {
@@ -4908,53 +4931,19 @@
         }
       }
     },
-    "library.edit.title" : {
+    "library.edit.backFooter" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Edit · %@"
+            "value" : "Shown after flip: sense/explanation, then sentence translation. Highlight gloss marks only the target word’s short translation."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "编辑 · %@"
-          }
-        }
-      }
-    },
-    "library.edit.basics" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Basics"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "基本信息"
-          }
-        }
-      }
-    },
-    "library.edit.frontSection" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Front"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正面"
+            "value" : "翻面后看到的内容：释义及解释，以及句子翻译。高亮译法只标目标词对应的短译。"
           }
         }
       }
@@ -4976,6 +4965,23 @@
         }
       }
     },
+    "library.edit.basics" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Basics"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "基本信息"
+          }
+        }
+      }
+    },
     "library.edit.frontFooter" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4993,19 +4999,36 @@
         }
       }
     },
-    "library.edit.backFooter" : {
+    "library.edit.frontSection" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Shown after flip: sense/explanation, then sentence translation. Highlight gloss marks only the target word’s short translation."
+            "value" : "Front"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "翻面后看到的内容：释义及解释，以及句子翻译。高亮译法只标目标词对应的短译。"
+            "value" : "正面"
+          }
+        }
+      }
+    },
+    "library.edit.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit · %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编辑 · %@"
           }
         }
       }
@@ -6191,6 +6214,74 @@
         }
       }
     },
+    "review.daily.collect" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Make a card from this"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用这句制卡"
+          }
+        }
+      }
+    },
+    "review.daily.fromLibrary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From your library"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "来自你的词库"
+          }
+        }
+      }
+    },
+    "review.daily.timely" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For the season"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "合时宜"
+          }
+        }
+      }
+    },
+    "review.daily.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A line for today"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今日一句"
+          }
+        }
+      }
+    },
     "review.deckFilter.all" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6204,6 +6295,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "全部词库"
+          }
+        }
+      }
+    },
+    "review.empty.assistant" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing here yet. Paste a line from what you’re reading — I’ll help turn it into cards you can review."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这里还空着。读到想留住的句子时，贴过来，我帮你整理成可复习的卡片。"
           }
         }
       }
@@ -6259,6 +6367,23 @@
         }
       }
     },
+    "review.empty.startCreate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start with a sentence"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从一句话开始"
+          }
+        }
+      }
+    },
     "review.empty.title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6308,18 +6433,52 @@
         }
       }
     },
-    "review.home.doneToday" : {
+    "review.home.doneHint" : {
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You're done for today"
+            "value" : "When a line sticks with you later, you can tuck it away anytime."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "今日复习已完成"
+            "value" : "之后读到想留住的句子，随时收录就好。"
+          }
+        }
+      }
+    },
+    "review.home.doneOffer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a card"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顺便加一张卡"
+          }
+        }
+      }
+    },
+    "review.home.doneToday" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That’s enough for today"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今天的份，先到这里"
           }
         }
       }
@@ -6814,39 +6973,6 @@
         }
       }
     },
-    "settings.ai.keyFooter" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Leave blank to use the built-in key. Your own key only affects AI billing — import/export and advanced features may still require membership later."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "留空则使用内置 Key。自备 Key 仅免除 AI 调用扣费，导入导出等高级功能后续仍可能需会员。"
-          }
-        }
-      }
-    },
-    "settings.ai.section" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AI Card Generation"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AI 制卡"
-          }
-        }
-      }
-    },
     "settings.ai.customBaseURL.footer" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6928,6 +7054,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "自定义模型 ID（可选）"
+          }
+        }
+      }
+    },
+    "settings.ai.keyFooter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leave blank to use the built-in key. Your own key only affects AI billing — import/export and advanced features may still require membership later."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "留空则使用内置 Key。自备 Key 仅免除 AI 调用扣费，导入导出等高级功能后续仍可能需会员。"
           }
         }
       }
@@ -7200,6 +7343,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "OpenRouter API Key"
+          }
+        }
+      }
+    },
+    "settings.ai.section" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI Card Generation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI 制卡"
           }
         }
       }
@@ -7992,6 +8151,91 @@
         }
       }
     },
+    "settings.migrateCards" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upgrade Card Content"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "整理旧卡片内容"
+          }
+        }
+      }
+    },
+    "settings.migrateCards.done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cards Upgraded"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "整理完成"
+          }
+        }
+      }
+    },
+    "settings.migrateCards.doneMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fronts updated: %lld\nBacks split: %lld\nPhonetics filled: %lld\nSources filled: %lld\nContent refreshed: %lld\nAI failures: %lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正面已更新：%lld\n背面已拆分：%lld\n音标已补全：%lld\n出处已补全：%lld\n内容已按新规则刷新：%lld\nAI 失败：%lld"
+          }
+        }
+      }
+    },
+    "settings.migrateCards.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Re-run the same latest AI card rules used for new cards (sense, translation with 【marks】, phonetics, source, etc.). Review progress and decks are kept. Future fields follow the generator automatically."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用与「新建卡片」相同的最新 AI 规则重生成内容（释义、翻译【标注】、音标、出处等），复习进度与牌组保留。后续新字段会随制卡规则自动生效。"
+          }
+        }
+      }
+    },
+    "settings.migrateCards.running" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upgrading cards…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在整理卡片…"
+          }
+        }
+      }
+    },
     "settings.model" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8124,91 +8368,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "读取失败"
-          }
-        }
-      }
-    },
-    "settings.migrateCards" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Upgrade Card Content"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "整理旧卡片内容"
-          }
-        }
-      }
-    },
-    "settings.migrateCards.message" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Re-run the same latest AI card rules used for new cards (sense, translation with 【marks】, phonetics, source, etc.). Review progress and decks are kept. Future fields follow the generator automatically."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "用与「新建卡片」相同的最新 AI 规则重生成内容（释义、翻译【标注】、音标、出处等），复习进度与牌组保留。后续新字段会随制卡规则自动生效。"
-          }
-        }
-      }
-    },
-    "settings.migrateCards.running" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Upgrading cards…"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在整理卡片…"
-          }
-        }
-      }
-    },
-    "settings.migrateCards.done" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cards Upgraded"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "整理完成"
-          }
-        }
-      }
-    },
-    "settings.migrateCards.doneMessage" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fronts updated: %lld\nBacks split: %lld\nPhonetics filled: %lld\nSources filled: %lld\nContent refreshed: %lld\nAI failures: %lld"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正面已更新：%lld\n背面已拆分：%lld\n音标已补全：%lld\n出处已补全：%lld\n内容已按新规则刷新：%lld\nAI 失败：%lld"
           }
         }
       }
