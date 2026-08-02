@@ -92,6 +92,7 @@ enum ReviewScheduler {
         snapshot.write(to: card)
         card.reviewCount += 1
         ReviewSettings.recordStudy(wasNewCard: wasNewCard, now: now)
+        StudyActivityStore.record(word: card.word, sentence: card.sentence, now: now)
     }
 
     private static func mutate(rating: ReviewRating, snapshot: inout ReviewSnapshot, now: Date) {

@@ -79,13 +79,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Requires a paid Apple Developer Program membership. See docs/AUTH_SETUP.md."
+            "value" : "Apple Sign In isn’t available on this build yet."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "需要付费 Apple Developer 账号才能开启，详见 docs/AUTH_SETUP.md。"
+            "value" : "当前版本暂未开启 Apple 登录。"
           }
         }
       }
@@ -271,13 +271,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Configure AUTH_BACKEND_URL to exchange the WeChat code on your server."
+            "value" : "WeChat sign-in isn’t ready yet. Please try again later."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "请配置 AUTH_BACKEND_URL，由服务端用 code 换取微信用户信息。"
+            "value" : "微信登录暂未就绪，请稍后再试。"
           }
         }
       }
@@ -303,13 +303,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Set WECHAT_APP_ID and WECHAT_UNIVERSAL_LINK in Info.plist."
+            "value" : "WeChat sign-in isn’t configured yet."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "请在 Info.plist 配置 WECHAT_APP_ID 与 WECHAT_UNIVERSAL_LINK。"
+            "value" : "微信登录尚未配置完成。"
           }
         }
       }
@@ -335,13 +335,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Link WechatOpenSDK to enable WeChat sign in. See docs/AUTH_SETUP.md."
+            "value" : "WeChat sign-in isn’t available in this build."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "请接入 WechatOpenSDK 后使用微信登录，详见 docs/AUTH_SETUP.md。"
+            "value" : "当前版本暂不支持微信登录。"
           }
         }
       }
@@ -1083,6 +1083,57 @@
         }
       }
     },
+    "create.generate.needBoth" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a sentence and at least one word"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "先填写原文，并加入至少一个词"
+          }
+        }
+      }
+    },
+    "create.generate.needSentence" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add the source sentence first"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "先填写原文"
+          }
+        }
+      }
+    },
+    "create.generate.needWords" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add at least one word to learn"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再加入至少一个要学的词"
+          }
+        }
+      }
+    },
     "create.defaultKey" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1342,13 +1393,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A sentence from a book, an essay, a quiet note…"
+            "value" : "Paste a line you want to remember"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "书页、随笔、一句想留下的话…"
+            "value" : "粘贴想留下的句子"
           }
         }
       }
@@ -6497,6 +6548,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "之后读到想留住的句子，随时收录就好。"
+          }
+        }
+      }
+    },
+    "review.home.activityToday" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today you revisited %1$lld words · %2$lld lines"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今天温习了 %1$lld 个词 · %2$lld 句"
+          }
+        }
+      }
+    },
+    "review.home.activityRecent" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last %1$lld days: %2$lld words · %3$lld lines"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "近 %1$lld 天温习了 %2$lld 个词 · %3$lld 句"
           }
         }
       }

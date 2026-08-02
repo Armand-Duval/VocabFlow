@@ -39,6 +39,17 @@ struct CreateCardsView: View {
         !trimmedSentence.isEmpty && !words.isEmpty
     }
 
+    private var generateDisabledHint: String? {
+        guard !canGenerate, !isGenerating else { return nil }
+        if trimmedSentence.isEmpty && words.isEmpty {
+            return L10n.createGenerateNeedBoth
+        }
+        if trimmedSentence.isEmpty {
+            return L10n.createGenerateNeedSentence
+        }
+        return L10n.createGenerateNeedWords
+    }
+
     private var hasPendingDrafts: Bool {
         guard let drafts = shareImport.pendingDrafts else { return false }
         return !drafts.isEmpty
@@ -139,13 +150,6 @@ struct CreateCardsView: View {
                         systemImage: "arrow.down.doc.fill",
                         onDismiss: { self.importBannerMessage = nil }
                     )
-                }
-
-                if sentence.isEmpty && words.isEmpty {
-                    Text(L10n.createLiteraryLead)
-                        .font(AppFont.secondary())
-                        .foregroundStyle(AppColor.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 sourceEditor
@@ -257,21 +261,33 @@ struct CreateCardsView: View {
     }
 
     private var generateFooter: some View {
-        Button(action: generateCards) {
-            HStack(spacing: AppSpacing.xs) {
-                if isGenerating {
-                    ProgressView()
-                        .tint(.white)
-                }
-                Text(isGenerating ? L10n.generating : L10n.createAIGenerate)
+        VStack(spacing: AppSpacing.xs) {
+            if let generateDisabledHint {
+                Text(generateDisabledHint)
+                    .font(AppFont.caption())
+                    .foregroundStyle(AppColor.textTertiary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, AppSpacing.md)
+                    .transition(.opacity)
             }
+
+            Button(action: generateCards) {
+                HStack(spacing: AppSpacing.xs) {
+                    if isGenerating {
+                        ProgressView()
+                            .tint(.white)
+                    }
+                    Text(isGenerating ? L10n.generating : L10n.createAIGenerate)
+                }
+            }
+            .buttonStyle(PrimaryButtonStyle(prominent: true))
+            .disabled(isGenerating || !canGenerate)
+            .padding(.horizontal, AppSpacing.md)
         }
-        .buttonStyle(PrimaryButtonStyle(prominent: true))
-        .disabled(isGenerating || !canGenerate)
-        .padding(.horizontal, AppSpacing.md)
         .padding(.top, AppSpacing.sm)
         .padding(.bottom, AppSpacing.sm)
         .background(AppColor.pageBackground)
+        .animation(.easeInOut(duration: 0.15), value: generateDisabledHint)
     }
 
     private func openShareDraftPreview() {

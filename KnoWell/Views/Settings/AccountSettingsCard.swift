@@ -74,8 +74,6 @@ struct AccountSettingsCard: View {
                 .frame(height: 48)
                 .clipShape(RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous))
                 .disabled(isSigningInApple || isSigningInWeChat)
-            } else {
-                appleSignInUnavailableRow
             }
 
             Button {
@@ -98,27 +96,6 @@ struct AccountSettingsCard: View {
                 ProgressView()
                     .tint(AppColor.accent)
             }
-        }
-    }
-
-    private var appleSignInUnavailableRow: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.xs) {
-            HStack(spacing: AppSpacing.sm) {
-                Image(systemName: "apple.logo")
-                    .font(.body.weight(.semibold))
-                Text(L10n.accountSignInApple)
-                    .fontWeight(.semibold)
-                Spacer(minLength: 0)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
-            .padding(.horizontal, AppSpacing.md)
-            .foregroundStyle(AppColor.textSecondary)
-            .background(AppColor.surfaceMuted, in: RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous))
-
-            Text(L10n.accountAppleUnavailable)
-                .font(AppFont.caption())
-                .foregroundStyle(AppColor.textSecondary)
         }
     }
 

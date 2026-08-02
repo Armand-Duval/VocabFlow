@@ -180,35 +180,71 @@ private struct ReviewHomeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppSpacing.xl) {
-                if dueCount == 0, hasAnyCards {
-                    // Done: quiet stats + literary line as the page focus.
-                    compactHeroStats
-                    doneCTA
-                } else {
-                    heroStats
+                // Zone 1: due / study status
+                dueZone
 
-                    if !hasAnyCards {
-                        emptyCTA
-                    } else {
-                        Button(action: onStartReview) {
-                            Text(L10n.reviewHomeStart)
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(PrimaryButtonStyle(prominent: true))
-                    }
-
-                    quietCaptureRow
-
-                    // Keep「今日一句」visible even when there are cards due.
-                    if let dailyReflection {
-                        literaryReflection(dailyReflection)
-                    }
+                // Zone 2:今日一句 — always visually separated
+                if let dailyReflection {
+                    reflectionSection(dailyReflection)
+                } else if dueCount == 0, hasAnyCards {
+                    reflectionFallbackSection
                 }
             }
             .padding(.horizontal, AppSpacing.md)
             .padding(.top, AppSpacing.lg)
             .padding(.bottom, AppSpacing.lg)
         }
+    }
+
+    private var dueZone: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
+            if !hasAnyCards {
+                compactHeroStats
+                activityTip
+                emptyCTA
+            } else if dueCount == 0 {
+                compactHeroStats
+                activityTip
+                Text(L10n.reviewHomeDoneToday)
+                    .font(AppFont.caption())
+                    .foregroundStyle(AppColor.textTertiary)
+            } else {
+                heroStats
+                activityTip
+                Button(action: onStartReview) {
+                    Text(L10n.reviewHomeStart)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(PrimaryButtonStyle(prominent: true))
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var activityTip: some View {
+        if let tip = activityTipText {
+            Text(tip)
+                .font(AppFont.weak())
+                .foregroundStyle(AppColor.textTertiary)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityLabel(tip)
+        }
+    }
+
+    private var activityTipText: String? {
+        guard hasAnyCards,
+              let summary = StudyActivityStore.recentSummary(),
+              summary.uniqueWords > 0 || summary.uniqueSentences > 0 else {
+            return nil
+        }
+        if summary.spanDays <= 1 {
+            return L10n.reviewHomeActivityToday(summary.uniqueWords, summary.uniqueSentences)
+        }
+        return L10n.reviewHomeActivityRecent(
+            summary.spanDays,
+            summary.uniqueWords,
+            summary.uniqueSentences
+        )
     }
 
     private var compactHeroStats: some View {
@@ -241,7 +277,7 @@ private struct ReviewHomeView: View {
     }
 
     private var heroStats: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+        VStack(alignment: .leading, spacing: 6) {
             Text(L10n.homeStatDue)
                 .font(AppFont.caption())
                 .foregroundStyle(AppColor.textTertiary)
@@ -252,7 +288,7 @@ private struct ReviewHomeView: View {
                 .contentTransition(.numericText())
 
             Text(metaLine)
-                .font(AppFont.caption())
+                .font(AppFont.weak())
                 .foregroundStyle(AppColor.textTertiary)
 
             if plan.hasDeferredCards {
@@ -291,27 +327,31 @@ private struct ReviewHomeView: View {
         }
     }
 
-    /// Done-for-today: the daily line is the companion, not a form card stack.
-    private var doneCTA: some View {
+    private func reflectionSection(_ reflection: DailyReflection) -> some View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
-            Text(L10n.reviewHomeDoneToday)
-                .font(AppFont.caption())
-                .foregroundStyle(AppColor.textTertiary)
-
-            if let dailyReflection {
-                literaryReflection(dailyReflection)
-            } else {
-                Text(L10n.reviewHomeDoneHint)
-                    .font(AppFont.secondary())
-                    .foregroundStyle(AppColor.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+            reflectionDivider
+            literaryReflection(reflection)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var reflectionFallbackSection: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
+            reflectionDivider
+            Text(L10n.reviewHomeDoneHint)
+                .font(AppFont.secondary())
+                .foregroundStyle(AppColor.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private var reflectionDivider: some View {
+        Rectangle()
+            .fill(AppColor.borderSubtle)
+            .frame(height: 1)
     }
 
     private func literaryReflection(_ reflection: DailyReflection) -> some View {
-        VStack(alignment: .leading, spacing: AppSpacing.md) {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
             HStack(spacing: 6) {
                 Text(L10n.reviewDailyTitle)
                     .font(AppFont.weak())
@@ -354,37 +394,6 @@ private struct ReviewHomeView: View {
 
             TextLinkAction(title: L10n.reviewDailyCollect) {
                 onCollectReflection(reflection)
-            }
-        }
-        .padding(.vertical, AppSpacing.sm)
-    }
-
-    private var quietCaptureRow: some View {
-        HStack(spacing: 6) {
-            Text(L10n.createQuickCaptureTitle)
-                .font(AppFont.weak())
-                .foregroundStyle(AppColor.textTertiary)
-
-            Spacer(minLength: AppSpacing.sm)
-
-            TextLinkAction(title: L10n.createQuickCamera) {
-                AppTab.request(.create)
-            }
-
-            Text("·")
-                .font(AppFont.weak())
-                .foregroundStyle(AppColor.textTertiary.opacity(0.45))
-
-            TextLinkAction(title: L10n.createQuickPhoto) {
-                AppTab.request(.create)
-            }
-
-            Text("·")
-                .font(AppFont.weak())
-                .foregroundStyle(AppColor.textTertiary.opacity(0.45))
-
-            TextLinkAction(title: L10n.createQuickPaste) {
-                AppTab.request(.create)
             }
         }
     }

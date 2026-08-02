@@ -22,7 +22,9 @@ enum L10n {
     static var homeRecentDecks: String { tr("home.recentDecks") }
     static var createAIGenerate: String { tr("create.aiGenerate") }
     static var createPastePlaceholder: String { tr("create.pastePlaceholder") }
-    static var createLiteraryLead: String { tr("create.literaryLead") }
+    static var createGenerateNeedSentence: String { tr("create.generate.needSentence") }
+    static var createGenerateNeedWords: String { tr("create.generate.needWords") }
+    static var createGenerateNeedBoth: String { tr("create.generate.needBoth") }
     static var createAddWord: String { tr("create.addWord") }
     static var createManageDeck: String { tr("create.manageDeck") }
 
@@ -178,6 +180,12 @@ enum L10n {
     static var reviewHomeDoneToday: String { tr("review.home.doneToday") }
     static var reviewHomeDoneHint: String { tr("review.home.doneHint") }
     static var reviewHomeDoneOffer: String { tr("review.home.doneOffer") }
+    static func reviewHomeActivityToday(_ words: Int, _ sentences: Int) -> String {
+        tf("review.home.activityToday", words, sentences)
+    }
+    static func reviewHomeActivityRecent(_ days: Int, _ words: Int, _ sentences: Int) -> String {
+        tf("review.home.activityRecent", days, words, sentences)
+    }
     static var reviewDailyTitle: String { tr("review.daily.title") }
     static var reviewDailyFromLibrary: String { tr("review.daily.fromLibrary") }
     static var reviewDailyCollect: String { tr("review.daily.collect") }
