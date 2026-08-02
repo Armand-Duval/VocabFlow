@@ -1,8 +1,11 @@
 import Foundation
 
-/// A gentle daily sentence for the review-home “done” state.
+/// A gentle daily sentence for the review home — original text first, then translation.
 struct DailyReflection: Equatable {
+    /// Original wording the reader should see first (any language / classical Chinese).
     let sentence: String
+    /// Chinese translation / vernacular when `sentence` is not already modern Chinese.
+    let translation: String?
     let source: String?
     /// Optional short seasonal / cultural note (e.g. “立秋将近”), never required.
     let occasion: String?
@@ -12,7 +15,7 @@ struct DailyReflection: Equatable {
 
 /// Timely line of the day: AI once per day (cached), curated fallback — never from the user's deck.
 enum DailyReflectionService {
-    private static let cacheDefaultsKey = "knowell.dailyReflection.v1"
+    private static let cacheDefaultsKey = "knowell.dailyReflection.v4"
     private static var inFlight: Task<DailyReflection, Never>?
     private static var inFlightDayKey: String?
 
@@ -20,7 +23,10 @@ enum DailyReflectionService {
     static func cachedOrCurated(for day: Date = .now) -> DailyReflection {
         let key = dayKey(day)
         if let cached = loadCache(), cached.dayKey == key {
-            return cached.asReflection(isAI: true)
+            let reflection = cached.asReflection(isAI: true)
+            if isWellFormed(reflection) {
+                return reflection
+            }
         }
         return curated(for: day)
     }
@@ -28,8 +34,12 @@ enum DailyReflectionService {
     /// Fetch a timely AI line at most once per calendar day; falls back to curated on failure.
     static func refreshIfNeeded(for day: Date = .now) async -> DailyReflection {
         let key = dayKey(day)
+        let fallback = curated(for: day)
         if let cached = loadCache(), cached.dayKey == key {
-            return cached.asReflection(isAI: true)
+            let reflection = cached.asReflection(isAI: true)
+            if isWellFormed(reflection) {
+                return reflection
+            }
         }
 
         if let inFlight, inFlightDayKey == key {
@@ -38,19 +48,23 @@ enum DailyReflectionService {
 
         let task = Task<DailyReflection, Never> {
             guard APISettings.canUseAI else {
-                return curated(for: day)
+                return fallback
             }
             do {
                 let ai = try await fetchAIReflection(for: day)
+                guard isWellFormed(ai) else {
+                    return fallback
+                }
                 saveCache(CachedReflection(
                     dayKey: key,
                     sentence: ai.sentence,
+                    translation: ai.translation,
                     source: ai.source,
                     occasion: ai.occasion
                 ))
                 return ai
             } catch {
-                return curated(for: day)
+                return fallback
             }
         }
         inFlight = task
@@ -86,22 +100,27 @@ enum DailyReflectionService {
         只返回 JSON，不要 markdown。
         格式：
         {
-          "sentence": "一句优美或有哲理的完整句子（中文或英文皆可，偏短，不超过 80 字）",
+          "sentence": "原文（作品本来的语言与写法，原汁原味；可以是外文、文言，也可以是现代汉语）",
+          "translation": "中文翻译或白话；仅当原文不是现代汉语时填写；原文已是现代汉语则必须空字符串",
           "source": "可核对的出处（书名/篇章/作者；不确定必须空字符串）",
           "occasion": "与今日相关的极短缘由（如节气、季节、常见节日；没有则空字符串，最多 12 字）"
         }
         规则：
-        1. 句子要适合安静阅读，有回味，不要鸡汤口号、不要催学习、不要广告
-        2. 可轻应景：日期、季节、节气、广为人知的节日；不要编造冷门「历史上的今天」或虚假纪念日
-        3. source 必须真实可指认；无把握就返回空字符串，禁止编造书名/作者
-        4. 不要输出多句，不要解释
+        1. sentence 必须是原文本身，不要用翻译顶替原文
+        2. 外文/文言：sentence=原文，translation=中文；现代汉语原文：sentence=原文，translation 留空
+        3. 禁止：把外文译成中文后只把中文放进 sentence（丢掉外文原文）
+        4. 不要对调字段；读者先看到 sentence，再看到 translation
+        5. 句子要适合安静阅读，有回味，不要鸡汤口号、不要催学习、不要广告；原文偏短（不超过约 120 字符）
+        6. 可轻应景：日期、季节、节气、广为人知的节日；不要编造冷门「历史上的今天」或虚假纪念日
+        7. source 必须真实可指认；无把握就返回空字符串，禁止编造书名/作者
+        8. 不要输出多句，不要解释
         """
 
         let userPrompt = """
         今天：\(dateText)
         大致季节：\(season)
         用户地区标识：\(localeID)
-        请给出一句合时宜的今日一句。
+        请给出一句合时宜的今日一句：保留原汁原味的原文；需要时再给中文翻译。
         """
 
         let body: [String: Any] = [
@@ -138,20 +157,72 @@ enum DailyReflectionService {
             throw KimiCardGeneratorError.parseError("empty")
         }
         let decoded = try JSONDecoder().decode(AIReflectionDTO.self, from: data)
-        let sentence = decoded.sentence.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !sentence.isEmpty, sentence.count <= 200 else {
+        var sentence = decoded.sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !sentence.isEmpty, sentence.count <= 240 else {
             throw KimiCardGeneratorError.parseError("bad sentence")
         }
+        var translation = decoded.translation?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if translation?.isEmpty == true {
+            translation = nil
+        }
+
+        // Model sometimes swaps fields — keep authentic original in `sentence`.
+        let normalized = normalizeOriginalFirst(sentence: sentence, translation: translation)
+        sentence = normalized.sentence
+        translation = normalized.translation
+
+        // Modern Chinese original should not carry a redundant "translation".
+        if latinLetterCount(sentence) < 4,
+           hanCount(sentence) >= 4,
+           let existingTranslation = translation,
+           latinLetterCount(existingTranslation) < 4,
+           hanCount(existingTranslation) >= 4,
+           existingTranslation == sentence {
+            translation = nil
+        }
+
         let source = decoded.source?
             .trimmingCharacters(in: .whitespacesAndNewlines)
         let occasion = decoded.occasion?
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        return DailyReflection(
+        let reflection = DailyReflection(
             sentence: sentence,
+            translation: translation,
             source: (source?.isEmpty == false) ? source : nil,
             occasion: (occasion?.isEmpty == false) ? String(occasion!.prefix(16)) : nil,
             isAI: true
         )
+        guard isWellFormed(reflection) else {
+            throw KimiCardGeneratorError.parseError("empty-original")
+        }
+        return reflection
+    }
+
+    /// Put authentic original in `sentence`; Chinese rendering in `translation` when needed.
+    private static func normalizeOriginalFirst(sentence: String, translation: String?) -> (sentence: String, translation: String?) {
+        guard let translation, !translation.isEmpty else {
+            return (sentence, nil)
+        }
+        let sentenceLatin = latinLetterCount(sentence)
+        let translationLatin = latinLetterCount(translation)
+        // Chinese parked in sentence, foreign parked in translation → swap back to original-first.
+        if sentenceLatin < 4, translationLatin >= 4 {
+            return (translation, sentence)
+        }
+        return (sentence, translation)
+    }
+
+    private static func isWellFormed(_ reflection: DailyReflection) -> Bool {
+        !reflection.sentence.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private static func latinLetterCount(_ text: String) -> Int {
+        text.unicodeScalars.filter { CharacterSet.letters.contains($0) && $0.isASCII }.count
+    }
+
+    private static func hanCount(_ text: String) -> Int {
+        text.unicodeScalars.filter { (0x4E00...0x9FFF).contains($0.value) }.count
     }
 
     private static func extractJSONObject(from content: String) -> String {
@@ -189,16 +260,24 @@ enum DailyReflectionService {
     private struct CachedReflection: Codable {
         let dayKey: String
         let sentence: String
+        let translation: String?
         let source: String?
         let occasion: String?
 
         func asReflection(isAI: Bool) -> DailyReflection {
-            DailyReflection(sentence: sentence, source: source, occasion: occasion, isAI: isAI)
+            DailyReflection(
+                sentence: sentence,
+                translation: translation,
+                source: source,
+                occasion: occasion,
+                isAI: isAI
+            )
         }
     }
 
     private struct AIReflectionDTO: Decodable {
         let sentence: String
+        let translation: String?
         let source: String?
         let occasion: String?
     }
@@ -223,86 +302,97 @@ enum DailyReflectionService {
     private static func curated(for day: Date) -> DailyReflection {
         let comps = Calendar.current.dateComponents([.year, .month, .day], from: day)
         let seed = abs((comps.year ?? 0) * 372 + (comps.month ?? 0) * 31 + (comps.day ?? 0))
-        var item = curatedReflections[seed % curatedReflections.count]
-        // Curated entries are stored with isAI false.
-        item = DailyReflection(
+        let item = curatedReflections[seed % curatedReflections.count]
+        return DailyReflection(
             sentence: item.sentence,
+            translation: item.translation,
             source: item.source,
             occasion: item.occasion,
             isAI: false
         )
-        return item
     }
 
     private static let curatedReflections: [DailyReflection] = [
         DailyReflection(
             sentence: "知之为知之，不知为不知，是知也。",
+            translation: "知道就是知道，不知道就是不知道，这才是真正的知。",
             source: "《论语·为政》",
             occasion: nil,
             isAI: false
         ),
         DailyReflection(
             sentence: "吾生也有涯，而知也无涯。",
+            translation: "生命有尽头，而求知没有尽头。",
             source: "《庄子·养生主》",
             occasion: nil,
             isAI: false
         ),
         DailyReflection(
             sentence: "路漫漫其修远兮，吾将上下而求索。",
+            translation: "道路漫长又遥远，我将上上下下地追寻。",
             source: "屈原《离骚》",
             occasion: nil,
             isAI: false
         ),
         DailyReflection(
             sentence: "博学之，审问之，慎思之，明辨之，笃行之。",
+            translation: "广泛地学习，详细地询问，慎重地思考，清楚地辨别，切实地实行。",
             source: "《中庸》",
             occasion: nil,
             isAI: false
         ),
         DailyReflection(
             sentence: "学而不思则罔，思而不学则殆。",
+            translation: "只学习不思考会迷茫，只思考不学习会危险。",
             source: "《论语·为政》",
             occasion: nil,
             isAI: false
         ),
         DailyReflection(
             sentence: "静以修身，俭以养德。",
+            translation: "以宁静修养自身，以节俭涵养品德。",
             source: "诸葛亮《诫子书》",
             occasion: nil,
             isAI: false
         ),
         DailyReflection(
             sentence: "The only true wisdom is in knowing you know nothing.",
+            translation: "真正的智慧，在于知道自己一无所知。",
             source: "Socrates",
             occasion: nil,
             isAI: false
         ),
         DailyReflection(
             sentence: "We are what we repeatedly do. Excellence, then, is not an act, but a habit.",
+            translation: "我们反复做的事成就了我们。因此卓越不是一次举动，而是一种习惯。",
             source: "Will Durant (on Aristotle)",
             occasion: nil,
             isAI: false
         ),
         DailyReflection(
             sentence: "The unexamined life is not worth living.",
+            translation: "未经省察的人生不值得过。",
             source: "Plato, Apology",
             occasion: nil,
             isAI: false
         ),
         DailyReflection(
             sentence: "The important thing is not to stop questioning.",
+            translation: "重要的是不要停止提问。",
             source: "Albert Einstein",
             occasion: nil,
             isAI: false
         ),
         DailyReflection(
             sentence: "Reading is to the mind what exercise is to the body.",
+            translation: "阅读之于心灵，犹如运动之于身体。",
             source: "Joseph Addison",
             occasion: nil,
             isAI: false
         ),
         DailyReflection(
             sentence: "Someone's sitting in the shade today because someone planted a tree a long time ago.",
+            translation: "有人今天能坐在树荫下，是因为很久以前有人栽下了一棵树。",
             source: "Warren Buffett",
             occasion: nil,
             isAI: false

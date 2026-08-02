@@ -1,12 +1,12 @@
 import SwiftUI
 
 enum AppColor {
-    // Ink & Sage — warm paper + deep sage accent (#1E6B5C)
-    private static let sageLight = Color(red: 0.118, green: 0.420, blue: 0.361)
-    private static let sageDark = Color(red: 0.28, green: 0.62, blue: 0.52)
+    // Ink & 黛青 — warm paper + ink teal A (#1A5A68), distinct from bright exam-app greens
+    private static let accentLight = Color(red: 0.102, green: 0.353, blue: 0.408)
+    private static let accentDark = Color(red: 0.290, green: 0.604, blue: 0.667)
 
-    static var accent: Color { Color.adaptive(light: sageLight, dark: sageDark) }
-    static var accentStrong: Color { Color.adaptive(light: sageLight, dark: sageDark) }
+    static var accent: Color { Color.adaptive(light: accentLight, dark: accentDark) }
+    static var accentStrong: Color { Color.adaptive(light: accentLight, dark: accentDark) }
     // Rating-only — not used for status chips
     static var warning: Color { Color(red: 0.722, green: 0.537, blue: 0.239) }
     static var success: Color { Color(red: 0.42, green: 0.62, blue: 0.48) }
@@ -193,7 +193,7 @@ struct PrimaryButtonStyle: ButtonStyle {
     }
 }
 
-/// Inline text action — Ink & Sage quick links (no icon circles).
+/// Inline text action — paper UI quick links (no icon circles).
 struct TextLinkAction: View {
     let title: String
     let action: () -> Void

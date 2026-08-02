@@ -149,9 +149,13 @@ struct ReviewView: View {
         }
 
         Task {
+            let previous = dailyReflection
             let refreshed = await DailyReflectionService.refreshIfNeeded()
             await MainActor.run {
-                dailyReflection = refreshed
+                // Avoid flashing a foreign curated line then replacing with Chinese-only AI.
+                if refreshed != previous {
+                    dailyReflection = refreshed
+                }
             }
         }
     }
@@ -330,6 +334,16 @@ private struct ReviewHomeView: View {
                 .lineSpacing(8)
                 .fixedSize(horizontal: false, vertical: true)
                 .textSelection(.enabled)
+
+            if let translation = reflection.translation?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !translation.isEmpty {
+                Text(translation)
+                    .font(AppFont.secondary())
+                    .foregroundStyle(AppColor.textSecondary)
+                    .lineSpacing(4)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .textSelection(.enabled)
+            }
 
             if let source = reflection.source?.trimmingCharacters(in: .whitespacesAndNewlines),
                !source.isEmpty {

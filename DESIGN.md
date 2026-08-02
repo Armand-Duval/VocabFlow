@@ -1,7 +1,7 @@
 # KnoWell Design System
 
 > 工程代号 **KnoWell** · 品牌 **致知 (KnoWell)**  
-> **Calm Study UI** — 三 Tab · Ink & Sage · 纸感极简  
+> **Calm Study UI** — 三 Tab · Ink & 黛青 · 纸感极简  
 > UX 全文见 **[docs/UX_SPEC.md](docs/UX_SPEC.md)**
 
 ---
@@ -57,7 +57,7 @@
 | **复习优先** | 打开 App 先看到「今天要学什么」 |
 | **内容为王** | 一屏一个焦点：词 → 答案 → 评分 |
 | **卡片即单元** | Deck、统计、配额、设置模块用 `AppSurfaceCard` |
-| **品牌色克制** | Teal 用于强调，不全屏铺满 |
+| **品牌色克制** | 黛青用于强调，不全屏铺满 |
 | **原生优先** | SF 字体、HIG 导航、系统动画 |
 | **语义清晰** | 红/橙/绿仅用于学习反馈 |
 | **开放工具** | 专业工具气质，非儿童游戏 / 非封闭运营 |
@@ -68,7 +68,7 @@
 
 | Token | Light | 用途 |
 |-------|-------|------|
-| `accent` / `accentStrong` | `#1E6B5C` Sage | 主色、CTA、选中 |
+| `accent` / `accentStrong` | `#1A5A68` 黛青 A | 主色、CTA、选中 |
 | `pageBackground` | `#F6F5F2` | 暖纸白页面底 |
 | `surface` | `#FFFFFF` | 卡片/输入白面 |
 | `surfaceMuted` | `#F1F0EA` | 次级纸色块 |
