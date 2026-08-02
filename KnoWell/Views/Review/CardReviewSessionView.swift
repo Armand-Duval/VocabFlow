@@ -1,6 +1,9 @@
 import SwiftUI
 import SwiftData
 import Combine
+#if canImport(UIKit)
+import UIKit
+#endif
 
 struct CardReviewSessionView: View {
     @Environment(\.dismiss) private var dismiss
@@ -456,6 +459,7 @@ struct CardReviewSessionView: View {
     }
 
     private func submit(rating: ReviewRating, for card: FlashCard) {
+        playRatingHaptic(rating)
         let preview = ReviewScheduler.preview(rating: rating, for: card, now: now)
         ReviewScheduler.apply(rating: rating, to: card, now: now)
         StudyStreakStore.recordStudy(now: now)
@@ -485,12 +489,32 @@ struct CardReviewSessionView: View {
         }
     }
 
+    private func playRatingHaptic(_ rating: ReviewRating) {
+        #if canImport(UIKit)
+        let style: UIImpactFeedbackGenerator.FeedbackStyle
+        switch rating {
+        case .again, .hard:
+            style = .medium
+        case .good, .easy:
+            style = .light
+        }
+        UIImpactFeedbackGenerator(style: style).impactOccurred()
+        #endif
+    }
+
     private func syncSessionQueue(with cards: [FlashCard]) {
         let pendingIDs = Set(pendingLearning.map(\.card.id))
-        let existingIDs = Set(sessionQueue.map(\.id))
 
+        if sessionQueue.isEmpty {
+            let initial = cards.filter { !pendingIDs.contains($0.id) }
+            sessionQueue = ReviewQueueBuilder.shuffledAvoidingAdjacentSameWord(initial)
+            currentIndex = 0
+            return
+        }
+
+        let existingIDs = Set(sessionQueue.map(\.id))
         for card in cards where !pendingIDs.contains(card.id) && !existingIDs.contains(card.id) {
-            sessionQueue.append(card)
+            insertAvoidingSameWord(card)
         }
 
         if currentIndex >= sessionQueue.count {
@@ -499,16 +523,41 @@ struct CardReviewSessionView: View {
     }
 
     private func promoteReadyLearningCards() {
-        let ready = pendingLearning.filter { $0.availableAt <= now }
+        let ready = pendingLearning.filter { $0.availableAt <= now }.map(\.card)
         guard !ready.isEmpty else { return }
 
         pendingLearning.removeAll { $0.availableAt <= now }
-        sessionQueue.append(contentsOf: ready.map(\.card))
+        for card in ReviewQueueBuilder.shuffledAvoidingAdjacentSameWord(ready) {
+            insertAvoidingSameWord(card)
+        }
 
         if currentIndex >= sessionQueue.count {
             currentIndex = max(0, sessionQueue.count - 1)
         }
         showBack = false
+    }
+
+    /// Insert after the current card when possible, skipping spots that would put
+    /// the same word or sentence back-to-back.
+    private func insertAvoidingSameWord(_ card: FlashCard) {
+        if sessionQueue.isEmpty {
+            sessionQueue.append(card)
+            return
+        }
+
+        let start = min(currentIndex + 1, sessionQueue.count)
+
+        if let index = (start...sessionQueue.count).first(where: { insertionIndex in
+            let beforeOK = insertionIndex == 0
+                || !ReviewQueueBuilder.sharesStudyContext(sessionQueue[insertionIndex - 1], with: card)
+            let afterOK = insertionIndex == sessionQueue.count
+                || !ReviewQueueBuilder.sharesStudyContext(sessionQueue[insertionIndex], with: card)
+            return beforeOK && afterOK
+        }) {
+            sessionQueue.insert(card, at: index)
+        } else {
+            sessionQueue.append(card)
+        }
     }
 }
 

@@ -45,9 +45,10 @@ enum ReviewQueueBuilder {
 
         let selectedNew = Array(dueNew.prefix(newRemaining))
         let selectedReview = Array(dueReview.prefix(reviewRemaining))
+        let sessionCards = shuffledAvoidingAdjacentSameWord(selectedNew + selectedReview)
 
         return ReviewQueuePlan(
-            sessionCards: selectedNew + selectedReview,
+            sessionCards: sessionCards,
             newStudiedToday: ReviewSettings.newStudiedToday,
             reviewStudiedToday: ReviewSettings.reviewStudiedToday,
             newLimit: dailyNewLimit,
@@ -70,6 +71,53 @@ enum ReviewQueueBuilder {
             dailyReviewLimit: dailyReviewLimit,
             now: now
         ).sessionCards.count
+    }
+
+    /// Shuffle, then greedily avoid consecutive cards that share the same word
+    /// or the same sentence (multi-word extracts from one line).
+    /// Unavoidable only when every remaining card collides with the previous one.
+    static func shuffledAvoidingAdjacentSameWord(_ cards: [FlashCard]) -> [FlashCard] {
+        guard cards.count > 1 else { return cards }
+
+        var pool = cards.shuffled()
+        var result: [FlashCard] = []
+        result.reserveCapacity(pool.count)
+
+        while !pool.isEmpty {
+            let previous = result.last
+            if let previous,
+               let index = pool.firstIndex(where: { !sharesStudyContext($0, with: previous) }) {
+                result.append(pool.remove(at: index))
+            } else {
+                result.append(pool.removeFirst())
+            }
+        }
+        return result
+    }
+
+    static func wordKey(for card: FlashCard) -> String {
+        wordKey(card)
+    }
+
+    static func sharesStudyContext(_ lhs: FlashCard, with rhs: FlashCard) -> Bool {
+        if wordKey(lhs) == wordKey(rhs) { return true }
+        guard let leftSentence = sentenceKey(lhs), let rightSentence = sentenceKey(rhs) else {
+            return false
+        }
+        return leftSentence == rightSentence
+    }
+
+    private static func wordKey(_ card: FlashCard) -> String {
+        card.word
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+    }
+
+    private static func sentenceKey(_ card: FlashCard) -> String? {
+        let sentence = card.sentence
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+        return sentence.isEmpty ? nil : sentence
     }
 
     private static func remainingQuota(limit: Int, studied: Int) -> Int {
