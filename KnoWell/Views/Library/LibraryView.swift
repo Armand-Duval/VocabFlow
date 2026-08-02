@@ -325,8 +325,10 @@ private struct LibraryGroupedList: View {
     var body: some View {
         Group {
             if isLoadingGroups && groups.isEmpty && flatCardIDs.isEmpty {
-                ProgressView(L10n.deckLoading)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                ProgressView {
+                    Text(L10n.deckLoading)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if groups.isEmpty && flatCardIDs.isEmpty {
                 AppEmptyState(
                     title: L10n.libraryNoResultsTitle,
@@ -334,116 +336,132 @@ private struct LibraryGroupedList: View {
                     systemImage: "magnifyingglass"
                 )
             } else {
-                List {
-                    if useFlatList {
-                        Section {
-                            Text(L10n.libraryFlatListHint)
-                                .font(AppFont.caption())
-                                .foregroundStyle(.secondary)
-                        }
-
-                        ForEach(flatCardIDs.prefix(visibleItemCount), id: \.self) { cardID in
-                            if let card = cardsByID[cardID] {
-                                NavigationLink {
-                                    FlashCardDetailView(card: card)
-                                } label: {
-                                    LibraryCardRow(
-                                        card: card,
-                                        showsDeckName: filterDeckID == nil,
-                                        searchHighlight: searchText
-                                    )
-                                }
-                            }
-                        }
-                        .onDelete { offsets in
-                            deleteFlatCards(at: offsets)
-                        }
-                    } else {
-                        if let filterDeckID, let deck = decks.first(where: { $0.id == filterDeckID }), !dueCards.isEmpty {
-                            Section {
-                                NavigationLink {
-                                    CardReviewSessionView(cards: dueCards, dismissWhenComplete: true)
-                                } label: {
-                                    Label(L10n.libraryReviewDeck(deck.name, count: dueCards.count), systemImage: "brain.head.profile")
-                                        .font(AppFont.secondary().weight(.medium))
-                                        .foregroundStyle(AppColor.accent)
-                                }
-                            }
-                        }
-
-                        ForEach(groups.prefix(visibleItemCount)) { group in
-                            Section {
-                                ForEach(group.cardIDs, id: \.self) { cardID in
-                                    if let card = cardsByID[cardID] {
-                                        NavigationLink {
-                                            FlashCardDetailView(card: card)
-                                        } label: {
-                                            LibraryCardRow(
-                                        card: card,
-                                        showsDeckName: filterDeckID == nil,
-                                        searchHighlight: searchText
-                                    )
-                                        }
-                                    }
-                                }
-                                .onDelete { offsets in
-                                    deleteCards(in: group, at: offsets)
-                                }
-
-                                if group.cardIDs.count > 1,
-                                   let reviewCards = resolvedCards(for: group.cardIDs) {
-                                    NavigationLink {
-                                        CardReviewSessionView(cards: reviewCards, dismissWhenComplete: true)
-                                    } label: {
-                                        Label(
-                                            L10n.reviewAll(group.word, count: group.cardIDs.count),
-                                            systemImage: "brain.head.profile"
-                                        )
-                                        .font(AppFont.secondary().weight(.medium))
-                                        .foregroundStyle(AppColor.accent)
-                                    }
-                                }
-                            } header: {
-                                AppSectionHeader(title: group.word)
-                            }
-                        }
-                    }
-
-                    if visibleItemCount < currentTotalItems {
-                        Section {
-                            HStack {
-                                Spacer()
-                                ProgressView()
-                                Spacer()
-                            }
-                            .task {
-                                visibleItemCount = min(
-                                    visibleItemCount + LibraryCardGrouper.groupPageSize,
-                                    currentTotalItems
-                                )
-                            }
-                        }
-                    }
-                }
-                .listStyle(.insetGrouped)
-                .listSectionSpacing(AppSpacing.md)
-                .appListChrome()
-                .scrollContentBackground(.hidden)
-                .appPageBackground()
-                .animation(.none, value: filterDeckID)
-                .overlay(alignment: .top) {
-                    if isLoadingGroups {
-                        ProgressView()
-                            .tint(AppColor.accent)
-                            .padding(8)
-                            .background(AppColor.surface, in: Capsule())
-                            .padding(.top, 8)
-                    }
-                }
+                libraryList
             }
         }
         .task(id: refreshToken) {
             await rebuildGroups()
+        }
+    }
+
+    private var libraryList: some View {
+        List {
+            if useFlatList {
+                flatListContent
+            } else {
+                groupedListContent
+            }
+
+            if visibleItemCount < currentTotalItems {
+                Section {
+                    HStack {
+                        Spacer()
+                        ProgressView()
+                        Spacer()
+                    }
+                    .task {
+                        visibleItemCount = min(
+                            visibleItemCount + LibraryCardGrouper.groupPageSize,
+                            currentTotalItems
+                        )
+                    }
+                }
+            }
+        }
+        .listSectionSpacing(AppSpacing.md)
+        .appListSurface()
+        .animation(.none, value: filterDeckID)
+        .overlay(alignment: .top) {
+            if isLoadingGroups {
+                ProgressView()
+                    .tint(AppColor.accent)
+                    .padding(8)
+                    .background(AppColor.surface, in: Capsule())
+                    .padding(.top, 8)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var flatListContent: some View {
+        Section {
+            Text(L10n.libraryFlatListHint)
+                .font(AppFont.caption())
+                .foregroundStyle(.secondary)
+        }
+
+        ForEach(flatCardIDs.prefix(visibleItemCount), id: \.self) { cardID in
+            if let card = cardsByID[cardID] {
+                NavigationLink {
+                    FlashCardDetailView(card: card)
+                } label: {
+                    LibraryCardRow(
+                        card: card,
+                        showsDeckName: filterDeckID == nil,
+                        searchHighlight: searchText
+                    )
+                }
+            }
+        }
+        .onDelete { offsets in
+            deleteFlatCards(at: offsets)
+        }
+    }
+
+    @ViewBuilder
+    private var groupedListContent: some View {
+        if let filterDeckID, let deck = decks.first(where: { $0.id == filterDeckID }), !dueCards.isEmpty {
+            Section {
+                NavigationLink {
+                    CardReviewSessionView(cards: dueCards, dismissWhenComplete: true)
+                } label: {
+                    Label {
+                        Text(L10n.libraryReviewDeck(deck.name, count: dueCards.count))
+                            .font(AppFont.secondary().weight(.medium))
+                    } icon: {
+                        Image(systemName: "brain.head.profile")
+                    }
+                }
+                .tint(AppColor.accent)
+            }
+        }
+
+        ForEach(groups.prefix(visibleItemCount)) { group in
+            Section {
+                ForEach(group.cardIDs, id: \.self) { cardID in
+                    if let card = cardsByID[cardID] {
+                        NavigationLink {
+                            FlashCardDetailView(card: card)
+                        } label: {
+                            LibraryCardRow(
+                                card: card,
+                                showsDeckName: filterDeckID == nil,
+                                searchHighlight: searchText
+                            )
+                        }
+                    }
+                }
+                .onDelete { offsets in
+                    deleteCards(in: group, at: offsets)
+                }
+
+                if group.cardIDs.count > 1,
+                   let reviewCards = resolvedCards(for: group.cardIDs) {
+                    NavigationLink {
+                        CardReviewSessionView(cards: reviewCards, dismissWhenComplete: true)
+                    } label: {
+                        Label {
+                            Text(L10n.reviewAll(group.word, count: group.cardIDs.count))
+                                .font(AppFont.secondary().weight(.medium))
+                        } icon: {
+                            Image(systemName: "brain.head.profile")
+                        }
+                    }
+                    .tint(AppColor.accent)
+                }
+            } header: {
+                AppSectionHeader(title: group.word)
+            }
         }
     }
 
