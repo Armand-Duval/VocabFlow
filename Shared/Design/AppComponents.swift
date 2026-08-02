@@ -85,6 +85,14 @@ enum AppColor {
         )
     }
 
+    /// Softest ink — quota / tip / footnotes (below tertiary).
+    static var textMuted: Color {
+        Color.adaptive(
+            light: Color(red: 0.635, green: 0.616, blue: 0.588),
+            dark: Color(red: 0.48, green: 0.50, blue: 0.54)
+        )
+    }
+
     static var navTitle: Color { textSecondary }
     static var navTitleSecondary: Color { textBody }
 
@@ -119,6 +127,8 @@ enum AppSpacing {
     static let md: CGFloat = 16
     static let lg: CGFloat = 20
     static let xl: CGFloat = 24
+    /// Between major page zones (due ↔ 今日一句).
+    static let section: CGFloat = 28
     static let formSection: CGFloat = 16
 }
 
@@ -173,7 +183,7 @@ struct PrimaryButtonStyle: ButtonStyle {
             .font(.system(size: 16, weight: .semibold))
             .frame(maxWidth: .infinity)
             .padding(.vertical, prominent ? 16 : 12)
-            .foregroundStyle(isEnabled ? Color.white : AppColor.textTertiary)
+            .foregroundStyle(isEnabled ? Color.white : AppColor.accent.opacity(0.45))
             .background(
                 RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
                     .fill(backgroundColor(isPressed: configuration.isPressed))
@@ -184,10 +194,8 @@ struct PrimaryButtonStyle: ButtonStyle {
 
     private func backgroundColor(isPressed: Bool) -> Color {
         guard isEnabled else {
-            return Color.adaptive(
-                light: Color(red: 0.90, green: 0.91, blue: 0.89),
-                dark: Color.white.opacity(0.10)
-            )
+            // Quiet accent wash — still reads disabled, not flat cement gray.
+            return AppColor.accentBackground(0.10)
         }
         return AppColor.accentStrong.opacity(isPressed ? 0.88 : 1)
     }

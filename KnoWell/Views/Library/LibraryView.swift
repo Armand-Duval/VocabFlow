@@ -237,7 +237,8 @@ struct LibraryView: View {
                         }
                     }
                     .padding(.horizontal, AppSpacing.md)
-                    .padding(.vertical, AppSpacing.xs)
+                    .padding(.top, AppSpacing.xs)
+                    .padding(.bottom, AppSpacing.sm)
                 }
                 .background(AppColor.pageBackground)
                 .onAppear {
@@ -364,6 +365,8 @@ private struct LibraryGroupedList: View {
                                     CardReviewSessionView(cards: dueCards, dismissWhenComplete: true)
                                 } label: {
                                     Label(L10n.libraryReviewDeck(deck.name, count: dueCards.count), systemImage: "brain.head.profile")
+                                        .font(AppFont.secondary().weight(.medium))
+                                        .foregroundStyle(AppColor.accent)
                                 }
                             }
                         }
@@ -396,7 +399,8 @@ private struct LibraryGroupedList: View {
                                             L10n.reviewAll(group.word, count: group.cardIDs.count),
                                             systemImage: "brain.head.profile"
                                         )
-                                        .font(AppFont.secondary())
+                                        .font(AppFont.secondary().weight(.medium))
+                                        .foregroundStyle(AppColor.accent)
                                     }
                                 }
                             } header: {
@@ -422,6 +426,8 @@ private struct LibraryGroupedList: View {
                     }
                 }
                 .listStyle(.insetGrouped)
+                .listSectionSpacing(AppSpacing.md)
+                .appListChrome()
                 .scrollContentBackground(.hidden)
                 .appPageBackground()
                 .animation(.none, value: filterDeckID)
@@ -574,7 +580,7 @@ private struct LibraryCardRow: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: AppSpacing.sm) {
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 4) {
                 HighlightedText(
                     text: card.word,
                     query: searchHighlight,
@@ -590,11 +596,11 @@ private struct LibraryCardRow: View {
                         font: AppFont.caption(),
                         lineLimit: 1
                     )
-                    .foregroundStyle(AppColor.textSecondary)
+                    .foregroundStyle(AppColor.textTertiary)
                 } else if showsDeckName, let deckName = card.deck?.name {
                     Text(deckName)
-                        .font(AppFont.caption())
-                        .foregroundStyle(AppColor.textSecondary)
+                        .font(AppFont.helper())
+                        .foregroundStyle(AppColor.textMuted)
                         .lineLimit(1)
                 }
             }
@@ -603,8 +609,8 @@ private struct LibraryCardRow: View {
 
             LibraryCardStatusChip(card: card)
         }
-        .padding(.vertical, 6)
-        .listRowInsets(EdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16))
+        .padding(.vertical, 4)
+        .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
         .listRowSeparatorTint(AppColor.borderSubtle)
     }
 

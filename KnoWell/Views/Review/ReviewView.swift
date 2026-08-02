@@ -182,19 +182,26 @@ private struct ReviewHomeView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: AppSpacing.xl) {
-                // Zone 1: due / study status
-                dueZone
+            VStack(alignment: .leading, spacing: AppSpacing.section) {
+                AppSurfaceCard(padding: AppSpacing.md) {
+                    dueZone
+                }
 
-                // Zone 2:今日一句 — always visually separated
                 if let dailyReflection {
-                    reflectionSection(dailyReflection)
+                    AppSurfaceCard(padding: AppSpacing.md) {
+                        literaryReflection(dailyReflection)
+                    }
                 } else if dueCount == 0, hasAnyCards {
-                    reflectionFallbackSection
+                    AppSurfaceCard(padding: AppSpacing.md) {
+                        Text(L10n.reviewHomeDoneHint)
+                            .font(AppFont.secondary())
+                            .foregroundStyle(AppColor.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
             }
             .padding(.horizontal, AppSpacing.md)
-            .padding(.top, AppSpacing.lg)
+            .padding(.top, AppSpacing.md)
             .padding(.bottom, AppSpacing.lg)
         }
     }
@@ -215,8 +222,8 @@ private struct ReviewHomeView: View {
                 if plan.hasDeferredCards {
                     Button(action: onShowQuota) {
                         Text(L10n.reviewQuotaReachedMessage(plan.deferredTotalCount))
-                            .font(AppFont.weak())
-                            .foregroundStyle(AppColor.textTertiary.opacity(0.75))
+                            .font(AppFont.helper())
+                            .foregroundStyle(AppColor.textMuted)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .buttonStyle(.plain)
@@ -255,8 +262,8 @@ private struct ReviewHomeView: View {
             }
 
             Text(metaLine)
-                .font(AppFont.weak())
-                .foregroundStyle(AppColor.textTertiary.opacity(0.9))
+                .font(AppFont.helper())
+                .foregroundStyle(AppColor.textMuted)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -275,8 +282,8 @@ private struct ReviewHomeView: View {
             if plan.hasDeferredCards {
                 Button(action: onShowQuota) {
                     Text(L10n.reviewQuotaReachedMessage(plan.deferredTotalCount))
-                        .font(AppFont.weak())
-                        .foregroundStyle(AppColor.textTertiary.opacity(0.75))
+                        .font(AppFont.helper())
+                        .foregroundStyle(AppColor.textMuted)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .buttonStyle(.plain)
@@ -286,8 +293,8 @@ private struct ReviewHomeView: View {
 
     private func homeTip(_ tip: String) -> some View {
         Text(tip)
-            .font(AppFont.weak())
-            .foregroundStyle(AppColor.textTertiary)
+            .font(AppFont.helper())
+            .foregroundStyle(AppColor.textMuted)
             .fixedSize(horizontal: false, vertical: true)
             .accessibilityLabel(tip)
     }
@@ -334,44 +341,20 @@ private struct ReviewHomeView: View {
         }
     }
 
-    private func reflectionSection(_ reflection: DailyReflection) -> some View {
-        VStack(alignment: .leading, spacing: AppSpacing.md) {
-            reflectionDivider
-                .padding(.top, dueCount == 0 && hasAnyCards ? AppSpacing.sm : 0)
-            literaryReflection(reflection)
-        }
-    }
-
-    private var reflectionFallbackSection: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.md) {
-            reflectionDivider
-            Text(L10n.reviewHomeDoneHint)
-                .font(AppFont.secondary())
-                .foregroundStyle(AppColor.textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-    }
-
-    private var reflectionDivider: some View {
-        Rectangle()
-            .fill(AppColor.borderSubtle)
-            .frame(height: 1)
-    }
-
     private func literaryReflection(_ reflection: DailyReflection) -> some View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
             HStack(spacing: 6) {
                 Text(L10n.reviewDailyTitle)
-                    .font(AppFont.weak())
-                    .foregroundStyle(AppColor.textTertiary)
+                    .font(AppFont.helper())
+                    .foregroundStyle(AppColor.textMuted)
                 if let occasion = reflection.occasion?.trimmingCharacters(in: .whitespacesAndNewlines),
                    !occasion.isEmpty {
                     Text("·")
-                        .font(AppFont.weak())
-                        .foregroundStyle(AppColor.textTertiary.opacity(0.5))
+                        .font(AppFont.helper())
+                        .foregroundStyle(AppColor.textMuted.opacity(0.55))
                     Text(occasion)
-                        .font(AppFont.weak())
-                        .foregroundStyle(AppColor.textTertiary)
+                        .font(AppFont.helper())
+                        .foregroundStyle(AppColor.textMuted)
                         .lineLimit(1)
                 }
             }
@@ -379,9 +362,10 @@ private struct ReviewHomeView: View {
             Text(reflection.sentence)
                 .font(AppFont.literaryQuote())
                 .foregroundStyle(AppColor.textPrimary)
-                .lineSpacing(8)
+                .lineSpacing(6)
                 .fixedSize(horizontal: false, vertical: true)
                 .textSelection(.enabled)
+                .padding(.top, 2)
 
             if let translation = reflection.translation?.trimmingCharacters(in: .whitespacesAndNewlines),
                !translation.isEmpty {
@@ -396,13 +380,14 @@ private struct ReviewHomeView: View {
             if let source = reflection.source?.trimmingCharacters(in: .whitespacesAndNewlines),
                !source.isEmpty {
                 Text("—— \(source)")
-                    .font(AppFont.caption())
-                    .foregroundStyle(AppColor.textTertiary)
+                    .font(AppFont.helper())
+                    .foregroundStyle(AppColor.textMuted)
             }
 
             TextLinkAction(title: L10n.reviewDailyCollect) {
                 onCollectReflection(reflection)
             }
+            .padding(.top, 2)
         }
     }
 }

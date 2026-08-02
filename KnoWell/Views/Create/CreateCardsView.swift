@@ -162,8 +162,8 @@ struct CreateCardsView: View {
 
                 if let todayCaptureTip {
                     Text(todayCaptureTip)
-                        .font(AppFont.weak())
-                        .foregroundStyle(AppColor.textTertiary)
+                        .font(AppFont.helper())
+                        .foregroundStyle(AppColor.textMuted)
                         .fixedSize(horizontal: false, vertical: true)
                         .accessibilityLabel(todayCaptureTip)
                 }
@@ -178,12 +178,19 @@ struct CreateCardsView: View {
                     HStack(spacing: AppSpacing.xs) {
                         ProgressView()
                         Text(L10n.recognizingPhoto)
-                            .font(AppFont.caption())
-                            .foregroundStyle(AppColor.textTertiary)
+                            .font(AppFont.helper())
+                            .foregroundStyle(AppColor.textMuted)
                     }
                 }
 
                 CreateDeckPickerCard(selectedDeckID: $selectedDeckID)
+                    .padding(.horizontal, AppSpacing.sm)
+                    .padding(.vertical, AppSpacing.sm)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        AppColor.surface,
+                        in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                    )
 
                 wordsCard
             }
@@ -195,31 +202,34 @@ struct CreateCardsView: View {
 
     private var sourceEditor: some View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            HStack(spacing: 6) {
-                Spacer(minLength: 0)
-                TextLinkAction(title: L10n.createQuickPhoto) {
+            HStack(spacing: AppSpacing.xs) {
+                createImportTool(
+                    systemImage: "photo.on.rectangle",
+                    label: L10n.createQuickPhoto,
+                    disabled: isRecognizingPhoto
+                ) {
                     showPhotoLibrary = true
                 }
-                .disabled(isRecognizingPhoto)
-                .opacity(isRecognizingPhoto ? 0.45 : 1)
 
                 if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                    Text("·")
-                        .font(AppFont.weak())
-                        .foregroundStyle(AppColor.textTertiary.opacity(0.45))
-                    TextLinkAction(title: L10n.createQuickCamera) {
+                    createImportTool(
+                        systemImage: "camera",
+                        label: L10n.createQuickCamera,
+                        disabled: isRecognizingPhoto
+                    ) {
                         showCamera = true
                     }
-                    .disabled(isRecognizingPhoto)
-                    .opacity(isRecognizingPhoto ? 0.45 : 1)
                 }
 
-                Text("·")
-                    .font(AppFont.weak())
-                    .foregroundStyle(AppColor.textTertiary.opacity(0.45))
-                TextLinkAction(title: L10n.createQuickPaste) {
+                createImportTool(
+                    systemImage: "doc.on.clipboard",
+                    label: L10n.createQuickPaste,
+                    disabled: false
+                ) {
                     pasteFromClipboard()
                 }
+
+                Spacer(minLength: 0)
             }
 
             ZStack(alignment: .topLeading) {
@@ -235,7 +245,7 @@ struct CreateCardsView: View {
                 if sentence.isEmpty {
                     Text(L10n.createPastePlaceholder)
                         .font(AppFont.literaryQuote())
-                        .foregroundStyle(AppColor.textTertiary.opacity(0.72))
+                        .foregroundStyle(AppColor.textMuted)
                         .padding(.horizontal, AppSpacing.md)
                         .padding(.top, AppSpacing.md + 2)
                         .allowsHitTesting(false)
@@ -245,7 +255,33 @@ struct CreateCardsView: View {
                 AppColor.surface,
                 in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
             )
+            .overlay {
+                RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                    .strokeBorder(AppColor.borderSubtle, lineWidth: 1)
+            }
         }
+    }
+
+    private func createImportTool(
+        systemImage: String,
+        label: String,
+        disabled: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.system(size: 16, weight: .regular))
+                .foregroundStyle(disabled ? AppColor.textMuted : AppColor.textSecondary)
+                .frame(width: 36, height: 36)
+                .background(
+                    AppColor.surfaceMuted,
+                    in: RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
+                )
+        }
+        .buttonStyle(.plain)
+        .disabled(disabled)
+        .opacity(disabled ? 0.55 : 1)
+        .accessibilityLabel(label)
     }
 
     private func pasteFromClipboard() {
@@ -262,8 +298,8 @@ struct CreateCardsView: View {
     private var wordsCard: some View {
         VStack(alignment: .leading, spacing: AppSpacing.xs) {
             Text(L10n.wordsSection)
-                .font(AppFont.weak())
-                .foregroundStyle(AppColor.textTertiary)
+                .font(AppFont.helper())
+                .foregroundStyle(AppColor.textMuted)
 
             VocabularyWordsEditor(
                 words: $words,
@@ -274,14 +310,20 @@ struct CreateCardsView: View {
                 }
             )
         }
+        .padding(AppSpacing.sm)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            AppColor.surface,
+            in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+        )
     }
 
     private var generateFooter: some View {
         VStack(spacing: AppSpacing.xs) {
             if let generateDisabledHint {
                 Text(generateDisabledHint)
-                    .font(AppFont.caption())
-                    .foregroundStyle(AppColor.textTertiary)
+                    .font(AppFont.helper())
+                    .foregroundStyle(AppColor.textMuted)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, AppSpacing.md)
                     .transition(.opacity)
