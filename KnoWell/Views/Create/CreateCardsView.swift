@@ -30,6 +30,7 @@ struct CreateCardsView: View {
     @State private var longTextChoiceMade = false
     @State private var isManualEditing = false
     @State private var sourceHint: String?
+    @State private var todayCaptureTip: String?
 
     private var trimmedSentence: String {
         sentence.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -129,6 +130,13 @@ struct CreateCardsView: View {
                         }
                     }
                 }
+                .onAppear { refreshCaptureTip() }
+                .onChange(of: showPreview) { _, isShowing in
+                    if !isShowing { refreshCaptureTip() }
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .libraryCatalogDidChange)) { _ in
+                    refreshCaptureTip()
+                }
         }
     }
 
@@ -150,6 +158,14 @@ struct CreateCardsView: View {
                         systemImage: "arrow.down.doc.fill",
                         onDismiss: { self.importBannerMessage = nil }
                     )
+                }
+
+                if let todayCaptureTip {
+                    Text(todayCaptureTip)
+                        .font(AppFont.weak())
+                        .foregroundStyle(AppColor.textTertiary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityLabel(todayCaptureTip)
                 }
 
                 sourceEditor
@@ -430,6 +446,15 @@ struct CreateCardsView: View {
         }
         importBannerMessage = payload.bannerMessage
         shareImport.acknowledgeImport()
+    }
+
+    private func refreshCaptureTip() {
+        if let summary = CaptureStatsStore.todaySummary(in: modelContext),
+           summary.uniqueWords > 0 || summary.uniqueSentences > 0 {
+            todayCaptureTip = L10n.createCaptureToday(summary.uniqueWords, summary.uniqueSentences)
+        } else {
+            todayCaptureTip = nil
+        }
     }
 
     private func generateCards() {

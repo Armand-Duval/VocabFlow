@@ -6620,7 +6620,7 @@
         }
       }
     },
-    "review.home.captureToday" : {
+    "create.captureToday" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {

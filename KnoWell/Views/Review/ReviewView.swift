@@ -12,7 +12,6 @@ struct ReviewView: View {
     @State private var showQuotaDetail = false
     @State private var isSessionActive = false
     @State private var dailyReflection: DailyReflection?
-    @State private var todayCapture: CaptureStatsStore.Summary?
 
     private var activeDeckID: UUID? {
         DeckSettings.lastSelectedDeckID
@@ -44,7 +43,6 @@ struct ReviewView: View {
                             plan: plan,
                             hasAnyCards: hasAnyCards,
                             dailyReflection: dailyReflection,
-                            todayCapture: todayCapture,
                             onStartReview: { isSessionActive = true },
                             onShowQuota: { showQuotaDetail = true },
                             onCollectReflection: { reflection in
@@ -124,7 +122,6 @@ struct ReviewView: View {
         var emptyDescriptor = FetchDescriptor<FlashCard>()
         emptyDescriptor.fetchLimit = 1
         hasAnyCards = !((try? modelContext.fetch(emptyDescriptor)) ?? []).isEmpty
-        todayCapture = CaptureStatsStore.todaySummary(in: modelContext)
 
         let dueDate = Date.now
         let descriptor = FetchDescriptor<FlashCard>(
@@ -173,7 +170,6 @@ private struct ReviewHomeView: View {
     let plan: ReviewQueuePlan
     let hasAnyCards: Bool
     let dailyReflection: DailyReflection?
-    let todayCapture: CaptureStatsStore.Summary?
     let onStartReview: () -> Void
     let onShowQuota: () -> Void
     let onCollectReflection: (DailyReflection) -> Void
@@ -297,11 +293,6 @@ private struct ReviewHomeView: View {
     }
 
     private var activityTipText: String? {
-        // One soft tip: prefer today’s capture, else recent review warmth.
-        if let capture = todayCapture,
-           capture.uniqueWords > 0 || capture.uniqueSentences > 0 {
-            return L10n.reviewHomeCaptureToday(capture.uniqueWords, capture.uniqueSentences)
-        }
         guard hasAnyCards,
               let summary = StudyActivityStore.recentSummary(),
               summary.uniqueWords > 0 || summary.uniqueSentences > 0 else {

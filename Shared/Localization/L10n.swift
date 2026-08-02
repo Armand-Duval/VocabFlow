@@ -190,8 +190,8 @@ enum L10n {
     static func reviewHomeActivityRecent(_ days: Int, _ words: Int, _ sentences: Int) -> String {
         tf("review.home.activityRecent", days, words, sentences)
     }
-    static func reviewHomeCaptureToday(_ words: Int, _ sentences: Int) -> String {
-        tf("review.home.captureToday", words, sentences)
+    static func createCaptureToday(_ words: Int, _ sentences: Int) -> String {
+        tf("create.captureToday", words, sentences)
     }
     static var reviewDailyTitle: String { tr("review.daily.title") }
     static var reviewDailyFromLibrary: String { tr("review.daily.fromLibrary") }
