@@ -188,8 +188,9 @@ struct CardReviewSessionView: View {
                         .foregroundStyle(AppColor.textPrimary)
                         .frame(width: 36, height: 36)
                         .background(AppColor.surface, in: Circle())
+                        .appSoftShadow()
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(SoftPressButtonStyle())
                 .accessibilityLabel(L10n.back)
             }
 
@@ -218,8 +219,9 @@ struct CardReviewSessionView: View {
                     .foregroundStyle(AppColor.textPrimary)
                     .frame(width: 36, height: 36)
                     .background(AppColor.surface, in: Circle())
+                    .appSoftShadow()
             }
-            .buttonStyle(.plain)
+            .buttonStyle(SoftPressButtonStyle())
             .accessibilityLabel(L10n.libraryEdit)
         }
     }
@@ -281,7 +283,7 @@ struct CardReviewSessionView: View {
                 .foregroundStyle(AppColor.accent)
                 .background(AppColor.accentBackground(0.12), in: Circle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(SoftPressButtonStyle())
         .accessibilityLabel(L10n.speakWord)
     }
 

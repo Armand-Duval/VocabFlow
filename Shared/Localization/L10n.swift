@@ -653,6 +653,10 @@ enum L10n {
     static var deckStatisticsOverview: String { tr("deck.statistics.overview") }
     static var deckStatisticsTotal: String { tr("deck.statistics.total") }
     static var deckStatisticsDue: String { tr("deck.statistics.due") }
+    static func deckDueShort(_ count: Int) -> String { tf("deck.due.short", count) }
+    static func deckDueMeterA11y(due: Int, total: Int) -> String {
+        tf("deck.due.meterA11y", due, total)
+    }
     static var deckStatisticsNew: String { tr("deck.statistics.new") }
     static var deckStatisticsLearned: String { tr("deck.statistics.learned") }
     static var deckStatisticsMastery: String { tr("deck.statistics.mastery") }

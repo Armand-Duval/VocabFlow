@@ -6,6 +6,7 @@ struct SelectableTextEditor: UIViewRepresentable {
     @Binding var text: String
     @Binding var selectedText: String
     @Binding var selectionClearNonce: Int
+    var isFocused: Binding<Bool>? = nil
     var minHeight: CGFloat = 120
     var onAddToVocabulary: (() -> Void)?
 
@@ -97,6 +98,18 @@ struct SelectableTextEditor: UIViewRepresentable {
 
         func textViewDidBeginEditing(_ textView: UITextView) {
             configureAncestorScrollViews(for: textView)
+            setFocused(true)
+        }
+
+        func textViewDidEndEditing(_ textView: UITextView) {
+            setFocused(false)
+        }
+
+        private func setFocused(_ value: Bool) {
+            guard let binding = parent.isFocused, binding.wrappedValue != value else { return }
+            DispatchQueue.main.async {
+                binding.wrappedValue = value
+            }
         }
 
         func makeInputAccessoryView() -> UIToolbar {

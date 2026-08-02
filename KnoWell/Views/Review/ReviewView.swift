@@ -72,6 +72,7 @@ struct ReviewView: View {
                         } label: {
                             AppIcon.symbol("gearshape")
                         }
+                        .buttonStyle(SoftPressButtonStyle())
                         .accessibilityLabel(L10n.settingsTitle)
                     }
                 }
@@ -226,7 +227,7 @@ private struct ReviewHomeView: View {
                             .foregroundStyle(AppColor.textMuted)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(SoftPressButtonStyle())
                 }
                 Button(action: onStartReview) {
                     Text(L10n.reviewHomeStart)
@@ -286,7 +287,7 @@ private struct ReviewHomeView: View {
                         .foregroundStyle(AppColor.textMuted)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(SoftPressButtonStyle())
             }
         }
     }
@@ -413,7 +414,7 @@ private struct ReviewQuotaDetailSheet: View {
                                 deferred: plan.deferredNewCount
                             )
 
-                            Divider()
+                            Spacer().frame(height: AppSpacing.xs)
 
                             quotaRow(
                                 title: L10n.reviewQuotaReview,

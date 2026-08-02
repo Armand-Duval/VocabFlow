@@ -22,8 +22,15 @@ final class LibraryCatalogCache {
         invalidateListCache()
     }
 
-    func cacheKey(filterDeckID: UUID?, search: String, cardCount: Int) -> String {
-        "\(filterDeckID?.uuidString ?? "all")|\(search.lowercased())|\(cardCount)"
+    func cacheKey(
+        filterDeckID: UUID?,
+        search: String,
+        cardCount: Int,
+        cardFilter: String = "all",
+        forceGrouped: Bool = false
+    ) -> String {
+        let mode = forceGrouped ? "grouped" : "auto"
+        return "\(filterDeckID?.uuidString ?? "all")|\(search.lowercased())|\(cardCount)|\(cardFilter)|\(mode)"
     }
 
     func cachedList(for key: String) -> LibraryListCacheEntry? {

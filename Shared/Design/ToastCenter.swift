@@ -54,18 +54,59 @@ struct LoadingOverlay: View {
 
     var body: some View {
         ZStack {
-            Color.black.opacity(0.18)
+            AppColor.pageBackground.opacity(0.55)
                 .ignoresSafeArea()
-            VStack(spacing: AppSpacing.sm) {
+            VStack(spacing: AppSpacing.md) {
+                VStack(alignment: .leading, spacing: 8) {
+                    skeletonBar(widthFraction: 0.72)
+                    skeletonBar(widthFraction: 0.92)
+                    skeletonBar(widthFraction: 0.58)
+                }
+                .frame(maxWidth: 220)
+                .redacted(reason: .placeholder)
+                .shimmering()
+
                 ProgressView()
-                    .controlSize(.large)
+                    .controlSize(.regular)
+                    .tint(AppColor.accent)
+
                 Text(message)
                     .font(AppFont.caption())
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColor.textSecondary)
+                    .multilineTextAlignment(.center)
             }
             .padding(AppSpacing.lg)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
+            .background(AppColor.surface, in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
+            .appSoftShadow()
         }
+    }
+
+    private func skeletonBar(widthFraction: CGFloat) -> some View {
+        RoundedRectangle(cornerRadius: 4, style: .continuous)
+            .fill(AppColor.surfaceMuted)
+            .frame(height: 10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.trailing, (1 - widthFraction) * 220)
+    }
+}
+
+private struct ShimmeringModifier: ViewModifier {
+    @State private var phase: CGFloat = 0
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(0.55 + 0.35 * phase)
+            .onAppear {
+                withAnimation(.easeInOut(duration: 1.05).repeatForever(autoreverses: true)) {
+                    phase = 1
+                }
+            }
+    }
+}
+
+private extension View {
+    func shimmering() -> some View {
+        modifier(ShimmeringModifier())
     }
 }
 

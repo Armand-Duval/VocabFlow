@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 enum AppColor {
     // Ink & 黛青 — warm paper + ink teal A (#1A5A68), distinct from bright exam-app greens
@@ -139,6 +142,30 @@ enum AppRadius {
     static let input: CGFloat = 6
     static let iconButton: CGFloat = 20
     static let sheet: CGFloat = 16
+    static let tabPill: CGFloat = 10
+}
+
+enum AppShadow {
+    /// Single paper-lift recipe used by cards, inputs, chips, CTAs.
+    static let radius: CGFloat = 8
+    static let y: CGFloat = 2
+
+    static func color(for colorScheme: ColorScheme, emphasized: Bool = false) -> Color {
+        let base = colorScheme == .dark ? 0.32 : 0.045
+        return Color.black.opacity(emphasized ? base + 0.02 : base)
+    }
+
+    static func card(_ colorScheme: ColorScheme = .light) -> (color: Color, radius: CGFloat, y: CGFloat) {
+        (color(for: colorScheme), radius, y)
+    }
+
+    static func pressed(_ colorScheme: ColorScheme = .light) -> (color: Color, radius: CGFloat, y: CGFloat) {
+        (color(for: colorScheme, emphasized: true), 4, 1)
+    }
+
+    static func focusAccent() -> (color: Color, radius: CGFloat, y: CGFloat) {
+        (AppColor.accent.opacity(0.10), radius, y)
+    }
 }
 
 enum AppFont {
@@ -174,19 +201,39 @@ enum AppIcon {
     }
 }
 
-struct PrimaryButtonStyle: ButtonStyle {
-    @Environment(\.isEnabled) private var isEnabled
-    var prominent: Bool = false
+/// Shared press feedback for plain / chip / icon actions.
+struct SoftPressButtonStyle: ButtonStyle {
+    var pressedScale: CGFloat = 0.97
+    var pressedOpacity: Double = 0.82
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
+            .opacity(configuration.isPressed ? pressedOpacity : 1)
+            .scaleEffect(configuration.isPressed ? pressedScale : 1)
+            .animation(.easeInOut(duration: 0.12), value: configuration.isPressed)
+    }
+}
+
+struct PrimaryButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.colorScheme) private var colorScheme
+    var prominent: Bool = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        let shadow = configuration.isPressed ? AppShadow.pressed(colorScheme) : AppShadow.card(colorScheme)
+        return configuration.label
             .font(.system(size: 16, weight: .semibold))
             .frame(maxWidth: .infinity)
             .padding(.vertical, prominent ? 16 : 12)
-            .foregroundStyle(isEnabled ? Color.white : AppColor.accent.opacity(0.45))
+            .foregroundStyle(isEnabled ? Color.white : AppColor.accent.opacity(0.52))
             .background(
                 RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
                     .fill(backgroundColor(isPressed: configuration.isPressed))
+            )
+            .shadow(
+                color: isEnabled ? shadow.color : .clear,
+                radius: shadow.radius,
+                y: shadow.y
             )
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
             .animation(.easeInOut(duration: 0.12), value: configuration.isPressed)
@@ -194,10 +241,11 @@ struct PrimaryButtonStyle: ButtonStyle {
 
     private func backgroundColor(isPressed: Bool) -> Color {
         guard isEnabled else {
-            // Quiet accent wash — still reads disabled, not flat cement gray.
-            return AppColor.accentBackground(0.10)
+            // Soft accent wash — reads disabled without cement gray.
+            return AppColor.accentBackground(0.14)
         }
-        return AppColor.accentStrong.opacity(isPressed ? 0.88 : 1)
+        // Slightly deeper at rest for clearer primary affordance.
+        return AppColor.accentStrong.opacity(isPressed ? 0.86 : 1)
     }
 }
 
@@ -212,11 +260,11 @@ struct TextLinkAction: View {
                 .font(AppFont.caption().weight(.medium))
                 .foregroundStyle(AppColor.accentStrong)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(SoftPressButtonStyle(pressedScale: 0.98, pressedOpacity: 0.88))
     }
 }
 
-/// Compact linear icon action — 致知 UX: small circles, soft border.
+/// Compact linear icon action — 致知 UX: soft rounded square, not heavy circles.
 struct CompactIconAction: View {
     let systemImage: String
     var title: String? = nil
@@ -229,14 +277,18 @@ struct CompactIconAction: View {
         Button(action: action) {
             VStack(spacing: 6) {
                 Image(systemName: systemImage)
-                    .font(.system(size: 18, weight: .regular))
+                    .font(.system(size: 17, weight: .regular))
                     .foregroundStyle(AppColor.accent)
-                    .frame(width: 44, height: 44)
-                    .background(AppColor.surface, in: Circle())
+                    .frame(width: 40, height: 40)
+                    .background(
+                        AppColor.surface,
+                        in: RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
+                    )
                     .overlay {
-                        Circle()
-                            .strokeBorder(AppColor.border.opacity(0.55), lineWidth: 0.8)
+                        RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
+                            .strokeBorder(AppColor.borderSubtle, lineWidth: 1)
                     }
+                    .appSoftShadow()
                 if let title {
                     Text(title)
                         .font(AppFont.weak())
@@ -246,7 +298,7 @@ struct CompactIconAction: View {
             }
             .frame(maxWidth: expands ? .infinity : nil)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(SoftPressButtonStyle())
         .disabled(isDisabled)
         .opacity(isDisabled ? 0.45 : 1)
         .accessibilityLabel(title ?? systemImage)
@@ -255,13 +307,32 @@ struct CompactIconAction: View {
 
 struct BrandMark: View {
     var body: some View {
-        // Toolbar-safe: Chinese only — avoids “致…” truncation with KnoWell beside it.
+        // Quiet wordmark — no fill chip; keep left corner light.
         Text(L10n.brandNameZH)
-            .font(.system(size: 17, weight: .semibold))
-            .foregroundStyle(AppColor.textPrimary)
+            .font(.system(size: 15, weight: .medium))
+            .foregroundStyle(AppColor.textSecondary)
             .lineLimit(1)
             .fixedSize(horizontal: true, vertical: false)
             .accessibilityLabel("\(L10n.brandNameZH) \(L10n.brandNameEN)")
+    }
+}
+
+/// Soft surface cluster for toolbar icon groups (library trailing tools).
+struct ToolbarIconCluster<Content: View>: View {
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        HStack(spacing: 10) {
+            content()
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(AppColor.surface, in: Capsule())
+        .overlay {
+            Capsule()
+                .strokeBorder(AppColor.borderSubtle, lineWidth: 1)
+        }
+        .appSoftShadow()
     }
 }
 
@@ -316,6 +387,7 @@ struct SecondaryButtonStyle: ButtonStyle {
                     )
             )
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
+            .animation(.easeInOut(duration: 0.12), value: configuration.isPressed)
     }
 }
 
@@ -328,9 +400,10 @@ struct RevealAnswerButtonStyle: ButtonStyle {
             .foregroundStyle(AppColor.textSecondary)
             .background(
                 RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
-                    .fill(AppColor.surfaceMuted.opacity(configuration.isPressed ? 0.92 : 1))
+                    .fill(AppColor.surfaceMuted.opacity(configuration.isPressed ? 0.88 : 1))
             )
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
+            .animation(.easeInOut(duration: 0.12), value: configuration.isPressed)
     }
 }
 
@@ -402,6 +475,87 @@ extension View {
         listRowBackground(AppColor.surface)
             .listRowSeparatorTint(AppColor.border)
     }
+
+    /// Soft paper elevation for surface cards / CTAs.
+    func appSoftShadow(emphasized: Bool = false) -> some View {
+        modifier(AppSoftShadowModifier(emphasized: emphasized))
+    }
+
+    /// Input / editor chrome with quiet focus ring.
+    func appInputSurface(isFocused: Bool = false) -> some View {
+        modifier(AppInputSurfaceModifier(isFocused: isFocused))
+    }
+}
+
+private struct AppSoftShadowModifier: ViewModifier {
+    @Environment(\.colorScheme) private var colorScheme
+    var emphasized: Bool
+
+    func body(content: Content) -> some View {
+        let shadow = emphasized ? AppShadow.pressed(colorScheme) : AppShadow.card(colorScheme)
+        content.shadow(color: shadow.color, radius: shadow.radius, y: shadow.y)
+    }
+}
+
+private struct AppInputSurfaceModifier: ViewModifier {
+    var isFocused: Bool
+
+    func body(content: Content) -> some View {
+        let focusShadow = AppShadow.focusAccent()
+        content
+            .background(
+                AppColor.surface,
+                in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                    .strokeBorder(
+                        isFocused ? AppColor.accent.opacity(0.32) : AppColor.borderSubtle,
+                        lineWidth: isFocused ? 1.2 : 1
+                    )
+            }
+            .shadow(
+                color: isFocused ? focusShadow.color : .clear,
+                radius: focusShadow.radius,
+                y: focusShadow.y
+            )
+            .animation(.easeInOut(duration: 0.16), value: isFocused)
+    }
+}
+
+enum AppTabBarChrome {
+    static func apply() {
+        #if canImport(UIKit)
+        let paper = UIColor(AppColor.pageBackground)
+        let accent = UIColor(AppColor.accent)
+        let muted = UIColor(AppColor.textTertiary)
+
+        let appearance = UITabBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = paper
+        appearance.shadowColor = UIColor.black.withAlphaComponent(0.06)
+
+        let item = UITabBarItemAppearance()
+        item.normal.iconColor = muted
+        item.normal.titleTextAttributes = [
+            .foregroundColor: muted,
+            .font: UIFont.systemFont(ofSize: 10, weight: .regular)
+        ]
+        item.selected.iconColor = accent
+        item.selected.titleTextAttributes = [
+            .foregroundColor: accent,
+            .font: UIFont.systemFont(ofSize: 10, weight: .semibold)
+        ]
+        appearance.stackedLayoutAppearance = item
+        appearance.inlineLayoutAppearance = item
+        appearance.compactInlineLayoutAppearance = item
+
+        UITabBar.appearance().standardAppearance = appearance
+        UITabBar.appearance().scrollEdgeAppearance = appearance
+        UITabBar.appearance().tintColor = accent
+        UITabBar.appearance().unselectedItemTintColor = muted
+        #endif
+    }
 }
 
 enum AppNavTitleStyle {
@@ -434,19 +588,34 @@ private struct AppNavTitleModifier: ViewModifier {
 struct AppSurfaceCard<Content: View>: View {
     var padding: CGFloat = AppSpacing.md
     var bordered: Bool = false
+    /// Soft paper lift. Turn off inside nested list rows if needed.
+    var elevated: Bool = true
     @ViewBuilder var content: () -> Content
 
     var body: some View {
+        let shape = RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
         content()
             .padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(AppColor.surface, in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
+            .background(AppColor.surface, in: shape)
             .overlay {
                 if bordered {
-                    RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                        .strokeBorder(AppColor.border, lineWidth: 1)
+                    shape.strokeBorder(AppColor.border, lineWidth: 1)
                 }
             }
+            .modifier(ConditionalSoftShadow(enabled: elevated))
+    }
+}
+
+private struct ConditionalSoftShadow: ViewModifier {
+    var enabled: Bool
+
+    func body(content: Content) -> some View {
+        if enabled {
+            content.appSoftShadow()
+        } else {
+            content
+        }
     }
 }
 
@@ -540,11 +709,13 @@ struct HighlightedText: View {
 
 struct AppTabIcon: View {
     let systemName: String
+    var isSelected: Bool = false
 
     var body: some View {
         Image(systemName: systemName)
             .symbolRenderingMode(.hierarchical)
-            .fontWeight(AppIcon.weight)
+            .fontWeight(isSelected ? .semibold : AppIcon.weight)
+            .animation(.easeInOut(duration: 0.18), value: isSelected)
     }
 }
 
@@ -596,7 +767,7 @@ struct QuickActionChip: View {
                     .strokeBorder(isHighlighted ? AppColor.accent.opacity(0.35) : AppColor.border, lineWidth: 1)
             }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(SoftPressButtonStyle())
         .disabled(isDisabled || isLoading)
         .opacity(isDisabled ? 0.45 : 1)
     }
@@ -647,14 +818,15 @@ struct DeckFilterChip: View {
                 .foregroundStyle(isSelected ? AppColor.accentStrong : AppColor.textSecondary)
 
                 Capsule()
-                    .fill(isSelected ? AppColor.accent : Color.clear)
-                    .frame(height: 2)
-                    .frame(maxWidth: 28)
+                    .fill(isSelected ? AppColor.accent.opacity(0.55) : Color.clear)
+                    .frame(height: 1.5)
+                    .frame(maxWidth: 22)
             }
             .padding(.horizontal, 4)
             .padding(.vertical, 4)
+            .opacity(isSelected ? 1 : 0.78)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(SoftPressButtonStyle(pressedScale: 0.98, pressedOpacity: 0.88))
     }
 }
 
@@ -679,7 +851,7 @@ struct FilterChip: View {
                         .strokeBorder(isSelected ? AppColor.accent.opacity(0.35) : Color.clear, lineWidth: 1)
                 }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(SoftPressButtonStyle(pressedScale: 0.97, pressedOpacity: 0.88))
     }
 }
 
@@ -696,6 +868,31 @@ struct DetailField: View {
                 .font(AppFont.secondary())
                 .foregroundStyle(AppColor.textPrimary)
         }
+    }
+}
+
+/// Quiet due/total meter for deck rows — not a dashboard gauge.
+struct DeckDueMeter: View {
+    let dueCount: Int
+    let totalCount: Int
+
+    private var progress: CGFloat {
+        guard totalCount > 0 else { return 0 }
+        return min(1, CGFloat(dueCount) / CGFloat(totalCount))
+    }
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(AppColor.surfaceMuted)
+                Capsule()
+                    .fill(dueCount > 0 ? AppColor.accent.opacity(0.55) : AppColor.borderSubtle)
+                    .frame(width: max(4, geo.size.width * progress))
+            }
+        }
+        .frame(height: 3)
+        .accessibilityLabel(L10n.deckDueMeterA11y(due: dueCount, total: totalCount))
     }
 }
 

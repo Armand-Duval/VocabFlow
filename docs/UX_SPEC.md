@@ -75,7 +75,7 @@ Tab 3 制卡          AI 导入制卡
 
 **原则：** 默认无边框，靠纸色块分层；状态用黛青字重/色点，不用第二主色橙标。
 
-**组件：** `TextLinkAction` · `BrandMark` · `PrimaryButtonStyle(prominent:)` · `AppSurfaceCard(bordered:)`
+**组件：** `TextLinkAction` · `BrandMark` · `PrimaryButtonStyle(prominent:)` · `SoftPressButtonStyle` · `AppSurfaceCard(bordered:)` · `DeckDueMeter` · `appInputSurface`
 
 ---
 
@@ -93,6 +93,8 @@ Tab 3 制卡          AI 导入制卡
 
 | 日期 | 说明 |
 |------|------|
+| 2026-08-02 | 评估微调：弱化 BrandMark、统一 AppShadow、ToolbarIconCluster、复习入口抬权、分隔线改间距 |
+| 2026-08-02 | P2：SoftPress、输入聚焦环、Tab 纸色 chrome、Surface 轻阴影、Deck Due 细条、生成骨架遮罩 |
 | 2026-08-02 | P0 UI：去掉制卡啰嗦引导；禁用生成提示；隐藏不可用 Apple 登录与开发向账号文案 |
 | 2026-08-02 | 主色定稿黛青 A `#1A5A68` |
 | 2026-08-02 | 定位定稿：通用文本精读；制卡输入不限外文 |

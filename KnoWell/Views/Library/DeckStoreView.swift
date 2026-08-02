@@ -248,7 +248,7 @@ struct DeckStoreView: View {
                     ForEach(decks) { deck in
                         deckRow(deck)
                         if deck.id != decks.last?.id {
-                            Divider()
+                            Spacer().frame(height: AppSpacing.sm)
                         }
                     }
                 }
@@ -257,7 +257,10 @@ struct DeckStoreView: View {
     }
 
     private func deckRow(_ deck: Deck) -> some View {
-        HStack(alignment: .center, spacing: AppSpacing.sm) {
+        let due = deck.dueCount
+        let total = max(deck.cardCount, 0)
+
+        return HStack(alignment: .center, spacing: AppSpacing.sm) {
             Button {
                 toggleDeckCheck(deck)
             } label: {
@@ -267,7 +270,7 @@ struct DeckStoreView: View {
                         .font(.title3)
                         .frame(width: 28)
 
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 6) {
                         Text(deck.name)
                             .font(AppFont.body().weight(.semibold))
                             .foregroundStyle(AppColor.textPrimary)
@@ -279,16 +282,27 @@ struct DeckStoreView: View {
                                 .foregroundStyle(AppColor.textSecondary)
                                 .lineLimit(1)
                         }
+                        if total > 0 {
+                            DeckDueMeter(dueCount: due, totalCount: total)
+                        }
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(SoftPressButtonStyle(pressedScale: 0.99, pressedOpacity: 0.9))
 
-            Text("\(deck.cardCount)")
-                .font(AppFont.caption())
-                .foregroundStyle(AppColor.textSecondary)
-                .monospacedDigit()
+            VStack(alignment: .trailing, spacing: 2) {
+                Text("\(total)")
+                    .font(AppFont.caption())
+                    .foregroundStyle(AppColor.textSecondary)
+                    .monospacedDigit()
+                if due > 0 {
+                    Text(L10n.deckDueShort(due))
+                        .font(AppFont.weak())
+                        .foregroundStyle(AppColor.accent)
+                        .monospacedDigit()
+                }
+            }
 
             Button {
                 deckPendingActions = deck
@@ -296,7 +310,7 @@ struct DeckStoreView: View {
                 AppIcon.symbol("ellipsis.circle")
                     .foregroundStyle(AppColor.textSecondary)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(SoftPressButtonStyle())
 
             NavigationLink {
                 DeckStatisticsView(deck: deck)
@@ -388,7 +402,7 @@ struct DeckStoreView: View {
                 }
             }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(SoftPressButtonStyle())
     }
 
     private var openSourceCard: some View {
@@ -401,7 +415,7 @@ struct DeckStoreView: View {
                 ForEach(DeckRemoteCatalog.packs) { pack in
                     remotePackRow(pack)
                     if pack.id != DeckRemoteCatalog.packs.last?.id {
-                        Divider()
+                        Spacer().frame(height: AppSpacing.sm)
                     }
                 }
             }
@@ -418,7 +432,7 @@ struct DeckStoreView: View {
                 ForEach(DeckCommunityCatalog.entries) { entry in
                     communityRow(entry)
                     if entry.id != DeckCommunityCatalog.entries.last?.id {
-                        Divider()
+                        Spacer().frame(height: AppSpacing.sm)
                     }
                 }
 
@@ -1001,7 +1015,7 @@ struct DeckCatalogView: View {
                 ForEach(DeckRemoteCatalog.packs) { pack in
                     remotePackRow(pack)
                     if pack.id != DeckRemoteCatalog.packs.last?.id {
-                        Divider()
+                        Spacer().frame(height: AppSpacing.sm)
                     }
                 }
             }
@@ -1018,7 +1032,7 @@ struct DeckCatalogView: View {
                 ForEach(DeckCommunityCatalog.entries) { entry in
                     communityRow(entry)
                     if entry.id != DeckCommunityCatalog.entries.last?.id {
-                        Divider()
+                        Spacer().frame(height: AppSpacing.sm)
                     }
                 }
 

@@ -31,6 +31,7 @@ struct CreateCardsView: View {
     @State private var isManualEditing = false
     @State private var sourceHint: String?
     @State private var todayCaptureTip: String?
+    @State private var isSourceFocused = false
 
     private var trimmedSentence: String {
         sentence.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -187,10 +188,8 @@ struct CreateCardsView: View {
                     .padding(.horizontal, AppSpacing.sm)
                     .padding(.vertical, AppSpacing.sm)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(
-                        AppColor.surface,
-                        in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                    )
+                    .appInputSurface(isFocused: false)
+                    .appSoftShadow()
 
                 wordsCard
             }
@@ -198,6 +197,7 @@ struct CreateCardsView: View {
             .padding(.top, AppSpacing.md)
             .padding(.bottom, AppSpacing.md)
         }
+        .scrollBounceBehavior(.basedOnSize)
     }
 
     private var sourceEditor: some View {
@@ -237,6 +237,7 @@ struct CreateCardsView: View {
                     text: $sentence,
                     selectedText: $selectedText,
                     selectionClearNonce: $selectionClearNonce,
+                    isFocused: $isSourceFocused,
                     onAddToVocabulary: appendSelectionToWords
                 )
                 .frame(minHeight: 180)
@@ -251,14 +252,7 @@ struct CreateCardsView: View {
                         .allowsHitTesting(false)
                 }
             }
-            .background(
-                AppColor.surface,
-                in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-            )
-            .overlay {
-                RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                    .strokeBorder(AppColor.borderSubtle, lineWidth: 1)
-            }
+            .appInputSurface(isFocused: isSourceFocused)
         }
     }
 
@@ -277,8 +271,9 @@ struct CreateCardsView: View {
                     AppColor.surfaceMuted,
                     in: RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
                 )
+                .appSoftShadow()
         }
-        .buttonStyle(.plain)
+        .buttonStyle(SoftPressButtonStyle())
         .disabled(disabled)
         .opacity(disabled ? 0.55 : 1)
         .accessibilityLabel(label)
@@ -312,10 +307,8 @@ struct CreateCardsView: View {
         }
         .padding(AppSpacing.sm)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            AppColor.surface,
-            in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-        )
+        .appInputSurface(isFocused: false)
+        .appSoftShadow()
     }
 
     private var generateFooter: some View {

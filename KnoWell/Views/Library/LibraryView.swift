@@ -69,7 +69,7 @@ struct LibraryView: View {
             .appNavTitle(L10n.libraryTitle, style: .hidden)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    HStack(spacing: AppSpacing.sm) {
+                    ToolbarIconCluster {
                         if hasAnyCards {
                             cardFilterMenu
                         }
@@ -82,6 +82,7 @@ struct LibraryView: View {
                                 Image(systemName: "xmark.circle.fill")
                                     .foregroundStyle(AppColor.textTertiary)
                             }
+                            .buttonStyle(SoftPressButtonStyle())
                             .accessibilityLabel(L10n.clear)
                         }
 
@@ -91,6 +92,7 @@ struct LibraryView: View {
                             } label: {
                                 AppIcon.symbol(forceGrouped ? "rectangle.grid.1x2" : "list.bullet")
                             }
+                            .buttonStyle(SoftPressButtonStyle())
                             .accessibilityLabel(
                                 forceGrouped ? L10n.libraryViewFlat : L10n.libraryViewGrouped
                             )
@@ -110,12 +112,14 @@ struct LibraryView: View {
                         } label: {
                             AppIcon.symbol("books.vertical")
                         }
+                        .buttonStyle(SoftPressButtonStyle())
 
                         Button {
                             AppTab.requestSettings()
                         } label: {
                             AppIcon.symbol("gearshape")
                         }
+                        .buttonStyle(SoftPressButtonStyle())
                         .accessibilityLabel(L10n.settingsTitle)
                     }
                 }
@@ -192,6 +196,7 @@ struct LibraryView: View {
         } label: {
             AppIcon.symbol(cardFilter == .all ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
         }
+        .buttonStyle(SoftPressButtonStyle())
         .accessibilityLabel(L10n.libraryFilterMenu)
         .appSelectionSheet(
             isPresented: $showCardFilterSheet,
@@ -229,9 +234,9 @@ struct LibraryView: View {
                                 } label: {
                                     AppIcon.symbol("chart.bar.xaxis")
                                         .font(.caption2)
-                                        .foregroundStyle(AppColor.textTertiary.opacity(0.8))
+                                        .foregroundStyle(AppColor.textTertiary.opacity(0.38))
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(SoftPressButtonStyle())
                             }
                             .id(LibraryDeckChipID.deck(deck.id))
                         }
@@ -390,7 +395,7 @@ private struct LibraryGroupedList: View {
                 .foregroundStyle(.secondary)
         }
 
-        ForEach(flatCardIDs.prefix(visibleItemCount), id: \.self) { cardID in
+                ForEach(flatCardIDs.prefix(visibleItemCount), id: \.self) { cardID in
             if let card = cardsByID[cardID] {
                 NavigationLink {
                     FlashCardDetailView(card: card)
@@ -401,6 +406,7 @@ private struct LibraryGroupedList: View {
                         searchHighlight: searchText
                     )
                 }
+                .buttonStyle(SoftPressButtonStyle(pressedScale: 0.99, pressedOpacity: 0.92))
             }
         }
         .onDelete { offsets in
@@ -417,12 +423,16 @@ private struct LibraryGroupedList: View {
                 } label: {
                     Label {
                         Text(L10n.libraryReviewDeck(deck.name, count: dueCards.count))
-                            .font(AppFont.secondary().weight(.medium))
+                            .font(AppFont.secondary().weight(.semibold))
+                            .foregroundStyle(AppColor.accentStrong)
                     } icon: {
                         Image(systemName: "brain.head.profile")
+                            .foregroundStyle(AppColor.accentStrong)
+                            .symbolRenderingMode(.monochrome)
                     }
                 }
-                .tint(AppColor.accent)
+                .buttonStyle(SoftPressButtonStyle(pressedScale: 0.99, pressedOpacity: 0.9))
+                .tint(AppColor.accentStrong)
             }
         }
 
@@ -439,6 +449,7 @@ private struct LibraryGroupedList: View {
                                 searchHighlight: searchText
                             )
                         }
+                        .buttonStyle(SoftPressButtonStyle(pressedScale: 0.99, pressedOpacity: 0.92))
                     }
                 }
                 .onDelete { offsets in
@@ -452,12 +463,16 @@ private struct LibraryGroupedList: View {
                     } label: {
                         Label {
                             Text(L10n.reviewAll(group.word, count: group.cardIDs.count))
-                                .font(AppFont.secondary().weight(.medium))
+                                .font(AppFont.secondary().weight(.semibold))
+                                .foregroundStyle(AppColor.accentStrong)
                         } icon: {
                             Image(systemName: "brain.head.profile")
+                                .foregroundStyle(AppColor.accentStrong)
+                                .symbolRenderingMode(.monochrome)
                         }
                     }
-                    .tint(AppColor.accent)
+                    .buttonStyle(SoftPressButtonStyle(pressedScale: 0.99, pressedOpacity: 0.9))
+                    .tint(AppColor.accentStrong)
                 }
             } header: {
                 AppSectionHeader(title: group.word)
@@ -485,15 +500,18 @@ private struct LibraryGroupedList: View {
         let cacheKey = cache.cacheKey(
             filterDeckID: filterDeckID,
             search: searchText,
-            cardCount: fetchedCards.count
+            cardCount: fetchedCards.count,
+            cardFilter: cardFilter.rawValue,
+            forceGrouped: forceGrouped
         )
 
         let cardLookup = Dictionary(uniqueKeysWithValues: fetchedCards.map { ($0.id, $0) })
         let snapshots = LibraryCardGrouper.makeSnapshots(from: fetchedCards)
         let query = searchText
 
-        let listData: (groups: [LibraryWordGroup], flatCardIDs: [UUID], useFlatList: Bool, searchIndex: LibrarySearchIndex)
-        if let cached = cache.cachedList(for: cacheKey), !forceGrouped {
+        if let cached = cache.cachedList(for: cacheKey),
+           !forceGrouped,
+           cacheEntryResolves(cached, in: cardLookup) {
             groups = cached.groups
             flatCardIDs = cached.flatCardIDs
             useFlatList = cached.useFlatList
@@ -503,7 +521,7 @@ private struct LibraryGroupedList: View {
                 LibraryCardGrouper.buildListData(snapshots: snapshots, searchQuery: query)
             }.value
 
-            var shouldUseFlat = built.useFlatList && !forceGrouped
+            let shouldUseFlat = built.useFlatList && !forceGrouped
             groups = shouldUseFlat ? [] : built.groups
             flatCardIDs = shouldUseFlat ? built.flatCardIDs : []
             useFlatList = shouldUseFlat
@@ -523,6 +541,15 @@ private struct LibraryGroupedList: View {
         }
 
         cardsByID = cardLookup
+    }
+
+    private func cacheEntryResolves(_ entry: LibraryListCacheEntry, in lookup: [UUID: FlashCard]) -> Bool {
+        if entry.useFlatList {
+            return !entry.flatCardIDs.isEmpty && entry.flatCardIDs.allSatisfy { lookup[$0] != nil }
+        }
+        return entry.groups.allSatisfy { group in
+            !group.cardIDs.isEmpty && group.cardIDs.allSatisfy { lookup[$0] != nil }
+        }
     }
 
     private func fetchCards(for deckID: UUID?, filter: LibraryCardFilter) -> [FlashCard] {
@@ -625,7 +652,12 @@ private struct LibraryCardRow: View {
 
             Spacer(minLength: AppSpacing.sm)
 
-            LibraryCardStatusChip(card: card)
+            VStack(alignment: .trailing, spacing: 4) {
+                Text(card.cardType.displayName)
+                    .font(AppFont.weak())
+                    .foregroundStyle(AppColor.textMuted)
+                LibraryCardStatusChip(card: card)
+            }
         }
         .padding(.vertical, 4)
         .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
@@ -633,6 +665,14 @@ private struct LibraryCardRow: View {
     }
 
     private var contextLine: String {
+        // Cloze: prefer the blanked front so filter results are recognizable.
+        if card.cardType == .cloze {
+            let trimmedFront = card.front.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmedFront.isEmpty {
+                return trimmedFront
+            }
+        }
+
         let trimmedSentence = card.sentence.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmedSentence.isEmpty {
             return trimmedSentence

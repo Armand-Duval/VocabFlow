@@ -11,7 +11,7 @@ struct ToastBanner: View {
             .padding(.horizontal, AppSpacing.md)
             .padding(.vertical, 10)
             .background(.ultraThinMaterial, in: Capsule())
-            .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
+            .appSoftShadow()
     }
 }
 

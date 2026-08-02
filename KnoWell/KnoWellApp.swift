@@ -25,6 +25,7 @@ struct KnoWellApp: App {
                 .onAppear {
                     APISettings.migrateToAppGroupIfNeeded()
                     WeChatSignInService.registerIfNeeded()
+                    AppTabBarChrome.apply()
                     Task {
                         await processShareWorkItems()
                     }

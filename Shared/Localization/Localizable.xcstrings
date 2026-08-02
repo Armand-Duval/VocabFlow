@@ -4239,6 +4239,40 @@
         }
       }
     },
+    "deck.due.short" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld due"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 待复"
+          }
+        }
+      }
+    },
+    "deck.due.meterA11y" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld of %lld cards due"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld / %lld 张待复习"
+          }
+        }
+      }
+    },
     "deck.statistics.learned" : {
       "extractionState" : "manual",
       "localizations" : {

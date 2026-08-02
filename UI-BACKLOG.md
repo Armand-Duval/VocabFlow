@@ -44,7 +44,7 @@
 | P1-3 | 首次复习手势引导 | [ ] | Coach mark 或动画示意四向滑动 |
 | P1-4 | Create 顶部快捷卡片区 | [x] | 已回退：OCR 放回原文区 |
 | P1-5 | 「待制作卡片」Banner 强化 | [x] | `PendingCardsBannerView` |
-| P1-6 | Deck 状态可视化 | [ ] | 词库卡片数 + Due 比例进度条 |
+| P1-6 | Deck 状态可视化 | [x] | 词库行 Due 比例细条 + 待复计数 |
 | P1-7 | 首次打开一次性引导 | [ ] | 承接已删 footer 说明 |
 | P1-8 | 报错改 Toast | [ ] | 致命错误才用 Alert |
 
@@ -66,7 +66,7 @@
 | P2-4 | 启动隐私同意弹窗 | [ ] | 首次启动 |
 | P2-5 | 开源协议二次确认 | [ ] | 社区 deck 导入 |
 | P2-6 | 动态字体 | [ ] | Accessibility |
-| P2-7 | AI 生成骨架屏 + 进度 | [ ] | 替代纯 ProgressView |
+| P2-7 | AI 生成骨架屏 + 进度 | [x] | LoadingOverlay 纸面骨架脉动 + Progress |
 | P2-8 | 长按按钮 Tooltip | [ ] | 替代常驻说明 |
 | P2-9 | 品牌主色 + 卡片阴影 | [x] | Teal accent + AppSurfaceCard 全站推广 |
 | P2-10 | 导入进度条细化 | [ ] | current/total |
@@ -78,6 +78,7 @@
 
 ## 变更日志
 
+- **2026-08-02** P2 质感：按压态、输入聚焦环、Tab 纸色 chrome、卡片轻阴影、Deck Due 细条、生成骨架遮罩
 - **2026-07-29** Ink & Sage 视觉跃迁：暖纸色板、首页大数字、减边框、文字链快捷入口、词库状态色点
 - **2026-07-29** 致知 (KnoWell) 三 Tab 重构：设置进齿轮、三栏数据卡、线性紧凑图标、品牌色 `#1E6B5C`
 - **2026-07-27** Deck 导入导出重构：当前词库 vs 全部词库；JSON 导入到选中 deck；修复 fileExporter 弹窗

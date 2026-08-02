@@ -23,7 +23,7 @@ struct ContentView: View {
                 Label {
                     Text(L10n.tabReview)
                 } icon: {
-                    AppTabIcon(systemName: "rectangle.stack")
+                    AppTabIcon(systemName: "rectangle.stack", isSelected: selectedTab == 0)
                 }
             }
             .badge(sessionDueCount > 0 ? sessionDueCount : 0)
@@ -36,7 +36,7 @@ struct ContentView: View {
                 Label {
                     Text(L10n.tabLibrary)
                 } icon: {
-                    AppTabIcon(systemName: "books.vertical")
+                    AppTabIcon(systemName: "books.vertical", isSelected: selectedTab == 1)
                 }
             }
             .tag(1)
@@ -48,13 +48,16 @@ struct ContentView: View {
                 Label {
                     Text(L10n.tabCreate)
                 } icon: {
-                    AppTabIcon(systemName: "plus.circle")
+                    AppTabIcon(systemName: "plus.circle", isSelected: selectedTab == 2)
                 }
             }
             .tag(2)
         }
+        .toolbarBackground(AppColor.pageBackground, for: .tabBar)
+        .toolbarBackground(.visible, for: .tabBar)
         .appTint()
         .appToast()
+        .animation(.easeInOut(duration: 0.18), value: selectedTab)
         .sheet(isPresented: $showSettings) {
             SettingsView(isPresentedAsSheet: true)
         }

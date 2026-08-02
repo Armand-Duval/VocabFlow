@@ -12,7 +12,7 @@ struct SpeakButton: View {
                 .font(.body)
                 .foregroundStyle(.tint)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(SoftPressButtonStyle())
         .accessibilityLabel(label ?? L10n.speakWord)
     }
 }
