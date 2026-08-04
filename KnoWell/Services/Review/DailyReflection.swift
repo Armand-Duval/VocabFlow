@@ -13,22 +13,89 @@ struct DailyReflection: Equatable {
     let isAI: Bool
 }
 
+/// One calendar day's reflection kept for later browsing (local archive).
+struct ArchivedDailyReflection: Identifiable, Equatable, Codable {
+    var id: String { dayKey }
+    let dayKey: String
+    let sentence: String
+    let translation: String?
+    let source: String?
+    let occasion: String?
+    let isAI: Bool
+    /// Hand-picked seed for a past day; protected from curated overwrite.
+    var isManualSeed: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case dayKey, sentence, translation, source, occasion, isAI, isManualSeed
+    }
+
+    init(
+        dayKey: String,
+        sentence: String,
+        translation: String?,
+        source: String?,
+        occasion: String?,
+        isAI: Bool,
+        isManualSeed: Bool = false
+    ) {
+        self.dayKey = dayKey
+        self.sentence = sentence
+        self.translation = translation
+        self.source = source
+        self.occasion = occasion
+        self.isAI = isAI
+        self.isManualSeed = isManualSeed
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        dayKey = try container.decode(String.self, forKey: .dayKey)
+        sentence = try container.decode(String.self, forKey: .sentence)
+        translation = try container.decodeIfPresent(String.self, forKey: .translation)
+        source = try container.decodeIfPresent(String.self, forKey: .source)
+        occasion = try container.decodeIfPresent(String.self, forKey: .occasion)
+        isAI = try container.decodeIfPresent(Bool.self, forKey: .isAI) ?? false
+        isManualSeed = try container.decodeIfPresent(Bool.self, forKey: .isManualSeed) ?? false
+    }
+
+    var asReflection: DailyReflection {
+        DailyReflection(
+            sentence: sentence,
+            translation: translation,
+            source: source,
+            occasion: occasion,
+            isAI: isAI
+        )
+    }
+
+    var displayDate: String {
+        let parts = dayKey.split(separator: "-").compactMap { Int($0) }
+        guard parts.count == 3 else { return dayKey }
+        return String(format: "%d月%d日", parts[1], parts[2])
+    }
+}
+
 /// Timely line of the day: AI once per day (cached), curated fallback — never from the user's deck.
 enum DailyReflectionService {
     private static let cacheDefaultsKey = "knowell.dailyReflection.v4"
+    private static let historyDefaultsKey = "knowell.dailyReflection.history.v1"
     private static var inFlight: Task<DailyReflection, Never>?
     private static var inFlightDayKey: String?
 
     /// Instant: today's AI cache if any, otherwise curated (stable for the day).
     static func cachedOrCurated(for day: Date = .now) -> DailyReflection {
+        seedManualPastLinesIfNeeded(relativeTo: day)
         let key = dayKey(day)
         if let cached = loadCache(), cached.dayKey == key {
             let reflection = cached.asReflection(isAI: true)
             if isWellFormed(reflection) {
+                archive(reflection, dayKey: key)
                 return reflection
             }
         }
-        return curated(for: day)
+        let curated = curated(for: day)
+        archive(curated, dayKey: key)
+        return curated
     }
 
     /// Fetch a timely AI line at most once per calendar day; falls back to curated on failure.
@@ -38,6 +105,7 @@ enum DailyReflectionService {
         if let cached = loadCache(), cached.dayKey == key {
             let reflection = cached.asReflection(isAI: true)
             if isWellFormed(reflection) {
+                archive(reflection, dayKey: key)
                 return reflection
             }
         }
@@ -48,11 +116,13 @@ enum DailyReflectionService {
 
         let task = Task<DailyReflection, Never> {
             guard APISettings.canUseAI else {
+                archive(fallback, dayKey: key)
                 return fallback
             }
             do {
                 let ai = try await fetchAIReflection(for: day)
                 guard isWellFormed(ai) else {
+                    archive(fallback, dayKey: key)
                     return fallback
                 }
                 saveCache(CachedReflection(
@@ -62,8 +132,10 @@ enum DailyReflectionService {
                     source: ai.source,
                     occasion: ai.occasion
                 ))
+                archive(ai, dayKey: key)
                 return ai
             } catch {
+                archive(fallback, dayKey: key)
                 return fallback
             }
         }
@@ -75,6 +147,154 @@ enum DailyReflectionService {
             inFlightDayKey = nil
         }
         return result
+    }
+
+    // MARK: - History
+
+    private static let pastSeedDefaultsKey = "knowell.dailyReflection.history.pastSeed.v1"
+
+    /// Newest first. Empty `query` returns the full archive.
+    static func history(matching query: String = "") -> [ArchivedDailyReflection] {
+        seedManualPastLinesIfNeeded()
+        let needle = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let items = loadHistory().sorted { $0.dayKey > $1.dayKey }
+        guard !needle.isEmpty else { return items }
+        return items.filter { item in
+            item.sentence.lowercased().contains(needle)
+                || (item.translation?.lowercased().contains(needle) ?? false)
+                || (item.source?.lowercased().contains(needle) ?? false)
+                || (item.occasion?.lowercased().contains(needle) ?? false)
+                || item.dayKey.contains(needle)
+        }
+    }
+
+    static var historyCount: Int {
+        seedManualPastLinesIfNeeded()
+        return loadHistory().count
+    }
+
+    /// Upsert one day. Prefer AI over curated when replacing the same day.
+    static func archive(_ reflection: DailyReflection, for day: Date = .now) {
+        seedManualPastLinesIfNeeded(relativeTo: day)
+        archive(reflection, dayKey: dayKey(day))
+    }
+
+    private static func archive(_ reflection: DailyReflection, dayKey: String) {
+        guard isWellFormed(reflection) else { return }
+        var items = loadHistory()
+        if let index = items.firstIndex(where: { $0.dayKey == dayKey }) {
+            let existing = items[index]
+            // Don't let a curated flash overwrite a stored AI line for the same day.
+            if existing.isAI, !reflection.isAI { return }
+            // Keep manually seeded past lines unless AI arrives for that day.
+            if existing.isManualSeed, !reflection.isAI { return }
+            items[index] = ArchivedDailyReflection(
+                dayKey: dayKey,
+                sentence: reflection.sentence,
+                translation: reflection.translation,
+                source: reflection.source,
+                occasion: reflection.occasion,
+                isAI: reflection.isAI,
+                isManualSeed: false
+            )
+        } else {
+            items.append(
+                ArchivedDailyReflection(
+                    dayKey: dayKey,
+                    sentence: reflection.sentence,
+                    translation: reflection.translation,
+                    source: reflection.source,
+                    occasion: reflection.occasion,
+                    isAI: reflection.isAI,
+                    isManualSeed: false
+                )
+            )
+        }
+        // Soft cap — keep about a year of daily lines.
+        if items.count > 400 {
+            items = Array(items.sorted { $0.dayKey > $1.dayKey }.prefix(400))
+        }
+        saveHistory(items)
+    }
+
+    /// One-time: fill yesterday + day-before with chosen literary lines; later days append normally.
+    private static func seedManualPastLinesIfNeeded(relativeTo day: Date = .now) {
+        guard !UserDefaults.standard.bool(forKey: pastSeedDefaultsKey) else { return }
+        let calendar = Calendar.current
+        let start = calendar.startOfDay(for: day)
+        guard
+            let yesterday = calendar.date(byAdding: .day, value: -1, to: start),
+            let dayBefore = calendar.date(byAdding: .day, value: -2, to: start)
+        else { return }
+
+        forceUpsert(
+            ArchivedDailyReflection(
+                dayKey: dayKey(yesterday),
+                sentence: "Whose woods these are I think I know.",
+                translation: "我想我知道这些树林是谁的。",
+                source: "Stopping by Woods on a Snowy Evening · Robert Frost（雪夜林边驻马）",
+                occasion: nil,
+                isAI: false,
+                isManualSeed: true
+            )
+        )
+        forceUpsert(
+            ArchivedDailyReflection(
+                dayKey: dayKey(dayBefore),
+                sentence: "Summer afternoon—summer afternoon; to me those have always been the two most beautiful words in the English language.",
+                translation: "夏日午后——夏日午后，于我而言始终是英文里最美的两个词。",
+                source: "Henry James（亨利·詹姆斯）",
+                occasion: nil,
+                isAI: false,
+                isManualSeed: true
+            )
+        )
+        UserDefaults.standard.set(true, forKey: pastSeedDefaultsKey)
+    }
+
+    private static func forceUpsert(_ item: ArchivedDailyReflection) {
+        var items = loadHistoryRaw()
+        if let index = items.firstIndex(where: { $0.dayKey == item.dayKey }) {
+            items[index] = item
+        } else {
+            items.append(item)
+        }
+        saveHistory(items)
+    }
+
+    private static func loadHistory() -> [ArchivedDailyReflection] {
+        seedManualPastLinesIfNeeded()
+        return loadHistoryRaw()
+    }
+
+    private static func loadHistoryRaw() -> [ArchivedDailyReflection] {
+        guard let data = UserDefaults.standard.data(forKey: historyDefaultsKey),
+              let items = try? JSONDecoder().decode([ArchivedDailyReflection].self, from: data) else {
+            return seedHistoryFromTodayCacheIfNeeded()
+        }
+        return items
+    }
+
+    private static func saveHistory(_ items: [ArchivedDailyReflection]) {
+        guard let data = try? JSONEncoder().encode(items) else { return }
+        UserDefaults.standard.set(data, forKey: historyDefaultsKey)
+    }
+
+    private static func seedHistoryFromTodayCacheIfNeeded() -> [ArchivedDailyReflection] {
+        guard let cached = loadCache() else { return [] }
+        let seeded = [
+            ArchivedDailyReflection(
+                dayKey: cached.dayKey,
+                sentence: cached.sentence,
+                translation: cached.translation,
+                source: cached.source,
+                occasion: cached.occasion,
+                isAI: true,
+                isManualSeed: false
+            )
+        ]
+        saveHistory(seeded)
+        return seeded
     }
 
     // MARK: - AI

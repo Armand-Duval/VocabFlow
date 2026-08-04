@@ -222,7 +222,7 @@ struct PrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         let shadow = configuration.isPressed ? AppShadow.pressed(colorScheme) : AppShadow.card(colorScheme)
         return configuration.label
-            .font(.system(size: 16, weight: .semibold))
+            .font(.system(size: 16, weight: prominent ? .bold : .semibold))
             .frame(maxWidth: .infinity)
             .padding(.vertical, prominent ? 16 : 12)
             .foregroundStyle(isEnabled ? Color.white : AppColor.accent.opacity(0.52))

@@ -7261,6 +7261,91 @@
         }
       }
     },
+    "review.daily.history.link" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Past lines"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查看往期句子"
+          }
+        }
+      }
+    },
+    "review.daily.history.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Past lines"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "往期句子"
+          }
+        }
+      }
+    },
+    "review.daily.history.search" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search lines"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜索原文或译文"
+          }
+        }
+      }
+    },
+    "review.daily.history.empty" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lines you see on the home screen will gather here."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "首页出现过的句子会自动收录到这里。"
+          }
+        }
+      }
+    },
+    "review.daily.history.noMatch" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No matching lines"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有匹配的句子"
+          }
+        }
+      }
+    },
     "review.daily.fromLibrary" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7657,6 +7742,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "开始复习"
+          }
+        }
+      }
+    },
+    "review.home.startDone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done for today"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今日复习完成"
           }
         }
       }

@@ -179,6 +179,8 @@ private struct ReviewHomeView: View {
     let onShowQuota: () -> Void
     let onCollectReflection: (DailyReflection) -> Void
 
+    @State private var showReflectionHistory = false
+
     private var dueCount: Int { plan.sessionCards.count }
 
     private var newQuotaDisplay: String {
@@ -187,7 +189,7 @@ private struct ReviewHomeView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: AppSpacing.section) {
+            VStack(alignment: .leading, spacing: 36) {
                 AppSurfaceCard(padding: AppSpacing.md) {
                     dueZone
                 }
@@ -209,116 +211,92 @@ private struct ReviewHomeView: View {
             .padding(.top, AppSpacing.md)
             .padding(.bottom, AppSpacing.lg)
         }
+        .sheet(isPresented: $showReflectionHistory) {
+            DailyReflectionHistoryView(onCollect: onCollectReflection)
+        }
     }
 
     private var dueZone: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.lg) {
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
+            dueHero
+
+            if hasAnyCards {
+                // Secondary: studied today · streak
+                Text(primaryMetaLine)
+                    .font(AppFont.secondary())
+                    .foregroundStyle(AppColor.textSecondary)
+
+                // Tertiary: quota · week activity
+                if let secondaryMetaLine {
+                    Text(secondaryMetaLine)
+                        .font(AppFont.weak())
+                        .foregroundStyle(AppColor.textMuted.opacity(0.88))
+                }
+            }
+
             if !hasAnyCards {
-                statusHeader(compact: true, includeMeta: false)
                 emptyCTA
-            } else if dueCount == 0 {
-                statusHeader(compact: true, includeMeta: false)
-                doneStatusBlock
+                    .padding(.top, AppSpacing.xs)
             } else {
-                statusHeader(compact: false, includeMeta: true)
+                startReviewButton
+                    .padding(.top, AppSpacing.sm)
+
+                // Deferred / future load — footnote, not competing with the hero.
                 if plan.hasDeferredCards {
                     Button(action: onShowQuota) {
                         Text(L10n.reviewQuotaReachedMessage(plan.deferredTotalCount))
-                            .font(AppFont.helper())
-                            .foregroundStyle(AppColor.textMuted)
+                            .font(AppFont.weak())
+                            .foregroundStyle(AppColor.textMuted.opacity(0.85))
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .buttonStyle(SoftPressButtonStyle())
+                    .padding(.top, 2)
                 }
-                Button(action: onStartReview) {
-                    Text(L10n.reviewHomeStart)
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(PrimaryButtonStyle(prominent: true))
             }
         }
     }
 
-    /// Number + quiet study meta. Due stays the hero; no dashboard tiles.
-    private func statusHeader(compact: Bool, includeMeta: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            if compact {
-                HStack(alignment: .firstTextBaseline, spacing: AppSpacing.sm) {
-                    Text("0")
-                        .font(AppFont.heroValueCompact())
-                        .foregroundStyle(AppColor.textPrimary)
-                    Text(L10n.homeStatDue)
-                        .font(AppFont.caption())
-                        .foregroundStyle(AppColor.textTertiary)
-                    Spacer(minLength: 0)
-                }
-            } else {
-                Text(L10n.homeStatDue)
-                    .font(AppFont.caption())
-                    .foregroundStyle(AppColor.textTertiary)
+    /// Level-1: due count is the only hero metric.
+    private var dueHero: some View {
+        HStack(alignment: .firstTextBaseline, spacing: AppSpacing.sm) {
+            Text("\(dueCount)")
+                .font(AppFont.heroValue())
+                .foregroundStyle(AppColor.textPrimary)
+                .contentTransition(.numericText())
+                .accessibilityLabel(L10n.reviewHomeDueCount(dueCount))
 
-                Text("\(dueCount)")
-                    .font(AppFont.heroValue())
-                    .foregroundStyle(AppColor.textPrimary)
-                    .contentTransition(.numericText())
-            }
+            Text(L10n.homeStatDue)
+                .font(AppFont.caption())
+                .foregroundStyle(AppColor.textTertiary)
 
-            if includeMeta {
-                Text(primaryMetaLine)
-                    .font(AppFont.helper())
-                    .foregroundStyle(AppColor.textMuted)
-
-                if let secondaryMetaLine {
-                    Text(secondaryMetaLine)
-                        .font(AppFont.weak())
-                        .foregroundStyle(AppColor.textMuted.opacity(0.9))
-                }
-            }
+            Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// Done-for-today: closing line leads; tip / deferred stay as footnotes.
-    private var doneStatusBlock: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            Text(L10n.reviewHomeDoneToday)
-                .font(AppFont.secondary())
-                .foregroundStyle(AppColor.textSecondary)
-
-            Text(primaryMetaLine)
-                .font(AppFont.helper())
-                .foregroundStyle(AppColor.textMuted)
-
-            if let secondaryMetaLine {
-                Text(secondaryMetaLine)
-                    .font(AppFont.weak())
-                    .foregroundStyle(AppColor.textMuted.opacity(0.9))
-            }
-
-            if plan.hasDeferredCards {
-                Button(action: onShowQuota) {
-                    Text(L10n.reviewQuotaReachedMessage(plan.deferredTotalCount))
-                        .font(AppFont.helper())
-                        .foregroundStyle(AppColor.textMuted)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .buttonStyle(SoftPressButtonStyle())
-            }
+    private var startReviewButton: some View {
+        Button(action: onStartReview) {
+            Text(dueCount > 0 ? L10n.reviewHomeStart : L10n.reviewHomeStartDone)
+                .font(.system(size: 16, weight: .bold))
+                .frame(maxWidth: .infinity)
         }
+        .buttonStyle(PrimaryButtonStyle(prominent: true))
+        .disabled(dueCount == 0)
+        .accessibilityLabel(dueCount > 0 ? L10n.reviewHomeStart : L10n.reviewHomeStartDone)
     }
 
     private var studiedToday: Int {
         plan.newStudiedToday + plan.reviewStudiedToday
     }
 
-    /// 今日已学 · 连续天数 — primary quiet stats under the due hero.
+    /// 今日已学｜连续天数 — secondary quiet stats under the due hero.
     private var primaryMetaLine: String {
         let studied = L10n.reviewHomeStudiedToday(studiedToday)
         let streak = "\(L10n.homeStatStreak) \(L10n.homeStatStreakValue(StudyStreakStore.currentStreak))"
-        return "\(studied) · \(streak)"
+        return "\(studied)｜\(streak)"
     }
 
-    /// 新词配额 · 本周词/句 — one soft line, not a chart.
+    /// 新词配额 · 本周词/句 — tertiary footnote.
     private var secondaryMetaLine: String? {
         guard hasAnyCards else { return nil }
         var parts: [String] = ["\(L10n.homeStatNewQuota) \(newQuotaDisplay)"]
@@ -340,6 +318,7 @@ private struct ReviewHomeView: View {
                 AppTab.request(.create)
             } label: {
                 Text(L10n.reviewEmptyStartCreate)
+                    .font(.system(size: 16, weight: .bold))
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(PrimaryButtonStyle(prominent: true))
@@ -350,16 +329,16 @@ private struct ReviewHomeView: View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
             HStack(spacing: 6) {
                 Text(L10n.reviewDailyTitle)
-                    .font(AppFont.helper())
-                    .foregroundStyle(AppColor.textMuted)
+                    .font(AppFont.weak())
+                    .foregroundStyle(AppColor.textMuted.opacity(0.9))
                 if let occasion = reflection.occasion?.trimmingCharacters(in: .whitespacesAndNewlines),
                    !occasion.isEmpty {
                     Text("·")
-                        .font(AppFont.helper())
-                        .foregroundStyle(AppColor.textMuted.opacity(0.55))
+                        .font(AppFont.weak())
+                        .foregroundStyle(AppColor.textMuted.opacity(0.45))
                     Text(occasion)
-                        .font(AppFont.helper())
-                        .foregroundStyle(AppColor.textMuted)
+                        .font(AppFont.weak())
+                        .foregroundStyle(AppColor.textMuted.opacity(0.75))
                         .lineLimit(1)
                 }
             }
@@ -385,13 +364,23 @@ private struct ReviewHomeView: View {
             if let source = reflection.source?.trimmingCharacters(in: .whitespacesAndNewlines),
                !source.isEmpty {
                 Text("—— \(source)")
-                    .font(AppFont.helper())
-                    .foregroundStyle(AppColor.textMuted)
+                    .font(AppFont.weak())
+                    .foregroundStyle(AppColor.textMuted.opacity(0.85))
             }
 
             TextLinkAction(title: L10n.reviewDailyCollect) {
                 onCollectReflection(reflection)
             }
+            .padding(.top, 2)
+
+            Button {
+                showReflectionHistory = true
+            } label: {
+                Text(L10n.reviewDailyHistoryLink)
+                    .font(AppFont.weak())
+                    .foregroundStyle(AppColor.textMuted.opacity(0.9))
+            }
+            .buttonStyle(SoftPressButtonStyle(pressedScale: 0.98, pressedOpacity: 0.88))
             .padding(.top, 2)
         }
     }

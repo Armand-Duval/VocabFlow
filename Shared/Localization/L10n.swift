@@ -244,6 +244,7 @@ enum L10n {
     static var studyTitle: String { tr("review.study") }
     static func reviewHomeDueCount(_ count: Int) -> String { tf("review.home.dueCount", count) }
     static var reviewHomeStart: String { tr("review.home.start") }
+    static var reviewHomeStartDone: String { tr("review.home.startDone") }
     static func reviewHomeContinueDeck(_ name: String) -> String { tf("review.home.continueDeck", name) }
     static var reviewHomeQuotaLink: String { tr("review.home.quotaLink") }
     static var reviewHomeQuickCapture: String { tr("review.home.quickCapture") }
@@ -270,6 +271,11 @@ enum L10n {
     static var reviewDailyTitle: String { tr("review.daily.title") }
     static var reviewDailyFromLibrary: String { tr("review.daily.fromLibrary") }
     static var reviewDailyCollect: String { tr("review.daily.collect") }
+    static var reviewDailyHistoryLink: String { tr("review.daily.history.link") }
+    static var reviewDailyHistoryTitle: String { tr("review.daily.history.title") }
+    static var reviewDailyHistorySearch: String { tr("review.daily.history.search") }
+    static var reviewDailyHistoryEmpty: String { tr("review.daily.history.empty") }
+    static var reviewDailyHistoryNoMatch: String { tr("review.daily.history.noMatch") }
     static var reviewSessionDone: String { tr("review.session.done") }
 
     static var ratingAgain: String { tr("rating.again") }

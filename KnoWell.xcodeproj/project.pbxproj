@@ -15,6 +15,7 @@
 		ACTVTY00100000000000000002 /* StudyActivityStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACTVTY00100000000000000001 /* StudyActivityStore.swift */; };
 		CAPTUR00100000000000000002 /* CaptureStatsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAPTUR00100000000000000001 /* CaptureStatsStore.swift */; };
 		DAILY00100000000000000001 /* DailyReflection.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAILY00100000000000000010 /* DailyReflection.swift */; };
+		DAILY00100000000000000002 /* DailyReflectionHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAILY00100000000000000011 /* DailyReflectionHistoryView.swift */; };
 		KK0000010000000000000001 /* ReviewSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = KK0000010000000000000010 /* ReviewSettings.swift */; };
 		KK0000010000000000000002 /* ReviewQueueBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = KK0000010000000000000011 /* ReviewQueueBuilder.swift */; };
 		TT0000010000000000000001 /* ReviewSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = KK0000010000000000000012 /* ReviewSettingsStore.swift */; };
@@ -196,6 +197,7 @@
 		ACTVTY00100000000000000001 /* StudyActivityStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyActivityStore.swift; sourceTree = "<group>"; };
 		CAPTUR00100000000000000001 /* CaptureStatsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureStatsStore.swift; sourceTree = "<group>"; };
 		DAILY00100000000000000010 /* DailyReflection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyReflection.swift; sourceTree = "<group>"; };
+		DAILY00100000000000000011 /* DailyReflectionHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyReflectionHistoryView.swift; sourceTree = "<group>"; };
 		KK0000010000000000000010 /* ReviewSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewSettings.swift; sourceTree = "<group>"; };
 		KK0000010000000000000012 /* ReviewSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewSettingsStore.swift; sourceTree = "<group>"; };
 		KK0000010000000000000011 /* ReviewQueueBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewQueueBuilder.swift; sourceTree = "<group>"; };
@@ -510,6 +512,7 @@
 			children = (
 				AA0000010000000000000017 /* ReviewView.swift */,
 				AA0000010000000000000058 /* CardReviewSessionView.swift */,
+				DAILY00100000000000000011 /* DailyReflectionHistoryView.swift */,
 				MM0000010000000000000011 /* SpeakButton.swift */,
 			);
 			path = Review;
@@ -926,6 +929,7 @@
 				ACTVTY00100000000000000002 /* StudyActivityStore.swift in Sources */,
 				CAPTUR00100000000000000002 /* CaptureStatsStore.swift in Sources */,
 				DAILY00100000000000000001 /* DailyReflection.swift in Sources */,
+				DAILY00100000000000000002 /* DailyReflectionHistoryView.swift in Sources */,
 				KK0000010000000000000001 /* ReviewSettings.swift in Sources */,
 				KK0000010000000000000002 /* ReviewQueueBuilder.swift in Sources */,
 				TT0000010000000000000001 /* ReviewSettingsStore.swift in Sources */,
