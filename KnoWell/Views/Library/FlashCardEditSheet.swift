@@ -13,6 +13,8 @@ struct FlashCardEditFields: Equatable {
     var translationPlain = ""
     /// Short gloss to highlight inside the translation.
     var translationHighlight = ""
+    var usageNote = ""
+    var etymology = ""
     var sourceAttribution = ""
     var deckID = UUID()
 
@@ -37,6 +39,8 @@ struct FlashCardEditFields: Equatable {
             back: card.back,
             translationPlain: CardContentFormatter.stripHighlightMarkers(note),
             translationHighlight: CardContentFormatter.primaryHighlightTerm(from: note),
+            usageNote: card.usageNote ?? "",
+            etymology: card.etymology ?? "",
             sourceAttribution: card.sourceAttribution ?? "",
             deckID: card.deck?.id ?? defaultDeckID
         )
@@ -53,6 +57,10 @@ struct FlashCardEditFields: Equatable {
         card.back = back.trimmingCharacters(in: .whitespacesAndNewlines)
         let note = composedContextNote.trimmingCharacters(in: .whitespacesAndNewlines)
         card.contextNote = note.isEmpty ? nil : note
+        let usage = usageNote.trimmingCharacters(in: .whitespacesAndNewlines)
+        card.usageNote = usage.isEmpty ? nil : usage
+        let roots = etymology.trimmingCharacters(in: .whitespacesAndNewlines)
+        card.etymology = roots.isEmpty ? nil : roots
         let source = sourceAttribution.trimmingCharacters(in: .whitespacesAndNewlines)
         card.sourceAttribution = source.isEmpty ? nil : source
         card.deck = DeckService.resolvedDeck(id: deckID, in: modelContext)
@@ -77,6 +85,14 @@ struct FlashCardEditFields: Equatable {
         if let phonetic = draft.phonetic?.trimmingCharacters(in: .whitespacesAndNewlines),
            !phonetic.isEmpty {
             self.phonetic = phonetic
+        }
+        if let usage = draft.usageNote?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !usage.isEmpty {
+            usageNote = usage
+        }
+        if let etymology = draft.etymology?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !etymology.isEmpty {
+            self.etymology = etymology
         }
         if let source = draft.sourceAttribution?.trimmingCharacters(in: .whitespacesAndNewlines),
            !source.isEmpty {
@@ -154,6 +170,20 @@ struct FlashCardEditorForm: View {
                     axis: .vertical,
                     lineLimit: 3...10,
                     prompt: L10n.backPlaceholder
+                )
+                labeledField(
+                    L10n.cardUsageNoteLabel,
+                    text: $fields.usageNote,
+                    axis: .vertical,
+                    lineLimit: 2...8,
+                    prompt: L10n.cardUsageNotePlaceholder
+                )
+                labeledField(
+                    L10n.cardEtymologyLabel,
+                    text: $fields.etymology,
+                    axis: .vertical,
+                    lineLimit: 1...4,
+                    prompt: L10n.cardEtymologyPlaceholder
                 )
                 labeledField(
                     L10n.cardSentenceTranslation,

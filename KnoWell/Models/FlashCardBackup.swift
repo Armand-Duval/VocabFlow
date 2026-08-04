@@ -16,6 +16,8 @@ struct FlashCardBackup: Codable {
     let front: String
     let back: String
     let contextNote: String?
+    let usageNote: String?
+    let etymology: String?
     let sourceAttribution: String?
     let sourceImagePath: String?
     let createdAt: Date
@@ -29,8 +31,8 @@ struct FlashCardBackup: Codable {
     let deckId: UUID?
 
     enum CodingKeys: String, CodingKey {
-        case id, word, phonetic, sentence, cardTypeRaw, front, back, contextNote, sourceAttribution
-        case sourceImagePath
+        case id, word, phonetic, sentence, cardTypeRaw, front, back, contextNote
+        case usageNote, etymology, sourceAttribution, sourceImagePath
         case createdAt, nextReviewDate, intervalDays, easeFactor, repetitions, reviewCount, learningStep
         case isSuspended, deckId
     }
@@ -44,6 +46,8 @@ struct FlashCardBackup: Codable {
         front = card.front
         back = card.back
         contextNote = card.contextNote
+        usageNote = card.usageNote
+        etymology = card.etymology
         sourceAttribution = card.sourceAttribution
         sourceImagePath = card.sourceImagePath
         createdAt = card.createdAt
@@ -67,6 +71,8 @@ struct FlashCardBackup: Codable {
         front = try container.decode(String.self, forKey: .front)
         back = try container.decode(String.self, forKey: .back)
         contextNote = try container.decodeIfPresent(String.self, forKey: .contextNote)
+        usageNote = try container.decodeIfPresent(String.self, forKey: .usageNote)
+        etymology = try container.decodeIfPresent(String.self, forKey: .etymology)
         sourceAttribution = try container.decodeIfPresent(String.self, forKey: .sourceAttribution)
         sourceImagePath = try container.decodeIfPresent(String.self, forKey: .sourceImagePath)
         createdAt = try container.decode(Date.self, forKey: .createdAt)
@@ -90,6 +96,8 @@ struct FlashCardBackup: Codable {
         try container.encode(front, forKey: .front)
         try container.encode(back, forKey: .back)
         try container.encode(contextNote, forKey: .contextNote)
+        try container.encodeIfPresent(usageNote, forKey: .usageNote)
+        try container.encodeIfPresent(etymology, forKey: .etymology)
         try container.encodeIfPresent(sourceAttribution, forKey: .sourceAttribution)
         try container.encodeIfPresent(sourceImagePath, forKey: .sourceImagePath)
         try container.encode(createdAt, forKey: .createdAt)
@@ -111,6 +119,8 @@ struct FlashCardBackup: Codable {
         card.front = front
         card.back = back
         card.contextNote = contextNote
+        card.usageNote = usageNote
+        card.etymology = etymology
         card.sourceAttribution = sourceAttribution
         card.sourceImagePath = sourceImagePath
         card.createdAt = createdAt
@@ -136,6 +146,8 @@ struct FlashCardBackup: Codable {
             front: front,
             back: back,
             contextNote: contextNote,
+            usageNote: usageNote,
+            etymology: etymology,
             sourceAttribution: sourceAttribution,
             sourceImagePath: sourceImagePath,
             phonetic: phonetic

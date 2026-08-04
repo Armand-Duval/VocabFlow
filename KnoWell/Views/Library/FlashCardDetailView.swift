@@ -156,6 +156,12 @@ struct FlashCardDetailView: View {
                 }
                 DetailField(label: L10n.frontLabel, value: card.front)
                 DetailField(label: L10n.backLabel, value: card.displayBack)
+                if let usage = card.usageNote, !usage.isEmpty {
+                    DetailField(label: L10n.cardUsageNoteLabel, value: usage)
+                }
+                if let etymology = card.etymology, !etymology.isEmpty {
+                    DetailField(label: L10n.cardEtymologyLabel, value: etymology)
+                }
             }
 
             Section(L10n.libraryDetailSRS) {

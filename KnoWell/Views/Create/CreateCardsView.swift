@@ -18,7 +18,6 @@ struct CreateCardsView: View {
     @State private var showPreview = false
     @State private var showGenerationQueue = false
     @State private var errorMessage: String?
-    @State private var importBannerMessage: String?
     @State private var selectedText = ""
     @State private var selectionClearNonce = 0
     @State private var wordFeedbackMessage: String?
@@ -34,6 +33,22 @@ struct CreateCardsView: View {
     @State private var sourceImagePath: String?
     @State private var todayCaptureTip: String?
     @State private var isSourceFocused = false
+    /// Edit pasted/OCR text vs pick phrases — one surface, not two stacked boxes.
+    @State private var sourceMode: SourceWorkspaceMode = .edit
+
+    private enum SourceWorkspaceMode: String, CaseIterable, Identifiable {
+        case edit
+        case pick
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .edit: return L10n.createSourceModeEdit
+            case .pick: return L10n.createSourceModePick
+            }
+        }
+    }
 
     private var trimmedSentence: String {
         sentence.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -151,6 +166,9 @@ struct CreateCardsView: View {
                 .onChange(of: showPreview) { _, isShowing in
                     if !isShowing { refreshCaptureTip() }
                 }
+                .onChange(of: trimmedSentence.isEmpty) { _, isEmpty in
+                    if isEmpty { sourceMode = .edit }
+                }
                 .onReceive(NotificationCenter.default.publisher(for: .libraryCatalogDidChange)) { _ in
                     refreshCaptureTip()
                 }
@@ -159,7 +177,7 @@ struct CreateCardsView: View {
 
     private var scrollContent: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: AppSpacing.lg) {
+            VStack(alignment: .leading, spacing: AppSpacing.md) {
                 if hasPendingDrafts, let pendingDrafts = shareImport.pendingDrafts {
                     PendingCardsBannerView(
                         title: L10n.createPendingImportTitle,
@@ -167,13 +185,6 @@ struct CreateCardsView: View {
                         systemImage: "sparkles.rectangle.stack.fill",
                         actionTitle: L10n.createPendingAction,
                         action: openShareDraftPreview
-                    )
-                } else if let importBannerMessage {
-                    PendingCardsBannerView(
-                        title: L10n.createPendingImportTitle,
-                        subtitle: importBannerMessage,
-                        systemImage: "arrow.down.doc.fill",
-                        onDismiss: { self.importBannerMessage = nil }
                     )
                 }
 
@@ -185,10 +196,17 @@ struct CreateCardsView: View {
                         .accessibilityLabel(todayCaptureTip)
                 }
 
-                sourceEditor
+                // Same quiet capture row empty or filled — no marketing hero card.
+                captureToolbar
 
-                if !selectedText.isEmpty {
-                    SelectionActionBar(selectedText: selectedText, action: appendSelectionToWords)
+                if trimmedSentence.isEmpty {
+                    sourceEditSurface(minHeight: 120, showPlaceholder: true)
+                } else {
+                    sourceWorkspace
+
+                    if sourceMode == .edit, !selectedText.isEmpty {
+                        SelectionActionBar(selectedText: selectedText, action: appendSelectionToWords)
+                    }
                 }
 
                 if isRecognizingPhoto {
@@ -216,78 +234,148 @@ struct CreateCardsView: View {
         .scrollBounceBehavior(.basedOnSize)
     }
 
-    private var sourceEditor: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            HStack(spacing: AppSpacing.xs) {
-                createImportTool(
-                    systemImage: "photo.on.rectangle",
-                    label: L10n.createQuickPhoto,
-                    disabled: isRecognizingPhoto
-                ) {
-                    showPhotoLibrary = true
-                }
+    private var captureToolbar: some View {
+        HStack(spacing: AppSpacing.sm) {
+            Button {
+                openScanCapture()
+            } label: {
+                Label(L10n.createScanExcerpt, systemImage: "camera.viewfinder")
+                    .font(AppFont.helper().weight(.semibold))
+                    .foregroundStyle(Color.white)
+                    .padding(.horizontal, AppSpacing.sm)
+                    .padding(.vertical, 10)
+                    .background(AppColor.accentStrong, in: Capsule())
+            }
+            .buttonStyle(SoftPressButtonStyle())
+            .disabled(isRecognizingPhoto)
+            .opacity(isRecognizingPhoto ? 0.55 : 1)
 
-                if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                    createImportTool(
-                        systemImage: "camera",
-                        label: L10n.createQuickCamera,
-                        disabled: isRecognizingPhoto
-                    ) {
-                        showCamera = true
-                    }
-                }
-
-                createImportTool(
-                    systemImage: "doc.on.clipboard",
-                    label: L10n.createQuickPaste,
-                    disabled: false
-                ) {
-                    pasteFromClipboard()
-                }
-
-                Spacer(minLength: 0)
+            createImportTool(
+                systemImage: "photo.on.rectangle",
+                label: L10n.createQuickPhoto,
+                title: L10n.createQuickPhoto,
+                disabled: isRecognizingPhoto
+            ) {
+                showPhotoLibrary = true
             }
 
-            ZStack(alignment: .topLeading) {
-                SelectableTextEditor(
-                    text: $sentence,
-                    selectedText: $selectedText,
-                    selectionClearNonce: $selectionClearNonce,
-                    isFocused: $isSourceFocused,
-                    onAddToVocabulary: appendSelectionToWords
-                )
-                .frame(minHeight: 180)
-                .padding(AppSpacing.sm)
-
-                if sentence.isEmpty {
-                    Text(L10n.createPastePlaceholder)
-                        .font(AppFont.literaryQuote())
-                        .foregroundStyle(AppColor.textMuted)
-                        .padding(.horizontal, AppSpacing.md)
-                        .padding(.top, AppSpacing.md + 2)
-                        .allowsHitTesting(false)
-                }
+            createImportTool(
+                systemImage: "doc.on.clipboard",
+                label: L10n.createQuickPaste,
+                title: L10n.createQuickPaste,
+                disabled: false
+            ) {
+                pasteFromClipboard()
             }
-            .appInputSurface(isFocused: isSourceFocused)
+
+            Spacer(minLength: 0)
         }
+    }
+
+    private func openScanCapture() {
+        if UIImagePickerController.isSourceTypeAvailable(.camera) {
+            showCamera = true
+        } else {
+            showPhotoLibrary = true
+        }
+    }
+
+    private var sourceWorkspace: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+            Picker("", selection: $sourceMode) {
+                ForEach(SourceWorkspaceMode.allCases) { mode in
+                    Text(mode.title).tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+            .onChange(of: sourceMode) { _, mode in
+                if mode == .pick {
+                    isSourceFocused = false
+                    UIApplication.shared.sendAction(
+                        #selector(UIResponder.resignFirstResponder),
+                        to: nil,
+                        from: nil,
+                        for: nil
+                    )
+                }
+            }
+
+            switch sourceMode {
+            case .edit:
+                sourceEditSurface(minHeight: 120, showPlaceholder: false)
+            case .pick:
+                PhraseTokenPicker(
+                    sentence: trimmedSentence,
+                    words: $words,
+                    maxContentHeight: 220,
+                    showsChrome: false,
+                    onCommitPhrase: { phrase in
+                        let result = appendCreateWord(phrase)
+                        VocabularyWordFeedback.apply(
+                            result,
+                            message: &wordFeedbackMessage,
+                            isError: &wordFeedbackIsError
+                        )
+                        clearFeedbackLater()
+                        return result
+                    }
+                )
+                .padding(AppSpacing.sm)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .appInputSurface(isFocused: false)
+            }
+        }
+    }
+
+    private func sourceEditSurface(minHeight: CGFloat, showPlaceholder: Bool) -> some View {
+        ZStack(alignment: .topLeading) {
+            SelectableTextEditor(
+                text: $sentence,
+                selectedText: $selectedText,
+                selectionClearNonce: $selectionClearNonce,
+                isFocused: $isSourceFocused,
+                onAddToVocabulary: appendSelectionToWords
+            )
+            .frame(minHeight: minHeight)
+            .padding(AppSpacing.sm)
+
+            if showPlaceholder, sentence.isEmpty {
+                Text(L10n.createPastePlaceholder)
+                    .font(AppFont.literaryQuote())
+                    .foregroundStyle(AppColor.textMuted)
+                    .padding(.horizontal, AppSpacing.md)
+                    .padding(.top, AppSpacing.md + 2)
+                    .allowsHitTesting(false)
+            }
+        }
+        .appInputSurface(isFocused: isSourceFocused)
     }
 
     private func createImportTool(
         systemImage: String,
         label: String,
+        title: String? = nil,
         disabled: Bool,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            Image(systemName: systemImage)
-                .font(.system(size: 16, weight: .regular))
-                .foregroundStyle(disabled ? AppColor.textMuted : AppColor.textSecondary)
-                .frame(width: 36, height: 36)
-                .background(
-                    AppColor.surfaceMuted,
-                    in: RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
-                )
-                .appSoftShadow()
+            HStack(spacing: 6) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 14, weight: .regular))
+                if let title {
+                    Text(title)
+                        .font(AppFont.helper().weight(.medium))
+                }
+            }
+            .foregroundStyle(disabled ? AppColor.textMuted : AppColor.textSecondary)
+            .padding(.horizontal, title == nil ? 0 : AppSpacing.sm)
+            .frame(minWidth: title == nil ? 36 : nil, minHeight: 36)
+            .padding(.horizontal, title == nil ? 0 : 2)
+            .background(
+                AppColor.surfaceMuted,
+                in: RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
+            )
+            .appSoftShadow()
         }
         .buttonStyle(SoftPressButtonStyle())
         .disabled(disabled)
@@ -300,7 +388,7 @@ struct CreateCardsView: View {
         if let text = UIPasteboard.general.string?.trimmingCharacters(in: .whitespacesAndNewlines),
            !text.isEmpty {
             sentence = text
-            importBannerMessage = L10n.createQuickPaste
+            sourceMode = .pick
             showToast(L10n.createQuickPaste)
         }
         #endif
@@ -387,7 +475,6 @@ struct CreateCardsView: View {
             selectedDeckID = SharedDeckStore.resolvedSelectedDeckID()
         }
         shareImport.acknowledgeDrafts()
-        importBannerMessage = nil
         showPreview = true
     }
 
@@ -442,19 +529,17 @@ struct CreateCardsView: View {
             }
 
             if result.hasHighlightContext {
-                let message = L10n.ocrHighlightContext(
+                showToast(L10n.ocrHighlightContext(
                     addedHighlights,
                     result.importUnits.count
-                )
-                importBannerMessage = message
-                showToast(message)
+                ))
+                sourceMode = .pick
             } else if addedHighlights > 0 {
-                let message = L10n.ocrHighlightDetected(addedHighlights)
-                importBannerMessage = message
-                showToast(message)
+                showToast(L10n.ocrHighlightDetected(addedHighlights))
+                sourceMode = .pick
             } else {
-                importBannerMessage = successBanner
                 showToast(successBanner)
+                sourceMode = .edit
             }
         } catch {
             errorMessage = error.localizedDescription
@@ -530,7 +615,10 @@ struct CreateCardsView: View {
         if let word = payload.selectedWord {
             words = VocabularyWords.parse(from: word)
         }
-        importBannerMessage = payload.bannerMessage
+        if !payload.bannerMessage.isEmpty {
+            showToast(payload.bannerMessage)
+        }
+        sourceMode = .pick
         shareImport.acknowledgeImport()
     }
 

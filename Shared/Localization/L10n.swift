@@ -30,6 +30,22 @@ enum L10n {
     static var createGenerateNeedBoth: String { tr("create.generate.needBoth") }
     static var createAddWord: String { tr("create.addWord") }
     static var createManageDeck: String { tr("create.manageDeck") }
+    static var createScanExcerpt: String { tr("create.scan.excerpt") }
+    static var createScanOpenCamera: String { tr("create.scan.openCamera") }
+    static var createScanRitualTitle: String { tr("create.scan.ritualTitle") }
+    static var createScanRitualSubtitle: String { tr("create.scan.ritualSubtitle") }
+    static var createScanEmptyHint: String { tr("create.scan.emptyHint") }
+    static var createScanStepPhoto: String { tr("create.scan.step.photo") }
+    static var createScanStepExtract: String { tr("create.scan.step.extract") }
+    static var createScanStepCard: String { tr("create.scan.step.card") }
+    static var createPhrasePickerTitle: String { tr("create.phrasePicker.title") }
+    static var createPhrasePickerHint: String { tr("create.phrasePicker.hint") }
+    static var createPhraseBoundaryHint: String { tr("create.phrasePicker.boundaryHint") }
+    static var createPhraseBoundaryStart: String { tr("create.phrasePicker.boundaryStart") }
+    static var createPhraseBoundaryEnd: String { tr("create.phrasePicker.boundaryEnd") }
+    static var createSourceModeEdit: String { tr("create.sourceMode.edit") }
+    static var createSourceModePick: String { tr("create.sourceMode.pick") }
+    static var createLiteraryLead: String { tr("create.literaryLead") }
 
     // MARK: - Common
 
@@ -153,6 +169,10 @@ enum L10n {
     static var cardTranslationHighlightPreview: String { tr("card.translationHighlight.preview") }
     static var cardSourceLabel: String { tr("card.source") }
     static var cardSourceImageLabel: String { tr("card.sourceImage") }
+    static var cardUsageNoteLabel: String { tr("card.usageNote") }
+    static var cardUsageNotePlaceholder: String { tr("card.usageNote.placeholder") }
+    static var cardEtymologyLabel: String { tr("card.etymology") }
+    static var cardEtymologyPlaceholder: String { tr("card.etymology.placeholder") }
     static func cardSource(_ value: String) -> String { tf("card.source.value", value) }
     static func saveCount(_ count: Int) -> String { tf("preview.save", count) }
     static var savedTitle: String { tr("preview.saved.title") }
@@ -200,6 +220,10 @@ enum L10n {
     static var tapToReveal: String { tr("review.tapReveal") }
     static var tapToFlipBack: String { tr("review.tapFlip") }
     static var showAnswer: String { tr("review.showAnswer") }
+    static var reviewScrollForAnswer: String { tr("review.scrollForAnswer") }
+    static var reviewMeaningSection: String { tr("review.meaning") }
+    static var reviewTranslationSection: String { tr("review.translation") }
+    static var reviewAIInsightSection: String { tr("review.aiInsight") }
     static var studyTitle: String { tr("review.study") }
     static func reviewHomeDueCount(_ count: Int) -> String { tf("review.home.dueCount", count) }
     static var reviewHomeStart: String { tr("review.home.start") }
@@ -216,6 +240,12 @@ enum L10n {
     }
     static func reviewHomeActivityRecent(_ days: Int, _ words: Int, _ sentences: Int) -> String {
         tf("review.home.activityRecent", days, words, sentences)
+    }
+    static func reviewHomeStudiedToday(_ count: Int) -> String {
+        tf("review.home.studiedToday", count)
+    }
+    static func reviewHomeWeekActivity(_ words: Int, _ sentences: Int) -> String {
+        tf("review.home.weekActivity", words, sentences)
     }
     static func createCaptureToday(_ words: Int, _ sentences: Int) -> String {
         tf("create.captureToday", words, sentences)
@@ -325,6 +355,11 @@ enum L10n {
     static var settingsReviewNewLimitLabel: String { tr("settings.review.newLimit") }
     static var settingsReviewReviewLimitLabel: String { tr("settings.review.reviewLimit") }
     static var settingsReviewFooter: String { tr("settings.review.footer") }
+    static var settingsReviewRevealStyle: String { tr("settings.review.revealStyle") }
+    static var settingsReviewRevealStyleReveal: String { tr("settings.review.revealStyle.reveal") }
+    static var settingsReviewRevealStyleFlip: String { tr("settings.review.revealStyle.flip") }
+    static var settingsReviewRevealStyleRevealFooter: String { tr("settings.review.revealStyle.revealFooter") }
+    static var settingsReviewRevealStyleFlipFooter: String { tr("settings.review.revealStyle.flipFooter") }
     static var settingsReviewReminderEnabled: String { tr("settings.review.reminder.enabled") }
     static var settingsReviewReminderTime: String { tr("settings.review.reminder.time") }
     static func reviewReminderBody(_ count: Int) -> String { tf("review.reminder.body", count) }

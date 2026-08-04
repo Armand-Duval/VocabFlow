@@ -164,6 +164,36 @@ struct DraftPreviewCard: View {
             }
 
             VStack(alignment: .leading, spacing: 6) {
+                Text(L10n.cardUsageNoteLabel)
+                    .font(AppFont.caption())
+                    .foregroundStyle(.tertiary)
+                TextField(
+                    L10n.cardUsageNotePlaceholder,
+                    text: Binding(
+                        get: { draft.usageNote ?? "" },
+                        set: { draft.usageNote = $0.nilIfEmpty }
+                    ),
+                    axis: .vertical
+                )
+                .lineLimit(2...8)
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(L10n.cardEtymologyLabel)
+                    .font(AppFont.caption())
+                    .foregroundStyle(.tertiary)
+                TextField(
+                    L10n.cardEtymologyPlaceholder,
+                    text: Binding(
+                        get: { draft.etymology ?? "" },
+                        set: { draft.etymology = $0.nilIfEmpty }
+                    ),
+                    axis: .vertical
+                )
+                .lineLimit(1...4)
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
                 Text(L10n.cardSentenceTranslation)
                     .font(AppFont.caption())
                     .foregroundStyle(.tertiary)

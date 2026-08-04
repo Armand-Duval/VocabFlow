@@ -210,16 +210,13 @@ private struct ReviewHomeView: View {
     private var dueZone: some View {
         VStack(alignment: .leading, spacing: AppSpacing.lg) {
             if !hasAnyCards {
-                statusHeader(compact: true)
+                statusHeader(compact: true, includeMeta: false)
                 emptyCTA
             } else if dueCount == 0 {
-                statusHeader(compact: true)
+                statusHeader(compact: true, includeMeta: false)
                 doneStatusBlock
             } else {
-                statusHeader(compact: false)
-                if let tip = activityTipText {
-                    homeTip(tip)
-                }
+                statusHeader(compact: false, includeMeta: true)
                 if plan.hasDeferredCards {
                     Button(action: onShowQuota) {
                         Text(L10n.reviewQuotaReachedMessage(plan.deferredTotalCount))
@@ -238,8 +235,8 @@ private struct ReviewHomeView: View {
         }
     }
 
-    /// Number + one meta line (+ optional deferred). Keeps grey noise out of the status story.
-    private func statusHeader(compact: Bool) -> some View {
+    /// Number + quiet study meta. Due stays the hero; no dashboard tiles.
+    private func statusHeader(compact: Bool, includeMeta: Bool) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             if compact {
                 HStack(alignment: .firstTextBaseline, spacing: AppSpacing.sm) {
@@ -262,9 +259,17 @@ private struct ReviewHomeView: View {
                     .contentTransition(.numericText())
             }
 
-            Text(metaLine)
-                .font(AppFont.helper())
-                .foregroundStyle(AppColor.textMuted)
+            if includeMeta {
+                Text(primaryMetaLine)
+                    .font(AppFont.helper())
+                    .foregroundStyle(AppColor.textMuted)
+
+                if let secondaryMetaLine {
+                    Text(secondaryMetaLine)
+                        .font(AppFont.weak())
+                        .foregroundStyle(AppColor.textMuted.opacity(0.9))
+                }
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -276,8 +281,14 @@ private struct ReviewHomeView: View {
                 .font(AppFont.secondary())
                 .foregroundStyle(AppColor.textSecondary)
 
-            if let tip = activityTipText {
-                homeTip(tip)
+            Text(primaryMetaLine)
+                .font(AppFont.helper())
+                .foregroundStyle(AppColor.textMuted)
+
+            if let secondaryMetaLine {
+                Text(secondaryMetaLine)
+                    .font(AppFont.weak())
+                    .foregroundStyle(AppColor.textMuted.opacity(0.9))
             }
 
             if plan.hasDeferredCards {
@@ -292,41 +303,30 @@ private struct ReviewHomeView: View {
         }
     }
 
-    private func homeTip(_ tip: String) -> some View {
-        Text(tip)
-            .font(AppFont.helper())
-            .foregroundStyle(AppColor.textMuted)
-            .fixedSize(horizontal: false, vertical: true)
-            .accessibilityLabel(tip)
+    private var studiedToday: Int {
+        plan.newStudiedToday + plan.reviewStudiedToday
     }
 
-    private var activityTipText: String? {
-        guard hasAnyCards,
-              let summary = StudyActivityStore.recentSummary(),
-              summary.uniqueWords > 0 || summary.uniqueSentences > 0 else {
-            return nil
-        }
-        if summary.spanDays <= 1 {
-            return L10n.reviewHomeActivityToday(summary.uniqueWords, summary.uniqueSentences)
-        }
-        return L10n.reviewHomeActivityRecent(
-            summary.spanDays,
-            summary.uniqueWords,
-            summary.uniqueSentences
-        )
+    /// 今日已学 · 连续天数 — primary quiet stats under the due hero.
+    private var primaryMetaLine: String {
+        let studied = L10n.reviewHomeStudiedToday(studiedToday)
+        let streak = "\(L10n.homeStatStreak) \(L10n.homeStatStreakValue(StudyStreakStore.currentStreak))"
+        return "\(studied) · \(streak)"
     }
 
-    private var metaLine: String {
-        let streak = L10n.homeStatStreakValue(StudyStreakStore.currentStreak)
-        return "\(L10n.homeStatNewQuota) \(newQuotaDisplay) · \(L10n.homeStatStreak) \(streak)"
+    /// 新词配额 · 本周词/句 — one soft line, not a chart.
+    private var secondaryMetaLine: String? {
+        guard hasAnyCards else { return nil }
+        var parts: [String] = ["\(L10n.homeStatNewQuota) \(newQuotaDisplay)"]
+        if let summary = StudyActivityStore.recentSummary(),
+           summary.uniqueWords > 0 || summary.uniqueSentences > 0 {
+            parts.append(L10n.reviewHomeWeekActivity(summary.uniqueWords, summary.uniqueSentences))
+        }
+        return parts.joined(separator: " · ")
     }
 
     private var emptyCTA: some View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            if let tip = activityTipText {
-                homeTip(tip)
-            }
-
             Text(L10n.reviewEmptyAssistant)
                 .font(AppFont.secondary())
                 .foregroundStyle(AppColor.textSecondary)

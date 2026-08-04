@@ -29,6 +29,12 @@ enum CardContentSync {
         let note = draft.contextNote?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         card.contextNote = note.isEmpty ? nil : note
 
+        let usage = draft.usageNote?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        card.usageNote = usage.isEmpty ? nil : usage
+
+        let etymology = draft.etymology?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        card.etymology = etymology.isEmpty ? nil : etymology
+
         if let phonetic = draft.phonetic?.trimmingCharacters(in: .whitespacesAndNewlines),
            !phonetic.isEmpty {
             card.phonetic = phonetic

@@ -11,6 +11,10 @@ final class FlashCard {
     var front: String
     var back: String
     var contextNote: String?
+    /// Why this word fits here; contrast with near-synonyms / alternatives.
+    var usageNote: String?
+    /// Root / affix / morphology note when useful.
+    var etymology: String?
     /// Book / article / author attribution when known.
     var sourceAttribution: String?
     /// App Group relative path (`card-images/….jpg`) for the shared / captured source image.
@@ -52,6 +56,8 @@ final class FlashCard {
         front: String,
         back: String,
         contextNote: String? = nil,
+        usageNote: String? = nil,
+        etymology: String? = nil,
         sourceAttribution: String? = nil,
         sourceImagePath: String? = nil,
         phonetic: String? = nil,
@@ -65,6 +71,8 @@ final class FlashCard {
         self.front = front
         self.back = back
         self.contextNote = contextNote
+        self.usageNote = usageNote
+        self.etymology = etymology
         self.sourceAttribution = sourceAttribution
         self.sourceImagePath = sourceImagePath
         self.deck = deck

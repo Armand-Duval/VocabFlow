@@ -56,6 +56,8 @@ enum ShareImportStore {
         let front: String
         let back: String
         let contextNote: String?
+        let usageNote: String?
+        let etymology: String?
         let sourceAttribution: String?
         let sourceImagePath: String?
 
@@ -67,12 +69,15 @@ enum ShareImportStore {
             front = draft.front
             back = draft.back
             contextNote = draft.contextNote
+            usageNote = draft.usageNote
+            etymology = draft.etymology
             sourceAttribution = draft.sourceAttribution
             sourceImagePath = draft.sourceImagePath
         }
 
         enum CodingKeys: String, CodingKey {
-            case word, phonetic, sentence, cardTypeRaw, front, back, contextNote, sourceAttribution, sourceImagePath
+            case word, phonetic, sentence, cardTypeRaw, front, back, contextNote
+            case usageNote, etymology, sourceAttribution, sourceImagePath
         }
 
         init(from decoder: Decoder) throws {
@@ -84,6 +89,8 @@ enum ShareImportStore {
             front = try container.decode(String.self, forKey: .front)
             back = try container.decode(String.self, forKey: .back)
             contextNote = try container.decodeIfPresent(String.self, forKey: .contextNote)
+            usageNote = try container.decodeIfPresent(String.self, forKey: .usageNote)
+            etymology = try container.decodeIfPresent(String.self, forKey: .etymology)
             sourceAttribution = try container.decodeIfPresent(String.self, forKey: .sourceAttribution)
             sourceImagePath = try container.decodeIfPresent(String.self, forKey: .sourceImagePath)
         }
@@ -97,6 +104,8 @@ enum ShareImportStore {
             try container.encode(front, forKey: .front)
             try container.encode(back, forKey: .back)
             try container.encodeIfPresent(contextNote, forKey: .contextNote)
+            try container.encodeIfPresent(usageNote, forKey: .usageNote)
+            try container.encodeIfPresent(etymology, forKey: .etymology)
             try container.encodeIfPresent(sourceAttribution, forKey: .sourceAttribution)
             try container.encodeIfPresent(sourceImagePath, forKey: .sourceImagePath)
         }
@@ -234,6 +243,8 @@ enum ShareImportStore {
                 front: stored.front,
                 back: stored.back,
                 contextNote: stored.contextNote,
+                usageNote: stored.usageNote,
+                etymology: stored.etymology,
                 sourceAttribution: stored.sourceAttribution,
                 sourceImagePath: stored.sourceImagePath
             )

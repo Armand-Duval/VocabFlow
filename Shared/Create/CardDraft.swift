@@ -21,6 +21,10 @@ struct GeneratedCardDraft: Identifiable, Equatable {
     var front: String
     var back: String
     var contextNote: String?
+    /// Why this word here; near-synonym / alternative contrast.
+    var usageNote: String? = nil
+    /// Root / affix / morphology when helpful.
+    var etymology: String? = nil
     /// Book / article / author when AI (or page header) can identify it.
     var sourceAttribution: String?
     /// App Group relative path to the source screenshot / photo, if any.

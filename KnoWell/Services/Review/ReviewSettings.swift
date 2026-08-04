@@ -1,5 +1,26 @@
 import Foundation
 
+enum ReviewCardRevealStyle: String, CaseIterable, Identifiable {
+    case reveal
+    case flip
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .reveal: return L10n.settingsReviewRevealStyleReveal
+        case .flip: return L10n.settingsReviewRevealStyleFlip
+        }
+    }
+
+    var footer: String {
+        switch self {
+        case .reveal: return L10n.settingsReviewRevealStyleRevealFooter
+        case .flip: return L10n.settingsReviewRevealStyleFlipFooter
+        }
+    }
+}
+
 enum ReviewSettings {
     private static let dailyNewLimitKey = "review.dailyNewLimit"
     private static let dailyReviewLimitKey = "review.dailyReviewLimit"
@@ -7,9 +28,11 @@ enum ReviewSettings {
     private static let dailyNewStudiedKey = "review.dailyNewStudied"
     private static let dailyReviewStudiedKey = "review.dailyReviewStudied"
     private static let reviewDeckIDKey = "review.selectedDeckID"
+    private static let cardRevealStyleKey = "review.cardRevealStyle"
 
     static let defaultDailyNewLimit = 20
     static let defaultDailyReviewLimit = 100
+    static let defaultCardRevealStyle: ReviewCardRevealStyle = .reveal
 
     private static var defaults: UserDefaults {
         UserDefaults(suiteName: ShareImportStore.appGroupID) ?? .standard
@@ -34,6 +57,20 @@ enum ReviewSettings {
         }
         set {
             defaults.set(max(0, newValue), forKey: dailyReviewLimitKey)
+        }
+    }
+
+    /// 复习卡揭晓方式：展开揭晓 / 翻转到背面（背面含完整题干+答案）。
+    static var cardRevealStyle: ReviewCardRevealStyle {
+        get {
+            guard let raw = defaults.string(forKey: cardRevealStyleKey),
+                  let style = ReviewCardRevealStyle(rawValue: raw) else {
+                return defaultCardRevealStyle
+            }
+            return style
+        }
+        set {
+            defaults.set(newValue.rawValue, forKey: cardRevealStyleKey)
         }
     }
 

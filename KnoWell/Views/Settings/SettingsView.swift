@@ -148,6 +148,23 @@ struct SettingsView: View {
                 }
 
                 SettingsDivider()
+                VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                    Text(L10n.settingsReviewRevealStyle)
+                        .font(AppFont.secondary())
+                        .foregroundStyle(AppColor.textPrimary)
+                    Picker("", selection: cardRevealStyleBinding) {
+                        ForEach(ReviewCardRevealStyle.allCases) { style in
+                            Text(style.title).tag(style)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    Text(reviewSettings.cardRevealStyle.footer)
+                        .font(AppFont.weak())
+                        .foregroundStyle(AppColor.textMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                SettingsDivider()
                 Toggle(L10n.settingsReviewReminderEnabled, isOn: $reminderEnabled)
                     .onChange(of: reminderEnabled) { _, enabled in
                         guard enabled else { return }
@@ -440,6 +457,13 @@ struct SettingsView: View {
                     reviewSettings.dailyReviewLimit = ReviewSettings.defaultDailyReviewLimit
                 }
             }
+        )
+    }
+
+    private var cardRevealStyleBinding: Binding<ReviewCardRevealStyle> {
+        Binding(
+            get: { reviewSettings.cardRevealStyle },
+            set: { reviewSettings.setCardRevealStyle($0) }
         )
     }
 
