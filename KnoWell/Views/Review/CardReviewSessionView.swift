@@ -25,11 +25,9 @@ struct CardReviewSessionView: View {
     @State private var showCardActions = false
     @State private var showRegenerateConfirm = false
     @State private var isRegenerating = false
-    @State private var translationExpanded = false
     @State private var relatedWordsExpanded = false
     @State private var aiExpanded = false
     @State private var paraphrasesExpanded = false
-    @State private var rootsSourceExpanded = false
     /// Bumps when card content changes so the face re-renders without resetting the queue.
     @State private var contentRevision = 0
 
@@ -167,18 +165,11 @@ struct CardReviewSessionView: View {
                         }
                         .padding(.top, AppSpacing.sm)
                     } else {
-                        collapseAnswerRow {
-                            withAnimation(Self.revealAnimation) {
-                                showBack = false
-                                collapseAllModules()
-                            }
-                        }
-
                         Divider()
-                            .overlay(AppColor.border.opacity(0.7))
-                            .padding(.vertical, AppSpacing.xs)
+                            .overlay(AppColor.border.opacity(0.55))
+                            .padding(.top, AppSpacing.xs)
 
-                        answerSection(for: card)
+                        answerSection(for: card, scrollProxy: proxy)
                             .id(answerAnchorID)
                     }
 
@@ -223,7 +214,7 @@ struct CardReviewSessionView: View {
                         // Complete back: keep the stem, then the full reveal content.
                         promptSection(for: card)
                         Divider().overlay(AppColor.border.opacity(0.7))
-                        answerSection(for: card)
+                        answerSection(for: card, scrollProxy: nil)
                     }
                 }
                 .opacity(showBack ? 1 : 0)
@@ -393,12 +384,47 @@ struct CardReviewSessionView: View {
                 }
             }
 
-            speakButton(for: card)
-                .padding(.top, 2)
-                .opacity(showBack || card.cardType == .definition ? 1 : 0)
-                .allowsHitTesting(showBack || card.cardType == .definition)
+            HStack(alignment: .top, spacing: 8) {
+                if showBack {
+                    compactCollapseButton
+                        .padding(.top, 2)
+                        .transition(.opacity.combined(with: .scale(scale: 0.85)))
+                }
+
+                speakButton(for: card)
+                    .padding(.top, 2)
+                    .opacity(showBack || card.cardType == .definition ? 1 : 0)
+                    .allowsHitTesting(showBack || card.cardType == .definition)
+            }
         }
         .animation(Self.revealAnimation, value: showBack)
+    }
+
+    private var anyModuleExpanded: Bool {
+        relatedWordsExpanded || aiExpanded || paraphrasesExpanded
+    }
+
+    /// Compact control in the title row — no dedicated vertical band.
+    private var compactCollapseButton: some View {
+        Button {
+            withAnimation(Self.revealAnimation) {
+                if anyModuleExpanded {
+                    collapseAllModules()
+                } else {
+                    showBack = false
+                }
+            }
+        } label: {
+            Image(systemName: "chevron.up")
+                .font(.system(size: 14, weight: .bold))
+                .frame(width: 36, height: 36)
+                .foregroundStyle(AppColor.textSecondary)
+                .background(AppColor.surfaceMuted, in: Circle())
+        }
+        .buttonStyle(SoftPressButtonStyle())
+        .accessibilityLabel(
+            anyModuleExpanded ? L10n.reviewCollapseModules : L10n.reviewCollapseAnswer
+        )
     }
 
     private func speakButton(for card: FlashCard) -> some View {
@@ -471,24 +497,8 @@ struct CardReviewSessionView: View {
         .accessibilityLabel(L10n.reviewScrollForAnswer)
     }
 
-    private func collapseAnswerRow(action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 6) {
-                Image(systemName: "chevron.up")
-                    .font(.caption.weight(.semibold))
-                Text(L10n.reviewCollapseAnswer)
-                    .font(AppFont.helper())
-            }
-            .foregroundStyle(AppColor.textTertiary)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, AppSpacing.xs)
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(L10n.reviewCollapseAnswer)
-    }
-
     @ViewBuilder
-    private func answerSection(for card: FlashCard) -> some View {
+    private func answerSection(for card: FlashCard, scrollProxy: ScrollViewProxy? = nil) -> some View {
         let sense = CardContentFormatter.senseText(card.back)
         let translation = CardContentFormatter.sentenceTranslation(card.contextNote)
         let highlightTerms = CardContentFormatter.translationHighlightTerms(
@@ -501,100 +511,112 @@ struct CardReviewSessionView: View {
         let antonymList = Array(CardContentFormatter.splitRelatedWords(card.antonyms).prefix(2))
         let paraphrases = Array(CardContentFormatter.decodeParaphrases(card.paraphrases).prefix(2))
         let source = card.sourceAttribution?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let hasRootsSource = !etymology.isEmpty || !source.isEmpty || card.sourceImagePath != nil
+        let hasExtension =
+            !synonymList.isEmpty || !antonymList.isEmpty || !usage.isEmpty || !paraphrases.isEmpty
 
         VStack(alignment: .leading, spacing: AppSpacing.md) {
-            // Core always-on: brief sense. Everything else is opt-in disclosure.
-            if !sense.isEmpty {
-                reviewModule(title: L10n.reviewMeaningSection, titleStrong: true) {
-                    Text(sense)
-                        .font(AppFont.body().weight(.medium))
+            // Base layer — always on: sense → translation → roots (understand first, then remember).
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                if !sense.isEmpty {
+                    reviewModule(title: L10n.reviewMeaningSection, titleStrong: true) {
+                        Text(sense)
+                            .font(AppFont.body().weight(.medium))
+                            .foregroundStyle(AppColor.textPrimary)
+                    }
+                } else if translation == nil || translation?.isEmpty == true {
+                    Text(card.displayBack)
+                        .font(AppFont.body())
                         .foregroundStyle(AppColor.textPrimary)
                 }
-            } else if translation == nil || translation?.isEmpty == true {
-                Text(card.displayBack)
-                    .font(AppFont.body())
-                    .foregroundStyle(AppColor.textPrimary)
-            }
 
-            if let translation, !translation.isEmpty {
-                reviewDisclosure(
-                    title: L10n.reviewTranslationSection,
-                    isExpanded: $translationExpanded
-                ) {
-                    HighlightedText(
-                        text: translation,
-                        terms: highlightTerms,
-                        font: AppFont.body(),
-                        emphasizeForeground: true
-                    )
-                    .foregroundStyle(AppColor.textBody)
-                }
-            }
-
-            if !synonymList.isEmpty || !antonymList.isEmpty {
-                reviewDisclosure(
-                    title: L10n.reviewRelatedWordsSection,
-                    isExpanded: $relatedWordsExpanded
-                ) {
-                    VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                        if !synonymList.isEmpty {
-                            relatedWordsRow(
-                                label: L10n.cardSynonymsLabel,
-                                value: synonymList.joined(separator: " · ")
-                            )
-                        }
-                        if !antonymList.isEmpty {
-                            relatedWordsRow(
-                                label: L10n.cardAntonymsLabel,
-                                value: antonymList.joined(separator: " · ")
-                            )
-                        }
-                    }
-                }
-            }
-
-            if !usage.isEmpty {
-                reviewDisclosure(
-                    title: L10n.reviewAIInsightSection,
-                    isExpanded: $aiExpanded
-                ) {
-                    Text(usage)
-                        .font(AppFont.secondary())
+                if let translation, !translation.isEmpty {
+                    reviewModule(title: L10n.reviewTranslationSection, titleStrong: true) {
+                        HighlightedText(
+                            text: translation,
+                            terms: highlightTerms,
+                            font: AppFont.body(),
+                            emphasizeForeground: true
+                        )
                         .foregroundStyle(AppColor.textBody)
-                }
-            }
-
-            if !paraphrases.isEmpty {
-                reviewDisclosure(
-                    title: L10n.reviewParaphrasesSection,
-                    isExpanded: $paraphrasesExpanded
-                ) {
-                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                        ForEach(paraphrases) { item in
-                            paraphraseBlock(item)
-                        }
                     }
                 }
-            }
 
-            if hasRootsSource {
-                reviewDisclosure(
-                    title: L10n.reviewRootsSourceSection,
-                    isExpanded: $rootsSourceExpanded
-                ) {
-                    VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                        if !etymology.isEmpty {
-                            Text(etymology)
-                                .font(AppFont.helper())
-                                .foregroundStyle(AppColor.textTertiary)
-                        }
+                if !etymology.isEmpty {
+                    reviewModule(title: L10n.cardEtymologyLabel) {
+                        Text(etymology)
+                            .font(AppFont.helper())
+                            .foregroundStyle(AppColor.textTertiary)
+                    }
+                }
+
+                if !source.isEmpty || card.sourceImagePath != nil {
+                    VStack(alignment: .leading, spacing: 4) {
                         if !source.isEmpty {
                             Text(L10n.cardSource(source))
                                 .font(AppFont.helper())
                                 .foregroundStyle(AppColor.textTertiary)
                         }
-                        CardSourceImageThumbnail(relativePath: card.sourceImagePath, maxHeight: 96)
+                        CardSourceImageThumbnail(relativePath: card.sourceImagePath, maxHeight: 88)
+                    }
+                }
+            }
+
+            if hasExtension {
+                Divider()
+                    .overlay(AppColor.border.opacity(0.55))
+
+                // Extension layer — opt-in depth for writing / contrast study.
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                    if !synonymList.isEmpty || !antonymList.isEmpty {
+                        reviewDisclosure(
+                            title: L10n.reviewRelatedWordsSection,
+                            anchorID: "review-module-related",
+                            isExpanded: $relatedWordsExpanded,
+                            scrollProxy: scrollProxy
+                        ) {
+                            VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                                if !synonymList.isEmpty {
+                                    relatedWordsRow(
+                                        label: L10n.cardSynonymsLabel,
+                                        value: synonymList.joined(separator: " · ")
+                                    )
+                                }
+                                if !antonymList.isEmpty {
+                                    relatedWordsRow(
+                                        label: L10n.cardAntonymsLabel,
+                                        value: antonymList.joined(separator: " · ")
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    if !usage.isEmpty {
+                        reviewDisclosure(
+                            title: L10n.reviewAIInsightSection,
+                            anchorID: "review-module-ai",
+                            isExpanded: $aiExpanded,
+                            scrollProxy: scrollProxy
+                        ) {
+                            Text(usage)
+                                .font(AppFont.secondary())
+                                .foregroundStyle(AppColor.textBody)
+                        }
+                    }
+
+                    if !paraphrases.isEmpty {
+                        reviewDisclosure(
+                            title: L10n.reviewParaphrasesSection,
+                            anchorID: "review-module-paraphrases",
+                            isExpanded: $paraphrasesExpanded,
+                            scrollProxy: scrollProxy
+                        ) {
+                            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                                ForEach(paraphrases) { item in
+                                    paraphraseBlock(item)
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -606,7 +628,9 @@ struct CardReviewSessionView: View {
 
     private func reviewDisclosure<Content: View>(
         title: String,
+        anchorID: String,
         isExpanded: Binding<Bool>,
+        scrollProxy: ScrollViewProxy?,
         @ViewBuilder content: @escaping () -> Content
     ) -> some View {
         DisclosureGroup(isExpanded: isExpanded) {
@@ -615,18 +639,30 @@ struct CardReviewSessionView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
         } label: {
             Text(title)
-                .font(AppFont.caption().weight(.semibold))
+                .font(AppFont.secondary().weight(.semibold))
                 .foregroundStyle(AppColor.textSecondary)
         }
         .tint(AppColor.textSecondary)
+        .id(anchorID)
+        .onChange(of: isExpanded.wrappedValue) { _, expanded in
+            guard expanded else { return }
+            scrollToModule(anchorID, proxy: scrollProxy)
+        }
+    }
+
+    private func scrollToModule(_ anchorID: String, proxy: ScrollViewProxy?) {
+        guard let proxy else { return }
+        DispatchQueue.main.async {
+            withAnimation(.easeOut(duration: 0.28)) {
+                proxy.scrollTo(anchorID, anchor: .top)
+            }
+        }
     }
 
     private func collapseAllModules() {
-        translationExpanded = false
         relatedWordsExpanded = false
         aiExpanded = false
         paraphrasesExpanded = false
-        rootsSourceExpanded = false
     }
 
     private func relatedWordsRow(label: String, value: String) -> some View {

@@ -8001,6 +8001,23 @@
         }
       }
     },
+    "review.collapseModules" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collapse sections"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收拢已展开模块"
+          }
+        }
+      }
+    },
     "review.meaning" : {
       "extractionState" : "manual",
       "localizations" : {

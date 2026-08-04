@@ -234,6 +234,7 @@ enum L10n {
     static var showAnswer: String { tr("review.showAnswer") }
     static var reviewScrollForAnswer: String { tr("review.scrollForAnswer") }
     static var reviewCollapseAnswer: String { tr("review.collapseAnswer") }
+    static var reviewCollapseModules: String { tr("review.collapseModules") }
     static var reviewMeaningSection: String { tr("review.meaning") }
     static var reviewTranslationSection: String { tr("review.translation") }
     static var reviewAIInsightSection: String { tr("review.aiInsight") }
