@@ -49,6 +49,9 @@ enum CardContentSync {
            !imagePath.isEmpty {
             card.sourceImagePath = imagePath
         }
+
+        // Fresh AI content — drop manual highlight override so the new study word leads.
+        card.highlightText = nil
     }
 
     @MainActor

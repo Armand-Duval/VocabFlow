@@ -8,6 +8,7 @@ import UIKit
 struct CardReviewSessionView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(ReviewSettingsStore.self) private var reviewSettings
+    @EnvironmentObject private var shareImport: ShareImportCoordinator
 
     let cards: [FlashCard]
     var dismissWhenComplete: Bool = false
@@ -311,22 +312,18 @@ struct CardReviewSessionView: View {
     }
 
     private func topTrailingActions(for card: FlashCard) -> some View {
-        HStack(spacing: AppSpacing.sm) {
-            speakButton(for: card)
-
-            Button {
-                showCardActions = true
-            } label: {
-                Image(systemName: "ellipsis")
-                    .font(.system(size: 17, weight: .bold))
-                    .foregroundStyle(AppColor.textPrimary)
-                    .frame(width: 40, height: 40)
-                    .background(AppColor.surface, in: Circle())
-                    .appSoftShadow()
-            }
-            .buttonStyle(SoftPressButtonStyle())
-            .accessibilityLabel(L10n.libraryEdit)
+        Button {
+            showCardActions = true
+        } label: {
+            Image(systemName: "ellipsis")
+                .font(.system(size: 17, weight: .bold))
+                .foregroundStyle(AppColor.textPrimary)
+                .frame(width: 40, height: 40)
+                .background(AppColor.surface, in: Circle())
+                .appSoftShadow()
         }
+        .buttonStyle(SoftPressButtonStyle())
+        .accessibilityLabel(L10n.libraryEdit)
     }
 
     private var currentCardActions: [AppSheetAction] {
@@ -361,27 +358,34 @@ struct CardReviewSessionView: View {
 
     @ViewBuilder
     private func wordTitleBlock(for card: FlashCard) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            if showBack || card.cardType == .definition {
-                Text(card.word)
-                    .font(.system(size: 30, weight: .bold))
-                    .foregroundStyle(AppColor.accent)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .transition(.opacity.combined(with: .move(edge: .leading)))
+        HStack(alignment: .top, spacing: AppSpacing.sm) {
+            VStack(alignment: .leading, spacing: 4) {
+                if showBack || card.cardType == .definition {
+                    Text(card.word)
+                        .font(.system(size: 30, weight: .bold))
+                        .foregroundStyle(AppColor.accent)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .transition(.opacity.combined(with: .move(edge: .leading)))
 
-                if let phonetic = card.phonetic?.trimmingCharacters(in: .whitespacesAndNewlines),
-                   !phonetic.isEmpty {
-                    Text(phonetic.hasPrefix("/") || phonetic.hasPrefix("[") ? phonetic : "/\(phonetic)/")
-                        .font(AppFont.secondary())
-                        .foregroundStyle(AppColor.textSecondary)
+                    if let phonetic = card.phonetic?.trimmingCharacters(in: .whitespacesAndNewlines),
+                       !phonetic.isEmpty {
+                        Text(phonetic.hasPrefix("/") || phonetic.hasPrefix("[") ? phonetic : "/\(phonetic)/")
+                            .font(AppFont.secondary())
+                            .foregroundStyle(AppColor.textSecondary)
+                    }
+                } else {
+                    Text(L10n.cardTypeCloze)
+                        .font(AppFont.caption().weight(.medium))
+                        .foregroundStyle(AppColor.textTertiary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .transition(.opacity)
                 }
-            } else {
-                Text(L10n.cardTypeCloze)
-                    .font(AppFont.caption().weight(.medium))
-                    .foregroundStyle(AppColor.textTertiary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .transition(.opacity)
             }
+
+            speakButton(for: card)
+                .padding(.top, 2)
+                .opacity(showBack || card.cardType == .definition ? 1 : 0)
+                .allowsHitTesting(showBack || card.cardType == .definition)
         }
         .animation(Self.revealAnimation, value: showBack)
     }
@@ -401,21 +405,40 @@ struct CardReviewSessionView: View {
     }
 
     private func promptSection(for card: FlashCard) -> some View {
-        Group {
-            if card.cardType == .definition {
-                HighlightedText(
-                    text: card.displayFront,
-                    query: card.word,
-                    font: AppFont.literaryQuote()
-                )
-                .foregroundStyle(AppColor.textPrimary)
-            } else {
-                Text(card.displayFront)
-                    .font(AppFont.literaryQuote())
-                    .foregroundStyle(AppColor.textPrimary)
+        let literaryFont: UIFont = {
+            let base = UIFont.preferredFont(forTextStyle: .body)
+            if let descriptor = base.fontDescriptor.withDesign(.serif) {
+                return UIFont(descriptor: descriptor, size: 18)
             }
-        }
-        .lineSpacing(6)
+            return base.withSize(18)
+        }()
+
+        return SelectableStudyText(
+            text: card.displayFront,
+            highlightTerms: card.cardType == .definition || showBack
+                ? [card.displayHighlight]
+                : [],
+            matchStyle: .wordBounded,
+            font: literaryFont,
+            onLookup: { _ in
+                // Lookup is presented from the text view responder chain inside SelectableStudyText.
+            },
+            onSetHighlight: { term in
+                card.highlightText = term
+                contentRevision &+= 1
+                ToastCenter.shared.show(L10n.studySelectionHighlightUpdated)
+            },
+            onCreateCard: { term in
+                shareImport.importPayload(
+                    ShareImportPayload(
+                        sentence: card.sentence,
+                        selectedWord: term,
+                        source: .clipboard
+                    )
+                )
+                AppTab.request(.create)
+            }
+        )
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityLabel(L10n.frontLabel)
     }
@@ -547,12 +570,13 @@ struct CardReviewSessionView: View {
                 let horizontal = value.translation.width
                 let vertical = value.translation.height
 
-                if !showBack, vertical < -56, abs(vertical) > abs(horizontal) {
+                // 下滑展开答案；上滑收起（与「下滑查看释义」文案一致）
+                if !showBack, vertical > 56, abs(vertical) > abs(horizontal) {
                     revealAnswer(proxy: proxy)
                     return
                 }
 
-                if showBack, vertical > 72, abs(vertical) > abs(horizontal) + 20 {
+                if showBack, vertical < -72, abs(vertical) > abs(horizontal) + 20 {
                     withAnimation(Self.revealAnimation) {
                         showBack = false
                     }
@@ -795,5 +819,6 @@ private struct ReviewRatingButtonStyle: ButtonStyle {
             .navigationTitle(L10n.studyTitle)
     }
     .environment(ReviewSettingsStore.shared)
+    .environmentObject(ShareImportCoordinator())
     .modelContainer(for: FlashCard.self, inMemory: true)
 }

@@ -630,7 +630,8 @@ private struct LibraryCardRow: View {
                     text: card.word,
                     query: searchHighlight,
                     font: .body.weight(.semibold),
-                    lineLimit: 1
+                    lineLimit: 1,
+                    matchStyle: .substring
                 )
                 .foregroundStyle(AppColor.textPrimary)
 
@@ -639,7 +640,8 @@ private struct LibraryCardRow: View {
                         text: contextLine,
                         query: searchHighlight,
                         font: AppFont.caption(),
-                        lineLimit: 1
+                        lineLimit: 1,
+                        matchStyle: .substring
                     )
                     .foregroundStyle(AppColor.textTertiary)
                 } else if showsDeckName, let deckName = card.deck?.name {

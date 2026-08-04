@@ -20,6 +20,7 @@ struct FlashCardBackup: Codable {
     let etymology: String?
     let sourceAttribution: String?
     let sourceImagePath: String?
+    let highlightText: String?
     let createdAt: Date
     let nextReviewDate: Date
     let intervalDays: Double
@@ -32,7 +33,7 @@ struct FlashCardBackup: Codable {
 
     enum CodingKeys: String, CodingKey {
         case id, word, phonetic, sentence, cardTypeRaw, front, back, contextNote
-        case usageNote, etymology, sourceAttribution, sourceImagePath
+        case usageNote, etymology, sourceAttribution, sourceImagePath, highlightText
         case createdAt, nextReviewDate, intervalDays, easeFactor, repetitions, reviewCount, learningStep
         case isSuspended, deckId
     }
@@ -50,6 +51,7 @@ struct FlashCardBackup: Codable {
         etymology = card.etymology
         sourceAttribution = card.sourceAttribution
         sourceImagePath = card.sourceImagePath
+        highlightText = card.highlightText
         createdAt = card.createdAt
         nextReviewDate = card.nextReviewDate
         intervalDays = card.intervalDays
@@ -75,6 +77,7 @@ struct FlashCardBackup: Codable {
         etymology = try container.decodeIfPresent(String.self, forKey: .etymology)
         sourceAttribution = try container.decodeIfPresent(String.self, forKey: .sourceAttribution)
         sourceImagePath = try container.decodeIfPresent(String.self, forKey: .sourceImagePath)
+        highlightText = try container.decodeIfPresent(String.self, forKey: .highlightText)
         createdAt = try container.decode(Date.self, forKey: .createdAt)
         nextReviewDate = try container.decode(Date.self, forKey: .nextReviewDate)
         intervalDays = try container.decode(Double.self, forKey: .intervalDays)
@@ -100,6 +103,7 @@ struct FlashCardBackup: Codable {
         try container.encodeIfPresent(etymology, forKey: .etymology)
         try container.encodeIfPresent(sourceAttribution, forKey: .sourceAttribution)
         try container.encodeIfPresent(sourceImagePath, forKey: .sourceImagePath)
+        try container.encodeIfPresent(highlightText, forKey: .highlightText)
         try container.encode(createdAt, forKey: .createdAt)
         try container.encode(nextReviewDate, forKey: .nextReviewDate)
         try container.encode(intervalDays, forKey: .intervalDays)
@@ -123,6 +127,7 @@ struct FlashCardBackup: Codable {
         card.etymology = etymology
         card.sourceAttribution = sourceAttribution
         card.sourceImagePath = sourceImagePath
+        card.highlightText = highlightText
         card.createdAt = createdAt
         card.nextReviewDate = nextReviewDate
         card.intervalDays = intervalDays
@@ -150,6 +155,7 @@ struct FlashCardBackup: Codable {
             etymology: etymology,
             sourceAttribution: sourceAttribution,
             sourceImagePath: sourceImagePath,
+            highlightText: highlightText,
             phonetic: phonetic
         )
         card.id = id

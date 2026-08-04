@@ -19,6 +19,8 @@ final class FlashCard {
     var sourceAttribution: String?
     /// App Group relative path (`card-images/….jpg`) for the shared / captured source image.
     var sourceImagePath: String?
+    /// Manual sentence highlight override; when nil, `word` is highlighted.
+    var highlightText: String?
     var createdAt: Date
     var nextReviewDate: Date
     var intervalDays: Double
@@ -32,6 +34,13 @@ final class FlashCard {
     var cardType: CardType {
         get { CardType(rawValue: cardTypeRaw) ?? .definition }
         set { cardTypeRaw = newValue.rawValue }
+    }
+
+    /// Phrase highlighted in the study sentence (manual override or study word).
+    var displayHighlight: String {
+        let custom = highlightText?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !custom.isEmpty { return custom }
+        return word
     }
 
     /// 复习正面：释义卡用完整原句（兼容旧数据里 front 只有单词）
@@ -60,6 +69,7 @@ final class FlashCard {
         etymology: String? = nil,
         sourceAttribution: String? = nil,
         sourceImagePath: String? = nil,
+        highlightText: String? = nil,
         phonetic: String? = nil,
         deck: Deck? = nil
     ) {
@@ -75,6 +85,7 @@ final class FlashCard {
         self.etymology = etymology
         self.sourceAttribution = sourceAttribution
         self.sourceImagePath = sourceImagePath
+        self.highlightText = highlightText
         self.deck = deck
         self.createdAt = Date()
         self.nextReviewDate = Date()

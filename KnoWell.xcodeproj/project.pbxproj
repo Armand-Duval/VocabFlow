@@ -86,6 +86,10 @@
 		WW0000010000000000000006 /* ToastCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = WW0000010000000000000012 /* ToastCenter.swift */; };
 		SHEET00100000000000000002 /* AppActionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = SHEET00100000000000000010 /* AppActionSheet.swift */; };
 		WW0000010000000000000007 /* AppComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = WW0000010000000000000015 /* AppComponents.swift */; };
+		HLMTCH001000000000000001 /* HighlightMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = HLMTCH001000000000000010 /* HighlightMatcher.swift */; };
+		HLMTCH001000000000000002 /* HighlightMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = HLMTCH001000000000000010 /* HighlightMatcher.swift */; };
+		HLMTCH001000000000000003 /* HighlightMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = HLMTCH001000000000000010 /* HighlightMatcher.swift */; };
+		SELSTDY001000000000000001 /* SelectableStudyText.swift in Sources */ = {isa = PBXBuildFile; fileRef = SELSTDY001000000000000010 /* SelectableStudyText.swift */; };
 		SHEET00100000000000000003 /* AppActionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = SHEET00100000000000000010 /* AppActionSheet.swift */; };
 		WW0000010000000000000010 /* AppNavigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = WW0000010000000000000016 /* AppNavigation.swift */; };
 		WW0000010000000000000008 /* StatusChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = WW0000010000000000000011 /* StatusChip.swift */; };
@@ -227,8 +231,10 @@
 		HH0000010000000000000011 /* ImportTextAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportTextAnalyzer.swift; sourceTree = "<group>"; };
 		HH0000010000000000000012 /* CreateCardsUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateCardsUI.swift; sourceTree = "<group>"; };
 		VV0000010000000000000010 /* CameraImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraImagePicker.swift; sourceTree = "<group>"; };
+		SELSTDY001000000000000010 /* SelectableStudyText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectableStudyText.swift; sourceTree = "<group>"; };
 		PHRASE001000000000000010 /* PhraseTokenPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhraseTokenPicker.swift; sourceTree = "<group>"; };
 		WW0000010000000000000015 /* AppComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppComponents.swift; sourceTree = "<group>"; };
+		HLMTCH001000000000000010 /* HighlightMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightMatcher.swift; sourceTree = "<group>"; };
 		SHEET00100000000000000010 /* AppActionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppActionSheet.swift; sourceTree = "<group>"; };
 		WW0000010000000000000016 /* AppNavigation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNavigation.swift; sourceTree = "<group>"; };
 		WW0000010000000000000011 /* StatusChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusChip.swift; sourceTree = "<group>"; };
@@ -590,6 +596,7 @@
 			isa = PBXGroup;
 			children = (
 				WW0000010000000000000015 /* AppComponents.swift */,
+				HLMTCH001000000000000010 /* HighlightMatcher.swift */,
 				SHEET00100000000000000010 /* AppActionSheet.swift */,
 				WW0000010000000000000016 /* AppNavigation.swift */,
 				WW0000010000000000000011 /* StatusChip.swift */,
@@ -629,6 +636,7 @@
 				GG0000010000000000000010 /* VocabularyWordsEditor.swift */,
 				FF0000010000000000000010 /* SelectableTextEditor.swift */,
 				VV0000010000000000000010 /* CameraImagePicker.swift */,
+				SELSTDY001000000000000010 /* SelectableStudyText.swift */,
 				PHRASE001000000000000010 /* PhraseTokenPicker.swift */,
 				HH0000010000000000000011 /* ImportTextAnalyzer.swift */,
 				BB0000010000000000000018 /* ImportCardsFormView.swift */,
@@ -802,6 +810,7 @@
 				VV0000010000000000000002 /* CameraImagePicker.swift in Sources */,
 				PHRASE001000000000000002 /* PhraseTokenPicker.swift in Sources */,
 				WW0000010000000000000004 /* AppComponents.swift in Sources */,
+				HLMTCH001000000000000002 /* HighlightMatcher.swift in Sources */,
 				SHEET00100000000000000002 /* AppActionSheet.swift in Sources */,
 				WW0000010000000000000005 /* StatusChip.swift in Sources */,
 				WW0000010000000000000006 /* ToastCenter.swift in Sources */,
@@ -842,6 +851,7 @@
 				VV0000010000000000000003 /* CameraImagePicker.swift in Sources */,
 				PHRASE001000000000000003 /* PhraseTokenPicker.swift in Sources */,
 				WW0000010000000000000007 /* AppComponents.swift in Sources */,
+				HLMTCH001000000000000003 /* HighlightMatcher.swift in Sources */,
 				SHEET00100000000000000003 /* AppActionSheet.swift in Sources */,
 				WW0000010000000000000008 /* StatusChip.swift in Sources */,
 				WW0000010000000000000009 /* ToastCenter.swift in Sources */,
@@ -950,8 +960,10 @@
 				IMGSRC001000000000000001 /* CardSourceImageStore.swift in Sources */,
 				IMGSRC001000000000000004 /* CardSourceImageThumbnail.swift in Sources */,
 				VV0000010000000000000001 /* CameraImagePicker.swift in Sources */,
+				SELSTDY001000000000000001 /* SelectableStudyText.swift in Sources */,
 				PHRASE001000000000000001 /* PhraseTokenPicker.swift in Sources */,
 				WW0000010000000000000001 /* AppComponents.swift in Sources */,
+				HLMTCH001000000000000001 /* HighlightMatcher.swift in Sources */,
 				SHEET00100000000000000001 /* AppActionSheet.swift in Sources */,
 				WW0000010000000000000010 /* AppNavigation.swift in Sources */,
 				WW0000010000000000000002 /* StatusChip.swift in Sources */,

@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 struct FlashCardDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var shareImport: ShareImportCoordinator
 
     @Bindable var card: FlashCard
 
@@ -141,7 +142,42 @@ struct FlashCardDetailView: View {
                     LabeledContent(L10n.phoneticLabel, value: phonetic)
                 }
                 LabeledContent(L10n.typeLabel, value: card.cardType.displayName)
-                DetailField(label: L10n.sourceText, value: card.sentence)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(L10n.sourceText)
+                        .font(AppFont.caption())
+                        .foregroundStyle(.secondary)
+                    SelectableStudyText(
+                        text: card.sentence,
+                        highlightTerms: [card.displayHighlight],
+                        matchStyle: .wordBounded,
+                        font: UIFont.preferredFont(forTextStyle: .body),
+            onLookup: { _ in },
+                        onSetHighlight: { term in
+                            card.highlightText = term
+                            contentRevision &+= 1
+                            ToastCenter.shared.show(L10n.studySelectionHighlightUpdated)
+                        },
+                        onCreateCard: { term in
+                            shareImport.importPayload(
+                                ShareImportPayload(
+                                    sentence: card.sentence,
+                                    selectedWord: term,
+                                    source: .clipboard
+                                )
+                            )
+                            AppTab.request(.create)
+                        }
+                    )
+                    Text(L10n.studySelectionHint)
+                        .font(AppFont.weak())
+                        .foregroundStyle(AppColor.textTertiary)
+                }
+                .padding(.vertical, 4)
+                if let highlight = card.highlightText?.trimmingCharacters(in: .whitespacesAndNewlines),
+                   !highlight.isEmpty,
+                   highlight.caseInsensitiveCompare(card.word) != .orderedSame {
+                    LabeledContent(L10n.studySelectionSetHighlight, value: highlight)
+                }
                 if let source = card.sourceAttribution, !source.isEmpty {
                     DetailField(label: L10n.cardSourceLabel, value: source)
                 }

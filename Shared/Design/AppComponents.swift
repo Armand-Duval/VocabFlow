@@ -647,22 +647,24 @@ struct HighlightedText: View {
     var font: Font = AppFont.body()
     var lineLimit: Int?
     var emphasizeForeground: Bool = false
+    var matchStyle: HighlightMatchStyle = .wordBounded
 
     init(
         text: String,
         query: String,
         font: Font = AppFont.body(),
         lineLimit: Int? = nil,
-        emphasizeForeground: Bool = false
+        emphasizeForeground: Bool = false,
+        matchStyle: HighlightMatchStyle = .wordBounded
     ) {
         self.text = text
-        self.terms = query
-            .split(whereSeparator: \.isWhitespace)
-            .map(String.init)
-            .filter { !$0.isEmpty }
+        // Keep the full phrase as one term — never split “a counting horse” into “a”.
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.terms = trimmed.isEmpty ? [] : [trimmed]
         self.font = font
         self.lineLimit = lineLimit
         self.emphasizeForeground = emphasizeForeground
+        self.matchStyle = matchStyle
     }
 
     init(
@@ -670,13 +672,17 @@ struct HighlightedText: View {
         terms: [String],
         font: Font = AppFont.body(),
         lineLimit: Int? = nil,
-        emphasizeForeground: Bool = false
+        emphasizeForeground: Bool = false,
+        matchStyle: HighlightMatchStyle = .wordBounded
     ) {
         self.text = text
-        self.terms = terms.filter { !$0.isEmpty }
+        self.terms = terms
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
         self.font = font
         self.lineLimit = lineLimit
         self.emphasizeForeground = emphasizeForeground
+        self.matchStyle = matchStyle
     }
 
     var body: some View {
@@ -687,19 +693,17 @@ struct HighlightedText: View {
 
     private var highlighted: AttributedString {
         var result = AttributedString(text)
-        guard !terms.isEmpty else { return result }
-
-        // Longer terms first to prefer fuller matches.
-        for term in terms.sorted(by: { $0.count > $1.count }) {
-            var searchStart = result.startIndex
-            while searchStart < result.endIndex,
-                  let found = result[searchStart...].range(of: term, options: .caseInsensitive) {
-                result[found].backgroundColor = AppColor.accentBackground(0.24)
-                result[found].font = font.weight(.semibold)
-                if emphasizeForeground {
-                    result[found].foregroundColor = AppColor.accent
-                }
-                searchStart = found.upperBound
+        let ranges = HighlightMatcher.ranges(of: terms, in: text, style: matchStyle)
+        for range in ranges {
+            guard let lower = AttributedString.Index(range.lowerBound, within: result),
+                  let upper = AttributedString.Index(range.upperBound, within: result) else {
+                continue
+            }
+            let attrRange = lower..<upper
+            result[attrRange].backgroundColor = AppColor.accentBackground(0.24)
+            result[attrRange].font = font.weight(.semibold)
+            if emphasizeForeground {
+                result[attrRange].foregroundColor = AppColor.accent
             }
         }
         return result

@@ -11,6 +11,7 @@ struct ReviewView: View {
     @State private var isLoading = true
     @State private var showQuotaDetail = false
     @State private var isSessionActive = false
+    @State private var sessionEpoch = 0
     @State private var dailyReflection: DailyReflection?
 
     private var activeDeckID: UUID? {
@@ -19,13 +20,6 @@ struct ReviewView: View {
 
     private var refreshToken: String {
         "\(reviewSettings.revision)|\(activeDeckID?.uuidString ?? "all")"
-    }
-
-    private var sessionSignature: String {
-        guard let plan else { return "loading" }
-        let sessionCards = plan.sessionCards
-        let head = sessionCards.prefix(3).map(\.id.uuidString).joined(separator: ",")
-        return "\(refreshToken)-\(sessionCards.count)-\(head)"
     }
 
     var body: some View {
@@ -43,7 +37,10 @@ struct ReviewView: View {
                             plan: plan,
                             hasAnyCards: hasAnyCards,
                             dailyReflection: dailyReflection,
-                            onStartReview: { isSessionActive = true },
+                            onStartReview: {
+                                sessionEpoch &+= 1
+                                isSessionActive = true
+                            },
                             onShowQuota: { showQuotaDetail = true },
                             onCollectReflection: { reflection in
                                 shareImport.importPayload(
@@ -87,12 +84,16 @@ struct ReviewView: View {
             await loadPlan()
         }
         .onReceive(NotificationCenter.default.publisher(for: .reviewQueueDidChange)) { _ in
+            // Don't rebuild mid-session — rating / AI regenerate must not reshuffle or remount the queue.
+            guard !isSessionActive else { return }
             Task { await loadPlan() }
         }
         .onReceive(NotificationCenter.default.publisher(for: .activeDeckDidChange)) { _ in
+            guard !isSessionActive else { return }
             Task { await loadPlan() }
         }
         .onReceive(NotificationCenter.default.publisher(for: .libraryCatalogDidChange)) { _ in
+            guard !isSessionActive else { return }
             Task { await loadPlan() }
         }
     }
@@ -104,7 +105,8 @@ struct ReviewView: View {
             showDeckName: activeDeckID == nil,
             onSessionComplete: { finishSession() }
         )
-        .id(sessionSignature)
+        // Stable for the whole session — do not remount when the home plan refreshes.
+        .id(sessionEpoch)
     }
 
     private func finishSession() {
@@ -114,6 +116,12 @@ struct ReviewView: View {
 
     @MainActor
     private func loadPlan() async {
+        // Active review owns its queue; rebuilding here would reshuffle and jump away
+        // from the card being studied (e.g. after AI regenerate → catalog notify).
+        if isSessionActive, plan != nil {
+            return
+        }
+
         if plan == nil {
             isLoading = true
         }
@@ -147,10 +155,6 @@ struct ReviewView: View {
         // Instant curated/cache first; AI timely line refreshes in background (once/day).
         dailyReflection = DailyReflectionService.cachedOrCurated()
         isLoading = false
-
-        if isSessionActive, plan?.sessionCards.isEmpty == true {
-            isSessionActive = false
-        }
 
         Task {
             let previous = dailyReflection

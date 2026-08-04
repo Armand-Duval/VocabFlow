@@ -185,6 +185,12 @@ enum L10n {
     static var phoneticLabel: String { tr("preview.phonetic") }
     static var phoneticPlaceholder: String { tr("preview.phonetic.placeholder") }
     static var speakWord: String { tr("speech.word") }
+    static var studySelectionLookup: String { tr("study.selection.lookup") }
+    static var studySelectionSetHighlight: String { tr("study.selection.setHighlight") }
+    static var studySelectionCreateCard: String { tr("study.selection.createCard") }
+    static var studySelectionHighlightUpdated: String { tr("study.selection.highlightUpdated") }
+    static var studySelectionLookupUnavailable: String { tr("study.selection.lookupUnavailable") }
+    static var studySelectionHint: String { tr("study.selection.hint") }
     static var speakSentence: String { tr("speech.sentence") }
     static var importFromPhoto: String { tr("import.photo") }
     static var importFromPhotoSuccess: String { tr("import.photo.success") }
