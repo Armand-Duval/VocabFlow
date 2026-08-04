@@ -25,7 +25,11 @@ struct CardReviewSessionView: View {
     @State private var showCardActions = false
     @State private var showRegenerateConfirm = false
     @State private var isRegenerating = false
-    @State private var aiExpanded = true
+    @State private var translationExpanded = false
+    @State private var relatedWordsExpanded = false
+    @State private var aiExpanded = false
+    @State private var paraphrasesExpanded = false
+    @State private var rootsSourceExpanded = false
     /// Bumps when card content changes so the face re-renders without resetting the queue.
     @State private var contentRevision = 0
 
@@ -163,6 +167,13 @@ struct CardReviewSessionView: View {
                         }
                         .padding(.top, AppSpacing.sm)
                     } else {
+                        collapseAnswerRow {
+                            withAnimation(Self.revealAnimation) {
+                                showBack = false
+                                collapseAllModules()
+                            }
+                        }
+
                         Divider()
                             .overlay(AppColor.border.opacity(0.7))
                             .padding(.vertical, AppSpacing.xs)
@@ -460,6 +471,22 @@ struct CardReviewSessionView: View {
         .accessibilityLabel(L10n.reviewScrollForAnswer)
     }
 
+    private func collapseAnswerRow(action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: "chevron.up")
+                    .font(.caption.weight(.semibold))
+                Text(L10n.reviewCollapseAnswer)
+                    .font(AppFont.helper())
+            }
+            .foregroundStyle(AppColor.textTertiary)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, AppSpacing.xs)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(L10n.reviewCollapseAnswer)
+    }
+
     @ViewBuilder
     private func answerSection(for card: FlashCard) -> some View {
         let sense = CardContentFormatter.senseText(card.back)
@@ -470,20 +497,31 @@ struct CardReviewSessionView: View {
         )
         let usage = card.usageNote?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let etymology = card.etymology?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let hasAI = !usage.isEmpty || !etymology.isEmpty
+        let synonymList = Array(CardContentFormatter.splitRelatedWords(card.synonyms).prefix(3))
+        let antonymList = Array(CardContentFormatter.splitRelatedWords(card.antonyms).prefix(2))
+        let paraphrases = Array(CardContentFormatter.decodeParaphrases(card.paraphrases).prefix(2))
         let source = card.sourceAttribution?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let hasRootsSource = !etymology.isEmpty || !source.isEmpty || card.sourceImagePath != nil
 
-        VStack(alignment: .leading, spacing: AppSpacing.lg) {
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
+            // Core always-on: brief sense. Everything else is opt-in disclosure.
             if !sense.isEmpty {
                 reviewModule(title: L10n.reviewMeaningSection, titleStrong: true) {
                     Text(sense)
                         .font(AppFont.body().weight(.medium))
                         .foregroundStyle(AppColor.textPrimary)
                 }
+            } else if translation == nil || translation?.isEmpty == true {
+                Text(card.displayBack)
+                    .font(AppFont.body())
+                    .foregroundStyle(AppColor.textPrimary)
             }
 
             if let translation, !translation.isEmpty {
-                reviewModule(title: L10n.reviewTranslationSection) {
+                reviewDisclosure(
+                    title: L10n.reviewTranslationSection,
+                    isExpanded: $translationExpanded
+                ) {
                     HighlightedText(
                         text: translation,
                         terms: highlightTerms,
@@ -494,54 +532,130 @@ struct CardReviewSessionView: View {
                 }
             }
 
-            if hasAI {
-                DisclosureGroup(isExpanded: $aiExpanded) {
-                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                        if !usage.isEmpty {
-                            Text(usage)
-                                .font(AppFont.secondary())
-                                .foregroundStyle(AppColor.textBody)
+            if !synonymList.isEmpty || !antonymList.isEmpty {
+                reviewDisclosure(
+                    title: L10n.reviewRelatedWordsSection,
+                    isExpanded: $relatedWordsExpanded
+                ) {
+                    VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                        if !synonymList.isEmpty {
+                            relatedWordsRow(
+                                label: L10n.cardSynonymsLabel,
+                                value: synonymList.joined(separator: " · ")
+                            )
                         }
-                        if !etymology.isEmpty {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(L10n.cardEtymologyLabel)
-                                    .font(AppFont.weak().weight(.medium))
-                                    .foregroundStyle(AppColor.textTertiary)
-                                Text(etymology)
-                                    .font(AppFont.secondary())
-                                    .foregroundStyle(AppColor.textBody)
-                            }
+                        if !antonymList.isEmpty {
+                            relatedWordsRow(
+                                label: L10n.cardAntonymsLabel,
+                                value: antonymList.joined(separator: " · ")
+                            )
                         }
                     }
-                    .padding(.top, AppSpacing.xs)
-                } label: {
-                    Text(L10n.reviewAIInsightSection)
-                        .font(AppFont.caption().weight(.semibold))
-                        .foregroundStyle(AppColor.textSecondary)
                 }
-                .tint(AppColor.textSecondary)
             }
 
-            if sense.isEmpty, translation == nil || translation?.isEmpty == true {
-                Text(card.displayBack)
-                    .font(AppFont.body())
-                    .foregroundStyle(AppColor.textPrimary)
+            if !usage.isEmpty {
+                reviewDisclosure(
+                    title: L10n.reviewAIInsightSection,
+                    isExpanded: $aiExpanded
+                ) {
+                    Text(usage)
+                        .font(AppFont.secondary())
+                        .foregroundStyle(AppColor.textBody)
+                }
             }
 
-            if !source.isEmpty || card.sourceImagePath != nil {
-                VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                    if !source.isEmpty {
-                        Text(L10n.cardSource(source))
-                            .font(AppFont.weak())
-                            .foregroundStyle(AppColor.textTertiary)
+            if !paraphrases.isEmpty {
+                reviewDisclosure(
+                    title: L10n.reviewParaphrasesSection,
+                    isExpanded: $paraphrasesExpanded
+                ) {
+                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                        ForEach(paraphrases) { item in
+                            paraphraseBlock(item)
+                        }
                     }
-                    CardSourceImageThumbnail(relativePath: card.sourceImagePath, maxHeight: 120)
+                }
+            }
+
+            if hasRootsSource {
+                reviewDisclosure(
+                    title: L10n.reviewRootsSourceSection,
+                    isExpanded: $rootsSourceExpanded
+                ) {
+                    VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                        if !etymology.isEmpty {
+                            Text(etymology)
+                                .font(AppFont.helper())
+                                .foregroundStyle(AppColor.textTertiary)
+                        }
+                        if !source.isEmpty {
+                            Text(L10n.cardSource(source))
+                                .font(AppFont.helper())
+                                .foregroundStyle(AppColor.textTertiary)
+                        }
+                        CardSourceImageThumbnail(relativePath: card.sourceImagePath, maxHeight: 96)
+                    }
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .contain)
         .accessibilityLabel(L10n.backLabel)
+    }
+
+    private func reviewDisclosure<Content: View>(
+        title: String,
+        isExpanded: Binding<Bool>,
+        @ViewBuilder content: @escaping () -> Content
+    ) -> some View {
+        DisclosureGroup(isExpanded: isExpanded) {
+            content()
+                .padding(.top, AppSpacing.xs)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        } label: {
+            Text(title)
+                .font(AppFont.caption().weight(.semibold))
+                .foregroundStyle(AppColor.textSecondary)
+        }
+        .tint(AppColor.textSecondary)
+    }
+
+    private func collapseAllModules() {
+        translationExpanded = false
+        relatedWordsExpanded = false
+        aiExpanded = false
+        paraphrasesExpanded = false
+        rootsSourceExpanded = false
+    }
+
+    private func relatedWordsRow(label: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label)
+                .font(AppFont.weak().weight(.medium))
+                .foregroundStyle(AppColor.textTertiary)
+            Text(value)
+                .font(AppFont.secondary())
+                .foregroundStyle(AppColor.textBody)
+        }
+    }
+
+    private func paraphraseBlock(_ item: CardParaphrase) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if !item.scene.isEmpty {
+                Text(item.scene)
+                    .font(AppFont.weak().weight(.medium))
+                    .foregroundStyle(AppColor.textTertiary)
+            }
+            Text(item.sentence)
+                .font(AppFont.secondary())
+                .foregroundStyle(AppColor.textBody)
+            if let note = item.note, !note.isEmpty {
+                Text(note)
+                    .font(AppFont.helper())
+                    .foregroundStyle(AppColor.textTertiary)
+            }
+        }
     }
 
     private func reviewModule<Content: View>(
@@ -561,6 +675,7 @@ struct CardReviewSessionView: View {
         DragGesture(minimumDistance: 28)
             .onChanged { value in
                 guard showBack else { return }
+                // Only drive horizontal rating preview — never fight vertical scroll.
                 guard abs(value.translation.width) > abs(value.translation.height) + 12 else { return }
                 dragOffset = value.translation
             }
@@ -570,21 +685,15 @@ struct CardReviewSessionView: View {
                 let horizontal = value.translation.width
                 let vertical = value.translation.height
 
-                // 下滑展开答案；上滑收起（与「下滑查看释义」文案一致）
+                // Reveal only: swipe down while the answer is hidden.
+                // Do NOT collapse on swipe up — that conflicts with scrolling long answers.
                 if !showBack, vertical > 56, abs(vertical) > abs(horizontal) {
                     revealAnswer(proxy: proxy)
                     return
                 }
 
-                if showBack, vertical < -72, abs(vertical) > abs(horizontal) + 20 {
-                    withAnimation(Self.revealAnimation) {
-                        showBack = false
-                    }
-                    return
-                }
-
                 guard showBack else { return }
-                guard abs(horizontal) > abs(vertical) else { return }
+                guard abs(horizontal) > abs(vertical) + 8 else { return }
 
                 if horizontal <= -swipeThreshold {
                     submit(rating: .again, for: card)
@@ -661,7 +770,7 @@ struct CardReviewSessionView: View {
         NotificationCenter.default.post(name: .reviewQueueDidChange, object: nil)
         showBack = false
         dragOffset = .zero
-        aiExpanded = true
+        collapseAllModules()
 
         sessionQueue.removeAll { $0.id == card.id }
 

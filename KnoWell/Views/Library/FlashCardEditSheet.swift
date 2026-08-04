@@ -15,6 +15,9 @@ struct FlashCardEditFields: Equatable {
     var translationHighlight = ""
     var usageNote = ""
     var etymology = ""
+    var synonyms = ""
+    var antonyms = ""
+    var paraphrases = ""
     var sourceAttribution = ""
     var deckID = UUID()
 
@@ -41,6 +44,9 @@ struct FlashCardEditFields: Equatable {
             translationHighlight: CardContentFormatter.primaryHighlightTerm(from: note),
             usageNote: card.usageNote ?? "",
             etymology: card.etymology ?? "",
+            synonyms: card.synonyms ?? "",
+            antonyms: card.antonyms ?? "",
+            paraphrases: card.paraphrases ?? "",
             sourceAttribution: card.sourceAttribution ?? "",
             deckID: card.deck?.id ?? defaultDeckID
         )
@@ -61,6 +67,12 @@ struct FlashCardEditFields: Equatable {
         card.usageNote = usage.isEmpty ? nil : usage
         let roots = etymology.trimmingCharacters(in: .whitespacesAndNewlines)
         card.etymology = roots.isEmpty ? nil : roots
+        let syn = synonyms.trimmingCharacters(in: .whitespacesAndNewlines)
+        card.synonyms = syn.isEmpty ? nil : syn
+        let ant = antonyms.trimmingCharacters(in: .whitespacesAndNewlines)
+        card.antonyms = ant.isEmpty ? nil : ant
+        let para = paraphrases.trimmingCharacters(in: .whitespacesAndNewlines)
+        card.paraphrases = para.isEmpty ? nil : para
         let source = sourceAttribution.trimmingCharacters(in: .whitespacesAndNewlines)
         card.sourceAttribution = source.isEmpty ? nil : source
         card.deck = DeckService.resolvedDeck(id: deckID, in: modelContext)
@@ -93,6 +105,18 @@ struct FlashCardEditFields: Equatable {
         if let etymology = draft.etymology?.trimmingCharacters(in: .whitespacesAndNewlines),
            !etymology.isEmpty {
             self.etymology = etymology
+        }
+        if let synonyms = draft.synonyms?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !synonyms.isEmpty {
+            self.synonyms = synonyms
+        }
+        if let antonyms = draft.antonyms?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !antonyms.isEmpty {
+            self.antonyms = antonyms
+        }
+        if let paraphrases = draft.paraphrases?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !paraphrases.isEmpty {
+            self.paraphrases = paraphrases
         }
         if let source = draft.sourceAttribution?.trimmingCharacters(in: .whitespacesAndNewlines),
            !source.isEmpty {
@@ -184,6 +208,27 @@ struct FlashCardEditorForm: View {
                     axis: .vertical,
                     lineLimit: 1...4,
                     prompt: L10n.cardEtymologyPlaceholder
+                )
+                labeledField(
+                    L10n.cardSynonymsLabel,
+                    text: $fields.synonyms,
+                    axis: .vertical,
+                    lineLimit: 1...3,
+                    prompt: L10n.cardSynonymsPlaceholder
+                )
+                labeledField(
+                    L10n.cardAntonymsLabel,
+                    text: $fields.antonyms,
+                    axis: .vertical,
+                    lineLimit: 1...3,
+                    prompt: L10n.cardAntonymsPlaceholder
+                )
+                labeledField(
+                    L10n.cardParaphrasesLabel,
+                    text: $fields.paraphrases,
+                    axis: .vertical,
+                    lineLimit: 2...10,
+                    prompt: L10n.cardParaphrasesPlaceholder
                 )
                 labeledField(
                     L10n.cardSentenceTranslation,

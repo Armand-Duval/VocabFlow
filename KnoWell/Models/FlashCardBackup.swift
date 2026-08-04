@@ -18,6 +18,9 @@ struct FlashCardBackup: Codable {
     let contextNote: String?
     let usageNote: String?
     let etymology: String?
+    let synonyms: String?
+    let antonyms: String?
+    let paraphrases: String?
     let sourceAttribution: String?
     let sourceImagePath: String?
     let highlightText: String?
@@ -33,7 +36,8 @@ struct FlashCardBackup: Codable {
 
     enum CodingKeys: String, CodingKey {
         case id, word, phonetic, sentence, cardTypeRaw, front, back, contextNote
-        case usageNote, etymology, sourceAttribution, sourceImagePath, highlightText
+        case usageNote, etymology, synonyms, antonyms, paraphrases
+        case sourceAttribution, sourceImagePath, highlightText
         case createdAt, nextReviewDate, intervalDays, easeFactor, repetitions, reviewCount, learningStep
         case isSuspended, deckId
     }
@@ -49,6 +53,9 @@ struct FlashCardBackup: Codable {
         contextNote = card.contextNote
         usageNote = card.usageNote
         etymology = card.etymology
+        synonyms = card.synonyms
+        antonyms = card.antonyms
+        paraphrases = card.paraphrases
         sourceAttribution = card.sourceAttribution
         sourceImagePath = card.sourceImagePath
         highlightText = card.highlightText
@@ -75,6 +82,9 @@ struct FlashCardBackup: Codable {
         contextNote = try container.decodeIfPresent(String.self, forKey: .contextNote)
         usageNote = try container.decodeIfPresent(String.self, forKey: .usageNote)
         etymology = try container.decodeIfPresent(String.self, forKey: .etymology)
+        synonyms = try container.decodeIfPresent(String.self, forKey: .synonyms)
+        antonyms = try container.decodeIfPresent(String.self, forKey: .antonyms)
+        paraphrases = try container.decodeIfPresent(String.self, forKey: .paraphrases)
         sourceAttribution = try container.decodeIfPresent(String.self, forKey: .sourceAttribution)
         sourceImagePath = try container.decodeIfPresent(String.self, forKey: .sourceImagePath)
         highlightText = try container.decodeIfPresent(String.self, forKey: .highlightText)
@@ -101,6 +111,9 @@ struct FlashCardBackup: Codable {
         try container.encode(contextNote, forKey: .contextNote)
         try container.encodeIfPresent(usageNote, forKey: .usageNote)
         try container.encodeIfPresent(etymology, forKey: .etymology)
+        try container.encodeIfPresent(synonyms, forKey: .synonyms)
+        try container.encodeIfPresent(antonyms, forKey: .antonyms)
+        try container.encodeIfPresent(paraphrases, forKey: .paraphrases)
         try container.encodeIfPresent(sourceAttribution, forKey: .sourceAttribution)
         try container.encodeIfPresent(sourceImagePath, forKey: .sourceImagePath)
         try container.encodeIfPresent(highlightText, forKey: .highlightText)
@@ -125,6 +138,9 @@ struct FlashCardBackup: Codable {
         card.contextNote = contextNote
         card.usageNote = usageNote
         card.etymology = etymology
+        card.synonyms = synonyms
+        card.antonyms = antonyms
+        card.paraphrases = paraphrases
         card.sourceAttribution = sourceAttribution
         card.sourceImagePath = sourceImagePath
         card.highlightText = highlightText
@@ -153,6 +169,9 @@ struct FlashCardBackup: Codable {
             contextNote: contextNote,
             usageNote: usageNote,
             etymology: etymology,
+            synonyms: synonyms,
+            antonyms: antonyms,
+            paraphrases: paraphrases,
             sourceAttribution: sourceAttribution,
             sourceImagePath: sourceImagePath,
             highlightText: highlightText,

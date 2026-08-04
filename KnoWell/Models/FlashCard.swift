@@ -15,6 +15,12 @@ final class FlashCard {
     var usageNote: String?
     /// Root / affix / morphology note when useful.
     var etymology: String?
+    /// Near-synonyms / substitutes for lookup (stored as joined list text).
+    var synonyms: String?
+    /// Opposites / contrasts for lookup (stored as joined list text).
+    var antonyms: String?
+    /// 1–2 transferable model sentences (scene-tagged multiline text).
+    var paraphrases: String?
     /// Book / article / author attribution when known.
     var sourceAttribution: String?
     /// App Group relative path (`card-images/….jpg`) for the shared / captured source image.
@@ -67,6 +73,9 @@ final class FlashCard {
         contextNote: String? = nil,
         usageNote: String? = nil,
         etymology: String? = nil,
+        synonyms: String? = nil,
+        antonyms: String? = nil,
+        paraphrases: String? = nil,
         sourceAttribution: String? = nil,
         sourceImagePath: String? = nil,
         highlightText: String? = nil,
@@ -83,6 +92,9 @@ final class FlashCard {
         self.contextNote = contextNote
         self.usageNote = usageNote
         self.etymology = etymology
+        self.synonyms = synonyms
+        self.antonyms = antonyms
+        self.paraphrases = paraphrases
         self.sourceAttribution = sourceAttribution
         self.sourceImagePath = sourceImagePath
         self.highlightText = highlightText

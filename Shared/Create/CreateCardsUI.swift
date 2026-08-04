@@ -194,6 +194,51 @@ struct DraftPreviewCard: View {
             }
 
             VStack(alignment: .leading, spacing: 6) {
+                Text(L10n.cardSynonymsLabel)
+                    .font(AppFont.caption())
+                    .foregroundStyle(.tertiary)
+                TextField(
+                    L10n.cardSynonymsPlaceholder,
+                    text: Binding(
+                        get: { draft.synonyms ?? "" },
+                        set: { draft.synonyms = $0.nilIfEmpty }
+                    ),
+                    axis: .vertical
+                )
+                .lineLimit(1...3)
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(L10n.cardAntonymsLabel)
+                    .font(AppFont.caption())
+                    .foregroundStyle(.tertiary)
+                TextField(
+                    L10n.cardAntonymsPlaceholder,
+                    text: Binding(
+                        get: { draft.antonyms ?? "" },
+                        set: { draft.antonyms = $0.nilIfEmpty }
+                    ),
+                    axis: .vertical
+                )
+                .lineLimit(1...3)
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(L10n.cardParaphrasesLabel)
+                    .font(AppFont.caption())
+                    .foregroundStyle(.tertiary)
+                TextField(
+                    L10n.cardParaphrasesPlaceholder,
+                    text: Binding(
+                        get: { draft.paraphrases ?? "" },
+                        set: { draft.paraphrases = $0.nilIfEmpty }
+                    ),
+                    axis: .vertical
+                )
+                .lineLimit(2...8)
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
                 Text(L10n.cardSentenceTranslation)
                     .font(AppFont.caption())
                     .foregroundStyle(.tertiary)

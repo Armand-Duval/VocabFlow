@@ -25,6 +25,12 @@ struct GeneratedCardDraft: Identifiable, Equatable {
     var usageNote: String? = nil
     /// Root / affix / morphology when helpful.
     var etymology: String? = nil
+    /// Near-synonyms joined for display / edit.
+    var synonyms: String? = nil
+    /// Antonyms / contrasts joined for display / edit.
+    var antonyms: String? = nil
+    /// Scene-tagged model sentences (multiline).
+    var paraphrases: String? = nil
     /// Book / article / author when AI (or page header) can identify it.
     var sourceAttribution: String?
     /// App Group relative path to the source screenshot / photo, if any.
@@ -32,7 +38,111 @@ struct GeneratedCardDraft: Identifiable, Equatable {
     var isSelected: Bool = true
 }
 
+struct CardParaphrase: Equatable, Identifiable {
+    var id: String { "\(scene)|\(sentence)" }
+    var scene: String
+    var sentence: String
+    var note: String?
+}
+
 enum CardContentFormatter {
+    /// Join synonym / antonym tokens for storage (`a · b · c`).
+    static func joinRelatedWords(_ words: [String]) -> String? {
+        let cleaned = words
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        guard !cleaned.isEmpty else { return nil }
+        var seen = Set<String>()
+        var unique: [String] = []
+        for word in cleaned {
+            let key = word.lowercased()
+            guard !seen.contains(key) else { continue }
+            seen.insert(key)
+            unique.append(word)
+        }
+        return unique.isEmpty ? nil : unique.joined(separator: " · ")
+    }
+
+    static func splitRelatedWords(_ text: String?) -> [String] {
+        let raw = trimmed(text)
+        guard !raw.isEmpty else { return [] }
+        let separators = CharacterSet(charactersIn: "·•、,，;/|｜\n")
+        return raw
+            .components(separatedBy: separators)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+    }
+
+    static func encodeParaphrases(_ items: [CardParaphrase]) -> String? {
+        let blocks = items.compactMap { item -> String? in
+            let scene = item.scene.trimmingCharacters(in: .whitespacesAndNewlines)
+            let sentence = item.sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !sentence.isEmpty else { return nil }
+            var lines: [String] = []
+            if scene.isEmpty {
+                lines.append(sentence)
+            } else {
+                lines.append("【\(scene)】\(sentence)")
+            }
+            if let note = item.note?.trimmingCharacters(in: .whitespacesAndNewlines), !note.isEmpty {
+                lines.append("（\(note)）")
+            }
+            return lines.joined(separator: "\n")
+        }
+        guard !blocks.isEmpty else { return nil }
+        return blocks.joined(separator: "\n\n")
+    }
+
+    static func decodeParaphrases(_ text: String?) -> [CardParaphrase] {
+        let raw = trimmed(text)
+        guard !raw.isEmpty else { return [] }
+
+        let blocks = raw
+            .components(separatedBy: "\n\n")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+
+        return blocks.compactMap { block in
+            let lines = block
+                .components(separatedBy: "\n")
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+            guard let first = lines.first else { return nil }
+
+            var scene = ""
+            var sentence = first
+            if first.hasPrefix("【"),
+               let close = first.firstIndex(of: "】") {
+                scene = String(first[first.index(after: first.startIndex)..<close])
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                sentence = String(first[first.index(after: close)...])
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+
+            var note: String?
+            if lines.count >= 2 {
+                let second = lines[1]
+                if second.hasPrefix("（"), second.hasSuffix("）"), second.count >= 3 {
+                    note = String(second.dropFirst().dropLast())
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                } else if second.hasPrefix("("), second.hasSuffix(")"), second.count >= 3 {
+                    note = String(second.dropFirst().dropLast())
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                } else {
+                    note = second
+                }
+            }
+
+            guard !sentence.isEmpty else { return nil }
+            let tip = note?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return CardParaphrase(
+                scene: scene,
+                sentence: sentence,
+                note: tip.isEmpty ? nil : tip
+            )
+        }
+    }
+
     /// Plain-text back for lists / export: sense, then sentence translation.
     static func displayBack(back: String, contextNote: String?) -> String {
         let sense = trimmed(back)

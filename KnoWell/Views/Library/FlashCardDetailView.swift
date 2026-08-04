@@ -198,6 +198,15 @@ struct FlashCardDetailView: View {
                 if let etymology = card.etymology, !etymology.isEmpty {
                     DetailField(label: L10n.cardEtymologyLabel, value: etymology)
                 }
+                if let synonyms = card.synonyms, !synonyms.isEmpty {
+                    DetailField(label: L10n.cardSynonymsLabel, value: synonyms)
+                }
+                if let antonyms = card.antonyms, !antonyms.isEmpty {
+                    DetailField(label: L10n.cardAntonymsLabel, value: antonyms)
+                }
+                if let paraphrases = card.paraphrases, !paraphrases.isEmpty {
+                    DetailField(label: L10n.cardParaphrasesLabel, value: paraphrases)
+                }
             }
 
             Section(L10n.libraryDetailSRS) {

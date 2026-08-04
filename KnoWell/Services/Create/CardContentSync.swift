@@ -35,6 +35,15 @@ enum CardContentSync {
         let etymology = draft.etymology?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         card.etymology = etymology.isEmpty ? nil : etymology
 
+        let synonyms = draft.synonyms?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        card.synonyms = synonyms.isEmpty ? nil : synonyms
+
+        let antonyms = draft.antonyms?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        card.antonyms = antonyms.isEmpty ? nil : antonyms
+
+        let paraphrases = draft.paraphrases?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        card.paraphrases = paraphrases.isEmpty ? nil : paraphrases
+
         if let phonetic = draft.phonetic?.trimmingCharacters(in: .whitespacesAndNewlines),
            !phonetic.isEmpty {
             card.phonetic = phonetic

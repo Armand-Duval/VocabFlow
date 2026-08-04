@@ -806,6 +806,108 @@
         }
       }
     },
+    "card.synonyms" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synonyms"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同义词"
+          }
+        }
+      }
+    },
+    "card.synonyms.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "speaker · rhetorician"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "speaker · rhetorician（用 · 分隔）"
+          }
+        }
+      }
+    },
+    "card.antonyms" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antonyms"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "反义词"
+          }
+        }
+      }
+    },
+    "card.antonyms.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "listener · audience"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "listener · audience（用 · 分隔）"
+          }
+        }
+      }
+    },
+    "card.paraphrases" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model sentences"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仿写例句"
+          }
+        }
+      }
+    },
+    "card.paraphrases.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "【Academic】She is a gifted orator who…\n(Optional Chinese tip)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "【学术写作】She is a gifted orator who…\n（可选中文提示）"
+          }
+        }
+      }
+    },
     "card.source.value" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7882,6 +7984,23 @@
         }
       }
     },
+    "review.collapseAnswer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collapse answer"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收起解析"
+          }
+        }
+      }
+    },
     "review.meaning" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7929,6 +8048,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "AI拓展解读"
+          }
+        }
+      }
+    },
+    "review.relatedWords" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synonyms / antonyms"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同义 / 反义"
+          }
+        }
+      }
+    },
+    "review.paraphrases" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model sentences"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仿写例句"
+          }
+        }
+      }
+    },
+    "review.rootsSource" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Roots / source"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "词根 / 出处"
           }
         }
       }

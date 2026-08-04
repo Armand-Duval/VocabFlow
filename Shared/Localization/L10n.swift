@@ -173,6 +173,12 @@ enum L10n {
     static var cardUsageNotePlaceholder: String { tr("card.usageNote.placeholder") }
     static var cardEtymologyLabel: String { tr("card.etymology") }
     static var cardEtymologyPlaceholder: String { tr("card.etymology.placeholder") }
+    static var cardSynonymsLabel: String { tr("card.synonyms") }
+    static var cardSynonymsPlaceholder: String { tr("card.synonyms.placeholder") }
+    static var cardAntonymsLabel: String { tr("card.antonyms") }
+    static var cardAntonymsPlaceholder: String { tr("card.antonyms.placeholder") }
+    static var cardParaphrasesLabel: String { tr("card.paraphrases") }
+    static var cardParaphrasesPlaceholder: String { tr("card.paraphrases.placeholder") }
     static func cardSource(_ value: String) -> String { tf("card.source.value", value) }
     static func saveCount(_ count: Int) -> String { tf("preview.save", count) }
     static var savedTitle: String { tr("preview.saved.title") }
@@ -227,9 +233,13 @@ enum L10n {
     static var tapToFlipBack: String { tr("review.tapFlip") }
     static var showAnswer: String { tr("review.showAnswer") }
     static var reviewScrollForAnswer: String { tr("review.scrollForAnswer") }
+    static var reviewCollapseAnswer: String { tr("review.collapseAnswer") }
     static var reviewMeaningSection: String { tr("review.meaning") }
     static var reviewTranslationSection: String { tr("review.translation") }
     static var reviewAIInsightSection: String { tr("review.aiInsight") }
+    static var reviewRelatedWordsSection: String { tr("review.relatedWords") }
+    static var reviewParaphrasesSection: String { tr("review.paraphrases") }
+    static var reviewRootsSourceSection: String { tr("review.rootsSource") }
     static var studyTitle: String { tr("review.study") }
     static func reviewHomeDueCount(_ count: Int) -> String { tf("review.home.dueCount", count) }
     static var reviewHomeStart: String { tr("review.home.start") }
