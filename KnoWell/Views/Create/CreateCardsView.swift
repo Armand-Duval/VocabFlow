@@ -614,11 +614,20 @@ struct CreateCardsView: View {
         sentence = payload.sentence
         if let word = payload.selectedWord {
             words = VocabularyWords.parse(from: word)
+        } else {
+            words = []
+        }
+        if let hint = payload.sourceHint?.trimmingCharacters(in: .whitespacesAndNewlines), !hint.isEmpty {
+            sourceHint = hint
+        }
+        if let path = payload.sourceImagePath?.trimmingCharacters(in: .whitespacesAndNewlines), !path.isEmpty {
+            sourceImagePath = path
         }
         if !payload.bannerMessage.isEmpty {
             showToast(payload.bannerMessage)
         }
-        sourceMode = .pick
+        // Shared text / OCR → same pick surface as in-app create.
+        sourceMode = words.isEmpty ? .edit : .pick
         shareImport.acknowledgeImport()
     }
 

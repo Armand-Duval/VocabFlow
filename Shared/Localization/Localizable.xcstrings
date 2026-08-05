@@ -5385,6 +5385,23 @@
         }
       }
     },
+    "extension.openingCreate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opening Create in KnoWell…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在打开致知制卡…"
+          }
+        }
+      }
+    },
     "extension.error.title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9325,13 +9342,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Choose KnoWell in the share sheet"
+            "value" : "Choose KnoWell — opens the same Create screen"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "分享面板选 KnoWell"
+            "value" : "分享面板选致知，进入与 App 相同的制卡页"
           }
         }
       }

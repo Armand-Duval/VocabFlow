@@ -4,11 +4,21 @@ import UserNotifications
 struct ShareImportPayload: Equatable {
     let sentence: String
     let selectedWord: String?
+    let sourceHint: String?
+    let sourceImagePath: String?
     let source: ImportSource
 
-    init(sentence: String, selectedWord: String? = nil, source: ImportSource = .shareExtension) {
+    init(
+        sentence: String,
+        selectedWord: String? = nil,
+        sourceHint: String? = nil,
+        sourceImagePath: String? = nil,
+        source: ImportSource = .shareExtension
+    ) {
         self.sentence = sentence
         self.selectedWord = selectedWord
+        self.sourceHint = sourceHint
+        self.sourceImagePath = sourceImagePath
         self.source = source
     }
 }
@@ -45,7 +55,36 @@ enum ShareImportStore {
     private struct StoredPayload: Codable {
         let sentence: String
         let selectedWord: String?
+        let sourceHint: String?
+        let sourceImagePath: String?
         let pending: Bool
+
+        enum CodingKeys: String, CodingKey {
+            case sentence, selectedWord, sourceHint, sourceImagePath, pending
+        }
+
+        init(
+            sentence: String,
+            selectedWord: String?,
+            sourceHint: String? = nil,
+            sourceImagePath: String? = nil,
+            pending: Bool
+        ) {
+            self.sentence = sentence
+            self.selectedWord = selectedWord
+            self.sourceHint = sourceHint
+            self.sourceImagePath = sourceImagePath
+            self.pending = pending
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            sentence = try container.decode(String.self, forKey: .sentence)
+            selectedWord = try container.decodeIfPresent(String.self, forKey: .selectedWord)
+            sourceHint = try container.decodeIfPresent(String.self, forKey: .sourceHint)
+            sourceImagePath = try container.decodeIfPresent(String.self, forKey: .sourceImagePath)
+            pending = try container.decode(Bool.self, forKey: .pending)
+        }
     }
 
     private struct StoredCardDraft: Codable {
@@ -187,10 +226,17 @@ enum ShareImportStore {
             .appendingPathComponent(generationJobFileName)
     }
 
-    static func save(sentence: String, selectedWord: String? = nil) {
+    static func save(
+        sentence: String,
+        selectedWord: String? = nil,
+        sourceHint: String? = nil,
+        sourceImagePath: String? = nil
+    ) {
         let payload = StoredPayload(
             sentence: sentence,
             selectedWord: selectedWord,
+            sourceHint: sourceHint,
+            sourceImagePath: sourceImagePath,
             pending: true
         )
         guard let url = payloadURL,
@@ -215,9 +261,14 @@ enum ShareImportStore {
         }
 
         clear()
+        let hint = payload.sourceHint?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let imagePath = payload.sourceImagePath?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         return ShareImportPayload(
             sentence: sentence,
-            selectedWord: payload.selectedWord?.isEmpty == false ? payload.selectedWord : nil
+            selectedWord: payload.selectedWord?.isEmpty == false ? payload.selectedWord : nil,
+            sourceHint: hint.isEmpty ? nil : hint,
+            sourceImagePath: imagePath.isEmpty ? nil : imagePath,
+            source: .shareExtension
         )
     }
 

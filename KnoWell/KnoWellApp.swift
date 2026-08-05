@@ -48,11 +48,11 @@ struct KnoWellApp: App {
     @MainActor
     private func processShareWorkItems() async {
         SharedDedupeSync.rebuild(in: AppModelContainer.shared.mainContext)
-        let hadPending = ShareImportStore.hasPendingGenerationJob
+        let hadPendingJob = ShareImportStore.hasPendingGenerationJob
         CardGenerationQueue.shared.ingestPendingShareJobsIfNeeded()
-        if hadPending {
+        shareImport.refreshAll()
+        if hadPendingJob || shareImport.hasPendingImport {
             AppTab.request(.create)
         }
-        shareImport.refreshAll()
     }
 }

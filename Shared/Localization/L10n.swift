@@ -151,6 +151,7 @@ enum L10n {
     static var extensionMissingKey: String { tr("extension.error.missingKey") }
     static var extensionNoContent: String { tr("extension.error.noContent") }
     static var extensionNoText: String { tr("extension.error.noText") }
+    static var extensionOpeningCreate: String { tr("extension.openingCreate") }
 
     // MARK: - Preview
 

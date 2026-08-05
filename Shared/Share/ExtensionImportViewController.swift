@@ -1,118 +1,182 @@
 import SwiftUI
 import UIKit
 
+/// Share / Action entry: extract content, then keep the create form on screen.
+/// Never auto-dismiss on load failure — that felt like a flash crash.
 class ExtensionImportViewController: UIViewController {
-    private var hostingController: UIHostingController<AnyView>?
     private var didFinishRequest = false
+    private var hostingController: UIHostingController<AnyView>?
+    private var statusLabel: UILabel?
+    private var closeButton: UIButton?
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .systemBackground
-        extractSharedText()
+        preferredContentSize = CGSize(width: 390, height: 640)
+        view.backgroundColor = UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(red: 0.11, green: 0.12, blue: 0.12, alpha: 1)
+                : UIColor(red: 0.965, green: 0.961, blue: 0.949, alpha: 1)
+        }
+        showStatus(L10n.extensionHint)
+        extractSharedContent()
     }
 
-    private func extractSharedText() {
+    private func extractSharedContent() {
         guard let inputItems = extensionContext?.inputItems as? [NSExtensionItem], !inputItems.isEmpty else {
-            finishWithError(L10n.extensionNoContent)
+            showRecoverableError(L10n.extensionNoContent)
             return
         }
 
         if let text = ShareTextExtractor.attributedText(from: inputItems) {
-            presentImportForm(for: text)
+            presentEditor(sentence: text, highlightedWords: [], sourceHint: nil, sourceImagePath: nil, preferSharedSentence: false)
             return
         }
 
         Task { @MainActor in
+            await Task.yield()
+
             if let text = await ShareTextExtractor.loadText(from: inputItems) {
-                presentImportForm(for: text)
+                presentEditor(sentence: text, highlightedWords: [], sourceHint: nil, sourceImagePath: nil, preferSharedSentence: false)
             } else if let ocr = await ShareTextExtractor.loadOCRFromImages(from: inputItems) {
-                presentImportForm(ocr: ocr)
+                presentOCREditor(ocr)
             } else {
-                finishWithError(L10n.extensionNoText)
+                showRecoverableError(L10n.extensionNoText)
             }
         }
     }
 
-    private func presentImportForm(ocr: OCRResult) {
+    private func presentOCREditor(_ ocr: OCRResult) {
         let hint = OCRContextExtractor.sourceHint(from: ocr.fullText)
         if ocr.hasHighlightContext {
-            presentImportForm(
-                for: ocr.preferredImportSentence,
+            presentEditor(
+                sentence: ocr.preferredImportSentence,
                 highlightedWords: ocr.preferredImportWords,
                 sourceHint: hint,
                 sourceImagePath: ocr.sourceImagePath,
-                replaceSentence: true
+                preferSharedSentence: true
             )
         } else {
-            presentImportForm(
-                for: ocr.fullText,
+            presentEditor(
+                sentence: ocr.fullText,
                 highlightedWords: ocr.highlightedWords,
                 sourceHint: hint,
-                sourceImagePath: ocr.sourceImagePath
+                sourceImagePath: ocr.sourceImagePath,
+                preferSharedSentence: false
             )
         }
     }
 
-    private func presentImportForm(
-        for text: String,
-        highlightedWords: [String] = [],
-        sourceHint: String? = nil,
-        sourceImagePath: String? = nil,
-        replaceSentence: Bool = false
+    private func presentEditor(
+        sentence raw: String,
+        highlightedWords: [String],
+        sourceHint: String?,
+        sourceImagePath: String?,
+        preferSharedSentence: Bool
     ) {
-        let parsed = ImportTextAnalyzer.parse(text)
-        var prefilled = replaceSentence ? [] : parsed.prefilledWords
+        let parsed = ImportTextAnalyzer.parse(raw)
+        var words = preferSharedSentence ? [] : parsed.prefilledWords
         for word in highlightedWords {
-            _ = VocabularyWords.append(word, to: &prefilled)
+            _ = VocabularyWords.append(word, to: &words)
         }
         let sentence: String
-        if replaceSentence {
-            sentence = text
+        if preferSharedSentence {
+            sentence = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         } else {
-            sentence = parsed.sentence.isEmpty ? text : parsed.sentence
+            let fromParser = parsed.sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+            sentence = fromParser.isEmpty ? raw.trimmingCharacters(in: .whitespacesAndNewlines) : fromParser
         }
-        let formView = ImportCardsFormView(
+
+        guard !sentence.isEmpty else {
+            showRecoverableError(L10n.extensionNoText)
+            return
+        }
+
+        ShareImportStore.save(
             sentence: sentence,
-            selectedWord: prefilled.isEmpty ? nil : VocabularyWords.join(prefilled),
+            selectedWord: words.isEmpty ? nil : VocabularyWords.join(words),
+            sourceHint: sourceHint,
+            sourceImagePath: sourceImagePath
+        )
+
+        let form = ImportCardsFormView(
+            sentence: sentence,
+            selectedWord: words.isEmpty ? nil : VocabularyWords.join(words),
             sourceHint: sourceHint,
             sourceImagePath: sourceImagePath,
             onSubmit: { [weak self] in
-                self?.finishAfterQueued()
+                self?.completeExtension()
             },
             onCancel: { [weak self] in
-                self?.completeExtension()
+                ShareImportStore.clear()
+                self?.cancelExtension()
             }
         )
 
-        let hosting = UIHostingController(rootView: AnyView(formView))
-        hosting.view.translatesAutoresizingMaskIntoConstraints = false
+        statusLabel?.removeFromSuperview()
+        statusLabel = nil
+        closeButton?.removeFromSuperview()
+        closeButton = nil
 
-        addChild(hosting)
-        view.addSubview(hosting.view)
+        hostingController?.willMove(toParent: nil)
+        hostingController?.view.removeFromSuperview()
+        hostingController?.removeFromParent()
 
+        let host = UIHostingController(rootView: AnyView(form))
+        addChild(host)
+        host.view.translatesAutoresizingMaskIntoConstraints = false
+        host.view.backgroundColor = .clear
+        view.addSubview(host.view)
         NSLayoutConstraint.activate([
-            hosting.view.topAnchor.constraint(equalTo: view.topAnchor),
-            hosting.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            hosting.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            hosting.view.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            host.view.topAnchor.constraint(equalTo: view.topAnchor),
+            host.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            host.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            host.view.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
-
-        hosting.didMove(toParent: self)
-        hostingController = hosting
+        host.didMove(toParent: self)
+        hostingController = host
     }
 
-    private func finishAfterQueued() {
-        // Wake the host app so Share / Action pending jobs enter CardGenerationQueue immediately.
-        if let url = URL(string: ShareImportStore.createURLString) {
-            extensionContext?.open(url) { [weak self] _ in
-                self?.completeExtension()
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
-                self?.completeExtension()
-            }
-            return
+    private func showStatus(_ message: String) {
+        let label = statusLabel ?? {
+            let created = UILabel()
+            created.textAlignment = .center
+            created.numberOfLines = 0
+            created.font = .preferredFont(forTextStyle: .body)
+            created.textColor = .secondaryLabel
+            created.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview(created)
+            NSLayoutConstraint.activate([
+                created.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+                created.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -24),
+                created.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
+                created.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -28)
+            ])
+            statusLabel = created
+            return created
+        }()
+        label.text = message
+    }
+
+    /// Stay on screen — auto cancelRequest looked like a crash to users.
+    private func showRecoverableError(_ message: String) {
+        showStatus(message)
+        if closeButton == nil {
+            let button = UIButton(type: .system)
+            button.setTitle(L10n.close, for: .normal)
+            button.titleLabel?.font = .preferredFont(forTextStyle: .headline)
+            button.translatesAutoresizingMaskIntoConstraints = false
+            button.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
+            view.addSubview(button)
+            NSLayoutConstraint.activate([
+                button.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+                button.topAnchor.constraint(equalTo: statusLabel?.bottomAnchor ?? view.centerYAnchor, constant: 20)
+            ])
+            closeButton = button
         }
-        completeExtension()
+    }
+
+    @objc private func closeTapped() {
+        cancelExtension()
     }
 
     private func completeExtension() {
@@ -121,26 +185,11 @@ class ExtensionImportViewController: UIViewController {
         extensionContext?.completeRequest(returningItems: nil)
     }
 
-    private func finishWithError(_ message: String) {
-        let label = UILabel()
-        label.text = message
-        label.textAlignment = .center
-        label.numberOfLines = 0
-        label.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(label)
-
-        NSLayoutConstraint.activate([
-            label.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            label.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            label.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
-            label.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24)
-        ])
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
-            let error = NSError(domain: "KnoWellShare", code: 1, userInfo: [
-                NSLocalizedDescriptionKey: message
-            ])
-            self?.extensionContext?.cancelRequest(withError: error)
-        }
+    private func cancelExtension() {
+        guard !didFinishRequest else { return }
+        didFinishRequest = true
+        extensionContext?.cancelRequest(withError: NSError(domain: "KnoWellShare", code: 0, userInfo: [
+            NSLocalizedDescriptionKey: L10n.cancel
+        ]))
     }
 }

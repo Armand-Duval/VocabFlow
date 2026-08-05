@@ -29,6 +29,8 @@ enum ShareTextExtractor {
     static func firstUsableProvider(from providers: [NSItemProvider]) -> NSItemProvider? {
         providers.first { provider in
             loadTypePriority.contains { provider.hasItemConformingToTypeIdentifier($0) }
+                || provider.canLoadObject(ofClass: String.self)
+                || provider.canLoadObject(ofClass: URL.self)
         }
     }
 
@@ -45,17 +47,32 @@ enum ShareTextExtractor {
         return await loadText(from: providers)
     }
 
+    /// Never uses `loadItem` — that API logs nil expectedValueClass and is unreliable on modern EX runtimes.
     static func loadText(from provider: NSItemProvider) async -> String? {
-        guard let typeIdentifier = preferredTypeIdentifier(for: provider) else {
-            return nil
+        if provider.canLoadObject(ofClass: String.self),
+           let text = await loadObject(String.self, from: provider),
+           let cleanedText = cleaned(text) {
+            return cleanedText
         }
 
-        return await withCheckedContinuation { continuation in
-            provider.loadItem(forTypeIdentifier: typeIdentifier, options: nil) { item, _ in
-                let text = cleaned(parseItem(item, typeIdentifier: typeIdentifier))
-                continuation.resume(returning: text)
+        if provider.canLoadObject(ofClass: URL.self),
+           let url = await loadObject(URL.self, from: provider),
+           let text = cleaned(await textFromURL(url)) {
+            return text
+        }
+
+        for typeIdentifier in loadTypePriority where provider.hasItemConformingToTypeIdentifier(typeIdentifier) {
+            if let data = await loadDataRepresentation(from: provider, typeIdentifier: typeIdentifier),
+               let text = cleaned(parseData(data, typeIdentifier: typeIdentifier)) {
+                return text
+            }
+
+            if let text = cleaned(await loadFileText(from: provider, typeIdentifier: typeIdentifier)) {
+                return text
             }
         }
+
+        return nil
     }
 
     static func loadText(from providers: [NSItemProvider]) async -> String? {
@@ -65,27 +82,6 @@ enum ShareTextExtractor {
             }
         }
         return nil
-    }
-
-    static func parseItem(_ item: NSSecureCoding?, typeIdentifier: String) -> String {
-        if let text = item as? String {
-            return normalizeSharedString(text, typeIdentifier: typeIdentifier)
-        }
-        if let attributed = item as? NSAttributedString {
-            return attributed.string
-        }
-        if let data = item as? Data {
-            return parseData(data, typeIdentifier: typeIdentifier)
-        }
-        if let url = item as? URL {
-            if url.isFileURL {
-                return (try? String(contentsOf: url, encoding: .utf8)) ?? ""
-            }
-            if typeIdentifier == UTType.url.identifier {
-                return url.absoluteString
-            }
-        }
-        return ""
     }
 
     private static func cleaned(_ text: String?) -> String? {
@@ -105,13 +101,6 @@ enum ShareTextExtractor {
         return true
     }
 
-    private static func normalizeSharedString(_ text: String, typeIdentifier: String) -> String {
-        if typeIdentifier == UTType.html.identifier {
-            return stripHTML(text)
-        }
-        return text
-    }
-
     private static func parseData(_ data: Data, typeIdentifier: String) -> String {
         switch typeIdentifier {
         case UTType.rtf.identifier:
@@ -127,6 +116,12 @@ enum ShareTextExtractor {
                 return stripHTML(html)
             }
             return ""
+        case UTType.url.identifier:
+            if let raw = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
+               let url = URL(string: raw) {
+                return url.absoluteString
+            }
+            return String(data: data, encoding: .utf8) ?? ""
         default:
             return String(data: data, encoding: .utf8) ?? ""
         }
@@ -142,6 +137,62 @@ enum ShareTextExtractor {
             return attributed.string
         }
         return html
+    }
+
+    private static func loadObject<T>(_ type: T.Type, from provider: NSItemProvider) async -> T? where T: _ObjectiveCBridgeable, T._ObjectiveCType: NSItemProviderReading {
+        await withCheckedContinuation { continuation in
+            _ = provider.loadObject(ofClass: type) { object, _ in
+                continuation.resume(returning: object)
+            }
+        }
+    }
+
+    private static func loadDataRepresentation(from provider: NSItemProvider, typeIdentifier: String) async -> Data? {
+        await withCheckedContinuation { continuation in
+            _ = provider.loadDataRepresentation(forTypeIdentifier: typeIdentifier) { data, _ in
+                continuation.resume(returning: data)
+            }
+        }
+    }
+
+    private static func loadFileText(from provider: NSItemProvider, typeIdentifier: String) async -> String? {
+        await withCheckedContinuation { continuation in
+            _ = provider.loadFileRepresentation(forTypeIdentifier: typeIdentifier) { url, _ in
+                guard let url else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                continuation.resume(returning: textFromFileURL(url))
+            }
+        }
+    }
+
+    private static func textFromURL(_ url: URL) async -> String? {
+        if url.isFileURL {
+            return await Task.detached(priority: .userInitiated) {
+                textFromFileURL(url)
+            }.value
+        }
+        return url.absoluteString
+    }
+
+    private static func textFromFileURL(_ url: URL) -> String? {
+        let accessed = url.startAccessingSecurityScopedResource()
+        defer {
+            if accessed {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+        if let text = try? String(contentsOf: url, encoding: .utf8) {
+            return text
+        }
+        // Some hosts hand a file URL whose contents are UTF-16 / Latin-1.
+        if let data = try? Data(contentsOf: url) {
+            return String(data: data, encoding: .utf8)
+                ?? String(data: data, encoding: .utf16)
+                ?? String(data: data, encoding: .isoLatin1)
+        }
+        return nil
     }
 
     #if canImport(UIKit)
@@ -179,33 +230,49 @@ enum ShareTextExtractor {
     }
 
     static func loadUIImage(from provider: NSItemProvider) async -> UIImage? {
+        if provider.canLoadObject(ofClass: UIImage.self),
+           let image = await loadUIImageObject(from: provider) {
+            return image
+        }
+
         for typeIdentifier in imageTypePriority where provider.hasItemConformingToTypeIdentifier(typeIdentifier) {
-            if let image = await loadUIImage(from: provider, typeIdentifier: typeIdentifier) {
+            if let data = await loadDataRepresentation(from: provider, typeIdentifier: typeIdentifier),
+               let image = UIImage(data: data) {
+                return image
+            }
+            if let image = await loadFileImage(from: provider, typeIdentifier: typeIdentifier) {
                 return image
             }
         }
         return nil
     }
 
-    private static func loadUIImage(from provider: NSItemProvider, typeIdentifier: String) async -> UIImage? {
+    private static func loadUIImageObject(from provider: NSItemProvider) async -> UIImage? {
         await withCheckedContinuation { continuation in
-            provider.loadItem(forTypeIdentifier: typeIdentifier, options: nil) { item, _ in
-                if let image = item as? UIImage {
-                    continuation.resume(returning: image)
+            _ = provider.loadObject(ofClass: UIImage.self) { object, _ in
+                continuation.resume(returning: object as? UIImage)
+            }
+        }
+    }
+
+    private static func loadFileImage(from provider: NSItemProvider, typeIdentifier: String) async -> UIImage? {
+        await withCheckedContinuation { continuation in
+            _ = provider.loadFileRepresentation(forTypeIdentifier: typeIdentifier) { url, _ in
+                guard let url else {
+                    continuation.resume(returning: nil)
                     return
                 }
-                if let url = item as? URL,
-                   let data = try? Data(contentsOf: url),
-                   let image = UIImage(data: data) {
-                    continuation.resume(returning: image)
-                    return
+                let accessed = url.startAccessingSecurityScopedResource()
+                defer {
+                    if accessed {
+                        url.stopAccessingSecurityScopedResource()
+                    }
                 }
-                if let data = item as? Data,
-                   let image = UIImage(data: data) {
+                if let data = try? Data(contentsOf: url), let image = UIImage(data: data) {
                     continuation.resume(returning: image)
-                    return
+                } else {
+                    continuation.resume(returning: nil)
                 }
-                continuation.resume(returning: nil)
             }
         }
     }
