@@ -10676,13 +10676,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Today’s auto backup is ready (JSON + Anki). Find it in Files → KnoWell → AutoBackup."
+            "value": "Today’s auto backup is ready (JSON + Anki). Tap to open AutoBackup in Files."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "今日自动备份已完成（JSON + Anki）。可在「文件」App 的 KnoWell/AutoBackup 查看。"
+            "value": "今日自动备份已完成（JSON + Anki）。点按可打开「文件」中的 AutoBackup。"
           }
         }
       }
@@ -10751,6 +10751,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "运行日志：可在「文件」→「我的 iPhone」→「KnoWell」→ Logs 查看（knowell-日期.log）。"
+          }
+        }
+      }
+    },
+    "library.autoBackup.banner.openHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the AutoBackup folder in the Files app."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在「文件」App 中打开 AutoBackup 文件夹。"
           }
         }
       }

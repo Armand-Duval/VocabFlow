@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import UIKit
 
 extension Notification.Name {
     static let dailyAutoBackupBannerDidChange = Notification.Name("knowell.dailyAutoBackup.bannerDidChange")
@@ -39,6 +40,15 @@ enum DailyAutoBackupService {
         defaults.set(false, forKey: bannerVisibleKey)
         defaults.removeObject(forKey: bannerTextKey)
         NotificationCenter.default.post(name: .dailyAutoBackupBannerDidChange, object: nil)
+    }
+
+    /// Opens the AutoBackup folder in the system Files app (UIFileSharingEnabled).
+    @discardableResult
+    static func openAutoBackupInFiles() -> Bool {
+        guard let folder = try? autoBackupDirectory(),
+              let url = filesAppURL(for: folder) else { return false }
+        UIApplication.shared.open(url)
+        return true
     }
 
     /// Call on app launch / becoming active.
@@ -128,6 +138,14 @@ enum DailyAutoBackupService {
         let folder = docs.appendingPathComponent("AutoBackup", isDirectory: true)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         return folder
+    }
+
+    /// Undocumented but widely used scheme to reveal a Documents path in Files.
+    private static func filesAppURL(for fileURL: URL) -> URL? {
+        var components = URLComponents()
+        components.scheme = "shareddocuments"
+        components.path = fileURL.path
+        return components.url
     }
 
     private static func pruneOldBackups(in folder: URL, keepingDays: Int) throws {

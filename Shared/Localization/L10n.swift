@@ -495,6 +495,7 @@ enum L10n {
     static var settingsDailyAutoBackupFooter: String { tr("settings.dailyAutoBackup.footer") }
     static var settingsAppLogFooter: String { tr("settings.appLog.footer") }
     static var libraryAutoBackupBanner: String { tr("library.autoBackup.banner") }
+    static var libraryAutoBackupBannerOpenHint: String { tr("library.autoBackup.banner.openHint") }
     static var exportBackup: String { tr("settings.backup.export") }
     static var importBackup: String { tr("settings.backup.import") }
     static func backupFooter(_ count: Int) -> String { tf("settings.backup.footer", count) }

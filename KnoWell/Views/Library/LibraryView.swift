@@ -178,21 +178,40 @@ struct LibraryView: View {
 
     private func autoBackupBanner(_ message: String) -> some View {
         HStack(alignment: .center, spacing: AppSpacing.sm) {
-            Image(systemName: "externaldrive.badge.checkmark")
-                .font(.body.weight(.semibold))
-                .foregroundStyle(AppColor.accent)
-            Text(message)
-                .font(AppFont.helper())
-                .foregroundStyle(AppColor.textPrimary)
-                .fixedSize(horizontal: false, vertical: true)
-            Spacer(minLength: 0)
-            Button(L10n.cancel) {
+            Button {
+                _ = DailyAutoBackupService.openAutoBackupInFiles()
+            } label: {
+                HStack(alignment: .center, spacing: AppSpacing.sm) {
+                    Image(systemName: "externaldrive.badge.checkmark")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(AppColor.accent)
+                    Text(message)
+                        .font(AppFont.helper())
+                        .foregroundStyle(AppColor.textPrimary)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(AppColor.textTertiary)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint(L10n.libraryAutoBackupBannerOpenHint)
+
+            Button {
                 DailyAutoBackupService.dismissBanner()
                 refreshAutoBackupBanner()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(AppColor.textTertiary)
+                    .frame(width: 28, height: 28)
+                    .contentShape(Rectangle())
             }
-            .font(AppFont.caption().weight(.semibold))
-            .foregroundStyle(AppColor.accent)
             .buttonStyle(.plain)
+            .accessibilityLabel(L10n.close)
         }
         .padding(.horizontal, AppSpacing.md)
         .padding(.vertical, 10)
