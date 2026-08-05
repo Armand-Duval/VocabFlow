@@ -208,6 +208,7 @@ struct CardReviewSessionView: View {
                 .opacity(showBack ? 0 : 1)
                 .rotation3DEffect(.degrees(showBack ? 180 : 0), axis: (x: 0, y: 1, z: 0), perspective: 0.65)
                 .allowsHitTesting(!showBack)
+                .onTapGesture { flipCard(toBack: true) }
 
                 flipFacePanel {
                     VStack(alignment: .leading, spacing: AppSpacing.md) {
@@ -220,16 +221,31 @@ struct CardReviewSessionView: View {
                 .opacity(showBack ? 1 : 0)
                 .rotation3DEffect(.degrees(showBack ? 0 : -180), axis: (x: 0, y: 1, z: 0), perspective: 0.65)
                 .allowsHitTesting(showBack)
+                // No whole-card tap-to-flip on the back — source image / text selection need the taps.
             }
             .padding(.horizontal, AppSpacing.md)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .offset(x: dragOffset.width * 0.18)
-            .onTapGesture { flipCard() }
             .simultaneousGesture(flipRateGesture(for: card))
             .accessibilityAddTraits(.isButton)
             .accessibilityLabel(showBack ? L10n.backLabel : L10n.frontLabel)
 
             if showBack {
+                HStack(spacing: AppSpacing.sm) {
+                    Button {
+                        flipCard(toBack: false)
+                    } label: {
+                        Label(L10n.frontLabel, systemImage: "arrow.uturn.backward")
+                            .font(AppFont.helper().weight(.semibold))
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, AppSpacing.md)
+                .padding(.bottom, AppSpacing.xs)
+
                 ratingButtons(for: card)
                     .transition(.opacity.combined(with: .move(edge: .bottom)))
             } else {

@@ -22,6 +22,7 @@ struct SettingsView: View {
     @State private var reminderEnabled = ReviewReminderService.isEnabled
     @State private var reminderTime = ReviewReminderService.reminderDate
     @State private var backupReminderEnabled = BackupReminderService.isEnabled
+    @State private var dailyAutoBackupEnabled = DailyAutoBackupService.isEnabled
     @State private var showDeckStore = false
 
     @State private var showResetAllConfirm = false
@@ -75,6 +76,8 @@ struct SettingsView: View {
                 customBaseURL = APISettings.customBaseURL
                 customModelID = APISettings.customModelID
                 apiKey = APISettings.kimiAPIKey
+                backupReminderEnabled = BackupReminderService.isEnabled
+                dailyAutoBackupEnabled = DailyAutoBackupService.isEnabled
             }
             .task {
                 await refreshHasAnyCards()
@@ -185,6 +188,11 @@ struct SettingsView: View {
 
                 SettingsDivider()
                 Toggle(L10n.settingsBackupReminderEnabled, isOn: $backupReminderEnabled)
+                SettingsDivider()
+                Toggle(L10n.settingsDailyAutoBackupEnabled, isOn: $dailyAutoBackupEnabled)
+                Text(L10n.settingsDailyAutoBackupFooter)
+                    .font(AppFont.weak())
+                    .foregroundStyle(AppColor.textTertiary)
             }
         }
     }
@@ -305,7 +313,14 @@ struct SettingsView: View {
         let trimmed = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty {
             if !DefaultAPIKey.deepseek.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-               selectedProvider == .deepseek {
+               selectedProvider == .deepseek || APISettings.defaultAPIKey(for: selectedProvider).isEmpty {
+                return AIProvider.deepseek.displayName
+            }
+            if selectedProvider == .moonshot,
+               !DefaultAPIKey.kimi.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                return AIProvider.moonshot.displayName
+            }
+            if !DefaultAPIKey.deepseek.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 return AIProvider.deepseek.displayName
             }
             if !DefaultAPIKey.kimi.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -322,6 +337,13 @@ struct SettingsView: View {
            !DefaultAPIKey.deepseek.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             return L10n.keySourceDefault
         }
+        if selectedProvider == .moonshot,
+           !DefaultAPIKey.kimi.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return L10n.keySourceDefault
+        }
+        if !DefaultAPIKey.deepseek.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return L10n.keySourceDefault
+        }
         if !DefaultAPIKey.kimi.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             return L10n.keySourceDefault
         }
@@ -334,7 +356,12 @@ struct SettingsView: View {
             if selectedProvider == .deepseek {
                 return !DefaultAPIKey.deepseek.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             }
-            return !DefaultAPIKey.kimi.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            if selectedProvider == .moonshot {
+                return !DefaultAPIKey.kimi.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            }
+            // Other providers with empty key → bundled DeepSeek, then Moonshot.
+            return !DefaultAPIKey.deepseek.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                || !DefaultAPIKey.kimi.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
         if selectedProvider == .custom {
             return !customBaseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -488,6 +515,12 @@ struct SettingsView: View {
         ReviewReminderService.applyReminderTime(reminderTime)
         BackupReminderService.isEnabled = backupReminderEnabled
         BackupReminderService.reschedule()
+        DailyAutoBackupService.isEnabled = dailyAutoBackupEnabled
+        if dailyAutoBackupEnabled {
+            Task {
+                await DailyAutoBackupService.runIfNeeded(in: modelContext)
+            }
+        }
         ReviewReminderService.reschedule(dueCount: ReviewStatusStore.dueCount)
         ToastCenter.shared.show(L10n.settingsSavedTitle)
     }

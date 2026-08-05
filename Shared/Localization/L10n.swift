@@ -170,6 +170,7 @@ enum L10n {
     static var cardTranslationHighlightPreview: String { tr("card.translationHighlight.preview") }
     static var cardSourceLabel: String { tr("card.source") }
     static var cardSourceImageLabel: String { tr("card.sourceImage") }
+    static var cardSourceImageExpandHint: String { tr("card.sourceImage.expandHint") }
     static var cardUsageNoteLabel: String { tr("card.usageNote") }
     static var cardUsageNotePlaceholder: String { tr("card.usageNote.placeholder") }
     static var cardEtymologyLabel: String { tr("card.etymology") }
@@ -490,6 +491,9 @@ enum L10n {
     static var backupSection: String { tr("settings.backup.section") }
     static var settingsBackupReminderEnabled: String { tr("settings.backupReminder.enabled") }
     static var settingsBackupReminderFooter: String { tr("settings.backupReminder.footer") }
+    static var settingsDailyAutoBackupEnabled: String { tr("settings.dailyAutoBackup.enabled") }
+    static var settingsDailyAutoBackupFooter: String { tr("settings.dailyAutoBackup.footer") }
+    static var libraryAutoBackupBanner: String { tr("library.autoBackup.banner") }
     static var exportBackup: String { tr("settings.backup.export") }
     static var importBackup: String { tr("settings.backup.import") }
     static func backupFooter(_ count: Int) -> String { tf("settings.backup.footer", count) }
@@ -695,7 +699,9 @@ enum L10n {
     static var deckOpenSourceSection: String { tr("deck.openSource.section") }
     static var deckCatalogTitle: String { tr("deck.catalog.title") }
     static var deckCatalogSubtitle: String { tr("deck.catalog.subtitle") }
+    static var deckCatalogHeroLead: String { tr("deck.catalog.heroLead") }
     static var deckCatalogMemberBadge: String { tr("deck.catalog.memberBadge") }
+    static var deckQuickExportAction: String { tr("deck.quick.exportAction") }
     static var deckOpenSourceFooter: String { tr("deck.openSource.footer") }
     static var deckCommunitySection: String { tr("deck.community.section") }
     static var deckCommunityFooter: String { tr("deck.community.footer") }

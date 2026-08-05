@@ -37,9 +37,6 @@ struct DeckStoreView: View {
     @State private var deckPendingClear: Deck?
     @State private var deckPendingActions: Deck?
     @State private var deckPendingStats: Deck?
-    @State private var showMembershipGate = false
-    @State private var pendingMembershipAction: (() -> Void)?
-    @State private var didPromptMembershipThisSession = false
     @Environment(\.openURL) private var openURL
 
     private var isImportBusy: Bool {
@@ -122,19 +119,6 @@ struct DeckStoreView: View {
             } message: {
                 Text(L10n.deckCommunityImportGuideBody)
             }
-            .alert(L10n.membershipAnkiTitle, isPresented: $showMembershipGate) {
-                Button(L10n.ok, role: .cancel) {
-                    pendingMembershipAction = nil
-                }
-                if !MembershipAccess.locksAnkiTransfer {
-                    Button(L10n.membershipContinueLimited) {
-                        pendingMembershipAction?()
-                        pendingMembershipAction = nil
-                    }
-                }
-            } message: {
-                Text(L10n.membershipAnkiBody)
-            }
             .sheet(item: $deckPendingStats) { deck in
                 NavigationStack {
                     DeckStatisticsView(deck: deck)
@@ -173,12 +157,12 @@ struct DeckStoreView: View {
     private var storeContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                catalogLinkCard
                 if !checkedDeckIDs.isEmpty {
                     selectionHintBar
                 }
                 myDecksCard
                 deckActionsCard
-                catalogLinkCard
             }
             .padding(AppSpacing.md)
         }
@@ -269,6 +253,20 @@ struct DeckStoreView: View {
                 .foregroundStyle(AppColor.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
+            if checkedCardCount > 0 {
+                Menu {
+                    Button(L10n.deckQuickExportDeckApkg) {
+                        exportCheckedDecksApkg()
+                    }
+                    Button(L10n.deckQuickExportDeckJSON) {
+                        exportCheckedDecksJSON()
+                    }
+                } label: {
+                    Text(L10n.deckQuickExportAction)
+                        .font(AppFont.caption().weight(.semibold))
+                        .foregroundStyle(AppColor.accent)
+                }
+            }
         }
         .padding(.horizontal, AppSpacing.sm)
         .padding(.vertical, 10)
@@ -390,66 +388,63 @@ struct DeckStoreView: View {
         AppSurfaceCard {
             VStack(alignment: .leading, spacing: AppSpacing.sm) {
                 Text(L10n.deckActionsSection)
-                    .font(AppFont.sectionTitle())
-                    .foregroundStyle(AppColor.textPrimary)
+                    .font(AppFont.caption().weight(.semibold))
+                    .foregroundStyle(AppColor.textSecondary)
 
-                // High-frequency Anki row
-                LazyVGrid(
-                    columns: [GridItem(.flexible()), GridItem(.flexible())],
-                    spacing: AppSpacing.sm
-                ) {
-                    QuickActionChip(
-                        systemImage: "square.and.arrow.down.fill",
-                        title: L10n.deckQuickImportApkg,
-                        isLoading: isImportingApkg,
-                        isDisabled: isImportingJSON,
-                        prominence: .primary,
-                        badge: MembershipAccess.showsMemberBadge ? L10n.membershipBadge : nil
+                // Compact tool strip — Anki first, JSON muted underneath.
+                VStack(spacing: AppSpacing.xs) {
+                    LazyVGrid(
+                        columns: [GridItem(.flexible()), GridItem(.flexible())],
+                        spacing: AppSpacing.xs
                     ) {
-                        runAnkiAction {
+                        QuickActionChip(
+                            systemImage: "square.and.arrow.down.fill",
+                            title: L10n.deckQuickImportApkg,
+                            isLoading: isImportingApkg,
+                            isDisabled: isImportingJSON,
+                            prominence: .compactPrimary
+                        ) {
                             beginFileImport(.apkg)
                         }
-                    }
 
-                    QuickActionChip(
-                        systemImage: "square.and.arrow.up.fill",
-                        title: L10n.deckQuickExportDeckApkg,
-                        isLoading: isPreparingExport,
-                        isDisabled: checkedDeckIDs.isEmpty || checkedCardCount == 0,
-                        prominence: .primary,
-                        badge: MembershipAccess.showsMemberBadge ? L10n.membershipBadge : nil
-                    ) {
-                        runAnkiAction {
+                        QuickActionChip(
+                            systemImage: "square.and.arrow.up.fill",
+                            title: L10n.deckQuickExportDeckApkg,
+                            isLoading: isPreparingExport,
+                            isDisabled: checkedDeckIDs.isEmpty || checkedCardCount == 0,
+                            prominence: .compactPrimary
+                        ) {
                             exportCheckedDecksApkg()
                         }
                     }
-                }
 
-                // Low-frequency JSON row
-                LazyVGrid(
-                    columns: [GridItem(.flexible()), GridItem(.flexible())],
-                    spacing: AppSpacing.sm
-                ) {
-                    QuickActionChip(
-                        systemImage: "square.and.arrow.down",
-                        title: L10n.deckQuickImportJSON,
-                        isLoading: isImportingJSON,
-                        isDisabled: isImportingApkg,
-                        prominence: .secondary
+                    LazyVGrid(
+                        columns: [GridItem(.flexible()), GridItem(.flexible())],
+                        spacing: AppSpacing.xs
                     ) {
-                        beginFileImport(.deckJSON)
-                    }
+                        QuickActionChip(
+                            systemImage: "square.and.arrow.down",
+                            title: L10n.deckQuickImportJSON,
+                            isLoading: isImportingJSON,
+                            isDisabled: isImportingApkg,
+                            prominence: .compactSecondary
+                        ) {
+                            beginFileImport(.deckJSON)
+                        }
 
-                    QuickActionChip(
-                        systemImage: "square.and.arrow.up",
-                        title: L10n.deckQuickExportDeckJSON,
-                        isLoading: isPreparingExport,
-                        isDisabled: checkedDeckIDs.isEmpty || checkedCardCount == 0,
-                        prominence: .secondary
-                    ) {
-                        exportCheckedDecksJSON()
+                        QuickActionChip(
+                            systemImage: "square.and.arrow.up",
+                            title: L10n.deckQuickExportDeckJSON,
+                            isLoading: isPreparingExport,
+                            isDisabled: checkedDeckIDs.isEmpty || checkedCardCount == 0,
+                            prominence: .compactSecondary
+                        ) {
+                            exportCheckedDecksJSON()
+                        }
                     }
                 }
+                .frame(maxWidth: 320)
+                .frame(maxWidth: .infinity, alignment: .center)
             }
         }
     }
@@ -459,43 +454,30 @@ struct DeckStoreView: View {
             DeckCatalogView(selectedDeckID: $selectedDeckID)
         } label: {
             AppSurfaceCard {
-                HStack(spacing: AppSpacing.sm) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack(spacing: AppSpacing.xs) {
-                            Text(L10n.deckCatalogTitle)
-                                .font(AppFont.sectionTitle())
-                                .foregroundStyle(AppColor.textPrimary)
-                            if MembershipAccess.showsMemberBadge {
-                                Text(L10n.deckCatalogMemberBadge)
-                                    .font(.system(size: 10, weight: .bold))
-                                    .foregroundStyle(.white)
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(AppColor.accentStrong, in: Capsule())
-                            }
-                        }
+                HStack(alignment: .center, spacing: AppSpacing.md) {
+                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                        Text(L10n.deckCatalogTitle)
+                            .font(AppFont.sectionTitle())
+                            .foregroundStyle(AppColor.textPrimary)
+                        Text(L10n.deckCatalogHeroLead)
+                            .font(AppFont.helper())
+                            .foregroundStyle(AppColor.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
                         Text(L10n.deckCatalogSubtitle)
                             .font(AppFont.caption())
-                            .foregroundStyle(AppColor.textSecondary)
+                            .foregroundStyle(AppColor.textTertiary)
                     }
                     Spacer(minLength: 0)
                     Image(systemName: "chevron.right")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(AppColor.textSecondary)
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(AppColor.accent)
+                        .frame(width: 36, height: 36)
+                        .background(AppColor.accentBackground(0.14), in: Circle())
                 }
+                .padding(.vertical, AppSpacing.sm)
             }
         }
         .buttonStyle(SoftPressButtonStyle())
-    }
-
-    private func runAnkiAction(_ action: @escaping () -> Void) {
-        if MembershipAccess.showsMemberBadge, !didPromptMembershipThisSession {
-            didPromptMembershipThisSession = true
-            pendingMembershipAction = action
-            showMembershipGate = true
-        } else {
-            action()
-        }
     }
 
     private var openSourceCard: some View {

@@ -739,6 +739,8 @@ struct QuickActionChip: View {
     enum Prominence {
         case primary
         case secondary
+        case compactPrimary
+        case compactSecondary
     }
 
     let systemImage: String
@@ -751,6 +753,14 @@ struct QuickActionChip: View {
     var badge: String? = nil
     let action: () -> Void
 
+    private var isCompact: Bool {
+        prominence == .compactPrimary || prominence == .compactSecondary
+    }
+
+    private var isPrimaryTone: Bool {
+        prominence == .primary || prominence == .compactPrimary
+    }
+
     var body: some View {
         Button(action: action) {
             Group {
@@ -759,6 +769,20 @@ struct QuickActionChip: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, verticalPadding)
                         .background(chipBackground, in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
+                } else if isCompact {
+                    HStack(spacing: 8) {
+                        iconBlock
+                        Text(title)
+                            .font(AppFont.captionSecondary().weight(isPrimaryTone ? .semibold : .regular))
+                            .foregroundStyle(isPrimaryTone ? AppColor.accent : AppColor.textSecondary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                        Spacer(minLength: 0)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, verticalPadding)
+                    .padding(.horizontal, AppSpacing.sm)
+                    .background(chipBackground, in: RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous))
                 } else {
                     VStack(spacing: prominence == .primary ? 8 : 6) {
                         iconBlock
@@ -786,43 +810,63 @@ struct QuickActionChip: View {
                 }
             }
             .overlay {
-                RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                    .strokeBorder(
-                        isHighlighted || prominence == .primary ? AppColor.accent.opacity(0.35) : AppColor.border,
-                        lineWidth: prominence == .primary ? 1.2 : 1
-                    )
+                RoundedRectangle(
+                    cornerRadius: isCompact ? AppRadius.button : AppRadius.card,
+                    style: .continuous
+                )
+                .strokeBorder(
+                    isHighlighted || isPrimaryTone ? AppColor.accent.opacity(0.28) : AppColor.borderSubtle,
+                    lineWidth: 1
+                )
             }
         }
         .buttonStyle(SoftPressButtonStyle())
         .disabled(isDisabled || isLoading)
-        .opacity(isDisabled ? 0.45 : (prominence == .secondary ? 0.92 : 1))
+        .opacity(isDisabled ? 0.45 : (prominence == .secondary || prominence == .compactSecondary ? 0.9 : 1))
     }
 
     private var verticalPadding: CGFloat {
-        prominence == .primary ? AppSpacing.md : AppSpacing.sm
+        switch prominence {
+        case .primary: AppSpacing.md
+        case .secondary: AppSpacing.sm
+        case .compactPrimary, .compactSecondary: 8
+        }
     }
 
     private var iconBlock: some View {
-        let size: CGFloat = prominence == .primary ? 52 : 40
+        let size: CGFloat = {
+            switch prominence {
+            case .primary: 52
+            case .secondary: 40
+            case .compactPrimary, .compactSecondary: 28
+            }
+        }()
+        let fillPrimary = isHighlighted || isPrimaryTone
         return ZStack {
-            RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
-                .fill(isHighlighted || prominence == .primary ? AppColor.accent : AppColor.accentBackground(0.12))
+            RoundedRectangle(cornerRadius: isCompact ? 8 : AppRadius.button, style: .continuous)
+                .fill(fillPrimary ? AppColor.accent : AppColor.accentBackground(0.12))
                 .frame(width: size, height: size)
 
             if isLoading {
                 ProgressView()
-                    .tint(isHighlighted || prominence == .primary ? .white : AppColor.accent)
+                    .controlSize(.small)
+                    .tint(fillPrimary ? .white : AppColor.accent)
             } else {
                 Image(systemName: systemImage)
-                    .font(.system(size: prominence == .primary ? 24 : 20, weight: AppIcon.weight))
+                    .font(.system(size: isCompact ? 14 : (prominence == .primary ? 24 : 20), weight: AppIcon.weight))
                     .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(isHighlighted || prominence == .primary ? .white : AppColor.accent)
+                    .foregroundStyle(fillPrimary ? .white : AppColor.accent)
             }
         }
     }
 
     private var chipBackground: some ShapeStyle {
-        prominence == .primary ? AppColor.accentBackground(0.08) : AppColor.surface
+        switch prominence {
+        case .primary, .compactPrimary:
+            AppColor.accentBackground(0.08)
+        case .secondary, .compactSecondary:
+            AppColor.surfaceMuted
+        }
     }
 }
 

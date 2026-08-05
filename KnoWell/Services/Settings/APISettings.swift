@@ -15,7 +15,7 @@ enum APISettings {
         get {
             guard let raw = defaults.string(forKey: providerKey),
                   let value = AIProvider(rawValue: raw) else {
-                return .moonshot
+                return .deepseek
             }
             return value
         }
@@ -94,9 +94,9 @@ enum APISettings {
         }
     }
 
-    /// Any bundled default key exists (Moonshot and/or DeepSeek).
+    /// Any bundled default key exists (DeepSeek and/or Moonshot).
     static var hasDefaultAPIKey: Bool {
-        !defaultAPIKey(for: .moonshot).isEmpty || !defaultAPIKey(for: .deepseek).isEmpty
+        !defaultAPIKey(for: .deepseek).isEmpty || !defaultAPIKey(for: .moonshot).isEmpty
     }
 
     /// Empty user key → using a bundled default for the effective provider.
@@ -109,14 +109,16 @@ enum APISettings {
         if hasUserAPIKey { return kimiAPIKey }
         let forProvider = defaultAPIKey(for: provider)
         if !forProvider.isEmpty { return forProvider }
+        if !defaultAPIKey(for: .deepseek).isEmpty { return defaultAPIKey(for: .deepseek) }
         return defaultAPIKey(for: .moonshot)
     }
 
     /// Requests use the selected provider when the user supplied a key, or when that
-    /// provider has a bundled default. Otherwise fall back to Moonshot + its default key.
+    /// provider has a bundled default. Otherwise fall back to DeepSeek, then Moonshot.
     static var effectiveProvider: AIProvider {
         if hasUserAPIKey { return provider }
         if !defaultAPIKey(for: provider).isEmpty { return provider }
+        if !defaultAPIKey(for: .deepseek).isEmpty { return .deepseek }
         if !defaultAPIKey(for: .moonshot).isEmpty { return .moonshot }
         return provider
     }

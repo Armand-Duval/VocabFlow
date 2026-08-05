@@ -2,9 +2,9 @@ import Foundation
 
 /// OpenAI-compatible chat providers used for card generation.
 enum AIProvider: String, CaseIterable, Identifiable, Codable {
+    case deepseek
     case moonshot
     case openai
-    case deepseek
     case openrouter
     case custom
 

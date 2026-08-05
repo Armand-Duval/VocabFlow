@@ -22,14 +22,12 @@
 3. 选择你的 **Paid Team** 重新签名
 4. 真机安装后，在 Safari 选中文字 → 分享 → 更多 → 打开 KnoWell
 
-## Kimi API 配置
+## AI API 配置
 
-1. 打开 App 的「设置」标签
-2. 填入 Kimi API Key（在 [platform.moonshot.cn](https://platform.moonshot.cn) 获取）
-3. 选择模型（默认 `moonshot-v1-8k` 即可）
-4. 保存后回到「制卡」即可使用
-
-未配置 Key 时会自动使用内置默认 Key；也可在设置里填写自己的 Key 优先使用。
+1. 打开 App 的「设置」
+2. 默认服务商为 **DeepSeek**（也可改选 Moonshot / Kimi、OpenAI 等）
+3. 填入对应 API Key；留空则使用内置默认 Key（优先 DeepSeek）
+4. 选择模型后保存，回到「制卡」即可使用
 
 ## 运行
 

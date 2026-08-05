@@ -34,6 +34,7 @@ struct LibraryView: View {
     @State private var showCardFilterSheet = false
     @State private var showDeckStore = false
     @State private var searchDebounceTask: Task<Void, Never>?
+    @State private var autoBackupBannerText: String?
 
     private var totalCardCount: Int {
         LibraryCatalogCache.shared.totalCount(from: decks)
@@ -125,7 +126,12 @@ struct LibraryView: View {
                 }
             }
             .safeAreaInset(edge: .top, spacing: 0) {
-                deckFilterBar
+                VStack(spacing: 0) {
+                    if let autoBackupBannerText {
+                        autoBackupBanner(autoBackupBannerText)
+                    }
+                    deckFilterBar
+                }
             }
             .navigationDestination(isPresented: $showDeckStore) {
                 DeckStoreView(selectedDeckID: Binding(
@@ -143,6 +149,7 @@ struct LibraryView: View {
                 if filterDeckID == nil {
                     filterDeckID = DeckSettings.lastSelectedDeckID
                 }
+                refreshAutoBackupBanner()
             }
             .task {
                 await refreshHasAnyCards()
@@ -150,6 +157,9 @@ struct LibraryView: View {
             .onReceive(NotificationCenter.default.publisher(for: .libraryCatalogDidChange)) { _ in
                 LibraryCatalogCache.shared.invalidateListCache()
                 Task { await refreshHasAnyCards() }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .dailyAutoBackupBannerDidChange)) { _ in
+                refreshAutoBackupBanner()
             }
             .onChange(of: searchText) { _, newValue in
                 searchDebounceTask?.cancel()
@@ -160,6 +170,34 @@ struct LibraryView: View {
                 }
             }
         }
+    }
+
+    private func refreshAutoBackupBanner() {
+        autoBackupBannerText = DailyAutoBackupService.pendingBannerText
+    }
+
+    private func autoBackupBanner(_ message: String) -> some View {
+        HStack(alignment: .center, spacing: AppSpacing.sm) {
+            Image(systemName: "externaldrive.badge.checkmark")
+                .font(.body.weight(.semibold))
+                .foregroundStyle(AppColor.accent)
+            Text(message)
+                .font(AppFont.helper())
+                .foregroundStyle(AppColor.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+            Button(L10n.cancel) {
+                DailyAutoBackupService.dismissBanner()
+                refreshAutoBackupBanner()
+            }
+            .font(AppFont.caption().weight(.semibold))
+            .foregroundStyle(AppColor.accent)
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, AppSpacing.md)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(AppColor.accentBackground(0.14))
     }
 
     @MainActor

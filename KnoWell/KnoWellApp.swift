@@ -28,6 +28,7 @@ struct KnoWellApp: App {
                     AppTabBarChrome.apply()
                     Task {
                         await processShareWorkItems()
+                        await DailyAutoBackupService.runIfNeeded(in: AppModelContainer.shared.mainContext)
                     }
                 }
                 .task {
@@ -39,6 +40,7 @@ struct KnoWellApp: App {
             if newPhase == .active {
                 Task {
                     await processShareWorkItems()
+                    await DailyAutoBackupService.runIfNeeded(in: AppModelContainer.shared.mainContext)
                 }
                 clipboardImport.checkClipboardIfNeeded(shareImport: shareImport)
             }
