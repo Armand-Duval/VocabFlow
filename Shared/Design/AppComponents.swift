@@ -543,8 +543,10 @@ enum AppTabBarChrome {
         item.selected.iconColor = accent
         item.selected.titleTextAttributes = [
             .foregroundColor: accent,
-            .font: UIFont.systemFont(ofSize: 10, weight: .semibold)
+            .font: UIFont.systemFont(ofSize: 10, weight: .bold)
         ]
+        // Slightly stronger selected affordance without a custom tab bar.
+        item.selected.badgeBackgroundColor = accent
         appearance.stackedLayoutAppearance = item
         appearance.inlineLayoutAppearance = item
         appearance.compactInlineLayoutAppearance = item
@@ -734,12 +736,19 @@ struct AppSectionHeader: View {
 }
 
 struct QuickActionChip: View {
+    enum Prominence {
+        case primary
+        case secondary
+    }
+
     let systemImage: String
     let title: String
     var iconOnly: Bool = false
     var isHighlighted: Bool = false
     var isLoading: Bool = false
     var isDisabled: Bool = false
+    var prominence: Prominence = .secondary
+    var badge: String? = nil
     let action: () -> Void
 
     var body: some View {
@@ -748,53 +757,72 @@ struct QuickActionChip: View {
                 if iconOnly {
                     iconBlock
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, AppSpacing.sm)
+                        .padding(.vertical, verticalPadding)
                         .background(chipBackground, in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
                 } else {
-                    VStack(spacing: 6) {
+                    VStack(spacing: prominence == .primary ? 8 : 6) {
                         iconBlock
                         Text(title)
-                            .font(AppFont.captionSecondary())
-                            .foregroundStyle(isHighlighted ? AppColor.accent : AppColor.textPrimary)
+                            .font(prominence == .primary ? AppFont.helper().weight(.semibold) : AppFont.captionSecondary())
+                            .foregroundStyle(isHighlighted || prominence == .primary ? AppColor.accent : AppColor.textPrimary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.85)
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, AppSpacing.sm)
+                    .padding(.vertical, verticalPadding)
                     .padding(.horizontal, AppSpacing.xs)
                     .background(chipBackground, in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
                 }
             }
+            .overlay(alignment: .topTrailing) {
+                if let badge, !badge.isEmpty {
+                    Text(badge)
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 2)
+                        .background(AppColor.accentStrong, in: Capsule())
+                        .padding(6)
+                }
+            }
             .overlay {
                 RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                    .strokeBorder(isHighlighted ? AppColor.accent.opacity(0.35) : AppColor.border, lineWidth: 1)
+                    .strokeBorder(
+                        isHighlighted || prominence == .primary ? AppColor.accent.opacity(0.35) : AppColor.border,
+                        lineWidth: prominence == .primary ? 1.2 : 1
+                    )
             }
         }
         .buttonStyle(SoftPressButtonStyle())
         .disabled(isDisabled || isLoading)
-        .opacity(isDisabled ? 0.45 : 1)
+        .opacity(isDisabled ? 0.45 : (prominence == .secondary ? 0.92 : 1))
+    }
+
+    private var verticalPadding: CGFloat {
+        prominence == .primary ? AppSpacing.md : AppSpacing.sm
     }
 
     private var iconBlock: some View {
-        ZStack {
+        let size: CGFloat = prominence == .primary ? 52 : 40
+        return ZStack {
             RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
-                .fill(isHighlighted ? AppColor.accent : AppColor.accentBackground(0.12))
-                .frame(width: 48, height: 48)
+                .fill(isHighlighted || prominence == .primary ? AppColor.accent : AppColor.accentBackground(0.12))
+                .frame(width: size, height: size)
 
             if isLoading {
                 ProgressView()
-                    .tint(isHighlighted ? .white : AppColor.accent)
+                    .tint(isHighlighted || prominence == .primary ? .white : AppColor.accent)
             } else {
                 Image(systemName: systemImage)
-                    .font(.system(size: 22, weight: AppIcon.weight))
+                    .font(.system(size: prominence == .primary ? 24 : 20, weight: AppIcon.weight))
                     .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(isHighlighted ? .white : AppColor.accent)
+                    .foregroundStyle(isHighlighted || prominence == .primary ? .white : AppColor.accent)
             }
         }
     }
 
     private var chipBackground: some ShapeStyle {
-        AppColor.surface
+        prominence == .primary ? AppColor.accentBackground(0.08) : AppColor.surface
     }
 }
 
@@ -894,7 +922,7 @@ struct DeckDueMeter: View {
                     .frame(width: max(4, geo.size.width * progress))
             }
         }
-        .frame(height: 3)
+        .frame(height: 5)
         .accessibilityLabel(L10n.deckDueMeterA11y(due: dueCount, total: totalCount))
     }
 }

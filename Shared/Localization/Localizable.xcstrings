@@ -10,6 +10,9 @@
     "·" : {
 
     },
+    "/" : {
+
+    },
     "%@ %@" : {
       "localizations" : {
         "en" : {
@@ -568,6 +571,74 @@
         }
       }
     },
+    "card.antonyms" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antonyms"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "反义词"
+          }
+        }
+      }
+    },
+    "card.antonyms.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "listener · audience"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "listener · audience（用 · 分隔）"
+          }
+        }
+      }
+    },
+    "card.etymology" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Word parts"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "词根构词"
+          }
+        }
+      }
+    },
+    "card.etymology.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Root / affix breakdown (optional)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "词根/词缀拆解（可选）"
+          }
+        }
+      }
+    },
     "card.export.apkg" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -581,6 +652,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "导出 apkg"
+          }
+        }
+      }
+    },
+    "card.paraphrases" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model sentences"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仿写例句"
+          }
+        }
+      }
+    },
+    "card.paraphrases.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "【Academic】She is a gifted orator who…\n(Optional Chinese tip)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "【学术写作】She is a gifted orator who…\n（可选中文提示）"
           }
         }
       }
@@ -721,193 +826,6 @@
         }
       }
     },
-    "card.sourceImage" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Source image"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "原图"
-          }
-        }
-      }
-    },
-    "card.usageNote" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Usage insight"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "用法洞察"
-          }
-        }
-      }
-    },
-    "card.usageNote.placeholder" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Why this word here; contrast with alternatives…"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "为何此处用此词；与近义/替代词对比…"
-          }
-        }
-      }
-    },
-    "card.etymology" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Word parts"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "词根构词"
-          }
-        }
-      }
-    },
-    "card.etymology.placeholder" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Root / affix breakdown (optional)"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "词根/词缀拆解（可选）"
-          }
-        }
-      }
-    },
-    "card.synonyms" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Synonyms"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "同义词"
-          }
-        }
-      }
-    },
-    "card.synonyms.placeholder" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "speaker · rhetorician"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "speaker · rhetorician（用 · 分隔）"
-          }
-        }
-      }
-    },
-    "card.antonyms" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Antonyms"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "反义词"
-          }
-        }
-      }
-    },
-    "card.antonyms.placeholder" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "listener · audience"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "listener · audience（用 · 分隔）"
-          }
-        }
-      }
-    },
-    "card.paraphrases" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Model sentences"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "仿写例句"
-          }
-        }
-      }
-    },
-    "card.paraphrases.placeholder" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "【Academic】She is a gifted orator who…\n(Optional Chinese tip)"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "【学术写作】She is a gifted orator who…\n（可选中文提示）"
-          }
-        }
-      }
-    },
     "card.source.value" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -921,6 +839,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "出处 · %@"
+          }
+        }
+      }
+    },
+    "card.sourceImage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Source image"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "原图"
           }
         }
       }
@@ -989,6 +924,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已暂停"
+          }
+        }
+      }
+    },
+    "card.synonyms" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synonyms"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同义词"
+          }
+        }
+      }
+    },
+    "card.synonyms.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "speaker · rhetorician"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "speaker · rhetorician（用 · 分隔）"
           }
         }
       }
@@ -1091,6 +1060,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已恢复复习"
+          }
+        }
+      }
+    },
+    "card.usageNote" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usage insight"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用法洞察"
+          }
+        }
+      }
+    },
+    "card.usageNote.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Why this word here; contrast with alternatives…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "为何此处用此词；与近义/替代词对比…"
           }
         }
       }
@@ -1721,261 +1724,6 @@
         }
       }
     },
-    "create.sourceMode.edit" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Edit text"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "编辑原文"
-          }
-        }
-      }
-    },
-    "create.sourceMode.pick" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pick phrases"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "圈选短语"
-          }
-        }
-      }
-    },
-    "create.scan.excerpt" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scan excerpt"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "扫描摘录"
-          }
-        }
-      }
-    },
-    "create.scan.openCamera" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open camera"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "打开相机"
-          }
-        }
-      }
-    },
-    "create.scan.ritualTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Photo → cards"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "拍书页 → 出卡"
-          }
-        }
-      }
-    },
-    "create.scan.ritualSubtitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Snap a marked page and turn highlights into review cards."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "拍下划过的书页，把高亮摘录收成可复习的卡片。"
-          }
-        }
-      }
-    },
-    "create.scan.emptyHint" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Camera first, album and paste stay one tap away."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "先拍再摘；相册与粘贴仍在同一屏。"
-          }
-        }
-      }
-    },
-    "create.scan.step.photo" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Page"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "书页"
-          }
-        }
-      }
-    },
-    "create.scan.step.extract" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Excerpt"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "摘录"
-          }
-        }
-      }
-    },
-    "create.scan.step.card" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Card"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "出卡"
-          }
-        }
-      }
-    },
-    "create.phrasePicker.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pick phrases in the sentence"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在原句中圈选短语"
-          }
-        }
-      }
-    },
-    "create.phrasePicker.hint" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Drag to select a phrase, then tap Add. Tap Cancel to clear. Drag the end dots to adjust bounds."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "拖选短语后点「加入」确认；点「取消」可放弃。两端圆点可改边界。"
-          }
-        }
-      }
-    },
-    "create.phrasePicker.boundaryHint" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Drag end dots to adjust"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "拖两端圆点调整"
-          }
-        }
-      }
-    },
-    "create.phrasePicker.boundaryStart" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Adjust start"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "调整起点"
-          }
-        }
-      }
-    },
-    "create.phrasePicker.boundaryEnd" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Adjust end"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "调整终点"
-          }
-        }
-      }
-    },
     "create.pastePlaceholder" : {
       "localizations" : {
         "en" : {
@@ -2039,6 +1787,91 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "待制作卡片"
+          }
+        }
+      }
+    },
+    "create.phrasePicker.boundaryEnd" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adjust end"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "调整终点"
+          }
+        }
+      }
+    },
+    "create.phrasePicker.boundaryHint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag end dots to adjust"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拖两端圆点调整"
+          }
+        }
+      }
+    },
+    "create.phrasePicker.boundaryStart" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adjust start"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "调整起点"
+          }
+        }
+      }
+    },
+    "create.phrasePicker.hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag to select a phrase, then tap Add. Tap Cancel to clear. Drag the end dots to adjust bounds."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拖选短语后点「加入」确认；点「取消」可放弃。两端圆点可改边界。"
+          }
+        }
+      }
+    },
+    "create.phrasePicker.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick phrases in the sentence"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在原句中圈选短语"
           }
         }
       }
@@ -2432,6 +2265,142 @@
         }
       }
     },
+    "create.scan.emptyHint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camera first, album and paste stay one tap away."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "先拍再摘；相册与粘贴仍在同一屏。"
+          }
+        }
+      }
+    },
+    "create.scan.excerpt" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan excerpt"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "扫描摘录"
+          }
+        }
+      }
+    },
+    "create.scan.openCamera" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open camera"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开相机"
+          }
+        }
+      }
+    },
+    "create.scan.ritualSubtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snap a marked page and turn highlights into review cards."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拍下划过的书页，把高亮摘录收成可复习的卡片。"
+          }
+        }
+      }
+    },
+    "create.scan.ritualTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Photo → cards"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拍书页 → 出卡"
+          }
+        }
+      }
+    },
+    "create.scan.step.card" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Card"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "出卡"
+          }
+        }
+      }
+    },
+    "create.scan.step.extract" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Excerpt"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "摘录"
+          }
+        }
+      }
+    },
+    "create.scan.step.photo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Page"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "书页"
+          }
+        }
+      }
+    },
     "create.source" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2547,6 +2516,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "粘贴或输入句子…"
+          }
+        }
+      }
+    },
+    "create.sourceMode.edit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit text"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编辑原文"
+          }
+        }
+      }
+    },
+    "create.sourceMode.pick" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick phrases"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "圈选短语"
           }
         }
       }
@@ -2843,6 +2846,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "浏览词库"
+          }
+        }
+      }
+    },
+    "deck.catalog.memberBadge" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro packs"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "会员专属词库包"
           }
         }
       }
@@ -3275,6 +3295,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "新建词库"
+          }
+        }
+      }
+    },
+    "deck.default.badge" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Default"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "默认"
           }
         }
       }
@@ -4410,6 +4447,23 @@
         }
       }
     },
+    "deck.manage.short" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manage"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "管理"
+          }
+        }
+      }
+    },
     "deck.myDecks" : {
       "localizations" : {
         "en" : {
@@ -5068,6 +5122,23 @@
         }
       }
     },
+    "deck.selectedExportHint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d deck(s) selected — ready to export"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已选中 %d 个词库，可直接导出"
+          }
+        }
+      }
+    },
     "deck.singleDeck.footer" : {
       "localizations" : {
         "en" : {
@@ -5385,23 +5456,6 @@
         }
       }
     },
-    "extension.openingCreate" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Opening Create in KnoWell…"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在打开致知制卡…"
-          }
-        }
-      }
-    },
     "extension.error.title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5432,6 +5486,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "拖选生词后点「AI 生成卡片」，将立即返回并后台制卡"
+          }
+        }
+      }
+    },
+    "extension.openingCreate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opening Create in KnoWell…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在打开致知制卡…"
           }
         }
       }
@@ -6544,6 +6615,74 @@
         }
       }
     },
+    "membership.anki.body" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anki import/export is a Pro perk. Membership checkout is coming soon; you can continue during the limited preview."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anki 导入/导出为会员权益。开通流程即将上线；限时预览期内可继续使用。"
+          }
+        }
+      }
+    },
+    "membership.anki.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Member feature"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "会员功能"
+          }
+        }
+      }
+    },
+    "membership.badge" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "会员"
+          }
+        }
+      }
+    },
+    "membership.continueLimited" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue for now"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "继续使用"
+          }
+        }
+      }
+    },
     "notification.failed" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7227,6 +7366,23 @@
         }
       }
     },
+    "review.aiInsight" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI insight"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI拓展解读"
+          }
+        }
+      }
+    },
     "review.card.back" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7261,6 +7417,40 @@
         }
       }
     },
+    "review.collapseAnswer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collapse answer"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收起解析"
+          }
+        }
+      }
+    },
+    "review.collapseModules" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collapse sections"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收拢已展开模块"
+          }
+        }
+      }
+    },
     "review.daily.collect" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7278,53 +7468,19 @@
         }
       }
     },
-    "review.daily.history.link" : {
+    "review.daily.fromLibrary" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Past lines"
+            "value" : "From your library"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "查看往期句子"
-          }
-        }
-      }
-    },
-    "review.daily.history.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Past lines"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "往期句子"
-          }
-        }
-      }
-    },
-    "review.daily.history.search" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search lines"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "搜索原文或译文"
+            "value" : "来自你的词库"
           }
         }
       }
@@ -7346,6 +7502,23 @@
         }
       }
     },
+    "review.daily.history.link" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Past lines"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查看往期句子"
+          }
+        }
+      }
+    },
     "review.daily.history.noMatch" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7363,19 +7536,36 @@
         }
       }
     },
-    "review.daily.fromLibrary" : {
+    "review.daily.history.search" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "From your library"
+            "value" : "Search lines"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "来自你的词库"
+            "value" : "搜索原文或译文"
+          }
+        }
+      }
+    },
+    "review.daily.history.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Past lines"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "往期句子"
           }
         }
       }
@@ -7713,6 +7903,39 @@
         }
       }
     },
+    "review.home.start" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Review"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始复习"
+          }
+        }
+      }
+    },
+    "review.home.startDone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done for today"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今日复习完成"
+          }
+        }
+      }
+    },
     "review.home.studiedToday" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7743,39 +7966,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "本周 %lld 词 · %lld 句"
-          }
-        }
-      }
-    },
-    "review.home.start" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start Review"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "开始复习"
-          }
-        }
-      }
-    },
-    "review.home.startDone" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Done for today"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "今日复习完成"
           }
         }
       }
@@ -7812,6 +8002,23 @@
         }
       }
     },
+    "review.meaning" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meaning"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "释义"
+          }
+        }
+      }
+    },
     "review.noCards" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7825,6 +8032,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "没有可复习的卡片"
+          }
+        }
+      }
+    },
+    "review.paraphrases" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model sentences"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仿写例句"
           }
         }
       }
@@ -8037,6 +8261,23 @@
         }
       }
     },
+    "review.relatedWords" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synonyms / antonyms"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同义 / 反义"
+          }
+        }
+      }
+    },
     "review.reminder.body" : {
       "localizations" : {
         "en" : {
@@ -8049,6 +8290,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "你有 %d 张卡片待复习"
+          }
+        }
+      }
+    },
+    "review.rootsSource" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Roots / source"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "词根 / 出处"
+          }
+        }
+      }
+    },
+    "review.scrollForAnswer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scroll for meaning & translation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下滑查看释义与翻译"
           }
         }
       }
@@ -8082,159 +8357,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "显示答案"
-          }
-        }
-      }
-    },
-    "review.scrollForAnswer" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scroll for meaning & translation"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "下滑查看释义与翻译"
-          }
-        }
-      }
-    },
-    "review.collapseAnswer" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Collapse answer"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "收起解析"
-          }
-        }
-      }
-    },
-    "review.collapseModules" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Collapse sections"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "收拢已展开模块"
-          }
-        }
-      }
-    },
-    "review.meaning" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Meaning"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "释义"
-          }
-        }
-      }
-    },
-    "review.translation" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Translation"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "译文"
-          }
-        }
-      }
-    },
-    "review.aiInsight" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AI insight"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AI拓展解读"
-          }
-        }
-      }
-    },
-    "review.relatedWords" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Synonyms / antonyms"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "同义 / 反义"
-          }
-        }
-      }
-    },
-    "review.paraphrases" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Model sentences"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "仿写例句"
-          }
-        }
-      }
-    },
-    "review.rootsSource" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Roots / source"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "词根 / 出处"
           }
         }
       }
@@ -8323,6 +8445,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "复习"
+          }
+        }
+      }
+    },
+    "review.translation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Translation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "译文"
           }
         }
       }
@@ -9806,91 +9945,6 @@
         }
       }
     },
-    "settings.review.revealStyle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Card reveal"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "卡片揭晓方式"
-          }
-        }
-      }
-    },
-    "settings.review.revealStyle.reveal" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Expand"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "揭晓"
-          }
-        }
-      }
-    },
-    "settings.review.revealStyle.flip" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Flip"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "翻转"
-          }
-        }
-      }
-    },
-    "settings.review.revealStyle.revealFooter" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keep the prompt visible and expand the answer below."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "题干保持可见，向下展开释义与译文。"
-          }
-        }
-      }
-    },
-    "settings.review.revealStyle.flipFooter" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Flip the card; the back includes the full prompt plus answer."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "翻到背面；背面含完整题干与答案。"
-          }
-        }
-      }
-    },
     "settings.review.footer" : {
       "localizations" : {
         "en" : {
@@ -9951,6 +10005,91 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "提醒时间"
+          }
+        }
+      }
+    },
+    "settings.review.revealStyle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Card reveal"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "卡片揭晓方式"
+          }
+        }
+      }
+    },
+    "settings.review.revealStyle.flip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flip"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "翻转"
+          }
+        }
+      }
+    },
+    "settings.review.revealStyle.flipFooter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flip the card; the back includes the full prompt plus answer."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "翻到背面；背面含完整题干与答案。"
+          }
+        }
+      }
+    },
+    "settings.review.revealStyle.reveal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expand"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "揭晓"
+          }
+        }
+      }
+    },
+    "settings.review.revealStyle.revealFooter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep the prompt visible and expand the answer below."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "题干保持可见，向下展开释义与译文。"
           }
         }
       }
@@ -10206,36 +10345,18 @@
         }
       }
     },
-    "study.selection.lookup" : {
-      "extractionState" : "manual",
+    "speech.word" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Look Up"
+            "value" : "Speak word"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "查词"
-          }
-        }
-      }
-    },
-    "study.selection.setHighlight" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Set highlight"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "设为高亮"
+            "value" : "朗读单词"
           }
         }
       }
@@ -10274,23 +10395,6 @@
         }
       }
     },
-    "study.selection.lookupUnavailable" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No dictionary entry for this term."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "系统词库中没有该词释义。"
-          }
-        }
-      }
-    },
     "study.selection.hint" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10308,18 +10412,53 @@
         }
       }
     },
-    "speech.word" : {
+    "study.selection.lookup" : {
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Speak word"
+            "value" : "Look Up"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "朗读单词"
+            "value" : "查词"
+          }
+        }
+      }
+    },
+    "study.selection.lookupUnavailable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No dictionary entry for this term."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "系统词库中没有该词释义。"
+          }
+        }
+      }
+    },
+    "study.selection.setHighlight" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set highlight"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设为高亮"
           }
         }
       }

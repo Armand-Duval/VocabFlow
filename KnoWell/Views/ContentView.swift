@@ -23,7 +23,10 @@ struct ContentView: View {
                 Label {
                     Text(L10n.tabReview)
                 } icon: {
-                    AppTabIcon(systemName: "rectangle.stack", isSelected: selectedTab == 0)
+                    AppTabIcon(
+                        systemName: selectedTab == 0 ? "rectangle.stack.fill" : "rectangle.stack",
+                        isSelected: selectedTab == 0
+                    )
                 }
             }
             .badge(sessionDueCount > 0 ? sessionDueCount : 0)
@@ -36,7 +39,10 @@ struct ContentView: View {
                 Label {
                     Text(L10n.tabLibrary)
                 } icon: {
-                    AppTabIcon(systemName: "books.vertical", isSelected: selectedTab == 1)
+                    AppTabIcon(
+                        systemName: selectedTab == 1 ? "books.vertical.fill" : "books.vertical",
+                        isSelected: selectedTab == 1
+                    )
                 }
             }
             .tag(1)
@@ -48,7 +54,10 @@ struct ContentView: View {
                 Label {
                     Text(L10n.tabCreate)
                 } icon: {
-                    AppTabIcon(systemName: "plus.circle", isSelected: selectedTab == 2)
+                    AppTabIcon(
+                        systemName: selectedTab == 2 ? "plus.circle.fill" : "plus.circle",
+                        isSelected: selectedTab == 2
+                    )
                 }
             }
             .tag(2)

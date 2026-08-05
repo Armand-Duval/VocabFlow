@@ -35,3 +35,22 @@ enum AccountAuthConfig {
         Bundle.main.object(forInfoDictionaryKey: "APPLE_SIGN_IN_ENABLED") as? Bool ?? false
     }
 }
+
+/// Soft membership hooks until StoreKit / entitlements ship.
+enum MembershipAccess {
+    private static let premiumKey = "membership.isPremium"
+
+    static var isPremium: Bool {
+        UserDefaults(suiteName: ShareImportStore.appGroupID)?.bool(forKey: premiumKey) == true
+    }
+
+    /// Visual “会员” badge on Anki / catalog hooks for free users.
+    static var showsMemberBadge: Bool { !isPremium }
+
+    /// Hard-gate Anki transfer. Keep false until paywall is ready.
+    static var locksAnkiTransfer: Bool { false }
+
+    static var canUseAnkiTransfer: Bool {
+        isPremium || !locksAnkiTransfer
+    }
+}

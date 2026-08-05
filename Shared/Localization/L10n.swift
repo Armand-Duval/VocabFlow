@@ -561,12 +561,19 @@ enum L10n {
     static var deckSectionFooter: String { tr("deck.section.footer") }
     static var deckTarget: String { tr("deck.target") }
     static var deckManage: String { tr("deck.manage") }
+    static var deckManageShort: String { tr("deck.manage.short") }
     static var deckLoading: String { tr("deck.loading") }
     static func deckLabelWithCount(_ name: String, count: Int) -> String {
         tf("deck.labelWithCount", name, count)
     }
     static var deckStoreTitle: String { tr("deck.store.title") }
     static var deckMyDecks: String { tr("deck.myDecks") }
+    static func deckSelectedExportHint(_ count: Int) -> String { tf("deck.selectedExportHint", count) }
+    static var deckDefaultBadge: String { tr("deck.default.badge") }
+    static var membershipBadge: String { tr("membership.badge") }
+    static var membershipAnkiTitle: String { tr("membership.anki.title") }
+    static var membershipAnkiBody: String { tr("membership.anki.body") }
+    static var membershipContinueLimited: String { tr("membership.continueLimited") }
     static var deckEmpty: String { tr("deck.empty") }
     static var deckImportDeckSection: String { tr("deck.import.deckSection") }
     static var deckImportDeckFooter: String { tr("deck.import.deckFooter") }
@@ -688,6 +695,7 @@ enum L10n {
     static var deckOpenSourceSection: String { tr("deck.openSource.section") }
     static var deckCatalogTitle: String { tr("deck.catalog.title") }
     static var deckCatalogSubtitle: String { tr("deck.catalog.subtitle") }
+    static var deckCatalogMemberBadge: String { tr("deck.catalog.memberBadge") }
     static var deckOpenSourceFooter: String { tr("deck.openSource.footer") }
     static var deckCommunitySection: String { tr("deck.community.section") }
     static var deckCommunityFooter: String { tr("deck.community.footer") }

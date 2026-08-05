@@ -117,16 +117,22 @@ private struct VocabularyWordChip: View {
             Text(word)
                 .font(.subheadline)
                 .lineLimit(1)
+                .truncationMode(.tail)
+                .frame(minWidth: 0, alignment: .leading)
 
             Button(action: onRemove) {
                 Image(systemName: "xmark")
                     .font(.caption2.weight(.bold))
                     .foregroundStyle(.secondary)
+                    .frame(width: 18, height: 18)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .fixedSize()
             .accessibilityLabel(Text(L10n.cancel))
         }
-        .padding(.horizontal, AppSpacing.sm)
+        .padding(.leading, AppSpacing.sm)
+        .padding(.trailing, 6)
         .padding(.vertical, AppSpacing.xs)
         .background(AppColor.accentBackground(0.12), in: Capsule())
     }
@@ -157,7 +163,19 @@ private struct VocabularyWordFlowLayout: Layout {
         var frames: [CGRect] = []
 
         for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
+            let unconstrained = subview.sizeThatFits(.unspecified)
+            // Cap chip width to container so long phrases keep the delete control on-screen.
+            let fitted: CGSize
+            if maxWidth.isFinite, unconstrained.width > maxWidth {
+                fitted = subview.sizeThatFits(ProposedViewSize(width: maxWidth, height: nil))
+            } else {
+                fitted = unconstrained
+            }
+            let size = CGSize(
+                width: maxWidth.isFinite ? min(fitted.width, maxWidth) : fitted.width,
+                height: fitted.height
+            )
+
             if x > 0, x + size.width > maxWidth {
                 x = 0
                 y += rowHeight + spacing
@@ -169,6 +187,7 @@ private struct VocabularyWordFlowLayout: Layout {
             x += size.width + spacing
         }
 
-        return (CGSize(width: maxWidth, height: y + rowHeight), frames)
+        let measuredWidth = maxWidth.isFinite ? maxWidth : (frames.map(\.maxX).max() ?? 0)
+        return (CGSize(width: measuredWidth, height: y + rowHeight), frames)
     }
 }

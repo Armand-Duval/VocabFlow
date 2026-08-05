@@ -36,6 +36,10 @@ struct DeckStoreView: View {
     @State private var showApkgImportGuide = false
     @State private var deckPendingClear: Deck?
     @State private var deckPendingActions: Deck?
+    @State private var deckPendingStats: Deck?
+    @State private var showMembershipGate = false
+    @State private var pendingMembershipAction: (() -> Void)?
+    @State private var didPromptMembershipThisSession = false
     @Environment(\.openURL) private var openURL
 
     private var isImportBusy: Bool {
@@ -59,107 +63,134 @@ struct DeckStoreView: View {
     }
 
     var body: some View {
+        storeContent
+            .appPageBackground()
+            .navigationTitle(L10n.deckStoreTitle)
+            .navigationBarTitleDisplayMode(.inline)
+            .loadingOverlay(isPresented: isImportBusy, message: busyOverlayMessage)
+            .toolbar { createDeckToolbar }
+            .sheet(isPresented: $showCreateDeck) {
+                DeckEditorSheet { deck in
+                    selectedDeckID = deck.id
+                    DeckSettings.lastSelectedDeckID = deck.id
+                    checkedDeckIDs = [deck.id]
+                    reloadDecks()
+                    DeckCardCountService.notifyCatalogChanged()
+                }
+            }
+            .sheet(item: $editingDeck) { deck in
+                DeckEditorSheet(deck: deck) { _ in
+                    reloadDecks()
+                    DeckCardCountService.notifyCatalogChanged()
+                }
+            }
+            .fileImporter(
+                isPresented: $showUnifiedFileImporter,
+                allowedContentTypes: allowedImportTypes,
+                allowsMultipleSelection: false
+            ) { result in
+                handleUnifiedFileImport(result)
+            }
+            .fileExporter(
+                isPresented: $showFileExporter,
+                document: pendingFileExport?.document,
+                contentType: pendingFileExport?.contentType ?? .json,
+                defaultFilename: pendingFileExport?.filename ?? BackupService.defaultFilename
+            ) { result in
+                let recordsBackupCompletion = pendingFileExport?.recordsBackupCompletion == true
+                defer { pendingFileExport = nil }
+                switch result {
+                case .success:
+                    if recordsBackupCompletion {
+                        BackupReminderService.recordBackupCompleted()
+                        ToastCenter.shared.show(L10n.exportBackupSuccess)
+                    }
+                case .failure(let error):
+                    showResult(title: L10n.exportFailed, message: error.localizedDescription)
+                }
+            }
+            .alert(alertTitle, isPresented: $showAlert) {
+                Button(L10n.ok, role: .cancel) {}
+            } message: {
+                Text(alertMessage)
+            }
+            .alert(L10n.deckCommunityImportGuideTitle, isPresented: $showApkgImportGuide) {
+                Button(L10n.deckCommunityImportNow) {
+                    beginFileImport(.apkg)
+                }
+                Button(L10n.ok, role: .cancel) {}
+            } message: {
+                Text(L10n.deckCommunityImportGuideBody)
+            }
+            .alert(L10n.membershipAnkiTitle, isPresented: $showMembershipGate) {
+                Button(L10n.ok, role: .cancel) {
+                    pendingMembershipAction = nil
+                }
+                if !MembershipAccess.locksAnkiTransfer {
+                    Button(L10n.membershipContinueLimited) {
+                        pendingMembershipAction?()
+                        pendingMembershipAction = nil
+                    }
+                }
+            } message: {
+                Text(L10n.membershipAnkiBody)
+            }
+            .sheet(item: $deckPendingStats) { deck in
+                NavigationStack {
+                    DeckStatisticsView(deck: deck)
+                }
+            }
+            .appActionSheet(
+                isPresented: Binding(
+                    get: { deckPendingActions != nil },
+                    set: { if !$0 { deckPendingActions = nil } }
+                ),
+                actions: deckActionItems
+            )
+            .appConfirmSheet(
+                isPresented: Binding(
+                    get: { deckPendingClear != nil },
+                    set: { if !$0 { deckPendingClear = nil } }
+                ),
+                title: L10n.deckClearTitle,
+                message: deckPendingClear.map { L10n.deckClearMessage($0.name) },
+                confirmTitle: L10n.deckClear,
+                confirmRole: .destructive
+            ) {
+                guard let deck = deckPendingClear else { return }
+                clearDeck(deck)
+                deckPendingClear = nil
+            }
+            .onAppear {
+                reloadDecks()
+                seedCheckedDecksIfNeeded()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .libraryCatalogDidChange)) { _ in
+                reloadDecks()
+            }
+    }
+
+    private var storeContent: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: AppSpacing.md) {
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                if !checkedDeckIDs.isEmpty {
+                    selectionHintBar
+                }
                 myDecksCard
                 deckActionsCard
                 catalogLinkCard
             }
             .padding(AppSpacing.md)
         }
-        .appPageBackground()
-        .navigationTitle(L10n.deckStoreTitle)
-        .navigationBarTitleDisplayMode(.inline)
-        .loadingOverlay(isPresented: isImportBusy, message: busyOverlayMessage)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    showCreateDeck = true
-                } label: {
-                    AppIcon.symbol("plus")
-                }
+    }
+
+    @ToolbarContentBuilder
+    private var createDeckToolbar: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            Button(L10n.deckCreateTitle) {
+                showCreateDeck = true
             }
-        }
-        .sheet(isPresented: $showCreateDeck) {
-            DeckEditorSheet { deck in
-                selectedDeckID = deck.id
-                DeckSettings.lastSelectedDeckID = deck.id
-                checkedDeckIDs = [deck.id]
-                reloadDecks()
-                DeckCardCountService.notifyCatalogChanged()
-            }
-        }
-        .sheet(item: $editingDeck) { deck in
-            DeckEditorSheet(deck: deck) { _ in
-                reloadDecks()
-                DeckCardCountService.notifyCatalogChanged()
-            }
-        }
-        .fileImporter(
-            isPresented: $showUnifiedFileImporter,
-            allowedContentTypes: allowedImportTypes,
-            allowsMultipleSelection: false
-        ) { result in
-            handleUnifiedFileImport(result)
-        }
-        .fileExporter(
-            isPresented: $showFileExporter,
-            document: pendingFileExport?.document,
-            contentType: pendingFileExport?.contentType ?? .json,
-            defaultFilename: pendingFileExport?.filename ?? BackupService.defaultFilename
-        ) { result in
-            let recordsBackupCompletion = pendingFileExport?.recordsBackupCompletion == true
-            defer { pendingFileExport = nil }
-            switch result {
-            case .success:
-                if recordsBackupCompletion {
-                    BackupReminderService.recordBackupCompleted()
-                    ToastCenter.shared.show(L10n.exportBackupSuccess)
-                }
-            case .failure(let error):
-                showResult(title: L10n.exportFailed, message: error.localizedDescription)
-            }
-        }
-        .alert(alertTitle, isPresented: $showAlert) {
-            Button(L10n.ok, role: .cancel) {}
-        } message: {
-            Text(alertMessage)
-        }
-        .alert(L10n.deckCommunityImportGuideTitle, isPresented: $showApkgImportGuide) {
-            Button(L10n.deckCommunityImportNow) {
-                beginFileImport(.apkg)
-            }
-            Button(L10n.ok, role: .cancel) {}
-        } message: {
-            Text(L10n.deckCommunityImportGuideBody)
-        }
-        .appActionSheet(
-            isPresented: Binding(
-                get: { deckPendingActions != nil },
-                set: { if !$0 { deckPendingActions = nil } }
-            ),
-            actions: deckActionItems
-        )
-        .appConfirmSheet(
-            isPresented: Binding(
-                get: { deckPendingClear != nil },
-                set: { if !$0 { deckPendingClear = nil } }
-            ),
-            title: L10n.deckClearTitle,
-            message: deckPendingClear.map { L10n.deckClearMessage($0.name) },
-            confirmTitle: L10n.deckClear,
-            confirmRole: .destructive
-        ) {
-            guard let deck = deckPendingClear else { return }
-            clearDeck(deck)
-            deckPendingClear = nil
-        }
-        .onAppear {
-            reloadDecks()
-            seedCheckedDecksIfNeeded()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .libraryCatalogDidChange)) { _ in
-            reloadDecks()
+            .font(AppFont.helper().weight(.semibold))
         }
     }
 
@@ -168,6 +199,9 @@ struct DeckStoreView: View {
         var items: [AppSheetAction] = [
             AppSheetAction(title: L10n.deckEdit, systemImage: "pencil") {
                 editingDeck = deck
+            },
+            AppSheetAction(title: L10n.deckStatisticsOverview, systemImage: "chart.bar.xaxis") {
+                deckPendingStats = deck
             }
         ]
         if DeckService.canDelete(deck) {
@@ -200,18 +234,21 @@ struct DeckStoreView: View {
         }
     }
 
-    private func toggleDeckCheck(_ deck: Deck) {
-        if checkedDeckIDs.contains(deck.id) {
-            checkedDeckIDs.remove(deck.id)
-        } else {
-            checkedDeckIDs.insert(deck.id)
-        }
+    /// Default: tap selects that deck only. Use Select All for batch export.
+    private func selectDeck(_ deck: Deck) {
+        checkedDeckIDs = [deck.id]
         syncPrimaryDeckSelection()
     }
 
     private func toggleSelectAllDecks() {
         if allDecksSelected {
-            checkedDeckIDs.removeAll()
+            if let selectedDeckID, decks.contains(where: { $0.id == selectedDeckID }) {
+                checkedDeckIDs = [selectedDeckID]
+            } else if let first = decks.first {
+                checkedDeckIDs = [first.id]
+            } else {
+                checkedDeckIDs.removeAll()
+            }
         } else {
             checkedDeckIDs = Set(decks.map(\.id))
         }
@@ -221,6 +258,21 @@ struct DeckStoreView: View {
     private func reloadDecks() {
         DeckCardCountService.recountAll(in: modelContext)
         cachedDecks = DeckService.refreshDecks(in: modelContext)
+    }
+
+    private var selectionHintBar: some View {
+        HStack(spacing: AppSpacing.sm) {
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundStyle(AppColor.accent)
+            Text(L10n.deckSelectedExportHint(checkedDeckIDs.count))
+                .font(AppFont.helper())
+                .foregroundStyle(AppColor.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, AppSpacing.sm)
+        .padding(.vertical, 10)
+        .background(AppColor.accentBackground(0.12), in: RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous))
     }
 
     private var myDecksCard: some View {
@@ -235,7 +287,7 @@ struct DeckStoreView: View {
                         Button(allDecksSelected ? L10n.deckDeselectAll : L10n.deckSelectAll) {
                             toggleSelectAllDecks()
                         }
-                        .font(AppFont.caption())
+                        .font(AppFont.caption().weight(.semibold))
                         .foregroundStyle(AppColor.accent)
                     }
                 }
@@ -248,7 +300,7 @@ struct DeckStoreView: View {
                     ForEach(decks) { deck in
                         deckRow(deck)
                         if deck.id != decks.last?.id {
-                            Spacer().frame(height: AppSpacing.sm)
+                            Divider().overlay(AppColor.borderSubtle)
                         }
                     }
                 }
@@ -259,27 +311,53 @@ struct DeckStoreView: View {
     private func deckRow(_ deck: Deck) -> some View {
         let due = deck.dueCount
         let total = max(deck.cardCount, 0)
+        let isChecked = checkedDeckIDs.contains(deck.id)
+        let isDefault = DeckService.isDefaultDeck(deck)
+        let nameColor = isDefault ? AppColor.textSecondary : AppColor.textPrimary
 
         return HStack(alignment: .center, spacing: AppSpacing.sm) {
             Button {
-                toggleDeckCheck(deck)
+                selectDeck(deck)
             } label: {
                 HStack(alignment: .center, spacing: AppSpacing.sm) {
-                    Image(systemName: checkedDeckIDs.contains(deck.id) ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(checkedDeckIDs.contains(deck.id) ? AppColor.accent : AppColor.textSecondary)
+                    Image(systemName: isChecked ? "checkmark.circle.fill" : "circle")
+                        .foregroundStyle(isChecked ? AppColor.accent : AppColor.textTertiary)
                         .font(.title3)
                         .frame(width: 28)
 
                     VStack(alignment: .leading, spacing: 6) {
-                        Text(deck.name)
-                            .font(AppFont.body().weight(.semibold))
-                            .foregroundStyle(AppColor.textPrimary)
-                            .multilineTextAlignment(.leading)
-                            .lineLimit(2)
+                        HStack(alignment: .firstTextBaseline, spacing: AppSpacing.xs) {
+                            Text(deck.name)
+                                .font(AppFont.body().weight(isDefault ? .medium : .semibold))
+                                .foregroundStyle(nameColor)
+                                .lineLimit(1)
+                            if isDefault {
+                                Text(L10n.deckDefaultBadge)
+                                    .font(.system(size: 10, weight: .medium))
+                                    .foregroundStyle(AppColor.textTertiary)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(AppColor.surfaceMuted, in: Capsule())
+                            }
+                            Spacer(minLength: 4)
+                            Text("\(total)")
+                                .font(AppFont.caption().weight(.medium))
+                                .foregroundStyle(AppColor.textSecondary)
+                                .monospacedDigit()
+                            Text("/")
+                                .font(AppFont.caption())
+                                .foregroundStyle(AppColor.textTertiary)
+                            Text("\(due)")
+                                .font(AppFont.caption().weight(.semibold))
+                                .foregroundStyle(due > 0 ? AppColor.accent : AppColor.textTertiary)
+                                .monospacedDigit()
+                                .accessibilityLabel(L10n.deckDueShort(due))
+                        }
+
                         if let detail = deck.detailText, !detail.isEmpty {
                             Text(detail)
                                 .font(AppFont.caption())
-                                .foregroundStyle(AppColor.textSecondary)
+                                .foregroundStyle(AppColor.textTertiary)
                                 .lineLimit(1)
                         }
                         if total > 0 {
@@ -288,36 +366,22 @@ struct DeckStoreView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .opacity(isDefault ? 0.82 : 1)
             }
             .buttonStyle(SoftPressButtonStyle(pressedScale: 0.99, pressedOpacity: 0.9))
-
-            VStack(alignment: .trailing, spacing: 2) {
-                Text("\(total)")
-                    .font(AppFont.caption())
-                    .foregroundStyle(AppColor.textSecondary)
-                    .monospacedDigit()
-                if due > 0 {
-                    Text(L10n.deckDueShort(due))
-                        .font(AppFont.weak())
-                        .foregroundStyle(AppColor.accent)
-                        .monospacedDigit()
-                }
-            }
 
             Button {
                 deckPendingActions = deck
             } label: {
-                AppIcon.symbol("ellipsis.circle")
-                    .foregroundStyle(AppColor.textSecondary)
+                Text(L10n.deckManageShort)
+                    .font(AppFont.caption().weight(.semibold))
+                    .foregroundStyle(AppColor.accent)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(AppColor.accentBackground(0.12), in: Capsule())
             }
             .buttonStyle(SoftPressButtonStyle())
-
-            NavigationLink {
-                DeckStatisticsView(deck: deck)
-            } label: {
-                AppIcon.symbol("chart.bar.xaxis")
-                    .foregroundStyle(AppColor.accent)
-            }
+            .accessibilityLabel(L10n.deckManageShort)
         }
         .padding(.vertical, AppSpacing.xs)
     }
@@ -329,6 +393,39 @@ struct DeckStoreView: View {
                     .font(AppFont.sectionTitle())
                     .foregroundStyle(AppColor.textPrimary)
 
+                // High-frequency Anki row
+                LazyVGrid(
+                    columns: [GridItem(.flexible()), GridItem(.flexible())],
+                    spacing: AppSpacing.sm
+                ) {
+                    QuickActionChip(
+                        systemImage: "square.and.arrow.down.fill",
+                        title: L10n.deckQuickImportApkg,
+                        isLoading: isImportingApkg,
+                        isDisabled: isImportingJSON,
+                        prominence: .primary,
+                        badge: MembershipAccess.showsMemberBadge ? L10n.membershipBadge : nil
+                    ) {
+                        runAnkiAction {
+                            beginFileImport(.apkg)
+                        }
+                    }
+
+                    QuickActionChip(
+                        systemImage: "square.and.arrow.up.fill",
+                        title: L10n.deckQuickExportDeckApkg,
+                        isLoading: isPreparingExport,
+                        isDisabled: checkedDeckIDs.isEmpty || checkedCardCount == 0,
+                        prominence: .primary,
+                        badge: MembershipAccess.showsMemberBadge ? L10n.membershipBadge : nil
+                    ) {
+                        runAnkiAction {
+                            exportCheckedDecksApkg()
+                        }
+                    }
+                }
+
+                // Low-frequency JSON row
                 LazyVGrid(
                     columns: [GridItem(.flexible()), GridItem(.flexible())],
                     spacing: AppSpacing.sm
@@ -337,7 +434,8 @@ struct DeckStoreView: View {
                         systemImage: "square.and.arrow.down",
                         title: L10n.deckQuickImportJSON,
                         isLoading: isImportingJSON,
-                        isDisabled: isImportingApkg
+                        isDisabled: isImportingApkg,
+                        prominence: .secondary
                     ) {
                         beginFileImport(.deckJSON)
                     }
@@ -346,37 +444,12 @@ struct DeckStoreView: View {
                         systemImage: "square.and.arrow.up",
                         title: L10n.deckQuickExportDeckJSON,
                         isLoading: isPreparingExport,
-                        isDisabled: checkedDeckIDs.isEmpty || checkedCardCount == 0
+                        isDisabled: checkedDeckIDs.isEmpty || checkedCardCount == 0,
+                        prominence: .secondary
                     ) {
                         exportCheckedDecksJSON()
                     }
-
-                    QuickActionChip(
-                        systemImage: "square.and.arrow.down.fill",
-                        title: L10n.deckQuickImportApkg,
-                        isLoading: isImportingApkg,
-                        isDisabled: isImportingJSON
-                    ) {
-                        beginFileImport(.apkg)
-                    }
-
-                    QuickActionChip(
-                        systemImage: "square.and.arrow.up.fill",
-                        title: L10n.deckQuickExportDeckApkg,
-                        isLoading: isPreparingExport,
-                        isDisabled: checkedDeckIDs.isEmpty || checkedCardCount == 0
-                    ) {
-                        exportCheckedDecksApkg()
-                    }
                 }
-
-                Text(
-                    checkedDeckIDs.isEmpty
-                        ? L10n.deckActionsImportFooter
-                        : L10n.deckActionsFooter(checkedDeckIDs.count)
-                )
-                .font(AppFont.caption())
-                .foregroundStyle(AppColor.textSecondary)
             }
         }
     }
@@ -388,9 +461,19 @@ struct DeckStoreView: View {
             AppSurfaceCard {
                 HStack(spacing: AppSpacing.sm) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(L10n.deckCatalogTitle)
-                            .font(AppFont.sectionTitle())
-                            .foregroundStyle(AppColor.textPrimary)
+                        HStack(spacing: AppSpacing.xs) {
+                            Text(L10n.deckCatalogTitle)
+                                .font(AppFont.sectionTitle())
+                                .foregroundStyle(AppColor.textPrimary)
+                            if MembershipAccess.showsMemberBadge {
+                                Text(L10n.deckCatalogMemberBadge)
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(AppColor.accentStrong, in: Capsule())
+                            }
+                        }
                         Text(L10n.deckCatalogSubtitle)
                             .font(AppFont.caption())
                             .foregroundStyle(AppColor.textSecondary)
@@ -403,6 +486,16 @@ struct DeckStoreView: View {
             }
         }
         .buttonStyle(SoftPressButtonStyle())
+    }
+
+    private func runAnkiAction(_ action: @escaping () -> Void) {
+        if MembershipAccess.showsMemberBadge, !didPromptMembershipThisSession {
+            didPromptMembershipThisSession = true
+            pendingMembershipAction = action
+            showMembershipGate = true
+        } else {
+            action()
+        }
     }
 
     private var openSourceCard: some View {
@@ -748,7 +841,7 @@ struct DeckStoreView: View {
 
     private func exportCheckedDecksJSON() {
         guard !checkedDeckIDs.isEmpty else {
-            showResult(title: L10n.exportFailed, message: L10n.deckExportNeedSelection)
+            ToastCenter.shared.show(L10n.deckExportNeedSelection)
             return
         }
         guard checkedCardCount > 0 else {
@@ -780,7 +873,7 @@ struct DeckStoreView: View {
 
     private func exportCheckedDecksApkg() {
         guard !checkedDeckIDs.isEmpty else {
-            showResult(title: L10n.exportFailed, message: L10n.deckExportNeedSelection)
+            ToastCenter.shared.show(L10n.deckExportNeedSelection)
             return
         }
 
