@@ -324,6 +324,7 @@ final class CardGenerationQueue: ObservableObject {
             || jobs[index].words[i].status == .pending {
             jobs[index].words[i].status = .failed
         }
+        AppLog.error("Card generation failed: \(message)", category: "Create")
         ToastCenter.shared.show(message)
     }
 }

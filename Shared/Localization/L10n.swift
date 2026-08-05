@@ -493,6 +493,7 @@ enum L10n {
     static var settingsBackupReminderFooter: String { tr("settings.backupReminder.footer") }
     static var settingsDailyAutoBackupEnabled: String { tr("settings.dailyAutoBackup.enabled") }
     static var settingsDailyAutoBackupFooter: String { tr("settings.dailyAutoBackup.footer") }
+    static var settingsAppLogFooter: String { tr("settings.appLog.footer") }
     static var libraryAutoBackupBanner: String { tr("library.autoBackup.banner") }
     static var exportBackup: String { tr("settings.backup.export") }
     static var importBackup: String { tr("settings.backup.import") }

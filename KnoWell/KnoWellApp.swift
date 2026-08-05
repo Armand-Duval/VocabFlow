@@ -26,6 +26,7 @@ struct KnoWellApp: App {
                     APISettings.migrateToAppGroupIfNeeded()
                     WeChatSignInService.registerIfNeeded()
                     AppTabBarChrome.apply()
+                    AppLog.bootstrap()
                     Task {
                         await processShareWorkItems()
                         await DailyAutoBackupService.runIfNeeded(in: AppModelContainer.shared.mainContext)
@@ -43,6 +44,7 @@ struct KnoWellApp: App {
                     await DailyAutoBackupService.runIfNeeded(in: AppModelContainer.shared.mainContext)
                 }
                 clipboardImport.checkClipboardIfNeeded(shareImport: shareImport)
+                AppLog.info("Scene became active", category: "Lifecycle")
             }
         }
     }

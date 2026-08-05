@@ -193,6 +193,9 @@ struct SettingsView: View {
                 Text(L10n.settingsDailyAutoBackupFooter)
                     .font(AppFont.weak())
                     .foregroundStyle(AppColor.textTertiary)
+                Text(L10n.settingsAppLogFooter)
+                    .font(AppFont.weak())
+                    .foregroundStyle(AppColor.textTertiary)
             }
         }
     }

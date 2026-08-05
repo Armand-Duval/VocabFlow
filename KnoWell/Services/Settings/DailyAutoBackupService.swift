@@ -44,6 +44,7 @@ enum DailyAutoBackupService {
     /// Call on app launch / becoming active.
     static func runIfNeeded(in context: ModelContext) async {
         guard isEnabled else {
+            AppLog.info("Daily auto-backup skipped (disabled)", category: "Backup")
             scheduleMidnightWatch(in: context)
             return
         }
@@ -72,7 +73,10 @@ enum DailyAutoBackupService {
     private static func performBackupIfDue(in context: ModelContext) async {
         guard isEnabled else { return }
         let today = dayKey(.now)
-        if defaults.string(forKey: lastCompletedDayKey) == today { return }
+        if defaults.string(forKey: lastCompletedDayKey) == today {
+            AppLog.debug("Daily auto-backup already done for \(today)", category: "Backup")
+            return
+        }
         guard !isRunning else { return }
         isRunning = true
         defer { isRunning = false }
@@ -82,6 +86,7 @@ enum DailyAutoBackupService {
             guard !cards.isEmpty else {
                 // Nothing to back up — still mark the day so we don't retry endlessly.
                 defaults.set(today, forKey: lastCompletedDayKey)
+                AppLog.info("Daily auto-backup: no cards, marked \(today)", category: "Backup")
                 return
             }
             let decks = try context.fetch(
@@ -108,11 +113,12 @@ enum DailyAutoBackupService {
             defaults.set(L10n.libraryAutoBackupBanner, forKey: bannerTextKey)
             BackupReminderService.recordBackupCompleted()
             NotificationCenter.default.post(name: .dailyAutoBackupBannerDidChange, object: nil)
+            AppLog.info(
+                "Daily auto-backup ok: \(cards.count) cards → \(jsonURL.lastPathComponent), \(apkgURL.lastPathComponent)",
+                category: "Backup"
+            )
         } catch {
-            // Leave lastCompletedDay unset so a later activation can retry.
-            #if DEBUG
-            print("DailyAutoBackup failed: \(error.localizedDescription)")
-            #endif
+            AppLog.error("Daily auto-backup failed: \(error.localizedDescription)", category: "Backup")
         }
     }
 

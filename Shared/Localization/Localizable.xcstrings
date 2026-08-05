@@ -10659,13 +10659,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "After local midnight, backs up JSON and Anki into the app Documents/AutoBackup folder on the next open (or while the app stays open past midnight)."
+            "value": "After local midnight, backs up JSON and Anki on next open (or while left open past midnight). Browse them in Files → On My iPhone → KnoWell → AutoBackup."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "本地 0 点后，下次打开 App（或 App 一直开着跨过 0 点）时，自动把 JSON 与 Anki 备份到本机 Documents/AutoBackup。"
+            "value": "本地 0 点后，下次打开 App（或前台跨过 0 点）时自动备份 JSON 与 Anki。可在「文件」→「我的 iPhone」→「KnoWell」→ AutoBackup 查看。"
           }
         }
       }
@@ -10676,13 +10676,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Today’s auto backup is ready (JSON + Anki)."
+            "value": "Today’s auto backup is ready (JSON + Anki). Find it in Files → KnoWell → AutoBackup."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "今日自动备份已完成（JSON + Anki）"
+            "value": "今日自动备份已完成（JSON + Anki）。可在「文件」App 的 KnoWell/AutoBackup 查看。"
           }
         }
       }
@@ -10734,6 +10734,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "快速导出"
+          }
+        }
+      }
+    },
+    "settings.appLog.footer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App logs: Files → On My iPhone → KnoWell → Logs (knowell-YYYY-MM-DD.log)."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "运行日志：可在「文件」→「我的 iPhone」→「KnoWell」→ Logs 查看（knowell-日期.log）。"
           }
         }
       }

@@ -169,6 +169,7 @@
 		UU0000010000000000000002 /* LibraryCatalogCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = UU0000010000000000000011 /* LibraryCatalogCache.swift */; };
 		UU0000010000000000000003 /* BackupReminderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = UU0000010000000000000012 /* BackupReminderService.swift */; };
 		AUTOBK0010000000000000001 /* DailyAutoBackupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AUTOBK0010000000000000010 /* DailyAutoBackupService.swift */; };
+		APPLOG0010000000000000001 /* AppLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = APPLOG0010000000000000010 /* AppLog.swift */; };
 		UU0000010000000000000004 /* DeckStatisticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = UU0000010000000000000013 /* DeckStatisticsService.swift */; };
 		UU0000010000000000000005 /* DeckStatisticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = UU0000010000000000000014 /* DeckStatisticsView.swift */; };
 		VV0000010000000000000001 /* CameraImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = VV0000010000000000000010 /* CameraImagePicker.swift */; };
@@ -332,6 +333,7 @@
 		UU0000010000000000000011 /* LibraryCatalogCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryCatalogCache.swift; sourceTree = "<group>"; };
 		UU0000010000000000000012 /* BackupReminderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupReminderService.swift; sourceTree = "<group>"; };
 		AUTOBK0010000000000000010 /* DailyAutoBackupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyAutoBackupService.swift; sourceTree = "<group>"; };
+		APPLOG0010000000000000010 /* AppLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLog.swift; sourceTree = "<group>"; };
 		UU0000010000000000000013 /* DeckStatisticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckStatisticsService.swift; sourceTree = "<group>"; };
 		UU0000010000000000000014 /* DeckStatisticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckStatisticsView.swift; sourceTree = "<group>"; };
 		VV0000010000000000000010 /* CameraImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraImagePicker.swift; sourceTree = "<group>"; };
@@ -625,6 +627,7 @@
 				AA0000010000000000000055 /* BackupService.swift */,
 				UU0000010000000000000012 /* BackupReminderService.swift */,
 				AUTOBK0010000000000000010 /* DailyAutoBackupService.swift */,
+				APPLOG0010000000000000010 /* AppLog.swift */,
 				AUTH0010000000000000000012 /* AccountAuthConfig.swift */,
 				AUTH0010000000000000000013 /* AccountStore.swift */,
 				AUTH0010000000000000000014 /* AppleSignInService.swift */,
@@ -908,6 +911,7 @@
 				UU0000010000000000000002 /* LibraryCatalogCache.swift in Sources */,
 				UU0000010000000000000003 /* BackupReminderService.swift in Sources */,
 				AUTOBK0010000000000000001 /* DailyAutoBackupService.swift in Sources */,
+				APPLOG0010000000000000001 /* AppLog.swift in Sources */,
 				UU0000010000000000000004 /* DeckStatisticsService.swift in Sources */,
 				UU0000010000000000000005 /* DeckStatisticsView.swift in Sources */,
 				RR0000010000000000000001 /* SharedDeckStore.swift in Sources */,

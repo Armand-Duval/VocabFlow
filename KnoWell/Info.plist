@@ -28,5 +28,9 @@
 	<string></string>
 	<key>APPLE_SIGN_IN_ENABLED</key>
 	<false/>
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
 </dict>
 </plist>
