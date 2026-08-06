@@ -98,7 +98,6 @@ struct SettingsView: View {
                 }
                 .loadingOverlay(isPresented: isMigratingCards, message: L10n.settingsMigrateCardsRunning)
         }
-        .appToast(bottomPadding: 24)
     }
 
     @ViewBuilder
@@ -106,13 +105,12 @@ struct SettingsView: View {
         @Bindable var reviewSettings = reviewSettings
         ScrollView {
             VStack(spacing: AppSpacing.section) {
-                AccountSettingsCard(compact: true)
-
                 reviewCard(
                     dailyNewLimit: $reviewSettings.dailyNewLimit,
                     dailyReviewLimit: $reviewSettings.dailyReviewLimit
                 )
 
+                AccountSettingsCard(compact: true)
                 aiCard
                 dataManagementCard
                 aboutSupportCard
@@ -168,12 +166,15 @@ struct SettingsView: View {
                 .font(AppFont.secondary())
             }
 
-            Toggle(L10n.settingsBackupReminderEnabled, isOn: $backupReminderEnabled)
             Toggle(L10n.settingsDailyAutoBackupEnabled, isOn: $dailyAutoBackupEnabled)
             Text(L10n.settingsDailyAutoBackupFooter)
                 .font(AppFont.weak())
                 .foregroundStyle(AppColor.textMuted)
                 .fixedSize(horizontal: false, vertical: true)
+
+            Toggle(L10n.settingsBackupReminderEnabled, isOn: $backupReminderEnabled)
+                .disabled(!dailyAutoBackupEnabled)
+                .opacity(dailyAutoBackupEnabled ? 1 : 0.45)
         }
     }
 
@@ -195,10 +196,24 @@ struct SettingsView: View {
                     .font(AppFont.secondary())
             }
 
-            TextField(modelFieldPlaceholder, text: modelFieldBinding)
+            if !selectedProvider.suggestedModels.isEmpty {
+                Picker(L10n.modelSection, selection: $selectedModel) {
+                    ForEach(selectedProvider.suggestedModels, id: \.self) { model in
+                        Text(model).tag(model)
+                    }
+                }
+                .font(AppFont.secondary())
+                .disabled(!customModelID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .opacity(customModelID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 1 : 0.45)
+            }
+
+            TextField(L10n.aiCustomModelPlaceholder, text: $customModelID)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .font(AppFont.secondary())
+            Text(L10n.aiCustomModelFooter)
+                .font(AppFont.weak())
+                .foregroundStyle(AppColor.textMuted)
 
             HStack(spacing: AppSpacing.sm) {
                 Group {
@@ -345,36 +360,6 @@ struct SettingsView: View {
                 sectionBody
             }
         }
-    }
-
-    private var modelFieldPlaceholder: String {
-        let fallback = selectedProvider.defaultModel
-        if fallback.isEmpty {
-            return L10n.aiCustomModelPlaceholder
-        }
-        return L10n.aiModelNamePlaceholder(fallback)
-    }
-
-    private var modelFieldBinding: Binding<String> {
-        Binding(
-            get: {
-                let custom = customModelID.trimmingCharacters(in: .whitespacesAndNewlines)
-                if !custom.isEmpty { return customModelID }
-                return selectedModel
-            },
-            set: { newValue in
-                let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
-                if trimmed.isEmpty {
-                    customModelID = ""
-                    selectedModel = selectedProvider.defaultModel
-                } else if selectedProvider.suggestedModels.contains(trimmed) {
-                    customModelID = ""
-                    selectedModel = trimmed
-                } else {
-                    customModelID = newValue
-                }
-            }
-        )
     }
 
     private var liveKeySourceDescription: String {
@@ -602,6 +587,11 @@ private struct SettingsLifecycleModifier: ViewModifier {
             }
             .onChange(of: dailyAutoBackupEnabled) { _, enabled in
                 onDailyBackupEnabled(enabled)
+                if !enabled {
+                    backupReminderEnabled = false
+                    BackupReminderService.isEnabled = false
+                    BackupReminderService.reschedule()
+                }
             }
     }
 }

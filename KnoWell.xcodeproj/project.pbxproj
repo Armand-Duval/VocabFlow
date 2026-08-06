@@ -55,6 +55,8 @@
 		CC0000010000000000000014 /* ShareTextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000010000000000000015 /* ShareTextExtractor.swift */; };
 		DAILY00100000000000000001 /* DailyReflection.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAILY00100000000000000010 /* DailyReflection.swift */; };
 		DAILY00100000000000000002 /* DailyReflectionHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAILY00100000000000000011 /* DailyReflectionHistoryView.swift */; };
+		DAILY00100000000000000003 /* DailyReflectionPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAILY00100000000000000012 /* DailyReflectionPreferences.swift */; };
+		DAILY00100000000000000004 /* DailyReflectionPreferencesSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAILY00100000000000000013 /* DailyReflectionPreferencesSheet.swift */; };
 		DD0000010000000000000003 /* ActionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000010000000000000013 /* ActionViewController.swift */; };
 		DD0000010000000000000004 /* ShareImportStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000010000000000000011 /* ShareImportStore.swift */; };
 		DD0000010000000000000005 /* KnoWellAction.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DD0000010000000000000010 /* KnoWellAction.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -266,6 +268,8 @@
 		CC0000010000000000000015 /* ShareTextExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareTextExtractor.swift; sourceTree = "<group>"; };
 		DAILY00100000000000000010 /* DailyReflection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyReflection.swift; sourceTree = "<group>"; };
 		DAILY00100000000000000011 /* DailyReflectionHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyReflectionHistoryView.swift; sourceTree = "<group>"; };
+		DAILY00100000000000000012 /* DailyReflectionPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyReflectionPreferences.swift; sourceTree = "<group>"; };
+		DAILY00100000000000000013 /* DailyReflectionPreferencesSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyReflectionPreferencesSheet.swift; sourceTree = "<group>"; };
 		DD0000010000000000000010 /* KnoWellAction.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = KnoWellAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		DD0000010000000000000013 /* ActionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionViewController.swift; sourceTree = "<group>"; };
 		DD0000010000000000000014 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -575,6 +579,7 @@
 				ACTVTY00100000000000000001 /* StudyActivityStore.swift */,
 				CAPTUR00100000000000000001 /* CaptureStatsStore.swift */,
 				DAILY00100000000000000010 /* DailyReflection.swift */,
+				DAILY00100000000000000012 /* DailyReflectionPreferences.swift */,
 				MM0000010000000000000010 /* SpeechService.swift */,
 			);
 			path = Review;
@@ -642,6 +647,7 @@
 				AA0000010000000000000017 /* ReviewView.swift */,
 				AA0000010000000000000058 /* CardReviewSessionView.swift */,
 				DAILY00100000000000000011 /* DailyReflectionHistoryView.swift */,
+				DAILY00100000000000000013 /* DailyReflectionPreferencesSheet.swift */,
 				MM0000010000000000000011 /* SpeakButton.swift */,
 			);
 			path = Review;
@@ -831,7 +837,9 @@
 				ACTVTY00100000000000000002 /* StudyActivityStore.swift in Sources */,
 				CAPTUR00100000000000000002 /* CaptureStatsStore.swift in Sources */,
 				DAILY00100000000000000001 /* DailyReflection.swift in Sources */,
+				DAILY00100000000000000003 /* DailyReflectionPreferences.swift in Sources */,
 				DAILY00100000000000000002 /* DailyReflectionHistoryView.swift in Sources */,
+				DAILY00100000000000000004 /* DailyReflectionPreferencesSheet.swift in Sources */,
 				KK0000010000000000000001 /* ReviewSettings.swift in Sources */,
 				KK0000010000000000000002 /* ReviewQueueBuilder.swift in Sources */,
 				TT0000010000000000000001 /* ReviewSettingsStore.swift in Sources */,

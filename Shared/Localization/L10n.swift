@@ -28,6 +28,7 @@ enum L10n {
     static var createGenerateNeedSentence: String { tr("create.generate.needSentence") }
     static var createGenerateNeedWords: String { tr("create.generate.needWords") }
     static var createGenerateNeedBoth: String { tr("create.generate.needBoth") }
+    static var createGenerateHintEmpty: String { tr("create.generate.hintEmpty") }
     static var createAddWord: String { tr("create.addWord") }
     static var createManageDeck: String { tr("create.manageDeck") }
     static var createScanExcerpt: String { tr("create.scan.excerpt") }
@@ -274,6 +275,9 @@ enum L10n {
         tf("create.captureToday", words, sentences)
     }
     static var reviewDailyTitle: String { tr("review.daily.title") }
+    static var reviewDailyRefresh: String { tr("review.daily.refresh") }
+    static var reviewHomeLifetimeStudied: String { tr("review.home.lifetimeStudied") }
+    static var reviewHomeTotalCards: String { tr("review.home.totalCards") }
     static var reviewDailyFromLibrary: String { tr("review.daily.fromLibrary") }
     static var reviewDailyCollect: String { tr("review.daily.collect") }
     static var reviewDailyHistoryLink: String { tr("review.daily.history.link") }
@@ -281,6 +285,16 @@ enum L10n {
     static var reviewDailyHistorySearch: String { tr("review.daily.history.search") }
     static var reviewDailyHistoryEmpty: String { tr("review.daily.history.empty") }
     static var reviewDailyHistoryNoMatch: String { tr("review.daily.history.noMatch") }
+    static var reviewDailyPreferencesLink: String { tr("review.daily.preferences.link") }
+    static var reviewDailyPreferencesTitle: String { tr("review.daily.preferences.title") }
+    static var reviewDailyPreferencesFooter: String { tr("review.daily.preferences.footer") }
+    static var reviewDailyPreferencesPlaceholder: String { tr("review.daily.preferences.placeholder") }
+    static var reviewDailyPreferencesPresets: String { tr("review.daily.preferences.presets") }
+    static var reviewDailyPreferencesCustom: String { tr("review.daily.preferences.custom") }
+    static var reviewDailyPreferencesClear: String { tr("review.daily.preferences.clear") }
+    static var reviewDailyPreferencesSave: String { tr("review.daily.preferences.save") }
+    static var reviewDailyPreferencesActive: String { tr("review.daily.preferences.active") }
+    static var reviewDailyPreferencesLimit: String { tr("review.daily.preferences.limit") }
     static var reviewSessionDone: String { tr("review.session.done") }
 
     static var ratingAgain: String { tr("rating.again") }
@@ -708,6 +722,10 @@ enum L10n {
     static var deckErrorCannotDeleteDefault: String { tr("deck.error.cannotDeleteDefault") }
     static var deckErrorInvalidName: String { tr("deck.error.invalidName") }
     static var deckOpenSourceSection: String { tr("deck.openSource.section") }
+    static var deckDirectDownloadSection: String { tr("deck.directDownload.section") }
+    static var deckCommunitySearchSection: String { tr("deck.communitySearch.section") }
+    static var deckTotalCardsShort: String { tr("deck.totalCards.short") }
+    static var deckDueCardsShort: String { tr("deck.dueCards.short") }
     static var deckCatalogTitle: String { tr("deck.catalog.title") }
     static var deckCatalogSubtitle: String { tr("deck.catalog.subtitle") }
     static var deckCatalogHeroLead: String { tr("deck.catalog.heroLead") }

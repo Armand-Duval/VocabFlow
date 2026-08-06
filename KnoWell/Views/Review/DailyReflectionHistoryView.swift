@@ -75,14 +75,13 @@ struct DailyReflectionHistoryView: View {
                 Spacer(minLength: 0)
             }
 
-            Text(item.sentence)
+            Text(item.displaySentence)
                 .font(AppFont.secondary())
                 .foregroundStyle(AppColor.textPrimary)
                 .lineLimit(3)
                 .fixedSize(horizontal: false, vertical: true)
 
-            if let translation = item.translation?.trimmingCharacters(in: .whitespacesAndNewlines),
-               !translation.isEmpty {
+            if let translation = item.displayTranslation {
                 Text(translation)
                     .font(AppFont.helper())
                     .foregroundStyle(AppColor.textSecondary)
@@ -113,26 +112,25 @@ struct DailyReflectionHistoryView: View {
                             }
                         }
 
-                        Text(item.sentence)
-                            .font(AppFont.literaryQuote())
-                            .foregroundStyle(AppColor.textPrimary)
-                            .lineSpacing(6)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .textSelection(.enabled)
+                        LiteraryQuoteLines(text: item.asReflection.displaySentence)
 
-                        if let translation = item.translation?.trimmingCharacters(in: .whitespacesAndNewlines),
-                           !translation.isEmpty {
-                            Text(translation)
-                                .font(AppFont.secondary())
-                                .foregroundStyle(AppColor.textSecondary)
-                                .lineSpacing(4)
-                                .fixedSize(horizontal: false, vertical: true)
-                                .textSelection(.enabled)
+                        if let quoteSource = item.asReflection.quoteSourceAttribution {
+                            Text("— \(quoteSource)")
+                                .font(AppFont.weak())
+                                .foregroundStyle(AppColor.textMuted.opacity(0.85))
                         }
 
-                        if let source = item.source?.trimmingCharacters(in: .whitespacesAndNewlines),
-                           !source.isEmpty {
-                            Text("—— \(source)")
+                        if let translation = item.asReflection.displayTranslation {
+                            LiteraryQuoteLines(
+                                text: translation,
+                                font: AppFont.secondary(),
+                                foreground: AppColor.textSecondary,
+                                lineSpacing: 3
+                            )
+                        }
+
+                        if let translationSource = item.asReflection.translationSourceAttribution {
+                            Text("—— \(translationSource)")
                                 .font(AppFont.weak())
                                 .foregroundStyle(AppColor.textMuted.opacity(0.85))
                         }

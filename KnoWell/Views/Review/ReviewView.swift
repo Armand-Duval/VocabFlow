@@ -13,6 +13,9 @@ struct ReviewView: View {
     @State private var isSessionActive = false
     @State private var sessionEpoch = 0
     @State private var dailyReflection: DailyReflection?
+    @State private var totalCardCount = 0
+    @State private var lifetimeStudiedCount = 0
+    @State private var isRefreshingReflection = false
 
     private var activeDeckID: UUID? {
         DeckSettings.lastSelectedDeckID
@@ -36,12 +39,21 @@ struct ReviewView: View {
                         ReviewHomeView(
                             plan: plan,
                             hasAnyCards: hasAnyCards,
+                            totalCardCount: totalCardCount,
+                            lifetimeStudiedCount: lifetimeStudiedCount,
                             dailyReflection: dailyReflection,
+                            isRefreshingReflection: isRefreshingReflection,
                             onStartReview: {
                                 sessionEpoch &+= 1
                                 isSessionActive = true
                             },
                             onShowQuota: { showQuotaDetail = true },
+                            onRefreshReflection: {
+                                Task { await refreshDailyReflection(force: true) }
+                            },
+                            onPreferencesSaved: {
+                                Task { await refreshDailyReflection(force: true) }
+                            },
                             onCollectReflection: { reflection in
                                 shareImport.importPayload(
                                     ShareImportPayload(
@@ -116,6 +128,10 @@ struct ReviewView: View {
         emptyDescriptor.fetchLimit = 1
         hasAnyCards = !((try? modelContext.fetch(emptyDescriptor)) ?? []).isEmpty
 
+        let allLibrary = (try? modelContext.fetch(FetchDescriptor<FlashCard>())) ?? []
+        totalCardCount = allLibrary.count
+        lifetimeStudiedCount = allLibrary.filter { $0.reviewCount > 0 }.count
+
         let dueDate = Date.now
         let descriptor = FetchDescriptor<FlashCard>(
             predicate: #Predicate<FlashCard> { card in
@@ -140,30 +156,42 @@ struct ReviewView: View {
         dailyReflection = DailyReflectionService.cachedOrCurated()
         isLoading = false
 
-        Task {
-            let previous = dailyReflection
-            let refreshed = await DailyReflectionService.refreshIfNeeded()
-            await MainActor.run {
-                // Avoid flashing a foreign curated line then replacing with Chinese-only AI.
-                if refreshed != previous {
-                    dailyReflection = refreshed
-                }
-            }
+        await refreshDailyReflection(force: false)
+    }
+
+    @MainActor
+    private func refreshDailyReflection(force: Bool) async {
+        if force {
+            isRefreshingReflection = true
+        }
+        defer { if force { isRefreshingReflection = false } }
+
+        let previous = dailyReflection
+        let refreshed = force
+            ? await DailyReflectionService.refreshNow(replacing: dailyReflection)
+            : await DailyReflectionService.refreshIfNeeded()
+        if force || refreshed != previous {
+            dailyReflection = refreshed
         }
     }
 }
-
 // MARK: - Review Home
 
 private struct ReviewHomeView: View {
     let plan: ReviewQueuePlan
     let hasAnyCards: Bool
+    let totalCardCount: Int
+    let lifetimeStudiedCount: Int
     let dailyReflection: DailyReflection?
+    let isRefreshingReflection: Bool
     let onStartReview: () -> Void
     let onShowQuota: () -> Void
+    let onRefreshReflection: () -> Void
+    let onPreferencesSaved: () -> Void
     let onCollectReflection: (DailyReflection) -> Void
 
     @State private var showReflectionHistory = false
+    @State private var showReflectionPreferences = false
 
     private var dueCount: Int { plan.sessionCards.count }
 
@@ -172,6 +200,10 @@ private struct ReviewHomeView: View {
             VStack(alignment: .leading, spacing: AppSpacing.section) {
                 AppSurfaceCard(padding: AppSpacing.md) {
                     dueZone
+                }
+
+                if hasAnyCards {
+                    libraryStatsRow
                 }
 
                 if let dailyReflection {
@@ -186,6 +218,9 @@ private struct ReviewHomeView: View {
         }
         .sheet(isPresented: $showReflectionHistory) {
             DailyReflectionHistoryView(onCollect: onCollectReflection)
+        }
+        .sheet(isPresented: $showReflectionPreferences) {
+            DailyReflectionPreferencesSheet(onSaved: onPreferencesSaved)
         }
     }
 
@@ -211,14 +246,35 @@ private struct ReviewHomeView: View {
                 emptyCTA
                     .padding(.top, AppSpacing.xs)
             } else if dueCount > 0 {
-                // Only show the primary CTA when there is work — avoid a heavy disabled block.
                 startReviewButton
                     .padding(.top, AppSpacing.xs)
             }
         }
     }
 
-    /// Level-1: due count is the only hero metric.
+    private var libraryStatsRow: some View {
+        HStack(spacing: 0) {
+            libraryStat(value: "\(lifetimeStudiedCount)", label: L10n.reviewHomeLifetimeStudied)
+            libraryStat(value: "\(totalCardCount)", label: L10n.reviewHomeTotalCards)
+        }
+        .padding(.vertical, AppSpacing.sm)
+        .background(AppColor.surface, in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
+    }
+
+    private func libraryStat(value: String, label: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(value)
+                .font(AppFont.statValue())
+                .foregroundStyle(AppColor.textPrimary)
+                .monospacedDigit()
+            Text(label)
+                .font(AppFont.weak())
+                .foregroundStyle(AppColor.textMuted)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, AppSpacing.md)
+    }
+
     private var dueHero: some View {
         HStack(alignment: .firstTextBaseline, spacing: AppSpacing.sm) {
             Text("\(dueCount)")
@@ -250,7 +306,6 @@ private struct ReviewHomeView: View {
         plan.newStudiedToday + plan.reviewStudiedToday
     }
 
-    /// Quiet habit line only — quota / week live in settings & quota sheet.
     private var compactMetaLine: String? {
         guard hasAnyCards else { return nil }
         return [
@@ -276,39 +331,78 @@ private struct ReviewHomeView: View {
             HStack(spacing: 6) {
                 Text(L10n.reviewDailyTitle)
                     .font(AppFont.weak())
-                    .foregroundStyle(AppColor.textMuted)
+                    .foregroundStyle(AppColor.textMuted.opacity(0.75))
                 if let occasion = reflection.occasion?.trimmingCharacters(in: .whitespacesAndNewlines),
                    !occasion.isEmpty {
                     Text("·")
                         .font(AppFont.weak())
-                        .foregroundStyle(AppColor.textMuted.opacity(0.55))
+                        .foregroundStyle(AppColor.textMuted.opacity(0.35))
                     Text(occasion)
                         .font(AppFont.weak())
-                        .foregroundStyle(AppColor.textMuted)
+                        .foregroundStyle(AppColor.textMuted.opacity(0.55))
                         .lineLimit(1)
                 }
+                Spacer(minLength: 0)
+                Button {
+                    showReflectionPreferences = true
+                } label: {
+                    Image(systemName: "slider.horizontal.3")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(
+                            DailyReflectionPreferences.hasKeywords
+                                ? AppColor.accent.opacity(0.85)
+                                : AppColor.textMuted.opacity(0.55)
+                        )
+                        .frame(width: 28, height: 28)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(L10n.reviewDailyPreferencesLink)
+                Button(action: onRefreshReflection) {
+                    Group {
+                        if isRefreshingReflection {
+                            ProgressView()
+                                .controlSize(.mini)
+                        } else {
+                            Image(systemName: "arrow.clockwise")
+                                .font(.system(size: 12, weight: .medium))
+                        }
+                    }
+                    .foregroundStyle(AppColor.textMuted.opacity(0.55))
+                    .frame(width: 28, height: 28)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .disabled(isRefreshingReflection)
+                .accessibilityLabel(L10n.reviewDailyRefresh)
             }
 
-            Text(reflection.sentence)
-                .font(AppFont.literaryQuote())
-                .foregroundStyle(AppColor.textPrimary)
-                .lineSpacing(5)
-                .fixedSize(horizontal: false, vertical: true)
-                .textSelection(.enabled)
-
-            if let translation = reflection.translation?.trimmingCharacters(in: .whitespacesAndNewlines),
-               !translation.isEmpty {
-                Text(translation)
-                    .font(AppFont.helper())
-                    .foregroundStyle(AppColor.textSecondary.opacity(0.9))
-                    .lineSpacing(3)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .textSelection(.enabled)
+            if DailyReflectionPreferences.hasKeywords {
+                Text(L10n.reviewDailyPreferencesActive + "：" + DailyReflectionPreferences.keywords.joined(separator: " · "))
+                    .font(AppFont.weak())
+                    .foregroundStyle(AppColor.textMuted.opacity(0.7))
+                    .lineLimit(1)
             }
 
-            if let source = reflection.source?.trimmingCharacters(in: .whitespacesAndNewlines),
-               !source.isEmpty {
-                Text("—— \(source)")
+            LiteraryQuoteLines(text: reflection.displaySentence)
+
+            if let quoteSource = reflection.quoteSourceAttribution {
+                Text("— \(quoteSource)")
+                    .font(AppFont.weak())
+                    .foregroundStyle(AppColor.textMuted)
+            }
+
+            if let translation = reflection.displayTranslation {
+                LiteraryQuoteLines(
+                    text: translation,
+                    font: AppFont.helper(),
+                    foreground: AppColor.textSecondary.opacity(0.9),
+                    lineSpacing: 3
+                )
+            }
+
+            if let translationSource = reflection.translationSourceAttribution {
+                Text("—— \(translationSource)")
                     .font(AppFont.weak())
                     .foregroundStyle(AppColor.textMuted)
             }
@@ -321,6 +415,10 @@ private struct ReviewHomeView: View {
                     showReflectionHistory = true
                 }
                 Spacer(minLength: 0)
+                Text(L10n.brandName)
+                    .font(AppFont.weak())
+                    .foregroundStyle(AppColor.textMuted.opacity(0.4))
+                    .accessibilityHidden(true)
             }
             .padding(.top, 2)
         }

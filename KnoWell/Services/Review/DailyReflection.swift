@@ -11,11 +11,124 @@ struct DailyReflection: Equatable {
     let occasion: String?
     /// True when produced by AI for the calendar day (vs curated fallback).
     let isAI: Bool
+
+    var displaySentence: String {
+        LiteraryTextFormatting.display(sentence)
+    }
+
+    var displayTranslation: String? {
+        guard let translation else { return nil }
+        let formatted = LiteraryTextFormatting.display(translation)
+        return formatted.isEmpty ? nil : formatted
+    }
+
+    var quoteSourceAttribution: String? {
+        LiteraryTextFormatting.sourceParts(source: source, sentence: sentence).quote
+    }
+
+    var translationSourceAttribution: String? {
+        LiteraryTextFormatting.sourceParts(source: source, sentence: sentence).translation
+    }
+}
+
+/// Normalizes poetry line breaks for storage and display (AI sometimes emits " / " or "，/").
+enum LiteraryTextFormatting {
+    static func display(_ text: String) -> String {
+        var result = text
+            .replacingOccurrences(of: "\r\n", with: "\n")
+            .replacingOccurrences(of: "\r", with: "\n")
+
+        // Punctuation + optional spaces + slash + optional spaces → newline after punctuation.
+        result = replaceRegex(
+            in: result,
+            pattern: #"([，,；;：:])\s*/\s*"#,
+            template: "$1\n"
+        )
+
+        // Remaining slash breaks with surrounding whitespace.
+        result = replaceRegex(
+            in: result,
+            pattern: #"\s+/+\s+"#,
+            template: "\n"
+        )
+
+        return result
+            .split(separator: "\n", omittingEmptySubsequences: false)
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .joined(separator: "\n")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Reject AI output that uses symbols the reader should never see in a literary quote.
+    static func containsInvalidMarkers(_ text: String) -> Bool {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+
+        if trimmed.contains("/") {
+            return true
+        }
+        if trimmed.contains("```") || trimmed.contains("**") || trimmed.contains("__") || trimmed.contains("<") {
+            return true
+        }
+        if trimmed.contains("\\n") || trimmed.contains("|") {
+            return true
+        }
+        return false
+    }
+
+    /// Split source for quote vs translation attribution blocks.
+    static func sourceParts(source: String?, sentence: String) -> (quote: String?, translation: String?) {
+        guard let raw = source?.trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty else {
+            return (nil, nil)
+        }
+
+        if raw.contains(" | ") {
+            let parts = raw
+                .components(separatedBy: " | ")
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+            if parts.count >= 2 {
+                let firstIsLatin = latinLetterCount(parts[0]) > hanCount(parts[0])
+                let secondIsLatin = latinLetterCount(parts[1]) > hanCount(parts[1])
+                if firstIsLatin, !secondIsLatin {
+                    return (parts[0], parts[1])
+                }
+                if secondIsLatin, !firstIsLatin {
+                    return (parts[1], parts[0])
+                }
+                return (parts[0], parts[1])
+            }
+        }
+
+        let sentenceIsEnglish = latinLetterCount(sentence) >= 4 && latinLetterCount(sentence) > hanCount(sentence)
+        let sourceIsLatin = latinLetterCount(raw) > hanCount(raw)
+        if sentenceIsEnglish {
+            if sourceIsLatin {
+                return (raw, nil)
+            }
+            return (nil, raw)
+        }
+        return (nil, raw)
+    }
+
+    static func latinLetterCount(_ text: String) -> Int {
+        text.unicodeScalars.filter { CharacterSet.letters.contains($0) && $0.isASCII }.count
+    }
+
+    static func hanCount(_ text: String) -> Int {
+        text.unicodeScalars.filter { (0x4E00...0x9FFF).contains($0.value) }.count
+    }
+
+    private static func replaceRegex(in text: String, pattern: String, template: String) -> String {
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return text }
+        let range = NSRange(text.startIndex..., in: text)
+        return regex.stringByReplacingMatches(in: text, range: range, withTemplate: template)
+    }
 }
 
 /// One calendar day's reflection kept for later browsing (local archive).
 struct ArchivedDailyReflection: Identifiable, Equatable, Codable {
-    var id: String { dayKey }
+    let id: String
     let dayKey: String
     let sentence: String
     let translation: String?
@@ -24,20 +137,25 @@ struct ArchivedDailyReflection: Identifiable, Equatable, Codable {
     let isAI: Bool
     /// Hand-picked seed for a past day; protected from curated overwrite.
     var isManualSeed: Bool
+    /// Newest first within the same day (refresh keeps prior lines).
+    var savedAt: Double
 
     enum CodingKeys: String, CodingKey {
-        case dayKey, sentence, translation, source, occasion, isAI, isManualSeed
+        case id, dayKey, sentence, translation, source, occasion, isAI, isManualSeed, savedAt
     }
 
     init(
+        id: String = UUID().uuidString,
         dayKey: String,
         sentence: String,
         translation: String?,
         source: String?,
         occasion: String?,
         isAI: Bool,
-        isManualSeed: Bool = false
+        isManualSeed: Bool = false,
+        savedAt: Double = Date().timeIntervalSince1970
     ) {
+        self.id = id
         self.dayKey = dayKey
         self.sentence = sentence
         self.translation = translation
@@ -45,6 +163,7 @@ struct ArchivedDailyReflection: Identifiable, Equatable, Codable {
         self.occasion = occasion
         self.isAI = isAI
         self.isManualSeed = isManualSeed
+        self.savedAt = savedAt
     }
 
     init(from decoder: Decoder) throws {
@@ -56,6 +175,19 @@ struct ArchivedDailyReflection: Identifiable, Equatable, Codable {
         occasion = try container.decodeIfPresent(String.self, forKey: .occasion)
         isAI = try container.decodeIfPresent(Bool.self, forKey: .isAI) ?? false
         isManualSeed = try container.decodeIfPresent(Bool.self, forKey: .isManualSeed) ?? false
+        // Legacy rows used dayKey as identity; keep them readable after migration.
+        id = try container.decodeIfPresent(String.self, forKey: .id) ?? dayKey
+        savedAt = try container.decodeIfPresent(Double.self, forKey: .savedAt) ?? 0
+    }
+
+    var displaySentence: String {
+        LiteraryTextFormatting.display(sentence)
+    }
+
+    var displayTranslation: String? {
+        guard let translation else { return nil }
+        let formatted = LiteraryTextFormatting.display(translation)
+        return formatted.isEmpty ? nil : formatted
     }
 
     var asReflection: DailyReflection {
@@ -79,12 +211,14 @@ struct ArchivedDailyReflection: Identifiable, Equatable, Codable {
 enum DailyReflectionService {
     private static let cacheDefaultsKey = "knowell.dailyReflection.v4"
     private static let historyDefaultsKey = "knowell.dailyReflection.history.v1"
+    private static let restoreSummerFlowerKey = "knowell.dailyReflection.restore.summerFlower.v1"
     private static var inFlight: Task<DailyReflection, Never>?
     private static var inFlightDayKey: String?
 
     /// Instant: today's AI cache if any, otherwise curated (stable for the day).
     static func cachedOrCurated(for day: Date = .now) -> DailyReflection {
         seedManualPastLinesIfNeeded(relativeTo: day)
+        restoreSummerFlowerLineIfNeeded(for: day)
         let key = dayKey(day)
         if let cached = loadCache(), cached.dayKey == key {
             let reflection = cached.asReflection(isAI: true)
@@ -149,6 +283,54 @@ enum DailyReflectionService {
         return result
     }
 
+    /// One-time: put back the Sonnet 94 line that was lost to an early refresh.
+    private static func restoreSummerFlowerLineIfNeeded(for day: Date) {
+        guard !UserDefaults.standard.bool(forKey: restoreSummerFlowerKey) else { return }
+        let key = dayKey(day)
+        let reflection = DailyReflection(
+            sentence: "The summer's flower is to the summer sweet, Though to itself it only live and die.",
+            translation: "夏日的花朵对夏日总是甜蜜，尽管对它自己它只自生自灭。",
+            source: "Sonnet 94 · William Shakespeare",
+            occasion: nil,
+            isAI: true
+        )
+        archive(reflection, dayKey: key)
+        saveCache(
+            CachedReflection(
+                dayKey: key,
+                sentence: reflection.sentence,
+                translation: reflection.translation,
+                source: reflection.source,
+                occasion: reflection.occasion
+            )
+        )
+        UserDefaults.standard.set(true, forKey: restoreSummerFlowerKey)
+    }
+
+    /// Drop today's AI cache so the next refresh can pick up new preferences.
+    static func invalidateTodayCache() {
+        UserDefaults.standard.removeObject(forKey: cacheDefaultsKey)
+        inFlight = nil
+        inFlightDayKey = nil
+    }
+
+    /// Manual retry: keep the current line in history, then fetch a new one.
+    static func refreshNow(
+        replacing current: DailyReflection? = nil,
+        for day: Date = .now
+    ) async -> DailyReflection {
+        let key = dayKey(day)
+        if let current {
+            archive(current, dayKey: key)
+        } else if let cached = loadCache(), cached.dayKey == key {
+            archive(cached.asReflection(isAI: true), dayKey: key)
+        }
+        UserDefaults.standard.removeObject(forKey: cacheDefaultsKey)
+        inFlight = nil
+        inFlightDayKey = nil
+        return await refreshIfNeeded(for: day)
+    }
+
     // MARK: - History
 
     private static let pastSeedDefaultsKey = "knowell.dailyReflection.history.pastSeed.v1"
@@ -157,7 +339,10 @@ enum DailyReflectionService {
     static func history(matching query: String = "") -> [ArchivedDailyReflection] {
         seedManualPastLinesIfNeeded()
         let needle = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        let items = loadHistory().sorted { $0.dayKey > $1.dayKey }
+        let items = loadHistory().sorted {
+            if $0.dayKey != $1.dayKey { return $0.dayKey > $1.dayKey }
+            return $0.savedAt > $1.savedAt
+        }
         guard !needle.isEmpty else { return items }
         return items.filter { item in
             item.sentence.lowercased().contains(needle)
@@ -173,7 +358,7 @@ enum DailyReflectionService {
         return loadHistory().count
     }
 
-    /// Upsert one day. Prefer AI over curated when replacing the same day.
+    /// Keep every distinct sentence for a day (refresh must not erase the previous line).
     static func archive(_ reflection: DailyReflection, for day: Date = .now) {
         seedManualPastLinesIfNeeded(relativeTo: day)
         archive(reflection, dayKey: dayKey(day))
@@ -182,13 +367,24 @@ enum DailyReflectionService {
     private static func archive(_ reflection: DailyReflection, dayKey: String) {
         guard isWellFormed(reflection) else { return }
         var items = loadHistory()
-        if let index = items.firstIndex(where: { $0.dayKey == dayKey }) {
-            let existing = items[index]
-            // Don't let a curated flash overwrite a stored AI line for the same day.
-            if existing.isAI, !reflection.isAI { return }
-            // Keep manually seeded past lines unless AI arrives for that day.
-            if existing.isManualSeed, !reflection.isAI { return }
-            items[index] = ArchivedDailyReflection(
+        let normalized = reflection.sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+        if items.contains(where: {
+            $0.dayKey == dayKey
+                && $0.sentence.trimmingCharacters(in: .whitespacesAndNewlines) == normalized
+        }) {
+            return
+        }
+        // Don't let a curated flash append when an AI line already exists for the day.
+        if !reflection.isAI, items.contains(where: { $0.dayKey == dayKey && $0.isAI }) {
+            return
+        }
+        // Keep manually seeded past lines unless AI arrives for that day.
+        if !reflection.isAI, items.contains(where: { $0.dayKey == dayKey && $0.isManualSeed }) {
+            return
+        }
+
+        items.insert(
+            ArchivedDailyReflection(
                 dayKey: dayKey,
                 sentence: reflection.sentence,
                 translation: reflection.translation,
@@ -196,23 +392,18 @@ enum DailyReflectionService {
                 occasion: reflection.occasion,
                 isAI: reflection.isAI,
                 isManualSeed: false
+            ),
+            at: 0
+        )
+        // Soft cap — keep about a year of daily lines (+ a few refreshes).
+        if items.count > 500 {
+            items = Array(
+                items.sorted {
+                    if $0.dayKey != $1.dayKey { return $0.dayKey > $1.dayKey }
+                    return $0.savedAt > $1.savedAt
+                }
+                .prefix(500)
             )
-        } else {
-            items.append(
-                ArchivedDailyReflection(
-                    dayKey: dayKey,
-                    sentence: reflection.sentence,
-                    translation: reflection.translation,
-                    source: reflection.source,
-                    occasion: reflection.occasion,
-                    isAI: reflection.isAI,
-                    isManualSeed: false
-                )
-            )
-        }
-        // Soft cap — keep about a year of daily lines.
-        if items.count > 400 {
-            items = Array(items.sorted { $0.dayKey > $1.dayKey }.prefix(400))
         }
         saveHistory(items)
     }
@@ -254,7 +445,9 @@ enum DailyReflectionService {
 
     private static func forceUpsert(_ item: ArchivedDailyReflection) {
         var items = loadHistoryRaw()
-        if let index = items.firstIndex(where: { $0.dayKey == item.dayKey }) {
+        if let index = items.firstIndex(where: { $0.dayKey == item.dayKey && $0.isManualSeed }) {
+            items[index] = item
+        } else if let index = items.firstIndex(where: { $0.dayKey == item.dayKey }) {
             items[index] = item
         } else {
             items.append(item)
@@ -317,35 +510,62 @@ enum DailyReflectionService {
 
         let systemPrompt = """
         你是克制的阅读陪伴助手，为学习 App「致知」挑选「今日一句」。
-        只返回 JSON，不要 markdown。
+        只返回 JSON，不要 markdown，不要代码块，不要任何字段外的说明文字。
+
         格式：
         {
-          "sentence": "原文（作品本来的语言与写法，原汁原味；可以是外文、文言，也可以是现代汉语）",
-          "translation": "中文翻译或白话；仅当原文不是现代汉语时填写；原文已是现代汉语则必须空字符串",
-          "source": "可核对的出处（书名/篇章/作者；不确定必须空字符串）",
-          "occasion": "与今日相关的极短缘由（如节气、季节、常见节日；没有则空字符串，最多 12 字）"
+          "sentence": "原文（作品本来的语言与写法）",
+          "translation": "中文翻译；原文已是现代汉语则必须空字符串",
+          "source": "与 sentence 同语言的出处；不确定则空字符串",
+          "source_zh": "sentence 为外文/文言时的中文出处；现代汉语原文可空字符串",
+          "occasion": "极短缘由；没有则空字符串，最多 12 字"
         }
-        选句优先级（由高到低）：
-        1. 浪漫、哲理、智慧：情感真挚、思辨有余味、洞见人生，适合安静回味
-        2. 文学质地：小说、诗歌、随笔、书信、经典语录中的佳句；避免鸡汤口号与励志口号
-        3. 季节/节气/节日：仅作轻量点缀；不要因为季节就把主题绑死在天气、景物或夏/冬意象上
-        规则：
-        1. sentence 必须是原文本身，不要用翻译顶替原文
-        2. 外文/文言：sentence=原文，translation=中文；现代汉语原文：sentence=原文，translation 留空
-        3. 禁止：把外文译成中文后只把中文放进 sentence（丢掉外文原文）
-        4. 不要对调字段；读者先看到 sentence，再看到 translation
-        5. 句子要适合安静阅读，有回味；原文偏短（不超过约 120 字符）
-        6. 主题以浪漫、哲理、智慧为主；季节信息可参考，但不得主导选句
-        7. source 必须真实可指认；无把握就返回空字符串，禁止编造书名/作者
-        8. 不要输出多句，不要解释；不要催学习、不要广告
-        9. 连续多日应轮换题材与语种感，避免连日都是同一季节景物描写
+
+        【格式禁令 — 违反任一条视为无效输出】
+        1. 禁止用斜杠 / 表示换行、分隔、占位或「或者」；sentence 与 translation 内不得出现 /
+        2. 禁止把 \\n、/n 当作文字写进 sentence 或 translation；需要换行时在 JSON 字符串里写真实换行符
+        3. 禁止 markdown（**、__、#、```、>）及 HTML 标签
+        4. 禁止竖线 |、制表符、多余空行、首尾空格
+        5. 禁止在 sentence/translation 里写出处；出处只放在 source / source_zh
+        6. 禁止把翻译放进 sentence，或把外文原文只放在 translation
+
+        【诗歌换行 — 正确做法】
+        - 两行诗：在 JSON 的 sentence 字符串内用真实换行分隔，例如：
+          "sentence": "The world is too much with us; late and soon,\\nGetting and spending, we lay waste our powers;—"
+        - 错误示例（禁止）："……soon, / Getting……" 或 "……早晚，/ 获取……"
+
+        【出处 — 正确做法】
+        - 外文原文：source 用外文（如 William Wordsworth, The World Is Too Much With Us），source_zh 用中文
+        - 中文原文：source 用中文（如《论语·为政》），source_zh 留空
+
+        选句优先级：浪漫、哲理、智慧 > 文学质地 > 季节点缀（季节不得主导选句）
+
+        其他规则：
+        1. sentence 必须是可核对的原文，不超过约 120 字符
+        2. 现代汉语原文：translation 与 source_zh 留空
+        3. source / source_zh 无把握则空字符串，禁止编造
+        4. 不要鸡汤口号、不要催学习、不要广告
+        5. 连续多日轮换题材与语种，避免重复同一作者或同一季节景物
         """
+
+        let preferenceHint: String
+        if let snippet = DailyReflectionPreferences.promptSnippet {
+            preferenceHint = "用户偏好关键词：\(snippet)。优先选气质相符的经典名句，作为软偏好；不要硬凑关键词、不要降低文学性。"
+        } else {
+            preferenceHint = "用户未设置偏好关键词，按默认优先级选句。"
+        }
 
         let userPrompt = """
         今天：\(dateText)
         大致季节（仅供参考，优先级低）：\(season)
         用户地区标识：\(localeID)
-        请给出一句今日一句：优先浪漫、哲理或智慧；保留原汁原味的原文；需要时再给中文翻译。季节不必强行呼应。
+        \(preferenceHint)
+
+        请给出今日一句。要求：
+        - 原文原汁原味；需要时再给中文翻译
+        - 诗歌如需分行，在 JSON 字符串内用真实换行，绝对不要用 /
+        - 外文必须同时给出外文 source 与中文 source_zh
+        - 季节不必强行呼应
         """
 
         let body: [String: Any] = [
@@ -382,12 +602,24 @@ enum DailyReflectionService {
             throw KimiCardGeneratorError.parseError("empty")
         }
         let decoded = try JSONDecoder().decode(AIReflectionDTO.self, from: data)
-        var sentence = decoded.sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+        let rawSentence = decoded.sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+        let rawTranslation = decoded.translation?.trimmingCharacters(in: .whitespacesAndNewlines)
+        if LiteraryTextFormatting.containsInvalidMarkers(rawSentence) {
+            throw KimiCardGeneratorError.parseError("invalid-formatting")
+        }
+        if let rawTranslation, !rawTranslation.isEmpty,
+           LiteraryTextFormatting.containsInvalidMarkers(rawTranslation) {
+            throw KimiCardGeneratorError.parseError("invalid-formatting")
+        }
+
+        var sentence = LiteraryTextFormatting.display(rawSentence)
         guard !sentence.isEmpty, sentence.count <= 240 else {
             throw KimiCardGeneratorError.parseError("bad sentence")
         }
-        var translation = decoded.translation?
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        var translation = rawTranslation
+        if let rawTranslation, !rawTranslation.isEmpty {
+            translation = LiteraryTextFormatting.display(rawTranslation)
+        }
         if translation?.isEmpty == true {
             translation = nil
         }
@@ -407,14 +639,13 @@ enum DailyReflectionService {
             translation = nil
         }
 
-        let source = decoded.source?
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let source = mergeSourceFields(primary: decoded.source, chinese: decoded.source_zh)
         let occasion = decoded.occasion?
             .trimmingCharacters(in: .whitespacesAndNewlines)
         let reflection = DailyReflection(
             sentence: sentence,
             translation: translation,
-            source: (source?.isEmpty == false) ? source : nil,
+            source: source,
             occasion: (occasion?.isEmpty == false) ? String(occasion!.prefix(16)) : nil,
             isAI: true
         )
@@ -422,6 +653,19 @@ enum DailyReflectionService {
             throw KimiCardGeneratorError.parseError("empty-original")
         }
         return reflection
+    }
+
+    private static func mergeSourceFields(primary: String?, chinese: String?) -> String? {
+        let primaryText = primary?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let chineseText = chinese?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let hasPrimary = primaryText.map { !$0.isEmpty } ?? false
+        let hasChinese = chineseText.map { !$0.isEmpty } ?? false
+        if hasPrimary, hasChinese {
+            return "\(primaryText!) | \(chineseText!)"
+        }
+        if hasPrimary { return primaryText }
+        if hasChinese { return chineseText }
+        return nil
     }
 
     /// Put authentic original in `sentence`; Chinese rendering in `translation` when needed.
@@ -504,6 +748,7 @@ enum DailyReflectionService {
         let sentence: String
         let translation: String?
         let source: String?
+        let source_zh: String?
         let occasion: String?
     }
 

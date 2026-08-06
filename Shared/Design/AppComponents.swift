@@ -189,6 +189,37 @@ enum AppFont {
     static func statLabel() -> Font { .system(size: 12, weight: .regular) }
 }
 
+/// Renders literary text line-by-line so poem breaks stay intact and avoid mid-line wraps.
+struct LiteraryQuoteLines: View {
+    let text: String
+    var font: Font = AppFont.literaryQuote()
+    var foreground: Color = AppColor.textPrimary
+    var lineSpacing: CGFloat = 4
+
+    private var lines: [String] {
+        text.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
+    }
+
+    var body: some View {
+        Group {
+            if lines.count <= 1 {
+                Text(text)
+            } else {
+                VStack(alignment: .leading, spacing: lineSpacing) {
+                    ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
+                        Text(line)
+                    }
+                }
+            }
+        }
+        .font(font)
+        .foregroundStyle(foreground)
+        .multilineTextAlignment(.leading)
+        .fixedSize(horizontal: false, vertical: true)
+        .textSelection(.enabled)
+    }
+}
+
 enum AppIcon {
     static let weight: Font.Weight = .regular
     static let toolbarSize: CGFloat = 20
@@ -277,8 +308,8 @@ struct TextLinkAction: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(tone == .accent ? AppFont.helper().weight(.medium) : AppFont.weak())
-                .foregroundStyle(tone == .accent ? AppColor.accent : AppColor.textMuted)
+                .font(tone == .accent ? AppFont.helper().weight(.semibold) : AppFont.weak())
+                .foregroundStyle(tone == .accent ? AppColor.accentStrong : AppColor.textMuted)
         }
         .buttonStyle(SoftPressButtonStyle(pressedScale: 0.98, pressedOpacity: 0.88))
     }
