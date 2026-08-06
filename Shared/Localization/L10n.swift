@@ -29,10 +29,19 @@ enum L10n {
     static var createGenerateNeedWords: String { tr("create.generate.needWords") }
     static var createGenerateNeedBoth: String { tr("create.generate.needBoth") }
     static var createGenerateHintEmpty: String { tr("create.generate.hintEmpty") }
+    static var createGenerateNoWordsHint: String { tr("create.generate.noWordsHint") }
     static var createCardModeCompact: String { tr("create.cardMode.compact") }
     static var createCardModeFull: String { tr("create.cardMode.full") }
     static var createCardModeCompactDetail: String { tr("create.cardMode.compactDetail") }
     static var createCardModeFullDetail: String { tr("create.cardMode.fullDetail") }
+    static var createWorkspaceVocabulary: String { tr("create.workspace.vocabulary") }
+    static var createWorkspaceAppreciation: String { tr("create.workspace.appreciation") }
+    static var createAppreciationDetail: String { tr("create.appreciation.detail") }
+    static var createAppreciationGenerate: String { tr("create.appreciation.generate") }
+    static var createAppreciationPlaceholder: String { tr("create.appreciation.placeholder") }
+    static var createAppreciationSource: String { tr("create.appreciation.source") }
+    static var createAppreciationSourcePlaceholder: String { tr("create.appreciation.sourcePlaceholder") }
+    static var createAppreciationGenerating: String { tr("create.appreciation.generating") }
     static var createCardRecommendedBadge: String { tr("create.cardRecommended.badge") }
     static var createPreviewSectionCards: String { tr("create.preview.sectionCards") }
     static var createPreviewFooterCompact: String { tr("create.preview.footerCompact") }
@@ -315,6 +324,9 @@ enum L10n {
     static var ratingHard: String { tr("rating.hard") }
     static var ratingGood: String { tr("rating.good") }
     static var ratingEasy: String { tr("rating.easy") }
+    static var ratingAppreciationAgain: String { tr("rating.appreciation.again") }
+    static var ratingAppreciationGood: String { tr("rating.appreciation.good") }
+    static var ratingAppreciationEasy: String { tr("rating.appreciation.easy") }
     static func intervalMinutes(_ count: Int) -> String { tf("interval.minutes", count) }
     static func intervalHours(_ count: Int) -> String { tf("interval.hours", count) }
     static func intervalDays(_ count: Int) -> String { tf("interval.days", count) }

@@ -151,7 +151,6 @@
 		QUEUE00100000000000000001 /* CardGenerationQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = QUEUE00100000000000000010 /* CardGenerationQueue.swift */; };
 		QUEUE00100000000000000002 /* CardGenerationQueueView.swift in Sources */ = {isa = PBXBuildFile; fileRef = QUEUE00100000000000000011 /* CardGenerationQueueView.swift */; };
 		REGEN00100000000000000001 /* CardContentRegenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = REGEN00100000000000000010 /* CardContentRegenerator.swift */; };
-		APPREC00100000000000000001 /* LiteraryAppreciationGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = APPREC00100000000000000010 /* LiteraryAppreciationGenerator.swift */; };
 		RR0000010000000000000001 /* SharedDeckStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = RR0000010000000000000010 /* SharedDeckStore.swift */; };
 		RR0000010000000000000002 /* SharedDeckPickerSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = RR0000010000000000000011 /* SharedDeckPickerSection.swift */; };
 		RR0000010000000000000003 /* SharedDeckStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = RR0000010000000000000010 /* SharedDeckStore.swift */; };
@@ -327,7 +326,6 @@
 		QUEUE00100000000000000010 /* CardGenerationQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardGenerationQueue.swift; sourceTree = "<group>"; };
 		QUEUE00100000000000000011 /* CardGenerationQueueView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardGenerationQueueView.swift; sourceTree = "<group>"; };
 		REGEN00100000000000000010 /* CardContentRegenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardContentRegenerator.swift; sourceTree = "<group>"; };
-		APPREC00100000000000000010 /* LiteraryAppreciationGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiteraryAppreciationGenerator.swift; sourceTree = "<group>"; };
 		RR0000010000000000000010 /* SharedDeckStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedDeckStore.swift; sourceTree = "<group>"; };
 		RR0000010000000000000011 /* SharedDeckPickerSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedDeckPickerSection.swift; sourceTree = "<group>"; };
 		SELSTDY001000000000000010 /* SelectableStudyText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectableStudyText.swift; sourceTree = "<group>"; };
@@ -618,7 +616,6 @@
 				DEDIDX0010000000000000011 /* SharedDedupeSync.swift */,
 				SYNC00100000000000000010 /* CardContentSync.swift */,
 				REGEN00100000000000000010 /* CardContentRegenerator.swift */,
-				APPREC00100000000000000010 /* LiteraryAppreciationGenerator.swift */,
 				BB0000010000000000000012 /* ShareImportCoordinator.swift */,
 				CC0000010000000000000010 /* ClipboardImportCoordinator.swift */,
 			);
@@ -904,7 +901,6 @@
 				PP0000010000000000000001 /* FlashCardDetailView.swift in Sources */,
 				EDIT00100000000000000001 /* FlashCardEditSheet.swift in Sources */,
 				REGEN00100000000000000001 /* CardContentRegenerator.swift in Sources */,
-				APPREC00100000000000000001 /* LiteraryAppreciationGenerator.swift in Sources */,
 				PP0000010000000000000002 /* PrivacyPolicyView.swift in Sources */,
 				PP0000010000000000000003 /* ApkgExportService.swift in Sources */,
 				PP0000010000000000000004 /* MinimalZipWriter.swift in Sources */,

@@ -9,13 +9,27 @@ enum ReviewRating: Int, CaseIterable {
     /// Visible review choices — Hard is folded into Again (short relearn).
     static var userChoices: [ReviewRating] { [.again, .good, .easy] }
 
-    var title: String {
+    private var vocabularyTitle: String {
         switch self {
         case .again: L10n.ratingAgain
         case .hard: L10n.ratingHard
         case .good: L10n.ratingGood
         case .easy: L10n.ratingEasy
         }
+    }
+
+    var title: String { vocabularyTitle }
+
+    func displayTitle(for cardType: CardType) -> String {
+        if cardType == .appreciation {
+            switch self {
+            case .again: return L10n.ratingAppreciationAgain
+            case .hard: return L10n.ratingHard
+            case .good: return L10n.ratingAppreciationGood
+            case .easy: return L10n.ratingAppreciationEasy
+            }
+        }
+        return vocabularyTitle
     }
 }
 
@@ -46,10 +60,15 @@ struct ReviewSnapshot {
 enum ReviewScheduler {
     private static let learningStepsMinutes = [1, 10]
     private static let lapseHours = 10
-    private static let graduationIntervalDays: [ReviewRating: Double] = [
+    private static let vocabularyGraduationIntervalDays: [ReviewRating: Double] = [
         .hard: 1,
         .good: 3,
         .easy: 7,
+    ]
+    private static let appreciationGraduationIntervalDays: [ReviewRating: Double] = [
+        .hard: 3,
+        .good: 7,
+        .easy: 14,
     ]
 
     static func isDue(_ card: FlashCard, now: Date = .now) -> Bool {
@@ -62,7 +81,7 @@ enum ReviewScheduler {
 
     static func preview(rating: ReviewRating, for card: FlashCard, now: Date = .now) -> ReviewSnapshot {
         var snapshot = ReviewSnapshot(from: card)
-        mutate(rating: rating, snapshot: &snapshot, now: now)
+        mutate(rating: rating, cardType: card.cardType, snapshot: &snapshot, now: now)
         return snapshot
     }
 
@@ -88,14 +107,31 @@ enum ReviewScheduler {
     static func apply(rating: ReviewRating, to card: FlashCard, now: Date = .now) {
         let wasNewCard = card.isNewCard
         var snapshot = ReviewSnapshot(from: card)
-        mutate(rating: rating, snapshot: &snapshot, now: now)
+        mutate(rating: rating, cardType: card.cardType, snapshot: &snapshot, now: now)
         snapshot.write(to: card)
         card.reviewCount += 1
         ReviewSettings.recordStudy(wasNewCard: wasNewCard, now: now)
         StudyActivityStore.record(word: card.word, sentence: card.sentence, now: now)
     }
 
-    private static func mutate(rating: ReviewRating, snapshot: inout ReviewSnapshot, now: Date) {
+    private static func graduationIntervalDays(for cardType: CardType, rating: ReviewRating) -> Double {
+        let table = cardType == .appreciation
+            ? appreciationGraduationIntervalDays
+            : vocabularyGraduationIntervalDays
+        switch rating {
+        case .hard: return table[.hard] ?? 1
+        case .good: return table[.good] ?? 3
+        case .easy: return table[.easy] ?? 7
+        case .again: return 0
+        }
+    }
+
+    private static func mutate(
+        rating: ReviewRating,
+        cardType: CardType,
+        snapshot: inout ReviewSnapshot,
+        now: Date
+    ) {
         switch rating {
         case .again:
             snapshot.easeFactor = max(1.3, snapshot.easeFactor - 0.2)
@@ -118,7 +154,7 @@ enum ReviewScheduler {
             snapshot.repetitions += 1
             snapshot.easeFactor = max(1.3, snapshot.easeFactor - 0.15)
             if graduating {
-                snapshot.intervalDays = graduationIntervalDays[.hard] ?? 1
+                snapshot.intervalDays = graduationIntervalDays(for: cardType, rating: .hard)
             } else {
                 snapshot.intervalDays = max(1, snapshot.intervalDays * 1.2)
             }
@@ -129,7 +165,7 @@ enum ReviewScheduler {
             snapshot.learningStep = 0
             snapshot.repetitions += 1
             if graduating {
-                snapshot.intervalDays = graduationIntervalDays[.good] ?? 3
+                snapshot.intervalDays = graduationIntervalDays(for: cardType, rating: .good)
             } else {
                 snapshot.intervalDays = max(1, round(snapshot.intervalDays * snapshot.easeFactor))
             }
@@ -141,7 +177,7 @@ enum ReviewScheduler {
             snapshot.repetitions += 1
             snapshot.easeFactor += 0.15
             if graduating {
-                snapshot.intervalDays = graduationIntervalDays[.easy] ?? 7
+                snapshot.intervalDays = graduationIntervalDays(for: cardType, rating: .easy)
             } else {
                 snapshot.intervalDays = max(4, round(snapshot.intervalDays * snapshot.easeFactor * 1.3))
             }

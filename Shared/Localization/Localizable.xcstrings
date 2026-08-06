@@ -1513,13 +1513,30 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Paste or scan text, then add a word."
+            "value" : "Paste or scan a sentence to get started."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "请粘贴或扫描文本，并加入生词。"
+            "value" : "请粘贴或扫描句子。"
+          }
+        }
+      }
+    },
+    "create.generate.noWordsHint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No words selected — AI will create an appreciation card for the sentence."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未选生词，将生成句子赏析卡。"
           }
         }
       }
@@ -1588,6 +1605,142 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "每个生词生成挖空 + 释义；AI 标记更推荐的一张。"
+          }
+        }
+      }
+    },
+    "create.workspace.vocabulary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vocabulary"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "生词制卡"
+          }
+        }
+      }
+    },
+    "create.workspace.appreciation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appreciation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "句子赏析"
+          }
+        }
+      }
+    },
+    "create.appreciation.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste a sentence you want to keep. AI writes a literary appreciation card — no word picking."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粘贴想收藏的句子，AI 生成赏析卡（无需选生词）。"
+          }
+        }
+      }
+    },
+    "create.appreciation.generate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generate appreciation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "生成赏析卡"
+          }
+        }
+      }
+    },
+    "create.appreciation.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste a line worth keeping…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粘贴想留住的句子…"
+          }
+        }
+      }
+    },
+    "create.appreciation.source" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Source (optional)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "出处（可选）"
+          }
+        }
+      }
+    },
+    "create.appreciation.sourcePlaceholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Book, author, or article"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "书名、作者或文章来源"
+          }
+        }
+      }
+    },
+    "create.appreciation.generating" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Writing appreciation…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在生成赏析…"
           }
         }
       }
@@ -2869,13 +3022,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tap + to add words, or select text above."
+            "value" : "Tap + to add words, or leave empty for an appreciation card."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "点 + 添加生词，或在上方原文中选中单词。"
+            "value" : "点 + 添加生词；留空则生成句子赏析卡。"
           }
         }
       }
@@ -7688,6 +7841,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "简单"
+          }
+        }
+      }
+    },
+    "rating.appreciation.again" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read again"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还想再读"
+          }
+        }
+      }
+    },
+    "rating.appreciation.good" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resonates"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有印象"
+          }
+        }
+      }
+    },
+    "rating.appreciation.easy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Familiar"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已熟悉"
           }
         }
       }

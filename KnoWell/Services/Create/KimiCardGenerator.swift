@@ -70,6 +70,7 @@ enum KimiCardGenerator {
 
     /// - Parameter skipExistingInDeckID: When set, drop word+sentence pairs already in that deck
     ///   before calling the model. Use for **new** cards only — regenerators must leave this `nil`.
+    /// - Parameter requiredCardType: When set, each word yields only that card type (for regenerate).
     /// - Parameter onProgress: Invoked on the main actor as each batch finishes `(completed, total)`.
     /// - Parameter onBatchFinished: Per-batch word outcomes for queue / progress UIs.
     static func generate(
@@ -78,6 +79,7 @@ enum KimiCardGenerator {
         sourceHint: String? = nil,
         deckName: String? = nil,
         mode: CardGenerationMode? = nil,
+        requiredCardType: CardType? = nil,
         skipExistingInDeckID: UUID? = nil,
         onProgress: (@MainActor (Int, Int) -> Void)? = nil,
         onBatchFinished: (@MainActor (_ sentence: String, _ words: [String], _ drafts: [GeneratedCardDraft], _ error: Error?) -> Void)? = nil
@@ -96,6 +98,7 @@ enum KimiCardGenerator {
             sourceHint: sourceHint,
             deckName: deckName,
             mode: mode,
+            requiredCardType: requiredCardType,
             onProgress: onProgress,
             onBatchFinished: onBatchFinished
         )
@@ -106,6 +109,7 @@ enum KimiCardGenerator {
         sourceHint: String? = nil,
         deckName: String? = nil,
         mode: CardGenerationMode? = nil,
+        requiredCardType: CardType? = nil,
         onProgress: (@MainActor (Int, Int) -> Void)? = nil,
         onBatchFinished: (@MainActor (_ sentence: String, _ words: [String], _ drafts: [GeneratedCardDraft], _ error: Error?) -> Void)? = nil
     ) async throws -> [GeneratedCardDraft] {
@@ -135,6 +139,7 @@ enum KimiCardGenerator {
             sourceHint: hint,
             deckName: deck,
             mode: mode ?? CardGenerationPreferences.mode,
+            requiredCardType: requiredCardType,
             onProgress: onProgress,
             onBatchFinished: onBatchFinished
         )
@@ -151,12 +156,14 @@ enum KimiCardGenerator {
         sourceHint: String?,
         deckName: String?,
         mode: CardGenerationMode,
+        requiredCardType: CardType?,
         onProgress: (@MainActor (Int, Int) -> Void)?,
         onBatchFinished: (@MainActor (_ sentence: String, _ words: [String], _ drafts: [GeneratedCardDraft], _ error: Error?) -> Void)?
     ) async -> (drafts: [GeneratedCardDraft], lastError: Error?) {
         let total = jobs.count
         var allDrafts: [GeneratedCardDraft] = []
-        allDrafts.reserveCapacity(total * maxWordsPerRequest * 2)
+        let draftsPerWord = requiredCardType == nil && mode == .full ? 2 : 1
+        allDrafts.reserveCapacity(total * maxWordsPerRequest * draftsPerWord)
         var lastError: Error?
         var completed = 0
 
@@ -176,7 +183,8 @@ enum KimiCardGenerator {
                                 words: job.words,
                                 sourceHint: sourceHint,
                                 deckName: deckName,
-                                mode: mode
+                                mode: mode,
+                                requiredCardType: requiredCardType
                             )
                             return (job, .success(drafts))
                         } catch {
@@ -262,7 +270,8 @@ enum KimiCardGenerator {
         words: [String],
         sourceHint: String?,
         deckName: String?,
-        mode: CardGenerationMode
+        mode: CardGenerationMode,
+        requiredCardType: CardType?
     ) async throws -> [GeneratedCardDraft] {
         try await withRetry(attempts: 2) {
             let content = try await requestCards(
@@ -270,9 +279,15 @@ enum KimiCardGenerator {
                 words: words,
                 sourceHint: sourceHint,
                 deckName: deckName,
-                mode: mode
+                mode: mode,
+                requiredCardType: requiredCardType
             )
-            return try parseCards(from: content, sentence: sentence, mode: mode)
+            return try parseCards(
+                from: content,
+                sentence: sentence,
+                mode: mode,
+                requiredCardType: requiredCardType
+            )
         }
     }
 
@@ -340,7 +355,8 @@ enum KimiCardGenerator {
         words: [String],
         sourceHint: String?,
         deckName: String?,
-        mode: CardGenerationMode
+        mode: CardGenerationMode,
+        requiredCardType: CardType?
     ) async throws -> String {
         guard let url = URL(string: APISettings.chatCompletionsURL) else {
             throw KimiCardGeneratorError.invalidResponse
@@ -356,22 +372,29 @@ enum KimiCardGenerator {
         let wordsList = words.joined(separator: ", ")
         let cardCountRule: String
         let primaryFieldHint: String
-        switch mode {
-        case .compact:
+        if let requiredCardType {
             cardCountRule = """
-            1. 每个生词只生成 1 张卡；智能选择 type（cloze 或 definition）：
-               - 默认优先 cloze（语境回忆、主动提取）
-               - 以下情况选 definition：固定搭配/短语需整体记忆、抽象概念首次接触、挖空后无法辨识、原句极短
+            1. 每个生词只生成 1 张 type 为 \(requiredCardType.rawValue) 的卡（\(requiredCardType.displayName)）；禁止生成其它 type
             """
             primaryFieldHint = ""
-        case .full:
-            cardCountRule = """
-            1. 每个生词生成 2 张卡：一张 cloze，一张 definition；同一生词两张卡的 usage_note / etymology / synonyms / antonyms / paraphrases 应一致
-               - 用 primary: true 标记 AI 更推荐的一张（通常 cloze）；另一张 primary: false
-            """
-            primaryFieldHint = """
-              "primary": true,
-            """
+        } else {
+            switch mode {
+            case .compact:
+                cardCountRule = """
+                1. 每个生词只生成 1 张卡；智能选择 type（cloze 或 definition）：
+                   - 默认优先 cloze（语境回忆、主动提取）
+                   - 以下情况选 definition：固定搭配/短语需整体记忆、抽象概念首次接触、挖空后无法辨识、原句极短
+                """
+                primaryFieldHint = ""
+            case .full:
+                cardCountRule = """
+                1. 每个生词生成 2 张卡：一张 cloze，一张 definition；同一生词两张卡的 usage_note / etymology / synonyms / antonyms / paraphrases 应一致
+                   - 用 primary: true 标记 AI 更推荐的一张（通常 cloze）；另一张 primary: false
+                """
+                primaryFieldHint = """
+                  "primary": true,
+                """
+            }
         }
 
         let systemPrompt = """
@@ -511,7 +534,12 @@ enum KimiCardGenerator {
         }
     }
 
-    private static func parseCards(from content: String, sentence: String, mode: CardGenerationMode) throws -> [GeneratedCardDraft] {
+    private static func parseCards(
+        from content: String,
+        sentence: String,
+        mode: CardGenerationMode,
+        requiredCardType: CardType?
+    ) throws -> [GeneratedCardDraft] {
         let jsonString = extractJSON(from: content)
         guard let data = jsonString.data(using: .utf8) else {
             throw KimiCardGeneratorError.parseError(L10n.generateFormatErrorDetail)
@@ -558,40 +586,54 @@ enum KimiCardGenerator {
                 antonyms: CardContentFormatter.joinRelatedWords(item.antonyms?.values ?? []),
                 paraphrases: CardContentFormatter.encodeParaphrases(item.decodedParaphrases),
                 sourceAttribution: source,
-                isSelected: selectionForItem(item, mode: mode),
-                isRecommended: recommendationForItem(item, mode: mode)
+                isSelected: selectionForItem(item, mode: mode, requiredCardType: requiredCardType),
+                isRecommended: recommendationForItem(item, mode: mode, requiredCardType: requiredCardType)
             )
         }
 
-        guard !drafts.isEmpty else {
+        var filtered = drafts
+        if let requiredCardType {
+            filtered = drafts.filter { $0.cardType == requiredCardType }
+        }
+
+        guard !filtered.isEmpty else {
             throw KimiCardGeneratorError.parseError(L10n.generateFormatErrorDetail)
         }
 
         // Cloze/definition pair: copy phonetic if one sibling omitted it.
         var phoneticByWord: [String: String] = [:]
-        for draft in drafts {
+        for draft in filtered {
             if let phonetic = draft.phonetic, !phonetic.isEmpty {
                 phoneticByWord[draft.word.lowercased()] = phonetic
             }
         }
-        for index in drafts.indices {
-            if drafts[index].phonetic == nil,
-               let shared = phoneticByWord[drafts[index].word.lowercased()] {
-                drafts[index].phonetic = shared
+        for index in filtered.indices {
+            if filtered[index].phonetic == nil,
+               let shared = phoneticByWord[filtered[index].word.lowercased()] {
+                filtered[index].phonetic = shared
             }
         }
 
         switch mode {
         case .compact:
-            drafts = CardContentFormatter.expandOptionalSiblings(drafts)
+            if requiredCardType == nil {
+                filtered = CardContentFormatter.expandOptionalSiblings(filtered)
+            }
         case .full:
             break
         }
 
-        return drafts
+        return filtered
     }
 
-    private static func selectionForItem(_ item: KimiCardItem, mode: CardGenerationMode) -> Bool {
+    private static func selectionForItem(
+        _ item: KimiCardItem,
+        mode: CardGenerationMode,
+        requiredCardType: CardType?
+    ) -> Bool {
+        if requiredCardType != nil {
+            return true
+        }
         switch mode {
         case .compact:
             return true
@@ -603,7 +645,14 @@ enum KimiCardGenerator {
         }
     }
 
-    private static func recommendationForItem(_ item: KimiCardItem, mode: CardGenerationMode) -> Bool {
+    private static func recommendationForItem(
+        _ item: KimiCardItem,
+        mode: CardGenerationMode,
+        requiredCardType: CardType?
+    ) -> Bool {
+        if requiredCardType != nil {
+            return true
+        }
         switch mode {
         case .compact:
             return true

@@ -23,7 +23,9 @@ struct CreateCardsView: View {
     @State private var wordFeedbackMessage: String?
     @State private var wordFeedbackIsError = false
     @State private var isRecognizingPhoto = false
+    @State private var isGeneratingAppreciation = false
     @State private var generationMode: CardGenerationMode = CardGenerationPreferences.mode
+    @State private var appreciationSource = ""
     @State private var showPhotoLibrary = false
     @State private var showCamera = false
     @State private var showLongTextPrompt = false
@@ -54,8 +56,12 @@ struct CreateCardsView: View {
         sentence.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    private var willGenerateAppreciation: Bool {
+        !trimmedSentence.isEmpty && words.isEmpty
+    }
+
     private var canGenerate: Bool {
-        !trimmedSentence.isEmpty && !words.isEmpty
+        !trimmedSentence.isEmpty
     }
 
     private var hasPendingDrafts: Bool {
@@ -78,7 +84,10 @@ struct CreateCardsView: View {
                 .safeAreaInset(edge: .bottom, spacing: 0) {
                     generateFooter
                 }
-                .loadingOverlay(isPresented: isRecognizingPhoto, message: L10n.recognizingPhoto)
+                .loadingOverlay(
+                    isPresented: isRecognizingPhoto || isGeneratingAppreciation,
+                    message: isGeneratingAppreciation ? L10n.createAppreciationGenerating : L10n.recognizingPhoto
+                )
                 .navigationDestination(isPresented: $showPreview) {
                     CardPreviewView(drafts: drafts, selectedDeckID: $selectedDeckID) {
                         showPreview = false
@@ -163,13 +172,17 @@ struct CreateCardsView: View {
                 captureToolbar
 
                 if trimmedSentence.isEmpty {
-                    sourceEditSurface(minHeight: 72, showPlaceholder: true)
+                    sourceEditSurface(minHeight: 72, showPlaceholder: true, placeholder: L10n.createPastePlaceholder)
                 } else {
                     sourceWorkspace
 
                     if sourceMode == .edit, !selectedText.isEmpty {
                         SelectionActionBar(selectedText: selectedText, action: appendSelectionToWords)
                     }
+                }
+
+                if willGenerateAppreciation {
+                    optionalSourceField
                 }
 
                 if isRecognizingPhoto {
@@ -194,6 +207,20 @@ struct CreateCardsView: View {
             .padding(.bottom, AppSpacing.md)
         }
         .scrollBounceBehavior(.basedOnSize)
+    }
+
+    private var optionalSourceField: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+            Text(L10n.createAppreciationSource)
+                .font(AppFont.helper())
+                .foregroundStyle(AppColor.textMuted)
+
+            TextField(L10n.createAppreciationSourcePlaceholder, text: $appreciationSource, axis: .vertical)
+                .font(AppFont.secondary())
+                .lineLimit(1...3)
+                .padding(AppSpacing.sm)
+                .appInputSurface(isFocused: false)
+        }
     }
 
     private var captureToolbar: some View {
@@ -300,7 +327,7 @@ struct CreateCardsView: View {
 
             switch sourceMode {
             case .edit:
-                sourceEditSurface(minHeight: 88, showPlaceholder: false)
+                sourceEditSurface(minHeight: 88, showPlaceholder: false, placeholder: L10n.createPastePlaceholder)
             case .pick:
                 PhraseTokenPicker(
                     sentence: trimmedSentence,
@@ -325,7 +352,7 @@ struct CreateCardsView: View {
         }
     }
 
-    private func sourceEditSurface(minHeight: CGFloat, showPlaceholder: Bool) -> some View {
+    private func sourceEditSurface(minHeight: CGFloat, showPlaceholder: Bool, placeholder: String) -> some View {
         ZStack(alignment: .topLeading) {
             SelectableTextEditor(
                 text: $sentence,
@@ -338,7 +365,7 @@ struct CreateCardsView: View {
             .padding(AppSpacing.sm)
 
             if showPlaceholder, sentence.isEmpty {
-                Text(L10n.createPastePlaceholder)
+                Text(placeholder)
                     .font(AppFont.literaryQuote())
                     .foregroundStyle(AppColor.textMuted)
                     .padding(.horizontal, AppSpacing.md)
@@ -412,51 +439,54 @@ struct CreateCardsView: View {
     private var generateFooter: some View {
         VStack(spacing: AppSpacing.xs) {
             if !canGenerate {
-                Text(generateDisabledHint)
+                Text(L10n.createGenerateHintEmpty)
                     .font(AppFont.weak())
                     .foregroundStyle(AppColor.textMuted)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, AppSpacing.md)
             }
 
-            VStack(alignment: .leading, spacing: 6) {
-                Picker("", selection: $generationMode) {
-                    ForEach(CardGenerationMode.allCases) { mode in
-                        Text(mode.title).tag(mode)
+            if canGenerate {
+                if willGenerateAppreciation {
+                    Text(L10n.createGenerateNoWordsHint)
+                        .font(AppFont.weak())
+                        .foregroundStyle(AppColor.textMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, AppSpacing.md)
+                } else {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Picker("", selection: $generationMode) {
+                            ForEach(CardGenerationMode.allCases) { mode in
+                                Text(mode.title).tag(mode)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .onChange(of: generationMode) { _, mode in
+                            CardGenerationPreferences.mode = mode
+                        }
+
+                        Text(generationMode.detail)
+                            .font(AppFont.weak())
+                            .foregroundStyle(AppColor.textMuted)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
+                    .padding(.horizontal, AppSpacing.md)
                 }
-                .pickerStyle(.segmented)
-                .onChange(of: generationMode) { _, mode in
-                    CardGenerationPreferences.mode = mode
-                }
-
-                Text(generationMode.detail)
-                    .font(AppFont.weak())
-                    .foregroundStyle(AppColor.textMuted)
-                    .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.horizontal, AppSpacing.md)
 
-            Button(action: enqueueGeneration) {
+            Button {
+                performGeneration()
+            } label: {
                 Text(L10n.createAIGenerate)
             }
             .buttonStyle(PrimaryButtonStyle(soft: true))
-            .disabled(!canGenerate)
+            .disabled(!canGenerate || isGeneratingAppreciation)
             .padding(.horizontal, AppSpacing.md)
         }
         .padding(.top, AppSpacing.sm)
         .padding(.bottom, AppSpacing.sm)
         .background(AppColor.pageBackground)
-    }
-
-    private var generateDisabledHint: String {
-        if trimmedSentence.isEmpty && words.isEmpty {
-            return L10n.createGenerateHintEmpty
-        }
-        if trimmedSentence.isEmpty {
-            return L10n.createGenerateNeedSentence
-        }
-        return L10n.createGenerateNeedWords
     }
 
     private func openShareDraftPreview() {
@@ -508,6 +538,9 @@ struct CreateCardsView: View {
             sentence = importSentence
             sourceHint = OCRContextExtractor.sourceHint(from: result.fullText)
             sourceImagePath = CardSourceImageStore.saveJPEG(image)
+            if let hint = sourceHint?.trimmingCharacters(in: .whitespacesAndNewlines), !hint.isEmpty {
+                appreciationSource = hint
+            }
             if result.hasHighlightContext {
                 words = []
             }
@@ -622,6 +655,14 @@ struct CreateCardsView: View {
         shareImport.acknowledgeImport()
     }
 
+    private func performGeneration() {
+        if willGenerateAppreciation {
+            Task { await generateAppreciationCard() }
+        } else {
+            enqueueGeneration()
+        }
+    }
+
     private func enqueueGeneration() {
         errorMessage = nil
         SharedDedupeSync.rebuild(in: modelContext)
@@ -641,6 +682,47 @@ struct CreateCardsView: View {
             )
             words = []
             showToast(L10n.createQueuedToast)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    @MainActor
+    private func generateAppreciationCard() async {
+        guard willGenerateAppreciation else { return }
+        isGeneratingAppreciation = true
+        defer { isGeneratingAppreciation = false }
+
+        errorMessage = nil
+        let manualSource = appreciationSource.trimmingCharacters(in: .whitespacesAndNewlines)
+        let ocrSource = sourceHint?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let resolvedSource = manualSource.isEmpty
+            ? (ocrSource.isEmpty ? nil : ocrSource)
+            : manualSource
+
+        let reflection = DailyReflection(
+            sentence: trimmedSentence,
+            translation: nil,
+            source: resolvedSource,
+            occasion: nil,
+            isAI: true
+        )
+
+        do {
+            var draft = try await LiteraryAppreciationGenerator.generate(from: reflection)
+            if let path = sourceImagePath?.trimmingCharacters(in: .whitespacesAndNewlines), !path.isEmpty {
+                draft.sourceImagePath = path
+            }
+
+            let deck: Deck
+            if let selectedDeckID {
+                deck = DeckService.resolvedDeck(id: selectedDeckID, in: modelContext)
+            } else {
+                deck = DeckService.fetchOrCreateDailyReflectionDeck(in: modelContext)
+            }
+            selectedDeckID = deck.id
+            drafts = [draft]
+            showPreview = true
         } catch {
             errorMessage = error.localizedDescription
         }

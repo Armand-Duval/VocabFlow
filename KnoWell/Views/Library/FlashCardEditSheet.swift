@@ -403,6 +403,26 @@ struct FlashCardEditSheet: View {
         }
 
         do {
+            if fields.cardType == .appreciation {
+                let reflection = DailyReflection(
+                    sentence: sentence,
+                    translation: {
+                        let text = fields.composedContextNote.trimmingCharacters(in: .whitespacesAndNewlines)
+                        return text.isEmpty ? nil : text
+                    }(),
+                    source: {
+                        let text = fields.sourceAttribution.trimmingCharacters(in: .whitespacesAndNewlines)
+                        return text.isEmpty ? nil : text
+                    }(),
+                    occasion: CardContentFormatter.senseText(fields.back),
+                    isAI: true
+                )
+                let draft = try await LiteraryAppreciationGenerator.generate(from: reflection)
+                fields.applyDraft(draft)
+                ToastCenter.shared.show(L10n.cardRegenerateDone)
+                return
+            }
+
             let drafts = try await KimiCardGenerator.generate(
                 sentence: sentence,
                 words: [word],
@@ -411,7 +431,7 @@ struct FlashCardEditSheet: View {
                     return hint.isEmpty ? nil : hint
                 }(),
                 deckName: decks.first(where: { $0.id == fields.deckID })?.name,
-                mode: .full
+                requiredCardType: fields.cardType
             )
             guard let draft = CardContentRegenerator.matchingDraft(
                 in: drafts,

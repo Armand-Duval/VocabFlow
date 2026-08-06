@@ -84,9 +84,13 @@ struct CardReviewSessionView: View {
         .loadingOverlay(isPresented: isRegenerating, message: L10n.cardRegenerateRunning)
         .onAppear {
             syncSessionQueue(with: cards)
+            prepareRevealState(for: currentCard)
         }
         .onChange(of: cards.map(\.id)) { _, _ in
             syncSessionQueue(with: cards)
+        }
+        .onChange(of: currentCard?.id) { _, _ in
+            prepareRevealState(for: currentCard)
         }
         .onReceive(timer) { date in
             now = date
@@ -121,6 +125,14 @@ struct CardReviewSessionView: View {
     private var currentCard: FlashCard? {
         guard sessionQueue.indices.contains(currentIndex) else { return nil }
         return sessionQueue[currentIndex]
+    }
+
+    private func shouldAutoRevealAnswer(for card: FlashCard) -> Bool {
+        card.cardType == .appreciation
+    }
+
+    private func prepareRevealState(for card: FlashCard?) {
+        showBack = card.map(shouldAutoRevealAnswer(for:)) ?? false
     }
 
     private func reviewContent(for card: FlashCard) -> some View {
@@ -159,12 +171,12 @@ struct CardReviewSessionView: View {
                     promptSection(for: card)
                         .frame(minHeight: showBack ? nil : 168, alignment: .topLeading)
 
-                    if !showBack {
+                    if !showBack, card.cardType != .appreciation {
                         scrollHintRow {
                             revealAnswer(proxy: proxy)
                         }
                         .padding(.top, AppSpacing.sm)
-                    } else {
+                    } else if showBack {
                         Divider()
                             .overlay(AppColor.border.opacity(0.55))
                             .padding(.top, AppSpacing.xs)
@@ -845,7 +857,7 @@ struct CardReviewSessionView: View {
                     submit(rating: rating, for: card)
                 } label: {
                     HStack(spacing: 4) {
-                        Text(rating.title)
+                        Text(rating.displayTitle(for: card.cardType))
                             .font(.subheadline.weight(.semibold))
                         Text(ReviewScheduler.intervalLabel(for: card, rating: rating, now: now))
                             .font(AppFont.weak())
@@ -893,6 +905,7 @@ struct CardReviewSessionView: View {
         if currentIndex >= sessionQueue.count {
             currentIndex = max(0, sessionQueue.count - 1)
         }
+        prepareRevealState(for: currentCard)
     }
 
     private func playRatingHaptic(_ rating: ReviewRating) {
@@ -940,7 +953,7 @@ struct CardReviewSessionView: View {
         if currentIndex >= sessionQueue.count {
             currentIndex = max(0, sessionQueue.count - 1)
         }
-        showBack = false
+        prepareRevealState(for: currentCard)
     }
 
     /// Insert after the current card when possible, skipping spots that would put
