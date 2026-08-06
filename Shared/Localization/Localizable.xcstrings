@@ -6429,13 +6429,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Search words, sentences, cards"
+            "value": "Search"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "搜索生词、原句、卡片内容"
+            "value": "搜索"
           }
         }
       }
@@ -8383,7 +8383,6 @@
         }
       }
     },
-    "review.tapFlip": {},
     "review.tapFlipBack": {
       "extractionState": "manual",
       "localizations": {
@@ -8843,17 +8842,18 @@
       }
     },
     "settings.ai.section": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "AI Card Generation"
+            "value": "AI model"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "AI 制卡"
+            "value": "AI 模型配置"
           }
         }
       }
@@ -10035,13 +10035,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Flip the card; the back includes the full prompt plus answer."
+            "value": "Flip to show the full prompt and meaning."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "翻到背面；背面含完整题干与答案。"
+            "value": "翻转后展示完整题干与释义。"
           }
         }
       }
@@ -10069,13 +10069,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keep the prompt visible and expand the answer below."
+            "value": "Reveal the answer below the prompt."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "题干保持可见，向下展开释义与译文。"
+            "value": "在题干下方展开答案。"
           }
         }
       }
@@ -10506,13 +10506,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Settings"
+            "value": "Me"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "设置"
+            "value": "我的"
           }
         }
       }
@@ -10659,13 +10659,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "After local midnight, backs up JSON and Anki on next open (or while left open past midnight). Browse them in Files → On My iPhone → KnoWell → AutoBackup."
+            "value": "Daily auto backup after midnight. Find files in the Files app under KnoWell."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "本地 0 点后，下次打开 App（或前台跨过 0 点）时自动备份 JSON 与 Anki。可在「文件」→「我的 iPhone」→「KnoWell」→ AutoBackup 查看。"
+            "value": "每日零点自动备份卡片数据，可在系统「文件」App 的 KnoWell 文件夹查看。"
           }
         }
       }
@@ -10693,13 +10693,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Double-tap or open to enlarge"
+            "value": "Tap to enlarge. Pinch or tap again to zoom out."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "点击放大原图"
+            "value": "点按放大；捏合或再点可缩小。"
           }
         }
       }
@@ -10768,6 +10768,125 @@
           "stringUnit": {
             "state": "translated",
             "value": "在「文件」App 中打开 AutoBackup 文件夹。"
+          }
+        }
+      }
+    },
+    "settings.ai.section.compact": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI model"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI 模型配置"
+          }
+        }
+      }
+    },
+    "settings.dataManagement.section": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Card data"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "卡片数据管理"
+          }
+        }
+      }
+    },
+    "settings.aboutSupport.section": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About & support"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关于与支持"
+          }
+        }
+      }
+    },
+    "settings.ai.modelName.placeholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Model name (default %@)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "模型名称（默认%@）"
+          }
+        }
+      }
+    },
+    "create.scan.short": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "扫描"
+          }
+        }
+      }
+    },
+    "create.photo.short": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Album"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "相册"
+          }
+        }
+      }
+    },
+    "create.paste.short": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "粘贴"
           }
         }
       }

@@ -16,9 +16,9 @@ enum AppColor {
     static var danger: Color { Color(red: 0.769, green: 0.361, blue: 0.329) }
 
     static var pageBackground: Color {
-        // #F6F5F2 warm paper
+        // Near-white canvas — keep hierarchy via spacing, not stacked wash tones.
         Color.adaptive(
-            light: Color(red: 0.965, green: 0.961, blue: 0.949),
+            light: Color.white,
             dark: Color(red: 0.07, green: 0.08, blue: 0.09)
         )
     }
@@ -91,8 +91,8 @@ enum AppColor {
     /// Softest ink — quota / tip / footnotes (below tertiary).
     static var textMuted: Color {
         Color.adaptive(
-            light: Color(red: 0.635, green: 0.616, blue: 0.588),
-            dark: Color(red: 0.48, green: 0.50, blue: 0.54)
+            light: Color(red: 0.635, green: 0.616, blue: 0.588).opacity(0.78),
+            dark: Color(red: 0.48, green: 0.50, blue: 0.54).opacity(0.85)
         )
     }
 
@@ -180,8 +180,8 @@ enum AppFont {
     static func secondary() -> Font { .system(size: 14, weight: .regular) }
     static func caption() -> Font { .system(size: 13, weight: .regular) }
     static func captionSecondary() -> Font { .system(size: 12, weight: .regular) }
-    static func helper() -> Font { .system(size: 12, weight: .regular) }
-    static func weak() -> Font { .system(size: 11, weight: .light) }
+    static func helper() -> Font { .system(size: 11, weight: .regular) }
+    static func weak() -> Font { .system(size: 10, weight: .light) }
     static func navTitle() -> Font { .system(size: 14, weight: .medium) }
     static func statValue() -> Font { .system(size: 22, weight: .semibold) }
     static func heroValue() -> Font { .system(size: 40, weight: .semibold) }
@@ -218,20 +218,28 @@ struct PrimaryButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.colorScheme) private var colorScheme
     var prominent: Bool = false
+    /// Soft fill (lower visual weight) for secondary-primary CTAs like generate.
+    var soft: Bool = false
 
     func makeBody(configuration: Configuration) -> some View {
         let shadow = configuration.isPressed ? AppShadow.pressed(colorScheme) : AppShadow.card(colorScheme)
         return configuration.label
-            .font(.system(size: 16, weight: prominent ? .bold : .semibold))
+            .font(.system(size: soft ? 15 : 16, weight: prominent && !soft ? .bold : .semibold))
             .frame(maxWidth: .infinity)
-            .padding(.vertical, prominent ? 16 : 12)
-            .foregroundStyle(isEnabled ? Color.white : AppColor.accent.opacity(0.52))
+            .padding(.vertical, soft ? 12 : (prominent ? 14 : 12))
+            .foregroundStyle(foregroundColor)
             .background(
                 RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
                     .fill(backgroundColor(isPressed: configuration.isPressed))
             )
+            .overlay {
+                if soft, isEnabled {
+                    RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
+                        .strokeBorder(AppColor.accent.opacity(configuration.isPressed ? 0.28 : 0.38), lineWidth: 1)
+                }
+            }
             .shadow(
-                color: isEnabled ? shadow.color : .clear,
+                color: isEnabled && !soft ? shadow.color : .clear,
                 radius: shadow.radius,
                 y: shadow.y
             )
@@ -239,26 +247,38 @@ struct PrimaryButtonStyle: ButtonStyle {
             .animation(.easeInOut(duration: 0.12), value: configuration.isPressed)
     }
 
+    private var foregroundColor: Color {
+        guard isEnabled else { return AppColor.textMuted }
+        return soft ? AppColor.accentStrong : Color.white
+    }
+
     private func backgroundColor(isPressed: Bool) -> Color {
         guard isEnabled else {
-            // Soft accent wash — reads disabled without cement gray.
-            return AppColor.accentBackground(0.14)
+            return AppColor.surfaceMuted.opacity(0.55)
         }
-        // Slightly deeper at rest for clearer primary affordance.
-        return AppColor.accentStrong.opacity(isPressed ? 0.86 : 1)
+        if soft {
+            return AppColor.accentBackground(isPressed ? 0.12 : 0.08)
+        }
+        return AppColor.accentStrong.opacity(isPressed ? 0.86 : 0.92)
     }
 }
 
 /// Inline text action — paper UI quick links (no icon circles).
 struct TextLinkAction: View {
     let title: String
+    var tone: Tone = .accent
     let action: () -> Void
+
+    enum Tone {
+        case accent
+        case muted
+    }
 
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(AppFont.caption().weight(.medium))
-                .foregroundStyle(AppColor.accentStrong)
+                .font(tone == .accent ? AppFont.helper().weight(.medium) : AppFont.weak())
+                .foregroundStyle(tone == .accent ? AppColor.accent : AppColor.textMuted)
         }
         .buttonStyle(SoftPressButtonStyle(pressedScale: 0.98, pressedOpacity: 0.88))
     }
@@ -878,28 +898,28 @@ struct DeckFilterChip: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 6) {
-                HStack(spacing: 5) {
+            VStack(spacing: 4) {
+                HStack(spacing: 4) {
                     Text(title)
-                        .font(AppFont.caption())
+                        .font(AppFont.helper())
                         .fontWeight(isSelected ? .semibold : .regular)
                         .lineLimit(1)
                     if let badge, badge > 0 {
                         Text("\(badge)")
-                            .font(.caption2.weight(.medium))
-                            .foregroundStyle(isSelected ? AppColor.accentStrong : AppColor.textTertiary)
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(isSelected ? AppColor.accent : AppColor.textMuted)
                     }
                 }
-                .foregroundStyle(isSelected ? AppColor.accentStrong : AppColor.textSecondary)
+                .foregroundStyle(isSelected ? AppColor.accent : AppColor.textTertiary)
 
                 Capsule()
-                    .fill(isSelected ? AppColor.accent.opacity(0.55) : Color.clear)
+                    .fill(isSelected ? AppColor.accent.opacity(0.5) : Color.clear)
                     .frame(height: 1.5)
-                    .frame(maxWidth: 22)
+                    .frame(maxWidth: 18)
             }
-            .padding(.horizontal, 4)
-            .padding(.vertical, 4)
-            .opacity(isSelected ? 1 : 0.78)
+            .padding(.horizontal, 2)
+            .padding(.vertical, 2)
+            .opacity(isSelected ? 1 : 0.72)
         }
         .buttonStyle(SoftPressButtonStyle(pressedScale: 0.98, pressedOpacity: 0.88))
     }

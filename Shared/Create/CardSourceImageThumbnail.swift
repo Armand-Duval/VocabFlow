@@ -54,13 +54,17 @@ struct CardSourceImageThumbnail: View {
 }
 
 #if canImport(UIKit)
-/// Fullscreen source-image viewer with pinch zoom; tap close / background to dismiss.
+/// Fullscreen source-image viewer: pinch / double-tap zoom, tap to shrink or dismiss.
 private struct CardSourceImagePreview: View {
     let image: UIImage
     @Binding var isPresented: Bool
 
     @State private var scale: CGFloat = 1
     @State private var baseScale: CGFloat = 1
+    @State private var offset: CGSize = .zero
+    @State private var lastOffset: CGSize = .zero
+
+    private var isZoomed: Bool { scale > 1.05 }
 
     var body: some View {
         ZStack {
@@ -73,32 +77,27 @@ private struct CardSourceImagePreview: View {
                 .resizable()
                 .scaledToFit()
                 .scaleEffect(scale)
+                .offset(offset)
                 .padding(AppSpacing.md)
-                .gesture(
-                    MagnificationGesture()
-                        .onChanged { value in
-                            scale = min(4, max(1, baseScale * value))
-                        }
-                        .onEnded { _ in
-                            baseScale = scale
-                            if scale < 1.05 {
-                                withAnimation(.easeOut(duration: 0.2)) {
-                                    scale = 1
-                                    baseScale = 1
-                                }
-                            }
-                        }
-                )
-                // Double-tap toggles zoom; single tap on image should not dismiss while zoomed.
+                .contentShape(Rectangle())
+                .gesture(zoomAndPanGesture)
                 .onTapGesture(count: 2) {
-                    withAnimation(.easeOut(duration: 0.2)) {
-                        if scale > 1.2 {
-                            scale = 1
-                            baseScale = 1
+                    withAnimation(.easeOut(duration: 0.22)) {
+                        if isZoomed {
+                            resetZoom()
                         } else {
                             scale = 2
                             baseScale = 2
                         }
+                    }
+                }
+                .onTapGesture {
+                    if isZoomed {
+                        withAnimation(.easeOut(duration: 0.22)) {
+                            resetZoom()
+                        }
+                    } else {
+                        dismiss()
                     }
                 }
 
@@ -121,7 +120,52 @@ private struct CardSourceImagePreview: View {
         }
     }
 
+    private var zoomAndPanGesture: some Gesture {
+        SimultaneousGesture(
+            MagnificationGesture()
+                .onChanged { value in
+                    scale = min(4, max(1, baseScale * value))
+                    if scale <= 1.05 {
+                        offset = .zero
+                    }
+                }
+                .onEnded { _ in
+                    if scale < 1.05 {
+                        withAnimation(.easeOut(duration: 0.2)) {
+                            resetZoom()
+                        }
+                    } else {
+                        baseScale = scale
+                    }
+                },
+            DragGesture()
+                .onChanged { value in
+                    guard isZoomed else { return }
+                    offset = CGSize(
+                        width: lastOffset.width + value.translation.width,
+                        height: lastOffset.height + value.translation.height
+                    )
+                }
+                .onEnded { _ in
+                    lastOffset = offset
+                    if !isZoomed {
+                        withAnimation(.easeOut(duration: 0.2)) {
+                            resetZoom()
+                        }
+                    }
+                }
+        )
+    }
+
+    private func resetZoom() {
+        scale = 1
+        baseScale = 1
+        offset = .zero
+        lastOffset = .zero
+    }
+
     private func dismiss() {
+        resetZoom()
         isPresented = false
     }
 }

@@ -31,7 +31,6 @@ struct CreateCardsView: View {
     @State private var isManualEditing = false
     @State private var sourceHint: String?
     @State private var sourceImagePath: String?
-    @State private var todayCaptureTip: String?
     @State private var isSourceFocused = false
     /// Edit pasted/OCR text vs pick phrases — one surface, not two stacked boxes.
     @State private var sourceMode: SourceWorkspaceMode = .edit
@@ -58,17 +57,6 @@ struct CreateCardsView: View {
         !trimmedSentence.isEmpty && !words.isEmpty
     }
 
-    private var generateDisabledHint: String? {
-        guard !canGenerate else { return nil }
-        if trimmedSentence.isEmpty && words.isEmpty {
-            return L10n.createGenerateNeedBoth
-        }
-        if trimmedSentence.isEmpty {
-            return L10n.createGenerateNeedSentence
-        }
-        return L10n.createGenerateNeedWords
-    }
-
     private var hasPendingDrafts: Bool {
         guard let drafts = shareImport.pendingDrafts else { return false }
         return !drafts.isEmpty
@@ -79,16 +67,6 @@ struct CreateCardsView: View {
             scrollContent
                 .appPageBackground()
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button {
-                            AppTab.requestSettings()
-                        } label: {
-                            AppIcon.symbol("gearshape")
-                        }
-                        .accessibilityLabel(L10n.settingsTitle)
-                    }
-                }
                 .dismissKeyboardOnScroll()
                 .keyboardDoneButton()
                 .safeAreaInset(edge: .top, spacing: 0) {
@@ -162,22 +140,15 @@ struct CreateCardsView: View {
                         }
                     }
                 }
-                .onAppear { refreshCaptureTip() }
-                .onChange(of: showPreview) { _, isShowing in
-                    if !isShowing { refreshCaptureTip() }
-                }
                 .onChange(of: trimmedSentence.isEmpty) { _, isEmpty in
                     if isEmpty { sourceMode = .edit }
-                }
-                .onReceive(NotificationCenter.default.publisher(for: .libraryCatalogDidChange)) { _ in
-                    refreshCaptureTip()
                 }
         }
     }
 
     private var scrollContent: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: AppSpacing.md) {
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
                 if hasPendingDrafts, let pendingDrafts = shareImport.pendingDrafts {
                     PendingCardsBannerView(
                         title: L10n.createPendingImportTitle,
@@ -188,19 +159,10 @@ struct CreateCardsView: View {
                     )
                 }
 
-                if let todayCaptureTip {
-                    Text(todayCaptureTip)
-                        .font(AppFont.helper())
-                        .foregroundStyle(AppColor.textMuted)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .accessibilityLabel(todayCaptureTip)
-                }
-
-                // Same quiet capture row empty or filled — no marketing hero card.
                 captureToolbar
 
                 if trimmedSentence.isEmpty {
-                    sourceEditSurface(minHeight: 120, showPlaceholder: true)
+                    sourceEditSurface(minHeight: 72, showPlaceholder: true)
                 } else {
                     sourceWorkspace
 
@@ -220,10 +182,9 @@ struct CreateCardsView: View {
 
                 CreateDeckPickerCard(selectedDeckID: $selectedDeckID)
                     .padding(.horizontal, AppSpacing.sm)
-                    .padding(.vertical, AppSpacing.sm)
+                    .padding(.vertical, AppSpacing.xs)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .appInputSurface(isFocused: false)
-                    .appSoftShadow()
 
                 wordsCard
             }
@@ -236,33 +197,31 @@ struct CreateCardsView: View {
 
     private var captureToolbar: some View {
         HStack(spacing: AppSpacing.sm) {
-            Button {
+            captureToolButton(
+                title: L10n.createScanShort,
+                systemImage: "camera.viewfinder",
+                accessibilityLabel: L10n.createScanExcerpt,
+                emphasized: true,
+                disabled: isRecognizingPhoto
+            ) {
                 openScanCapture()
-            } label: {
-                Label(L10n.createScanExcerpt, systemImage: "camera.viewfinder")
-                    .font(AppFont.helper().weight(.semibold))
-                    .foregroundStyle(Color.white)
-                    .padding(.horizontal, AppSpacing.sm)
-                    .padding(.vertical, 10)
-                    .background(AppColor.accentStrong, in: Capsule())
             }
-            .buttonStyle(SoftPressButtonStyle())
-            .disabled(isRecognizingPhoto)
-            .opacity(isRecognizingPhoto ? 0.55 : 1)
 
-            createImportTool(
+            captureToolButton(
+                title: L10n.createPhotoShort,
                 systemImage: "photo.on.rectangle",
-                label: L10n.createQuickPhoto,
-                title: L10n.createQuickPhoto,
+                accessibilityLabel: L10n.createQuickPhoto,
+                emphasized: false,
                 disabled: isRecognizingPhoto
             ) {
                 showPhotoLibrary = true
             }
 
-            createImportTool(
+            captureToolButton(
+                title: L10n.createPasteShort,
                 systemImage: "doc.on.clipboard",
-                label: L10n.createQuickPaste,
-                title: L10n.createQuickPaste,
+                accessibilityLabel: L10n.createQuickPaste,
+                emphasized: false,
                 disabled: false
             ) {
                 pasteFromClipboard()
@@ -270,6 +229,38 @@ struct CreateCardsView: View {
 
             Spacer(minLength: 0)
         }
+        .opacity(isRecognizingPhoto ? 0.72 : 1)
+    }
+
+    private func captureToolButton(
+        title: String,
+        systemImage: String,
+        accessibilityLabel: String,
+        emphasized: Bool,
+        disabled: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 5) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 14, weight: .medium))
+                Text(title)
+                    .font(AppFont.helper().weight(.semibold))
+            }
+            .foregroundStyle(emphasized ? Color.white : AppColor.textSecondary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 9)
+            .background(
+                emphasized
+                    ? AppColor.accentStrong.opacity(0.92)
+                    : AppColor.surfaceMuted,
+                in: Capsule()
+            )
+        }
+        .buttonStyle(SoftPressButtonStyle())
+        .disabled(disabled)
+        .opacity(disabled ? 0.55 : 1)
+        .accessibilityLabel(accessibilityLabel)
     }
 
     private func openScanCapture() {
@@ -302,7 +293,7 @@ struct CreateCardsView: View {
 
             switch sourceMode {
             case .edit:
-                sourceEditSurface(minHeight: 120, showPlaceholder: false)
+                sourceEditSurface(minHeight: 88, showPlaceholder: false)
             case .pick:
                 PhraseTokenPicker(
                     sentence: trimmedSentence,
@@ -351,38 +342,6 @@ struct CreateCardsView: View {
         .appInputSurface(isFocused: isSourceFocused)
     }
 
-    private func createImportTool(
-        systemImage: String,
-        label: String,
-        title: String? = nil,
-        disabled: Bool,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            HStack(spacing: 6) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 14, weight: .regular))
-                if let title {
-                    Text(title)
-                        .font(AppFont.helper().weight(.medium))
-                }
-            }
-            .foregroundStyle(disabled ? AppColor.textMuted : AppColor.textSecondary)
-            .padding(.horizontal, title == nil ? 0 : AppSpacing.sm)
-            .frame(minWidth: title == nil ? 36 : nil, minHeight: 36)
-            .padding(.horizontal, title == nil ? 0 : 2)
-            .background(
-                AppColor.surfaceMuted,
-                in: RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
-            )
-            .appSoftShadow()
-        }
-        .buttonStyle(SoftPressButtonStyle())
-        .disabled(disabled)
-        .opacity(disabled ? 0.55 : 1)
-        .accessibilityLabel(label)
-    }
-
     private func pasteFromClipboard() {
         #if canImport(UIKit)
         if let text = UIPasteboard.general.string?.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -412,7 +371,6 @@ struct CreateCardsView: View {
         .padding(AppSpacing.sm)
         .frame(maxWidth: .infinity, alignment: .leading)
         .appInputSurface(isFocused: false)
-        .appSoftShadow()
     }
 
     private var generationQueueBanner: some View {
@@ -445,27 +403,15 @@ struct CreateCardsView: View {
     }
 
     private var generateFooter: some View {
-        VStack(spacing: AppSpacing.xs) {
-            if let generateDisabledHint {
-                Text(generateDisabledHint)
-                    .font(AppFont.helper())
-                    .foregroundStyle(AppColor.textMuted)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, AppSpacing.md)
-                    .transition(.opacity)
-            }
-
-            Button(action: enqueueGeneration) {
-                Text(L10n.createAIGenerate)
-            }
-            .buttonStyle(PrimaryButtonStyle(prominent: true))
-            .disabled(!canGenerate)
-            .padding(.horizontal, AppSpacing.md)
+        Button(action: enqueueGeneration) {
+            Text(L10n.createAIGenerate)
         }
+        .buttonStyle(PrimaryButtonStyle(soft: true))
+        .disabled(!canGenerate)
+        .padding(.horizontal, AppSpacing.md)
         .padding(.top, AppSpacing.sm)
         .padding(.bottom, AppSpacing.sm)
         .background(AppColor.pageBackground)
-        .animation(.easeInOut(duration: 0.15), value: generateDisabledHint)
     }
 
     private func openShareDraftPreview() {
@@ -629,15 +575,6 @@ struct CreateCardsView: View {
         // Shared text / OCR → same pick surface as in-app create.
         sourceMode = words.isEmpty ? .edit : .pick
         shareImport.acknowledgeImport()
-    }
-
-    private func refreshCaptureTip() {
-        if let summary = CaptureStatsStore.todaySummary(in: modelContext),
-           summary.uniqueWords > 0 || summary.uniqueSentences > 0 {
-            todayCaptureTip = L10n.createCaptureToday(summary.uniqueWords, summary.uniqueSentences)
-        } else {
-            todayCaptureTip = nil
-        }
     }
 
     private func enqueueGeneration() {

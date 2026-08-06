@@ -31,6 +31,9 @@ enum L10n {
     static var createAddWord: String { tr("create.addWord") }
     static var createManageDeck: String { tr("create.manageDeck") }
     static var createScanExcerpt: String { tr("create.scan.excerpt") }
+    static var createScanShort: String { tr("create.scan.short") }
+    static var createPhotoShort: String { tr("create.photo.short") }
+    static var createPasteShort: String { tr("create.paste.short") }
     static var createScanOpenCamera: String { tr("create.scan.openCamera") }
     static var createScanRitualTitle: String { tr("create.scan.ritualTitle") }
     static var createScanRitualSubtitle: String { tr("create.scan.ritualSubtitle") }
@@ -232,7 +235,7 @@ enum L10n {
     static var cardFront: String { tr("review.card.front") }
     static var cardBack: String { tr("review.card.back") }
     static var tapToReveal: String { tr("review.tapReveal") }
-    static var tapToFlipBack: String { tr("review.tapFlip") }
+    static var tapToFlipBack: String { tr("review.tapFlipBack") }
     static var showAnswer: String { tr("review.showAnswer") }
     static var reviewScrollForAnswer: String { tr("review.scrollForAnswer") }
     static var reviewCollapseAnswer: String { tr("review.collapseAnswer") }
@@ -394,6 +397,9 @@ enum L10n {
     static var settingsTitle: String { tr("settings.title") }
     static var settingsSavedTitle: String { tr("settings.saved.title") }
     static var settingsAISection: String { tr("settings.ai.section") }
+    static var settingsAISectionCompact: String { tr("settings.ai.section.compact") }
+    static var settingsDataManagementSection: String { tr("settings.dataManagement.section") }
+    static var settingsAboutSupportSection: String { tr("settings.aboutSupport.section") }
     static var settingsImportSection: String { tr("settings.import.section") }
     static var settingsImportExportSection: String { tr("settings.importExport.section") }
     static var settingsOpenDeckStore: String { tr("settings.openDeckStore") }
@@ -464,6 +470,9 @@ enum L10n {
     static var aiCustomBaseURLMissing: String { tr("settings.ai.customBaseURL.missing") }
     static var aiCustomModelPlaceholder: String { tr("settings.ai.customModel.placeholder") }
     static var aiCustomModelFooter: String { tr("settings.ai.customModel.footer") }
+    static func aiModelNamePlaceholder(_ defaultModel: String) -> String {
+        tf("settings.ai.modelName.placeholder", defaultModel)
+    }
     static var aiModelOpenAI4oMiniDetail: String { tr("settings.ai.model.openai.4oMini") }
     static var aiModelOpenAI4oDetail: String { tr("settings.ai.model.openai.4o") }
     static var aiModelDeepSeekChatDetail: String { tr("settings.ai.model.deepseek.chat") }

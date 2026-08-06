@@ -65,71 +65,14 @@ struct LibraryView: View {
                     )
                 }
             }
-            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: L10n.librarySearchPrompt)
             .appPageBackground()
             .appNavTitle(L10n.libraryTitle, style: .hidden)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    ToolbarIconCluster {
-                        if hasAnyCards {
-                            cardFilterMenu
-                        }
-
-                        if !searchText.isEmpty {
-                            Button {
-                                searchText = ""
-                                debouncedSearchText = ""
-                            } label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundStyle(AppColor.textTertiary)
-                            }
-                            .buttonStyle(SoftPressButtonStyle())
-                            .accessibilityLabel(L10n.clear)
-                        }
-
-                        if totalCardCount >= LibraryCardGrouper.flatListThreshold {
-                            Button {
-                                forceGrouped.toggle()
-                            } label: {
-                                AppIcon.symbol(forceGrouped ? "rectangle.grid.1x2" : "list.bullet")
-                            }
-                            .buttonStyle(SoftPressButtonStyle())
-                            .accessibilityLabel(
-                                forceGrouped ? L10n.libraryViewFlat : L10n.libraryViewGrouped
-                            )
-                        }
-
-                        NavigationLink {
-                            DeckStoreView(selectedDeckID: Binding(
-                                get: { filterDeckID ?? selectedDeckID },
-                                set: { newValue in
-                                    filterDeckID = newValue
-                                    selectedDeckID = newValue
-                                    if let newValue {
-                                        DeckSettings.lastSelectedDeckID = newValue
-                                    }
-                                }
-                            ))
-                        } label: {
-                            AppIcon.symbol("books.vertical")
-                        }
-                        .buttonStyle(SoftPressButtonStyle())
-
-                        Button {
-                            AppTab.requestSettings()
-                        } label: {
-                            AppIcon.symbol("gearshape")
-                        }
-                        .buttonStyle(SoftPressButtonStyle())
-                        .accessibilityLabel(L10n.settingsTitle)
-                    }
-                }
-            }
             .safeAreaInset(edge: .top, spacing: 0) {
                 VStack(spacing: 0) {
                     if let autoBackupBannerText {
                         autoBackupBanner(autoBackupBannerText)
                     }
+                    libraryChromeRow
                     deckFilterBar
                 }
             }
@@ -170,6 +113,68 @@ struct LibraryView: View {
                 }
             }
         }
+    }
+
+    /// Search + filter + library tools on one quiet row.
+    private var libraryChromeRow: some View {
+        HStack(spacing: AppSpacing.sm) {
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(AppColor.textMuted)
+
+                TextField(L10n.librarySearchPrompt, text: $searchText)
+                    .font(AppFont.secondary())
+                    .foregroundStyle(AppColor.textPrimary)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .submitLabel(.search)
+
+                if !searchText.isEmpty {
+                    Button {
+                        searchText = ""
+                        debouncedSearchText = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 14))
+                            .foregroundStyle(AppColor.textTertiary)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(L10n.clear)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 9)
+            .background(AppColor.surfaceMuted, in: Capsule())
+
+            if hasAnyCards {
+                cardFilterMenu
+            }
+
+            Button {
+                showDeckStore = true
+            } label: {
+                AppIcon.symbol("books.vertical")
+            }
+            .buttonStyle(SoftPressButtonStyle())
+            .accessibilityLabel(L10n.deckManage)
+
+            if totalCardCount >= LibraryCardGrouper.flatListThreshold {
+                Button {
+                    forceGrouped.toggle()
+                } label: {
+                    AppIcon.symbol(forceGrouped ? "rectangle.grid.1x2" : "list.bullet")
+                }
+                .buttonStyle(SoftPressButtonStyle())
+                .accessibilityLabel(
+                    forceGrouped ? L10n.libraryViewFlat : L10n.libraryViewGrouped
+                )
+            }
+        }
+        .padding(.horizontal, AppSpacing.md)
+        .padding(.top, AppSpacing.xs)
+        .padding(.bottom, 6)
+        .background(AppColor.pageBackground)
     }
 
     private func refreshAutoBackupBanner() {
@@ -274,33 +279,22 @@ struct LibraryView: View {
         if !decks.isEmpty {
             ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: AppSpacing.sm) {
+                    HStack(spacing: 6) {
                         deckChip(title: L10n.deckFilterAll, deckID: nil, count: totalCardCount)
                             .id(LibraryDeckChipID.all)
 
                         ForEach(decks) { deck in
-                            HStack(spacing: 6) {
-                                deckChip(
-                                    title: deck.name,
-                                    deckID: deck.id,
-                                    count: deckCounts[deck.id, default: 0]
-                                )
-
-                                NavigationLink {
-                                    DeckStatisticsView(deck: deck)
-                                } label: {
-                                    AppIcon.symbol("chart.bar.xaxis")
-                                        .font(.caption2)
-                                        .foregroundStyle(AppColor.textTertiary.opacity(0.38))
-                                }
-                                .buttonStyle(SoftPressButtonStyle())
-                            }
+                            deckChip(
+                                title: deck.name,
+                                deckID: deck.id,
+                                count: deckCounts[deck.id, default: 0]
+                            )
                             .id(LibraryDeckChipID.deck(deck.id))
                         }
                     }
                     .padding(.horizontal, AppSpacing.md)
-                    .padding(.top, AppSpacing.xs)
-                    .padding(.bottom, AppSpacing.sm)
+                    .padding(.top, 4)
+                    .padding(.bottom, AppSpacing.xs)
                 }
                 .background(AppColor.pageBackground)
                 .onAppear {
@@ -447,27 +441,23 @@ private struct LibraryGroupedList: View {
     @ViewBuilder
     private var flatListContent: some View {
         Section {
-            Text(L10n.libraryFlatListHint)
-                .font(AppFont.caption())
-                .foregroundStyle(.secondary)
-        }
-
-                ForEach(flatCardIDs.prefix(visibleItemCount), id: \.self) { cardID in
-            if let card = cardsByID[cardID] {
-                NavigationLink {
-                    FlashCardDetailView(card: card)
-                } label: {
-                    LibraryCardRow(
-                        card: card,
-                        showsDeckName: filterDeckID == nil,
-                        searchHighlight: searchText
-                    )
+            ForEach(flatCardIDs.prefix(visibleItemCount), id: \.self) { cardID in
+                if let card = cardsByID[cardID] {
+                    NavigationLink {
+                        FlashCardDetailView(card: card)
+                    } label: {
+                        LibraryCardRow(
+                            card: card,
+                            showsDeckName: filterDeckID == nil,
+                            searchHighlight: searchText
+                        )
+                    }
+                    .buttonStyle(SoftPressButtonStyle(pressedScale: 0.99, pressedOpacity: 0.92))
                 }
-                .buttonStyle(SoftPressButtonStyle(pressedScale: 0.99, pressedOpacity: 0.92))
             }
-        }
-        .onDelete { offsets in
-            deleteFlatCards(at: offsets)
+            .onDelete { offsets in
+                deleteFlatCards(at: offsets)
+            }
         }
     }
 
@@ -478,18 +468,12 @@ private struct LibraryGroupedList: View {
                 NavigationLink {
                     CardReviewSessionView(cards: dueCards, dismissWhenComplete: true)
                 } label: {
-                    Label {
-                        Text(L10n.libraryReviewDeck(deck.name, count: dueCards.count))
-                            .font(AppFont.secondary().weight(.semibold))
-                            .foregroundStyle(AppColor.accentStrong)
-                    } icon: {
-                        Image(systemName: "brain.head.profile")
-                            .foregroundStyle(AppColor.accentStrong)
-                            .symbolRenderingMode(.monochrome)
-                    }
+                    Text(L10n.libraryReviewDeck(deck.name, count: dueCards.count))
+                        .font(AppFont.helper().weight(.medium))
+                        .foregroundStyle(AppColor.accent)
                 }
                 .buttonStyle(SoftPressButtonStyle(pressedScale: 0.99, pressedOpacity: 0.9))
-                .tint(AppColor.accentStrong)
+                .tint(AppColor.accent)
             }
         }
 
@@ -518,18 +502,12 @@ private struct LibraryGroupedList: View {
                     NavigationLink {
                         CardReviewSessionView(cards: reviewCards, dismissWhenComplete: true)
                     } label: {
-                        Label {
-                            Text(L10n.reviewAll(group.word, count: group.cardIDs.count))
-                                .font(AppFont.secondary().weight(.semibold))
-                                .foregroundStyle(AppColor.accentStrong)
-                        } icon: {
-                            Image(systemName: "brain.head.profile")
-                                .foregroundStyle(AppColor.accentStrong)
-                                .symbolRenderingMode(.monochrome)
-                        }
+                        Text(L10n.reviewAll(group.word, count: group.cardIDs.count))
+                            .font(AppFont.helper().weight(.medium))
+                            .foregroundStyle(AppColor.accent)
                     }
                     .buttonStyle(SoftPressButtonStyle(pressedScale: 0.99, pressedOpacity: 0.9))
-                    .tint(AppColor.accentStrong)
+                    .tint(AppColor.accent)
                 }
             } header: {
                 AppSectionHeader(title: group.word)
@@ -711,10 +689,10 @@ private struct LibraryCardRow: View {
 
             Spacer(minLength: AppSpacing.sm)
 
-            VStack(alignment: .trailing, spacing: 4) {
+            VStack(alignment: .trailing, spacing: 2) {
                 Text(card.cardType.displayName)
                     .font(AppFont.weak())
-                    .foregroundStyle(AppColor.textMuted)
+                    .foregroundStyle(AppColor.textMuted.opacity(0.85))
                 LibraryCardStatusChip(card: card)
             }
         }

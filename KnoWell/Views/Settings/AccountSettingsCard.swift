@@ -2,14 +2,16 @@ import AuthenticationServices
 import SwiftUI
 
 struct AccountSettingsCard: View {
+    var compact: Bool = false
+
     @State private var accountSession = AccountSession.shared
     @State private var isSigningInApple = false
     @State private var isSigningInWeChat = false
     @State private var errorMessage: String?
 
     var body: some View {
-        AppSurfaceCard {
-            VStack(alignment: .leading, spacing: AppSpacing.md) {
+        AppSurfaceCard(padding: compact ? AppSpacing.sm : AppSpacing.md) {
+            VStack(alignment: .leading, spacing: compact ? AppSpacing.sm : AppSpacing.md) {
                 if let profile = accountSession.profile {
                     signedInHeader(profile)
                     Button(L10n.accountSignOut, role: .destructive) {
@@ -38,13 +40,13 @@ struct AccountSettingsCard: View {
         HStack(spacing: AppSpacing.sm) {
             avatarView(for: profile)
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(profile.headline)
-                    .font(AppFont.sectionTitle())
+                    .font(compact ? AppFont.secondary().weight(.semibold) : AppFont.sectionTitle())
                     .foregroundStyle(AppColor.textPrimary)
                 Text(profile.providerLabel)
-                    .font(AppFont.caption())
-                    .foregroundStyle(AppColor.textSecondary)
+                    .font(AppFont.weak())
+                    .foregroundStyle(AppColor.textMuted)
             }
 
             Spacer(minLength: 0)
@@ -52,18 +54,20 @@ struct AccountSettingsCard: View {
     }
 
     private var signedOutHeader: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+        VStack(alignment: .leading, spacing: compact ? 2 : AppSpacing.xs) {
             Text(L10n.accountSignedOutTitle)
-                .font(AppFont.sectionTitle())
+                .font(compact ? AppFont.secondary().weight(.semibold) : AppFont.sectionTitle())
                 .foregroundStyle(AppColor.textPrimary)
-            Text(L10n.accountSignedOutMessage)
-                .font(AppFont.secondary())
-                .foregroundStyle(AppColor.textSecondary)
+            if !compact {
+                Text(L10n.accountSignedOutMessage)
+                    .font(AppFont.secondary())
+                    .foregroundStyle(AppColor.textSecondary)
+            }
         }
     }
 
     private var signInButtons: some View {
-        VStack(spacing: AppSpacing.sm) {
+        VStack(spacing: compact ? AppSpacing.xs : AppSpacing.sm) {
             if AccountAuthConfig.isAppleSignInAvailable {
                 SignInWithAppleButton(.signIn) { request in
                     request.requestedScopes = [.fullName, .email]
@@ -71,7 +75,7 @@ struct AccountSettingsCard: View {
                     handleAppleCompletion(result)
                 }
                 .signInWithAppleButtonStyle(.black)
-                .frame(height: 48)
+                .frame(height: compact ? 40 : 48)
                 .clipShape(RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous))
                 .disabled(isSigningInApple || isSigningInWeChat)
             }
@@ -85,7 +89,7 @@ struct AccountSettingsCard: View {
                         .fontWeight(.semibold)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
+                .padding(.vertical, compact ? 10 : 14)
                 .foregroundStyle(.white)
                 .background(Color(red: 0.09, green: 0.72, blue: 0.27), in: RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous))
             }
@@ -101,12 +105,13 @@ struct AccountSettingsCard: View {
 
     @ViewBuilder
     private func avatarView(for profile: AccountProfile) -> some View {
+        let size: CGFloat = compact ? 40 : 52
         ZStack {
             Circle()
                 .fill(AppColor.accentBackground(0.16))
-                .frame(width: 52, height: 52)
+                .frame(width: size, height: size)
             Image(systemName: profile.provider == .apple ? "apple.logo" : "message.fill")
-                .font(.title3)
+                .font(compact ? .body : .title3)
                 .foregroundStyle(AppColor.accent)
         }
     }

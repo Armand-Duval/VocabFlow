@@ -12,7 +12,6 @@ struct ContentView: View {
     @State private var sessionDueCount = ReviewStatusStore.dueCount
     @State private var dueCountRefreshToken = 0
     @State private var dueCountRefreshDelayMilliseconds = 0
-    @State private var showSettings = false
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -61,15 +60,27 @@ struct ContentView: View {
                 }
             }
             .tag(2)
+
+            tabContent(3) {
+                SettingsView(isPresentedAsSheet: false)
+            }
+            .tabItem {
+                Label {
+                    Text(L10n.tabSettings)
+                } icon: {
+                    AppTabIcon(
+                        systemName: selectedTab == 3 ? "person.crop.circle.fill" : "person.crop.circle",
+                        isSelected: selectedTab == 3
+                    )
+                }
+            }
+            .tag(3)
         }
         .toolbarBackground(AppColor.pageBackground, for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)
         .appTint()
         .appToast()
         .animation(.easeInOut(duration: 0.18), value: selectedTab)
-        .sheet(isPresented: $showSettings) {
-            SettingsView(isPresentedAsSheet: true)
-        }
         .onReceive(NotificationCenter.default.publisher(for: .shareImportReceived)) { _ in
             shareImport.refreshAll()
             focusCreateTabForPendingShareWork()
@@ -91,7 +102,8 @@ struct ContentView: View {
             scheduleDueCountRefresh(delayMilliseconds: 0)
         }
         .onReceive(NotificationCenter.default.publisher(for: .requestSettings)) { _ in
-            showSettings = true
+            selectedTab = AppTab.settings.rawValue
+            mountedTabs.insert(AppTab.settings.rawValue)
         }
         .onChange(of: shareImport.pendingPayload) { _, payload in
             if payload != nil {
@@ -107,7 +119,7 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .requestAppTab)) { notification in
             if let tab = notification.userInfo?["tab"] as? Int {
-                selectedTab = min(tab, 2)
+                selectedTab = min(max(tab, 0), AppTab.settings.rawValue)
             }
         }
         .onChange(of: reviewSettings.revision) { _, _ in
@@ -148,7 +160,7 @@ struct ContentView: View {
     private func prewarmIdleTabs() {
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(2))
-            mountedTabs.formUnion([1, 2])
+            mountedTabs.formUnion([1, 2, 3])
         }
     }
 

@@ -221,7 +221,7 @@ struct CardReviewSessionView: View {
                 .opacity(showBack ? 1 : 0)
                 .rotation3DEffect(.degrees(showBack ? 0 : -180), axis: (x: 0, y: 1, z: 0), perspective: 0.65)
                 .allowsHitTesting(showBack)
-                // No whole-card tap-to-flip on the back — source image / text selection need the taps.
+                .onTapGesture { flipCard(toBack: false) }
             }
             .padding(.horizontal, AppSpacing.md)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -229,23 +229,9 @@ struct CardReviewSessionView: View {
             .simultaneousGesture(flipRateGesture(for: card))
             .accessibilityAddTraits(.isButton)
             .accessibilityLabel(showBack ? L10n.backLabel : L10n.frontLabel)
+            .accessibilityHint(showBack ? L10n.tapToFlipBack : L10n.tapToReveal)
 
             if showBack {
-                HStack(spacing: AppSpacing.sm) {
-                    Button {
-                        flipCard(toBack: false)
-                    } label: {
-                        Label(L10n.frontLabel, systemImage: "arrow.uturn.backward")
-                            .font(AppFont.helper().weight(.semibold))
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-
-                    Spacer(minLength: 0)
-                }
-                .padding(.horizontal, AppSpacing.md)
-                .padding(.bottom, AppSpacing.xs)
-
                 ratingButtons(for: card)
                     .transition(.opacity.combined(with: .move(edge: .bottom)))
             } else {
