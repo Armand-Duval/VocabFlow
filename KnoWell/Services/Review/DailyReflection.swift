@@ -233,10 +233,10 @@ enum DailyReflectionService {
     }
 
     /// Fetch a timely AI line at most once per calendar day; falls back to curated on failure.
-    static func refreshIfNeeded(for day: Date = .now) async -> DailyReflection {
+    static func refreshIfNeeded(for day: Date = .now, options: FetchOptions = FetchOptions()) async -> DailyReflection {
         let key = dayKey(day)
-        let fallback = curated(for: day)
-        if let cached = loadCache(), cached.dayKey == key {
+        if !options.isManualRefresh,
+           let cached = loadCache(), cached.dayKey == key {
             let reflection = cached.asReflection(isAI: true)
             if isWellFormed(reflection) {
                 archive(reflection, dayKey: key)
@@ -244,34 +244,12 @@ enum DailyReflectionService {
             }
         }
 
-        if let inFlight, inFlightDayKey == key {
+        if let inFlight, inFlightDayKey == key, !options.isManualRefresh {
             return await inFlight.value
         }
 
         let task = Task<DailyReflection, Never> {
-            guard APISettings.canUseAI else {
-                archive(fallback, dayKey: key)
-                return fallback
-            }
-            do {
-                let ai = try await fetchAIReflection(for: day)
-                guard isWellFormed(ai) else {
-                    archive(fallback, dayKey: key)
-                    return fallback
-                }
-                saveCache(CachedReflection(
-                    dayKey: key,
-                    sentence: ai.sentence,
-                    translation: ai.translation,
-                    source: ai.source,
-                    occasion: ai.occasion
-                ))
-                archive(ai, dayKey: key)
-                return ai
-            } catch {
-                archive(fallback, dayKey: key)
-                return fallback
-            }
+            await fetchAndPersist(for: day, dayKey: key, options: options)
         }
         inFlight = task
         inFlightDayKey = key
@@ -325,10 +303,15 @@ enum DailyReflectionService {
         } else if let cached = loadCache(), cached.dayKey == key {
             archive(cached.asReflection(isAI: true), dayKey: key)
         }
-        UserDefaults.standard.removeObject(forKey: cacheDefaultsKey)
-        inFlight = nil
-        inFlightDayKey = nil
-        return await refreshIfNeeded(for: day)
+        invalidateTodayCache()
+
+        let excluded = sentencesArchivedToday(dayKey: key)
+        let options = FetchOptions(
+            isManualRefresh: true,
+            refreshAttempt: max(1, excluded.count),
+            excludedSentences: excluded
+        )
+        return await refreshIfNeeded(for: day, options: options)
     }
 
     // MARK: - History
@@ -492,7 +475,83 @@ enum DailyReflectionService {
 
     // MARK: - AI
 
-    private static func fetchAIReflection(for day: Date) async throws -> DailyReflection {
+    struct FetchOptions {
+        var isManualRefresh = false
+        var refreshAttempt = 1
+        var excludedSentences: [String] = []
+    }
+
+    private static func sentencesArchivedToday(dayKey: String) -> [String] {
+        seedManualPastLinesIfNeeded()
+        var seen = Set<String>()
+        return loadHistoryRaw()
+            .filter { $0.dayKey == dayKey }
+            .sorted { $0.savedAt > $1.savedAt }
+            .compactMap { item -> String? in
+                let sentence = item.sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !sentence.isEmpty else { return nil }
+                let key = normalizedSentenceKey(sentence)
+                guard seen.insert(key).inserted else { return nil }
+                return sentence
+            }
+    }
+
+    private static func normalizedSentenceKey(_ sentence: String) -> String {
+        sentence
+            .lowercased()
+            .components(separatedBy: .whitespacesAndNewlines)
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+    }
+
+    private static func isDuplicateSentence(_ sentence: String, excluded: [String]) -> Bool {
+        let key = normalizedSentenceKey(sentence)
+        return excluded.contains { normalizedSentenceKey($0) == key }
+    }
+
+    private static func fetchAndPersist(for day: Date, dayKey key: String, options: FetchOptions) async -> DailyReflection {
+        let fallback = curated(for: day, variantOffset: options.isManualRefresh ? options.refreshAttempt : 0)
+
+        guard APISettings.canUseAI else {
+            archive(fallback, dayKey: key)
+            return fallback
+        }
+
+        let attempts = options.isManualRefresh ? 2 : 1
+        for attempt in 0..<attempts {
+            do {
+                let ai = try await fetchAIReflection(
+                    for: day,
+                    options: options,
+                    retryBoost: attempt > 0
+                )
+                guard isWellFormed(ai) else { continue }
+                guard !isDuplicateSentence(ai.sentence, excluded: options.excludedSentences) else {
+                    continue
+                }
+                saveCache(CachedReflection(
+                    dayKey: key,
+                    sentence: ai.sentence,
+                    translation: ai.translation,
+                    source: ai.source,
+                    occasion: ai.occasion
+                ))
+                archive(ai, dayKey: key)
+                return ai
+            } catch {
+                continue
+            }
+        }
+
+        archive(fallback, dayKey: key)
+        return fallback
+    }
+
+    private static func fetchAIReflection(
+        for day: Date,
+        options: FetchOptions = FetchOptions(),
+        retryBoost: Bool = false
+    ) async throws -> DailyReflection {
         guard let url = URL(string: APISettings.chatCompletionsURL) else {
             throw KimiCardGeneratorError.invalidResponse
         }
@@ -529,10 +588,19 @@ enum DailyReflectionService {
         5. 禁止在 sentence/translation 里写出处；出处只放在 source / source_zh
         6. 禁止把翻译放进 sentence，或把外文原文只放在 translation
 
-        【诗歌换行 — 正确做法】
-        - 两行诗：在 JSON 的 sentence 字符串内用真实换行分隔，例如：
+        【换行 — 何时用、何时不用】
+        - 默认：sentence 与 translation 都是单行字符串，不含换行符
+        - 仅当原文本身是短诗、且分行是作品固有形式时，才在 JSON 内用真实换行
+        - 散文、戏剧台词、哲言、小说摘录：即使出自 blank verse，也写成一整句，不要人为拆行
+        - 禁止为排版把句中词拆到新行；禁止因换行把句中 as/is/and 等改成行首大写
+
+        【诗歌换行 — 仅短诗可用】
+        - 正确（两行诗，分行是作品形式）：
           "sentence": "The world is too much with us; late and soon,\\nGetting and spending, we lay waste our powers;—"
-        - 错误示例（禁止）："……soon, / Getting……" 或 "……早晚，/ 获取……"
+        - 正确（散文/戏剧，单行）：
+          "sentence": "We are such stuff as dreams are made on, and our little life is rounded with a sleep."
+        - 错误（禁止人为诗化散文）：把上一句拆成三行且 As/Is 大写
+        - 错误（禁止）："……soon, / Getting……" 或 "……早晚，/ 获取……"
 
         【出处 — 正确做法】
         - 外文原文：source 用外文（如 William Wordsworth, The World Is Too Much With Us），source_zh 用中文
@@ -555,26 +623,54 @@ enum DailyReflectionService {
             preferenceHint = "用户未设置偏好关键词，按默认优先级选句。"
         }
 
+        let refreshHint: String
+        if options.isManualRefresh {
+            let excludedBlock: String
+            if options.excludedSentences.isEmpty {
+                excludedBlock = "（今日尚无历史句）"
+            } else {
+                excludedBlock = options.excludedSentences
+                    .prefix(8)
+                    .enumerated()
+                    .map { index, sentence in
+                        let preview = sentence.replacingOccurrences(of: "\n", with: " ")
+                        let clipped = preview.count > 72 ? String(preview.prefix(72)) + "…" : preview
+                        return "\(index + 1). \(clipped)"
+                    }
+                    .joined(separator: "\n")
+            }
+            refreshHint = """
+            这是用户第 \(options.refreshAttempt) 次刷新今日一句：必须换一句与下方列表完全不同的经典名句。
+            禁止重复同一原文（不要只改 translation/source）；优先换作者、语种或题材。
+            今日已展示过的原文（禁止重复）：
+            \(excludedBlock)
+            """
+        } else {
+            refreshHint = "这是今日首次生成，按默认规则选句即可。"
+        }
+
         let userPrompt = """
         今天：\(dateText)
         大致季节（仅供参考，优先级低）：\(season)
         用户地区标识：\(localeID)
         \(preferenceHint)
+        \(refreshHint)
 
         请给出今日一句。要求：
         - 原文原汁原味；需要时再给中文翻译
-        - 诗歌如需分行，在 JSON 字符串内用真实换行，绝对不要用 /
+        - 默认单行输出；只有短诗且分行是原文形式时才用真实换行，散文/戏剧台词不要拆行
         - 外文必须同时给出外文 source 与中文 source_zh
         - 季节不必强行呼应
         """
 
+        let preferredTemperature = options.isManualRefresh ? (retryBoost ? 1.0 : 0.92) : 0.7
         let body: [String: Any] = [
             "model": APISettings.effectiveModel,
             "messages": [
                 ["role": "system", "content": systemPrompt],
                 ["role": "user", "content": userPrompt]
             ],
-            "temperature": APISettings.chatTemperature(preferred: 0.7),
+            "temperature": APISettings.chatTemperature(preferred: preferredTemperature),
             "response_format": ["type": "json_object"]
         ]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
@@ -769,10 +865,11 @@ enum DailyReflectionService {
 
     // MARK: - Curated fallback
 
-    private static func curated(for day: Date) -> DailyReflection {
+    private static func curated(for day: Date, variantOffset: Int = 0) -> DailyReflection {
         let comps = Calendar.current.dateComponents([.year, .month, .day], from: day)
-        let seed = abs((comps.year ?? 0) * 372 + (comps.month ?? 0) * 31 + (comps.day ?? 0))
-        let item = curatedReflections[seed % curatedReflections.count]
+        let base = abs((comps.year ?? 0) * 372 + (comps.month ?? 0) * 31 + (comps.day ?? 0))
+        let index = (base + max(0, variantOffset)) % curatedReflections.count
+        let item = curatedReflections[index]
         return DailyReflection(
             sentence: item.sentence,
             translation: item.translation,
