@@ -29,6 +29,10 @@ struct CardPreviewView: View {
                 ForEach($drafts) { $draft in
                     DraftPreviewCard(draft: $draft)
                 }
+            } header: {
+                Text(L10n.createPreviewSectionCards)
+            } footer: {
+                Text(L10n.createPreviewFooterCompact)
             }
         }
         .navigationTitle(L10n.previewTitle)

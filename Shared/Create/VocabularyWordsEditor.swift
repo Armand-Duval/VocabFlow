@@ -55,7 +55,7 @@ struct VocabularyWordsEditor: View {
             HStack(spacing: 8) {
                 Image(systemName: "plus")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(AppColor.textMuted)
 
                 TextField(L10n.wordsManualPlaceholder, text: $manualInput)
                     .textInputAutocapitalization(.never)
@@ -68,6 +68,16 @@ struct VocabularyWordsEditor: View {
                     Button(L10n.add, action: addManualWord)
                         .font(.subheadline.weight(.semibold))
                 }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(
+                AppColor.surfaceMuted.opacity(0.7),
+                in: RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
+                    .strokeBorder(AppColor.borderSubtle, lineWidth: 1)
             }
 
             if let feedbackMessage {

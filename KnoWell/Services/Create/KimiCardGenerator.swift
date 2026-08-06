@@ -77,6 +77,7 @@ enum KimiCardGenerator {
         words: [String],
         sourceHint: String? = nil,
         deckName: String? = nil,
+        mode: CardGenerationMode? = nil,
         skipExistingInDeckID: UUID? = nil,
         onProgress: (@MainActor (Int, Int) -> Void)? = nil,
         onBatchFinished: (@MainActor (_ sentence: String, _ words: [String], _ drafts: [GeneratedCardDraft], _ error: Error?) -> Void)? = nil
@@ -94,6 +95,7 @@ enum KimiCardGenerator {
             units: prepared.units,
             sourceHint: sourceHint,
             deckName: deckName,
+            mode: mode,
             onProgress: onProgress,
             onBatchFinished: onBatchFinished
         )
@@ -103,6 +105,7 @@ enum KimiCardGenerator {
         units: [OCRImportUnit],
         sourceHint: String? = nil,
         deckName: String? = nil,
+        mode: CardGenerationMode? = nil,
         onProgress: (@MainActor (Int, Int) -> Void)? = nil,
         onBatchFinished: (@MainActor (_ sentence: String, _ words: [String], _ drafts: [GeneratedCardDraft], _ error: Error?) -> Void)? = nil
     ) async throws -> [GeneratedCardDraft] {
@@ -131,6 +134,7 @@ enum KimiCardGenerator {
             jobs,
             sourceHint: hint,
             deckName: deck,
+            mode: mode ?? CardGenerationPreferences.mode,
             onProgress: onProgress,
             onBatchFinished: onBatchFinished
         )
@@ -146,6 +150,7 @@ enum KimiCardGenerator {
         _ jobs: [GenerationJob],
         sourceHint: String?,
         deckName: String?,
+        mode: CardGenerationMode,
         onProgress: (@MainActor (Int, Int) -> Void)?,
         onBatchFinished: (@MainActor (_ sentence: String, _ words: [String], _ drafts: [GeneratedCardDraft], _ error: Error?) -> Void)?
     ) async -> (drafts: [GeneratedCardDraft], lastError: Error?) {
@@ -170,7 +175,8 @@ enum KimiCardGenerator {
                                 sentence: job.sentence,
                                 words: job.words,
                                 sourceHint: sourceHint,
-                                deckName: deckName
+                                deckName: deckName,
+                                mode: mode
                             )
                             return (job, .success(drafts))
                         } catch {
@@ -255,16 +261,18 @@ enum KimiCardGenerator {
         sentence: String,
         words: [String],
         sourceHint: String?,
-        deckName: String?
+        deckName: String?,
+        mode: CardGenerationMode
     ) async throws -> [GeneratedCardDraft] {
         try await withRetry(attempts: 2) {
             let content = try await requestCards(
                 sentence: sentence,
                 words: words,
                 sourceHint: sourceHint,
-                deckName: deckName
+                deckName: deckName,
+                mode: mode
             )
-            return try parseCards(from: content, sentence: sentence)
+            return try parseCards(from: content, sentence: sentence, mode: mode)
         }
     }
 
@@ -331,7 +339,8 @@ enum KimiCardGenerator {
         sentence: String,
         words: [String],
         sourceHint: String?,
-        deckName: String?
+        deckName: String?,
+        mode: CardGenerationMode
     ) async throws -> String {
         guard let url = URL(string: APISettings.chatCompletionsURL) else {
             throw KimiCardGeneratorError.invalidResponse
@@ -345,6 +354,26 @@ enum KimiCardGenerator {
         applyProviderHeaders(to: &request)
 
         let wordsList = words.joined(separator: ", ")
+        let cardCountRule: String
+        let primaryFieldHint: String
+        switch mode {
+        case .compact:
+            cardCountRule = """
+            1. 每个生词只生成 1 张卡；智能选择 type（cloze 或 definition）：
+               - 默认优先 cloze（语境回忆、主动提取）
+               - 以下情况选 definition：固定搭配/短语需整体记忆、抽象概念首次接触、挖空后无法辨识、原句极短
+            """
+            primaryFieldHint = ""
+        case .full:
+            cardCountRule = """
+            1. 每个生词生成 2 张卡：一张 cloze，一张 definition；同一生词两张卡的 usage_note / etymology / synonyms / antonyms / paraphrases 应一致
+               - 用 primary: true 标记 AI 更推荐的一张（通常 cloze）；另一张 primary: false
+            """
+            primaryFieldHint = """
+              "primary": true,
+            """
+        }
+
         let systemPrompt = """
         你是多语言精读助手。用户给出原句与生词/短语，请结合语境生成复习卡片：不仅解释「是什么意思」，还要分析「为何用这个词、换别的词会怎样」，补充可迁移仿写句与同义/反义汇总，并在有把握时补充词根/构词。
         必须只返回 JSON，不要 markdown，不要额外说明。
@@ -355,7 +384,7 @@ enum KimiCardGenerator {
             {
               "word": "生词",
               "phonetic": "音标（英文必须给 IPA，用 /.../ 包裹；其它语言给读法；实在没有才空字符串）",
-              "type": "cloze 或 definition",
+        \(primaryFieldHint)              "type": "cloze 或 definition",
               "front": "卡片正面",
               "back": "词性 + 本句核心中文释义（尽量 1 句，最多 2 句）",
               "context_note": "整句中文翻译（目标词短译必须用【】标出）",
@@ -371,7 +400,7 @@ enum KimiCardGenerator {
           ]
         }
         规则：
-        1. 每个生词生成 2 张卡：一张 cloze，一张 definition；同一生词两张卡的 usage_note / etymology / synonyms / antonyms / paraphrases 应一致
+        \(cardCountRule)
         2. cloze 的 front：完整原句，仅把目标词/短语替换为 ______（保持原文语言）
         3. definition 的 front：必须是完整原句且保留目标词，禁止只写单词，禁止写成「xxx 是什么意思」之类提问
         4. back：只写词性 + 本句语境下的核心释义；尽量 1 句，最多 2 句；不要写整句翻译，不要把近义对比塞进 back
@@ -482,7 +511,7 @@ enum KimiCardGenerator {
         }
     }
 
-    private static func parseCards(from content: String, sentence: String) throws -> [GeneratedCardDraft] {
+    private static func parseCards(from content: String, sentence: String, mode: CardGenerationMode) throws -> [GeneratedCardDraft] {
         let jsonString = extractJSON(from: content)
         guard let data = jsonString.data(using: .utf8) else {
             throw KimiCardGeneratorError.parseError(L10n.generateFormatErrorDetail)
@@ -528,7 +557,9 @@ enum KimiCardGenerator {
                 synonyms: CardContentFormatter.joinRelatedWords(item.synonyms?.values ?? []),
                 antonyms: CardContentFormatter.joinRelatedWords(item.antonyms?.values ?? []),
                 paraphrases: CardContentFormatter.encodeParaphrases(item.decodedParaphrases),
-                sourceAttribution: source
+                sourceAttribution: source,
+                isSelected: selectionForItem(item, mode: mode),
+                isRecommended: recommendationForItem(item, mode: mode)
             )
         }
 
@@ -550,7 +581,38 @@ enum KimiCardGenerator {
             }
         }
 
+        switch mode {
+        case .compact:
+            drafts = CardContentFormatter.expandOptionalSiblings(drafts)
+        case .full:
+            break
+        }
+
         return drafts
+    }
+
+    private static func selectionForItem(_ item: KimiCardItem, mode: CardGenerationMode) -> Bool {
+        switch mode {
+        case .compact:
+            return true
+        case .full:
+            if let primary = item.primary {
+                return primary
+            }
+            return true
+        }
+    }
+
+    private static func recommendationForItem(_ item: KimiCardItem, mode: CardGenerationMode) -> Bool {
+        switch mode {
+        case .compact:
+            return true
+        case .full:
+            if let primary = item.primary {
+                return primary
+            }
+            return item.type.lowercased() == CardType.cloze.rawValue
+        }
     }
 
     private static func normalizedPhonetic(_ raw: String?) -> String? {
@@ -602,6 +664,7 @@ private struct KimiCardsResponse: Decodable {
 private struct KimiCardItem: Decodable {
     let word: String
     let phonetic: String?
+    let primary: Bool?
     let type: String
     let front: String
     let back: String
@@ -614,7 +677,7 @@ private struct KimiCardItem: Decodable {
     let paraphrases: [KimiParaphraseItem]?
 
     enum CodingKeys: String, CodingKey {
-        case word, phonetic, type, front, back, highlight, etymology
+        case word, phonetic, primary, type, front, back, highlight, etymology
         case synonyms, antonyms, paraphrases
         case contextNote = "context_note"
         case usageNote = "usage_note"

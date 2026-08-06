@@ -21,11 +21,26 @@ enum CardContentRegenerator {
             throw CardContentRegeneratorError.noMatchingDraft
         }
 
+        if card.cardType == .appreciation {
+            let reflection = DailyReflection(
+                sentence: sentence,
+                translation: card.contextNote,
+                source: card.sourceAttribution,
+                occasion: CardContentFormatter.senseText(card.back),
+                isAI: true
+            )
+            let draft = try await LiteraryAppreciationGenerator.generate(from: reflection)
+            CardContentSync.applyGeneratedContent(draft, to: card)
+            DeckCardCountService.notifyCatalogChanged()
+            return
+        }
+
         let drafts = try await KimiCardGenerator.generate(
             sentence: sentence,
             words: [word],
             sourceHint: card.sourceAttribution,
-            deckName: card.deck?.name
+            deckName: card.deck?.name,
+            mode: .full
         )
         guard let draft = matchingDraft(in: drafts, word: word, cardType: card.cardType) else {
             throw CardContentRegeneratorError.noMatchingDraft

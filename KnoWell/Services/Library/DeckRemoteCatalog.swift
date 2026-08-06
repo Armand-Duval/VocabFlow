@@ -28,7 +28,19 @@ struct DeckRemotePack: Identifiable {
 }
 
 enum DeckRemoteCatalog {
+    /// Prefer direct-install packs (TOEFL/IELTS 1000) first, then other open lists.
     static let packs: [DeckRemotePack] = [
+        DeckRemotePack(
+            id: "toefl-ielts-1000",
+            slug: "toefl-ielts-1000",
+            name: L10n.deckRemoteTOEFLName,
+            detailText: L10n.deckRemoteTOEFLDetail,
+            url: URL(string: "https://raw.githubusercontent.com/anlecute/toefl-essential-vocabulary-dataset/main/toefl_essential_vocabulary.json")!,
+            format: .toeflEssential,
+            cardCount: 1000,
+            license: "MIT",
+            attributionURL: URL(string: "https://github.com/anlecute/toefl-essential-vocabulary-dataset")!
+        ),
         DeckRemotePack(
             id: "ngsl-1.2",
             slug: "ngsl-1.2",
@@ -50,17 +62,6 @@ enum DeckRemoteCatalog {
             cardCount: 963,
             license: "CC BY-SA 4.0",
             attributionURL: URL(string: "https://www.newgeneralservicelist.com/new-academic-word-list")!
-        ),
-        DeckRemotePack(
-            id: "toefl-ielts-1000",
-            slug: "toefl-ielts-1000",
-            name: L10n.deckRemoteTOEFLName,
-            detailText: L10n.deckRemoteTOEFLDetail,
-            url: URL(string: "https://raw.githubusercontent.com/anlecute/toefl-essential-vocabulary-dataset/main/toefl_essential_vocabulary.json")!,
-            format: .toeflEssential,
-            cardCount: 1000,
-            license: "MIT",
-            attributionURL: URL(string: "https://github.com/anlecute/toefl-essential-vocabulary-dataset")!
         )
     ]
 

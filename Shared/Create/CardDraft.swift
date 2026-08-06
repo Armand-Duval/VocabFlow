@@ -3,11 +3,13 @@ import Foundation
 enum CardType: String, Codable, CaseIterable {
     case cloze
     case definition
+    case appreciation
 
     var displayName: String {
         switch self {
         case .cloze: L10n.cardTypeCloze
         case .definition: L10n.cardTypeDefinition
+        case .appreciation: L10n.cardTypeAppreciation
         }
     }
 }
@@ -36,6 +38,8 @@ struct GeneratedCardDraft: Identifiable, Equatable {
     /// App Group relative path to the source screenshot / photo, if any.
     var sourceImagePath: String? = nil
     var isSelected: Bool = true
+    /// AI-recommended primary card for this word (shown in compact mode).
+    var isRecommended: Bool = false
 }
 
 struct CardParaphrase: Equatable, Identifiable {
@@ -43,6 +47,44 @@ struct CardParaphrase: Equatable, Identifiable {
     var scene: String
     var sentence: String
     var note: String?
+}
+
+enum CardGenerationMode: String, CaseIterable, Identifiable {
+    case compact
+    case full
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .compact: L10n.createCardModeCompact
+        case .full: L10n.createCardModeFull
+        }
+    }
+
+    var detail: String {
+        switch self {
+        case .compact: L10n.createCardModeCompactDetail
+        case .full: L10n.createCardModeFullDetail
+        }
+    }
+}
+
+enum CardGenerationPreferences {
+    private static let modeKey = "cardGeneration.mode.v1"
+
+    static var mode: CardGenerationMode {
+        get {
+            guard let raw = UserDefaults.standard.string(forKey: modeKey),
+                  let value = CardGenerationMode(rawValue: raw) else {
+                return .compact
+            }
+            return value
+        }
+        set {
+            UserDefaults.standard.set(newValue.rawValue, forKey: modeKey)
+        }
+    }
 }
 
 enum CardContentFormatter {
@@ -407,6 +449,11 @@ enum CardContentFormatter {
                 return trimmedFront
             }
             return trimmedFront
+        case .appreciation:
+            if !trimmedSentence.isEmpty {
+                return trimmedSentence
+            }
+            return trimmedFront
         }
     }
 
@@ -418,6 +465,96 @@ enum CardContentFormatter {
         cardType: CardType
     ) -> String {
         displayFront(front: front, sentence: sentence, word: word, cardType: cardType)
+    }
+
+    /// Build a cloze front by blanking the target word/phrase in the source sentence.
+    static func makeClozeFront(sentence: String, word: String) -> String {
+        let trimmedSentence = sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedWord = word.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedSentence.isEmpty, !trimmedWord.isEmpty else { return trimmedSentence }
+
+        if let range = trimmedSentence.range(of: trimmedWord, options: .caseInsensitive) {
+            return trimmedSentence.replacingCharacters(in: range, with: "______")
+        }
+        return trimmedSentence
+    }
+
+    /// Derive the alternate card type from a primary draft (compact mode optional sibling).
+    static func siblingDraft(from primary: GeneratedCardDraft) -> GeneratedCardDraft {
+        let siblingType: CardType = primary.cardType == .cloze ? .definition : .cloze
+        let siblingFront: String
+        if siblingType == .cloze {
+            siblingFront = makeClozeFront(sentence: primary.sentence, word: primary.word)
+        } else {
+            siblingFront = primary.sentence
+        }
+        return GeneratedCardDraft(
+            word: primary.word,
+            phonetic: primary.phonetic,
+            sentence: primary.sentence,
+            cardType: siblingType,
+            front: normalizedFront(
+                front: siblingFront,
+                sentence: primary.sentence,
+                word: primary.word,
+                cardType: siblingType
+            ),
+            back: primary.back,
+            contextNote: primary.contextNote,
+            usageNote: primary.usageNote,
+            etymology: primary.etymology,
+            synonyms: primary.synonyms,
+            antonyms: primary.antonyms,
+            paraphrases: primary.paraphrases,
+            sourceAttribution: primary.sourceAttribution,
+            sourceImagePath: primary.sourceImagePath,
+            isSelected: false,
+            isRecommended: false
+        )
+    }
+
+    /// Append unselected sibling cards so preview can opt in without another AI call.
+    static func expandOptionalSiblings(_ drafts: [GeneratedCardDraft]) -> [GeneratedCardDraft] {
+        var result: [GeneratedCardDraft] = []
+        var existing = Set<String>()
+
+        for draft in drafts {
+            let key = draftSelectionKey(word: draft.word, cardType: draft.cardType)
+            result.append(draft)
+            existing.insert(key)
+
+            let sibling = siblingDraft(from: draft)
+            let siblingKey = draftSelectionKey(word: sibling.word, cardType: sibling.cardType)
+            guard !existing.contains(siblingKey) else { continue }
+            result.append(sibling)
+            existing.insert(siblingKey)
+        }
+        return result
+    }
+
+    static func draftSelectionKey(word: String, cardType: CardType) -> String {
+        "\(word.trimmingCharacters(in: .whitespacesAndNewlines).lowercased())|\(cardType.rawValue)"
+    }
+
+    /// Library / card list title for sentence-level appreciation cards.
+    static func appreciationWordLabel(source: String?, sentence: String) -> String {
+        let trimmedSource = source?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !trimmedSource.isEmpty {
+            let primary = trimmedSource
+                .components(separatedBy: CharacterSet(charactersIn: "·•|｜,"))
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .first(where: { !$0.isEmpty }) ?? trimmedSource
+            if primary.count <= 28 {
+                return primary
+            }
+            return String(primary.prefix(28)) + "…"
+        }
+
+        let trimmedSentence = sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmedSentence.count <= 24 {
+            return trimmedSentence
+        }
+        return String(trimmedSentence.prefix(24)) + "…"
     }
 
     /// Split old single-field backs into sense + sentence translation when possible.

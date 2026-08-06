@@ -58,6 +58,39 @@ enum DeckService {
     }
 
     @MainActor
+    @discardableResult
+    static func fetchOrCreateDailyReflectionDeck(in context: ModelContext) -> Deck {
+        if let existing = fetchDeck(slug: DeckCatalog.dailyReflectionSlug, in: context) {
+            return existing
+        }
+        if let existing = fetchDeck(name: L10n.deckDailyReflectionName, in: context) {
+            if existing.slug == nil {
+                existing.slug = DeckCatalog.dailyReflectionSlug
+                existing.isBuiltIn = true
+                try? context.save()
+            }
+            return existing
+        }
+
+        let deck = Deck(
+            name: L10n.deckDailyReflectionName,
+            detailText: L10n.deckDailyReflectionDetail,
+            slug: DeckCatalog.dailyReflectionSlug,
+            isBuiltIn: true,
+            sortOrder: nextSortOrder(in: context)
+        )
+        context.insert(deck)
+        do {
+            try context.save()
+        } catch {
+            assertionFailure("Failed to create daily reflection deck: \(error)")
+        }
+        syncSharedCatalog(in: context)
+        DeckCardCountService.notifyCatalogChanged()
+        return deck
+    }
+
+    @MainActor
     static func fetchAll(in context: ModelContext) -> [Deck] {
         let descriptor = FetchDescriptor<Deck>(
             sortBy: [SortDescriptor(\.sortOrder), SortDescriptor(\.createdAt)]
@@ -304,6 +337,7 @@ enum DeckService {
     @MainActor
     static func canDelete(_ deck: Deck) -> Bool {
         if deck.slug == DeckCatalog.defaultSlug { return false }
+        if deck.slug == DeckCatalog.dailyReflectionSlug { return false }
         if deck.slug == nil, deck.isBuiltIn, deck.sortOrder == 0 { return false }
         return true
     }

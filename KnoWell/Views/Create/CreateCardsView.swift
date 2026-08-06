@@ -23,6 +23,7 @@ struct CreateCardsView: View {
     @State private var wordFeedbackMessage: String?
     @State private var wordFeedbackIsError = false
     @State private var isRecognizingPhoto = false
+    @State private var generationMode: CardGenerationMode = CardGenerationPreferences.mode
     @State private var showPhotoLibrary = false
     @State private var showCamera = false
     @State private var showLongTextPrompt = false
@@ -252,10 +253,16 @@ struct CreateCardsView: View {
             .padding(.vertical, 9)
             .background(
                 emphasized
-                    ? AppColor.accentStrong.opacity(0.92)
-                    : AppColor.surfaceMuted,
+                    ? AppColor.accentStrong
+                    : Color.clear,
                 in: Capsule()
             )
+            .overlay {
+                if !emphasized {
+                    Capsule()
+                        .strokeBorder(AppColor.border.opacity(0.9), lineWidth: 1)
+                }
+            }
         }
         .buttonStyle(SoftPressButtonStyle())
         .disabled(disabled)
@@ -403,15 +410,53 @@ struct CreateCardsView: View {
     }
 
     private var generateFooter: some View {
-        Button(action: enqueueGeneration) {
-            Text(L10n.createAIGenerate)
+        VStack(spacing: AppSpacing.xs) {
+            if !canGenerate {
+                Text(generateDisabledHint)
+                    .font(AppFont.weak())
+                    .foregroundStyle(AppColor.textMuted)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, AppSpacing.md)
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Picker("", selection: $generationMode) {
+                    ForEach(CardGenerationMode.allCases) { mode in
+                        Text(mode.title).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .onChange(of: generationMode) { _, mode in
+                    CardGenerationPreferences.mode = mode
+                }
+
+                Text(generationMode.detail)
+                    .font(AppFont.weak())
+                    .foregroundStyle(AppColor.textMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.horizontal, AppSpacing.md)
+
+            Button(action: enqueueGeneration) {
+                Text(L10n.createAIGenerate)
+            }
+            .buttonStyle(PrimaryButtonStyle(soft: true))
+            .disabled(!canGenerate)
+            .padding(.horizontal, AppSpacing.md)
         }
-        .buttonStyle(PrimaryButtonStyle(soft: true))
-        .disabled(!canGenerate)
-        .padding(.horizontal, AppSpacing.md)
         .padding(.top, AppSpacing.sm)
         .padding(.bottom, AppSpacing.sm)
         .background(AppColor.pageBackground)
+    }
+
+    private var generateDisabledHint: String {
+        if trimmedSentence.isEmpty && words.isEmpty {
+            return L10n.createGenerateHintEmpty
+        }
+        if trimmedSentence.isEmpty {
+            return L10n.createGenerateNeedSentence
+        }
+        return L10n.createGenerateNeedWords
     }
 
     private func openShareDraftPreview() {

@@ -4,7 +4,6 @@ import SwiftData
 struct ReviewView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(ReviewSettingsStore.self) private var reviewSettings
-    @EnvironmentObject private var shareImport: ShareImportCoordinator
 
     @State private var plan: ReviewQueuePlan?
     @State private var hasAnyCards = false
@@ -16,6 +15,7 @@ struct ReviewView: View {
     @State private var totalCardCount = 0
     @State private var lifetimeStudiedCount = 0
     @State private var isRefreshingReflection = false
+    @State private var isCollectingReflection = false
 
     private var activeDeckID: UUID? {
         DeckSettings.lastSelectedDeckID
@@ -43,6 +43,7 @@ struct ReviewView: View {
                             lifetimeStudiedCount: lifetimeStudiedCount,
                             dailyReflection: dailyReflection,
                             isRefreshingReflection: isRefreshingReflection,
+                            isCollectingReflection: isCollectingReflection,
                             onStartReview: {
                                 sessionEpoch &+= 1
                                 isSessionActive = true
@@ -55,13 +56,7 @@ struct ReviewView: View {
                                 Task { await refreshDailyReflection(force: true) }
                             },
                             onCollectReflection: { reflection in
-                                shareImport.importPayload(
-                                    ShareImportPayload(
-                                        sentence: reflection.sentence,
-                                        source: .clipboard
-                                    )
-                                )
-                                AppTab.request(.create)
+                                Task { await collectReflection(reflection) }
                             }
                         )
                     }
@@ -174,6 +169,29 @@ struct ReviewView: View {
             dailyReflection = refreshed
         }
     }
+
+    @MainActor
+    private func collectReflection(_ reflection: DailyReflection) async {
+        guard !isCollectingReflection else { return }
+        isCollectingReflection = true
+        defer { isCollectingReflection = false }
+
+        do {
+            let draft = try await LiteraryAppreciationGenerator.generate(from: reflection)
+            let deck = DeckService.fetchOrCreateDailyReflectionDeck(in: modelContext)
+            let result = FlashCardSaver.save(drafts: [draft], to: modelContext, deck: deck)
+
+            if result.skippedAll {
+                ToastCenter.shared.show(L10n.reviewDailyCollectDuplicate)
+            } else if result.didSaveAny {
+                ToastCenter.shared.show(L10n.reviewDailyCollectSuccess)
+                NotificationCenter.default.post(name: .reviewQueueDidChange, object: nil)
+                await loadPlan()
+            }
+        } catch {
+            ToastCenter.shared.show(error.localizedDescription)
+        }
+    }
 }
 // MARK: - Review Home
 
@@ -184,6 +202,7 @@ private struct ReviewHomeView: View {
     let lifetimeStudiedCount: Int
     let dailyReflection: DailyReflection?
     let isRefreshingReflection: Bool
+    let isCollectingReflection: Bool
     let onStartReview: () -> Void
     let onShowQuota: () -> Void
     let onRefreshReflection: () -> Void
@@ -408,9 +427,11 @@ private struct ReviewHomeView: View {
             }
 
             HStack(spacing: AppSpacing.md) {
-                TextLinkAction(title: L10n.reviewDailyCollect) {
+                TextLinkAction(title: isCollectingReflection ? L10n.reviewDailyCollecting : L10n.reviewDailyCollect) {
+                    guard !isCollectingReflection else { return }
                     onCollectReflection(reflection)
                 }
+                .opacity(isCollectingReflection ? 0.6 : 1)
                 TextLinkAction(title: L10n.reviewDailyHistoryLink, tone: .muted) {
                     showReflectionHistory = true
                 }

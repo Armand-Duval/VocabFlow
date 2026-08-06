@@ -6,6 +6,7 @@ private enum LibraryCardFilter: String, CaseIterable, Identifiable {
     case due
     case definition
     case cloze
+    case appreciation
 
     var id: String { rawValue }
 
@@ -15,6 +16,7 @@ private enum LibraryCardFilter: String, CaseIterable, Identifiable {
         case .due: L10n.libraryFilterDue
         case .definition: L10n.libraryFilterDefinition
         case .cloze: L10n.libraryFilterCloze
+        case .appreciation: L10n.libraryFilterAppreciation
         }
     }
 }
@@ -614,6 +616,8 @@ private struct LibraryGroupedList: View {
             return baseCards.filter { $0.cardType == .definition }
         case .cloze:
             return baseCards.filter { $0.cardType == .cloze }
+        case .appreciation:
+            return baseCards.filter { $0.cardType == .appreciation }
         }
     }
 
@@ -702,6 +706,13 @@ private struct LibraryCardRow: View {
     }
 
     private var contextLine: String {
+        if card.cardType == .appreciation {
+            let trimmedSentence = card.sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmedSentence.isEmpty {
+                return trimmedSentence
+            }
+        }
+
         // Cloze: prefer the blanked front so filter results are recognizable.
         if card.cardType == .cloze {
             let trimmedFront = card.front.trimmingCharacters(in: .whitespacesAndNewlines)

@@ -29,6 +29,13 @@ enum L10n {
     static var createGenerateNeedWords: String { tr("create.generate.needWords") }
     static var createGenerateNeedBoth: String { tr("create.generate.needBoth") }
     static var createGenerateHintEmpty: String { tr("create.generate.hintEmpty") }
+    static var createCardModeCompact: String { tr("create.cardMode.compact") }
+    static var createCardModeFull: String { tr("create.cardMode.full") }
+    static var createCardModeCompactDetail: String { tr("create.cardMode.compactDetail") }
+    static var createCardModeFullDetail: String { tr("create.cardMode.fullDetail") }
+    static var createCardRecommendedBadge: String { tr("create.cardRecommended.badge") }
+    static var createPreviewSectionCards: String { tr("create.preview.sectionCards") }
+    static var createPreviewFooterCompact: String { tr("create.preview.footerCompact") }
     static var createAddWord: String { tr("create.addWord") }
     static var createManageDeck: String { tr("create.manageDeck") }
     static var createScanExcerpt: String { tr("create.scan.excerpt") }
@@ -222,6 +229,7 @@ enum L10n {
 
     static var cardTypeCloze: String { tr("cardType.cloze") }
     static var cardTypeDefinition: String { tr("cardType.definition") }
+    static var cardTypeAppreciation: String { tr("cardType.appreciation") }
 
     // MARK: - Review
 
@@ -243,6 +251,8 @@ enum L10n {
     static var reviewCollapseModules: String { tr("review.collapseModules") }
     static var reviewMeaningSection: String { tr("review.meaning") }
     static var reviewTranslationSection: String { tr("review.translation") }
+    static var reviewAppreciationSection: String { tr("review.appreciation") }
+    static var reviewAppreciationThemeSection: String { tr("review.appreciation.theme") }
     static var reviewAIInsightSection: String { tr("review.aiInsight") }
     static var reviewRelatedWordsSection: String { tr("review.relatedWords") }
     static var reviewParaphrasesSection: String { tr("review.paraphrases") }
@@ -280,6 +290,10 @@ enum L10n {
     static var reviewHomeTotalCards: String { tr("review.home.totalCards") }
     static var reviewDailyFromLibrary: String { tr("review.daily.fromLibrary") }
     static var reviewDailyCollect: String { tr("review.daily.collect") }
+    static var reviewDailyCollecting: String { tr("review.daily.collecting") }
+    static var reviewDailyCollectSuccess: String { tr("review.daily.collectSuccess") }
+    static var reviewDailyCollectDuplicate: String { tr("review.daily.collectDuplicate") }
+    static var reviewDailyCollectNeedSentence: String { tr("review.daily.collectNeedSentence") }
     static var reviewDailyHistoryLink: String { tr("review.daily.history.link") }
     static var reviewDailyHistoryTitle: String { tr("review.daily.history.title") }
     static var reviewDailyHistorySearch: String { tr("review.daily.history.search") }
@@ -450,6 +464,9 @@ enum L10n {
     static var settingsMigrateCards: String { tr("settings.migrateCards") }
     static var settingsMigrateCardsMessage: String { tr("settings.migrateCards.message") }
     static var settingsMigrateCardsRunning: String { tr("settings.migrateCards.running") }
+    static var settingsMigrateCardsQueued: String { tr("settings.migrateCards.queued") }
+    static var settingsMigrateCardsAlreadyQueued: String { tr("settings.migrateCards.alreadyQueued") }
+    static var settingsMigrateCardsNothingToDo: String { tr("settings.migrateCards.nothingToDo") }
     static var settingsMigrateCardsDone: String { tr("settings.migrateCards.done") }
     static func settingsMigrateCardsDoneMessage(
         _ fronts: Int,
@@ -585,6 +602,8 @@ enum L10n {
     // MARK: - Decks
 
     static var deckDefaultName: String { tr("deck.default.name") }
+    static var deckDailyReflectionName: String { tr("deck.dailyReflection.name") }
+    static var deckDailyReflectionDetail: String { tr("deck.dailyReflection.detail") }
     static var deckDefaultDetail: String { tr("deck.default.detail") }
     static var deckSection: String { tr("deck.section") }
     static var deckSectionFooter: String { tr("deck.section.footer") }
@@ -713,6 +732,7 @@ enum L10n {
     static var libraryFilterDue: String { tr("library.filter.due") }
     static var libraryFilterDefinition: String { tr("library.filter.definition") }
     static var libraryFilterCloze: String { tr("library.filter.cloze") }
+    static var libraryFilterAppreciation: String { tr("library.filter.appreciation") }
     static var libraryFilterMenu: String { tr("library.filter.menu") }
     static var libraryEmptyGoCreate: String { tr("library.empty.goCreate") }
     static var deckDownload: String { tr("deck.download.starter") }

@@ -1,7 +1,7 @@
 import Foundation
 import SwiftData
 
-struct CardContentMigrationReport: Sendable {
+struct CardContentMigrationReport: Sendable, Equatable {
     var scanned = 0
     var frontsUpdated = 0
     var backsSplit = 0
@@ -21,6 +21,25 @@ struct CardContentMigrationReport: Sendable {
             aiFailures
         )
     }
+
+    mutating func mergeApplyStats(_ stats: CardContentMigrationService.ApplyStats) {
+        contentRefreshed += stats.refreshed
+        phoneticsFilled += stats.phonetics
+        sourcesFilled += stats.sources
+    }
+}
+
+struct CardContentMigrationBatch: Equatable, Sendable {
+    let sentence: String
+    let words: [String]
+    let sourceHint: String?
+    let deckName: String?
+    let cardIDs: [UUID]
+}
+
+struct CardContentMigrationPlan: Equatable, Sendable {
+    let batches: [CardContentMigrationBatch]
+    let scanned: Int
 }
 
 /// Upgrades existing cards by re-running the **same** `KimiCardGenerator` rules used for new cards,
@@ -64,6 +83,60 @@ enum CardContentMigrationService {
         return report
     }
 
+    /// Builds AI migration batches after local fixes; returns nil when AI is unavailable or nothing to run.
+    @MainActor
+    static func buildMigrationPlan(in context: ModelContext) -> CardContentMigrationPlan? {
+        guard APISettings.canUseAI else { return nil }
+
+        let cards = (try? context.fetch(FetchDescriptor<FlashCard>())) ?? []
+        let groups = Dictionary(grouping: cards) {
+            $0.sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        .filter { !$0.key.isEmpty }
+
+        var batches: [CardContentMigrationBatch] = []
+        for (_, group) in groups {
+            let words = uniqueWords(in: group)
+            guard !words.isEmpty else { continue }
+
+            let sourceHint = group
+                .compactMap { $0.sourceAttribution?.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .first { !$0.isEmpty }
+            let deckName = group
+                .compactMap { $0.deck?.name.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .first { !$0.isEmpty }
+            let cardIDs = group.map(\.id)
+
+            for wordBatch in words.chunked(into: wordsPerGenerateCall) {
+                batches.append(
+                    CardContentMigrationBatch(
+                        sentence: group[0].sentence,
+                        words: wordBatch,
+                        sourceHint: sourceHint,
+                        deckName: deckName,
+                        cardIDs: cardIDs
+                    )
+                )
+            }
+        }
+
+        guard !batches.isEmpty else { return nil }
+        return CardContentMigrationPlan(batches: batches, scanned: cards.count)
+    }
+
+    @MainActor
+    @discardableResult
+    static func applyMigrationBatch(
+        drafts: [GeneratedCardDraft],
+        cardIDs: [UUID],
+        in context: ModelContext
+    ) -> ApplyStats {
+        let idSet = Set(cardIDs)
+        let cards = (try? context.fetch(FetchDescriptor<FlashCard>()))?
+            .filter { idSet.contains($0.id) } ?? []
+        return applyDrafts(drafts, to: cards)
+    }
+
     @MainActor
     static func migrate(in context: ModelContext, useAI: Bool) async -> CardContentMigrationReport {
         var report = migrateLocally(in: context)
@@ -94,7 +167,8 @@ enum CardContentMigrationService {
                         sentence: group[0].sentence,
                         words: wordBatch,
                         sourceHint: sourceHint,
-                        deckName: deckName
+                        deckName: deckName,
+                        mode: .full
                     )
                     let applied = applyDrafts(drafts, to: group)
                     report.contentRefreshed += applied.refreshed
@@ -156,7 +230,7 @@ enum CardContentMigrationService {
 
     // MARK: - Apply latest generator output
 
-    private struct ApplyStats {
+    struct ApplyStats {
         var refreshed = 0
         var phonetics = 0
         var sources = 0

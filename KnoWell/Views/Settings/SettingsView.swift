@@ -5,6 +5,7 @@ struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(ReviewSettingsStore.self) private var reviewSettings
+    @ObservedObject private var generationQueue = CardGenerationQueue.shared
 
     var isPresentedAsSheet: Bool = false
 
@@ -27,7 +28,6 @@ struct SettingsView: View {
 
     @State private var showResetAllConfirm = false
     @State private var showMigrateCardsConfirm = false
-    @State private var isMigratingCards = false
     @State private var maintenanceAlertTitle = ""
     @State private var maintenanceAlertMessage = ""
     @State private var showMaintenanceAlert = false
@@ -94,9 +94,8 @@ struct SettingsView: View {
                     confirmTitle: L10n.settingsMigrateCards,
                     confirmRole: .accent
                 ) {
-                    Task { await migrateCardContent() }
+                    migrateCardContent()
                 }
-                .loadingOverlay(isPresented: isMigratingCards, message: L10n.settingsMigrateCardsRunning)
         }
     }
 
@@ -301,7 +300,7 @@ struct SettingsView: View {
                 )
             }
             .buttonStyle(.plain)
-            .disabled(!hasAnyCards || isMigratingCards)
+            .disabled(!hasAnyCards || generationQueue.hasActiveMigrationJob)
             .opacity(hasAnyCards ? 1 : 0.45)
 
             Button {
@@ -313,7 +312,7 @@ struct SettingsView: View {
                 )
             }
             .buttonStyle(.plain)
-            .disabled(!hasAnyCards || isMigratingCards)
+            .disabled(!hasAnyCards || generationQueue.hasActiveMigrationJob)
             .opacity(hasAnyCards ? 1 : 0.45)
         }
     }
@@ -487,17 +486,33 @@ struct SettingsView: View {
     }
 
     @MainActor
-    private func migrateCardContent() async {
-        isMigratingCards = true
-        defer { isMigratingCards = false }
-        let report = await CardContentMigrationService.migrate(
-            in: modelContext,
-            useAI: APISettings.canUseAI
-        )
-        showMaintenanceResult(
-            title: L10n.settingsMigrateCardsDone,
-            message: report.summaryMessage
-        )
+    private func migrateCardContent() {
+        let localReport = CardContentMigrationService.migrateLocally(in: modelContext)
+
+        if APISettings.canUseAI,
+           let plan = CardContentMigrationService.buildMigrationPlan(in: modelContext) {
+            do {
+                _ = try generationQueue.enqueueMigration(
+                    in: modelContext,
+                    initialReport: localReport,
+                    plan: plan
+                )
+                ToastCenter.shared.show(L10n.settingsMigrateCardsQueued)
+            } catch {
+                ToastCenter.shared.show(error.localizedDescription)
+            }
+            return
+        }
+
+        let hasLocalChanges = localReport.frontsUpdated > 0 || localReport.backsSplit > 0
+        if hasLocalChanges {
+            showMaintenanceResult(
+                title: L10n.settingsMigrateCardsDone,
+                message: localReport.summaryMessage
+            )
+        } else {
+            ToastCenter.shared.show(L10n.settingsMigrateCardsNothingToDo)
+        }
     }
 
     private func showMaintenanceResult(title: String, message: String) {

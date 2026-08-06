@@ -1152,6 +1152,23 @@
         }
       }
     },
+    "cardType.appreciation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appreciation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "赏析"
+          }
+        }
+      }
+    },
     "common.add" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1503,6 +1520,125 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "请粘贴或扫描文本，并加入生词。"
+          }
+        }
+      }
+    },
+    "create.cardMode.compact" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smart"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "精简"
+          }
+        }
+      }
+    },
+    "create.cardMode.full" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Full"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完整"
+          }
+        }
+      }
+    },
+    "create.cardMode.compactDetail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI picks one card type per word; you can add the alternate type in preview."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI 为每个生词智能选一种主卡；预览里可勾选另一种。"
+          }
+        }
+      }
+    },
+    "create.cardMode.fullDetail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generates cloze + definition; AI marks the recommended one."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每个生词生成挖空 + 释义；AI 标记更推荐的一张。"
+          }
+        }
+      }
+    },
+    "create.cardRecommended.badge" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI pick"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI 推荐"
+          }
+        }
+      }
+    },
+    "create.preview.sectionCards" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generated cards"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "生成的卡片"
+          }
+        }
+      }
+    },
+    "create.preview.footerCompact" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cards marked AI pick are selected by default. Turn on Include to save optional alternates."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "带「AI 推荐」标签的卡片默认入库；另一种类型可手动打开「加入词库」。"
           }
         }
       }
@@ -3466,6 +3602,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "默认词库"
+          }
+        }
+      }
+    },
+    "deck.dailyReflection.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily Lines"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每日一句"
+          }
+        }
+      }
+    },
+    "deck.dailyReflection.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appreciation cards saved from Daily Lines"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从「今日一句」收藏的赏析卡"
           }
         }
       }
@@ -6409,6 +6579,23 @@
         }
       }
     },
+    "library.filter.appreciation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appreciation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "赏析卡"
+          }
+        }
+      }
+    },
     "library.filter.definition" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7590,6 +7777,40 @@
         }
       }
     },
+    "review.appreciation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appreciation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "赏析"
+          }
+        }
+      }
+    },
+    "review.appreciation.theme" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Theme"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主题"
+          }
+        }
+      }
+    },
     "review.aiInsight" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7681,13 +7902,81 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Make a card from this"
+            "value" : "Save appreciation card"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "用这句制卡"
+            "value" : "收藏赏析"
+          }
+        }
+      }
+    },
+    "review.daily.collecting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saving…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收藏中…"
+          }
+        }
+      }
+    },
+    "review.daily.collectSuccess" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved to Daily Lines deck"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "赏析卡已加入「每日一句」词库"
+          }
+        }
+      }
+    },
+    "review.daily.collectDuplicate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This line is already in your library"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这句赏析已在词库中"
+          }
+        }
+      }
+    },
+    "review.daily.collectNeedSentence" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No sentence to save"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有可收藏的句子"
           }
         }
       }
@@ -10203,6 +10492,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在整理卡片…"
+          }
+        }
+      }
+    },
+    "settings.migrateCards.queued" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Card upgrade added to the generation queue. Track progress on the Create tab."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "整理旧卡片已加入生成队列，可在制卡页查看进度"
+          }
+        }
+      }
+    },
+    "settings.migrateCards.alreadyQueued" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A card upgrade is already in the queue."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已有整理任务在队列中"
+          }
+        }
+      }
+    },
+    "settings.migrateCards.nothingToDo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No cards need upgrading right now."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前没有需要整理的卡片"
           }
         }
       }

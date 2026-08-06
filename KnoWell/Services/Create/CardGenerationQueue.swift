@@ -1,9 +1,15 @@
 import Foundation
 import SwiftUI
+import SwiftData
 
 @MainActor
 final class CardGenerationQueue: ObservableObject {
     static let shared = CardGenerationQueue()
+
+    enum JobKind: Equatable {
+        case create
+        case migrate
+    }
 
     enum JobStatus: String {
         case queued
@@ -37,6 +43,7 @@ final class CardGenerationQueue: ObservableObject {
     struct Job: Identifiable, Equatable {
         let id: UUID
         let createdAt: Date
+        let kind: JobKind
         let deckID: UUID
         let deckName: String?
         let sourceHint: String?
@@ -50,6 +57,8 @@ final class CardGenerationQueue: ObservableObject {
         var words: [WordItem]
         var drafts: [GeneratedCardDraft]
         var errorMessage: String?
+        var migrationBatches: [CardContentMigrationBatch]
+        var migrationReport: CardContentMigrationReport?
 
         var progressFraction: Double {
             guard totalBatches > 0 else { return status == .succeeded ? 1 : 0 }
@@ -58,6 +67,10 @@ final class CardGenerationQueue: ObservableObject {
 
         var isActive: Bool {
             status == .queued || status == .running
+        }
+
+        var displayTitle: String {
+            kind == .migrate ? L10n.settingsMigrateCards : sentencePreview
         }
     }
 
@@ -72,6 +85,17 @@ final class CardGenerationQueue: ObservableObject {
     @Published var readyPreview: ReadyPreview?
 
     private var isProcessing = false
+    private var migrationContext: ModelContext?
+
+    enum MigrationEnqueueError: LocalizedError {
+        case alreadyRunning
+
+        var errorDescription: String? {
+            switch self {
+            case .alreadyRunning: L10n.settingsMigrateCardsAlreadyQueued
+            }
+        }
+    }
 
     var activeJobs: [Job] {
         jobs.filter(\.isActive)
@@ -79,6 +103,10 @@ final class CardGenerationQueue: ObservableObject {
 
     var hasActiveJobs: Bool {
         !activeJobs.isEmpty
+    }
+
+    var hasActiveMigrationJob: Bool {
+        jobs.contains { $0.kind == .migrate && $0.isActive }
     }
 
     var activeSummary: String {
@@ -121,6 +149,7 @@ final class CardGenerationQueue: ObservableObject {
         let job = Job(
             id: UUID(),
             createdAt: Date(),
+            kind: .create,
             deckID: deckID,
             deckName: deckName,
             sourceHint: sourceHint,
@@ -136,7 +165,56 @@ final class CardGenerationQueue: ObservableObject {
             skippedDuplicates: prepared.skippedCount,
             words: wordItems,
             drafts: [],
-            errorMessage: nil
+            errorMessage: nil,
+            migrationBatches: [],
+            migrationReport: nil
+        )
+        jobs.insert(job, at: 0)
+        processNextIfNeeded()
+        return job.id
+    }
+
+    @discardableResult
+    func enqueueMigration(
+        in context: ModelContext,
+        initialReport: CardContentMigrationReport,
+        plan: CardContentMigrationPlan
+    ) throws -> UUID {
+        guard !hasActiveMigrationJob else {
+            throw MigrationEnqueueError.alreadyRunning
+        }
+
+        var wordItems: [WordItem] = []
+        var seen = Set<String>()
+        for batch in plan.batches {
+            for word in batch.words {
+                let key = "\(word.lowercased())|\(batch.sentence)"
+                guard !seen.contains(key) else { continue }
+                seen.insert(key)
+                wordItems.append(WordItem(word: word, sentence: batch.sentence))
+            }
+        }
+
+        migrationContext = context
+        let job = Job(
+            id: UUID(),
+            createdAt: Date(),
+            kind: .migrate,
+            deckID: UUID(),
+            deckName: nil,
+            sourceHint: nil,
+            sourceImagePath: nil,
+            sentencePreview: L10n.settingsMigrateCards,
+            units: [],
+            status: .queued,
+            completedBatches: 0,
+            totalBatches: plan.batches.count,
+            skippedDuplicates: 0,
+            words: wordItems,
+            drafts: [],
+            errorMessage: nil,
+            migrationBatches: plan.batches,
+            migrationReport: initialReport
         )
         jobs.insert(job, at: 0)
         processNextIfNeeded()
@@ -204,6 +282,15 @@ final class CardGenerationQueue: ObservableObject {
     }
 
     private func run(_ job: Job) async {
+        switch job.kind {
+        case .create:
+            await runCreate(job)
+        case .migrate:
+            await runMigration(job)
+        }
+    }
+
+    private func runCreate(_ job: Job) async {
         do {
             let drafts = try await KimiCardGenerator.generate(
                 units: job.units,
@@ -221,10 +308,72 @@ final class CardGenerationQueue: ObservableObject {
                 )
             }
 
-            finishSuccess(jobID: job.id, drafts: drafts)
+            finishCreateSuccess(jobID: job.id, drafts: drafts)
         } catch {
             finishFailure(jobID: job.id, message: error.localizedDescription)
         }
+    }
+
+    private func runMigration(_ job: Job) async {
+        guard let context = migrationContext else {
+            finishFailure(jobID: job.id, message: L10n.generateEmptyError)
+            migrationContext = nil
+            return
+        }
+
+        var report = job.migrationReport ?? CardContentMigrationReport()
+        let batches = job.migrationBatches
+
+        for (index, batch) in batches.enumerated() {
+            updateProgress(jobID: job.id, completed: index, total: batches.count)
+
+            do {
+                let drafts = try await KimiCardGenerator.generate(
+                    sentence: batch.sentence,
+                    words: batch.words,
+                    sourceHint: batch.sourceHint,
+                    deckName: batch.deckName,
+                    mode: .full
+                )
+                let stats = CardContentMigrationService.applyMigrationBatch(
+                    drafts: drafts,
+                    cardIDs: batch.cardIDs,
+                    in: context
+                )
+                try? context.save()
+                report.mergeApplyStats(stats)
+                if let jobIndex = jobs.firstIndex(where: { $0.id == job.id }) {
+                    jobs[jobIndex].migrationReport = report
+                }
+                applyMigrationBatch(
+                    jobID: job.id,
+                    batch: batch,
+                    drafts: drafts,
+                    error: nil
+                )
+            } catch {
+                let idSet = Set(batch.cardIDs)
+                let cards = (try? context.fetch(FetchDescriptor<FlashCard>()))?
+                    .filter { idSet.contains($0.id) } ?? []
+                report.aiFailures += cards.filter { card in
+                    batch.words.contains { $0.caseInsensitiveCompare(card.word) == .orderedSame }
+                }.count
+                if let jobIndex = jobs.firstIndex(where: { $0.id == job.id }) {
+                    jobs[jobIndex].migrationReport = report
+                }
+                applyMigrationBatch(
+                    jobID: job.id,
+                    batch: batch,
+                    drafts: [],
+                    error: error
+                )
+            }
+
+            updateProgress(jobID: job.id, completed: index + 1, total: batches.count)
+        }
+
+        finishMigrationSuccess(jobID: job.id, report: report)
+        migrationContext = nil
     }
 
     private func updateProgress(jobID: UUID, completed: Int, total: Int) {
@@ -262,7 +411,34 @@ final class CardGenerationQueue: ObservableObject {
         jobs[index].drafts.append(contentsOf: drafts)
     }
 
-    private func finishSuccess(jobID: UUID, drafts: [GeneratedCardDraft]) {
+    private func applyMigrationBatch(
+        jobID: UUID,
+        batch: CardContentMigrationBatch,
+        drafts: [GeneratedCardDraft],
+        error: Error?
+    ) {
+        guard let index = jobs.firstIndex(where: { $0.id == jobID }) else { return }
+        let sentenceKey = SharedDedupeIndex.normalizedSentence(batch.sentence)
+        let wordKeys = Set(batch.words.map(SharedDedupeIndex.normalizedWord))
+        let draftWordKeys = Set(drafts.map { SharedDedupeIndex.normalizedWord($0.word) })
+
+        for i in jobs[index].words.indices {
+            let item = jobs[index].words[i]
+            guard SharedDedupeIndex.normalizedSentence(item.sentence) == sentenceKey,
+                  wordKeys.contains(SharedDedupeIndex.normalizedWord(item.word)) else {
+                continue
+            }
+            if error != nil {
+                jobs[index].words[i].status = .failed
+            } else if draftWordKeys.contains(SharedDedupeIndex.normalizedWord(item.word)) {
+                jobs[index].words[i].status = .done
+            } else {
+                jobs[index].words[i].status = .failed
+            }
+        }
+    }
+
+    private func finishCreateSuccess(jobID: UUID, drafts: [GeneratedCardDraft]) {
         defer {
             isProcessing = false
             processNextIfNeeded()
@@ -312,9 +488,38 @@ final class CardGenerationQueue: ObservableObject {
         }
     }
 
+    private func finishMigrationSuccess(jobID: UUID, report: CardContentMigrationReport) {
+        defer {
+            isProcessing = false
+            processNextIfNeeded()
+        }
+        guard let index = jobs.firstIndex(where: { $0.id == jobID }) else { return }
+
+        jobs[index].status = .succeeded
+        jobs[index].completedBatches = jobs[index].totalBatches
+        jobs[index].migrationReport = report
+        for i in jobs[index].words.indices where jobs[index].words[i].status == .running
+            || jobs[index].words[i].status == .pending {
+            jobs[index].words[i].status = .done
+        }
+
+        if report.contentRefreshed > 0
+            || report.frontsUpdated > 0
+            || report.backsSplit > 0
+            || report.phoneticsFilled > 0
+            || report.sourcesFilled > 0 {
+            DeckCardCountService.notifyDataMaintenance()
+        }
+
+        ToastCenter.shared.show(report.summaryMessage)
+    }
+
     private func finishFailure(jobID: UUID, message: String) {
         defer {
             isProcessing = false
+            if let job = jobs.first(where: { $0.id == jobID }), job.kind == .migrate {
+                migrationContext = nil
+            }
             processNextIfNeeded()
         }
         guard let index = jobs.firstIndex(where: { $0.id == jobID }) else { return }

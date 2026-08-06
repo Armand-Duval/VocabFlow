@@ -364,18 +364,28 @@ struct CardReviewSessionView: View {
     private func wordTitleBlock(for card: FlashCard) -> some View {
         HStack(alignment: .top, spacing: AppSpacing.sm) {
             VStack(alignment: .leading, spacing: 4) {
-                if showBack || card.cardType == .definition {
-                    Text(card.word)
-                        .font(.system(size: 30, weight: .bold))
-                        .foregroundStyle(AppColor.accent)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .transition(.opacity.combined(with: .move(edge: .leading)))
+                if showBack || card.cardType == .definition || card.cardType == .appreciation {
+                    if card.cardType == .appreciation {
+                        Text(card.word)
+                            .font(AppFont.sectionTitle())
+                            .foregroundStyle(AppColor.textPrimary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Text(L10n.cardTypeAppreciation)
+                            .font(AppFont.caption())
+                            .foregroundStyle(AppColor.textTertiary)
+                    } else {
+                        Text(card.word)
+                            .font(.system(size: 30, weight: .bold))
+                            .foregroundStyle(AppColor.accent)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .transition(.opacity.combined(with: .move(edge: .leading)))
 
-                    if let phonetic = card.phonetic?.trimmingCharacters(in: .whitespacesAndNewlines),
-                       !phonetic.isEmpty {
-                        Text(phonetic.hasPrefix("/") || phonetic.hasPrefix("[") ? phonetic : "/\(phonetic)/")
-                            .font(AppFont.secondary())
-                            .foregroundStyle(AppColor.textSecondary)
+                        if let phonetic = card.phonetic?.trimmingCharacters(in: .whitespacesAndNewlines),
+                           !phonetic.isEmpty {
+                            Text(phonetic.hasPrefix("/") || phonetic.hasPrefix("[") ? phonetic : "/\(phonetic)/")
+                                .font(AppFont.secondary())
+                                .foregroundStyle(AppColor.textSecondary)
+                        }
                     }
                 } else {
                     Text(L10n.cardTypeCloze)
@@ -395,8 +405,8 @@ struct CardReviewSessionView: View {
 
                 speakButton(for: card)
                     .padding(.top, 2)
-                    .opacity(showBack || card.cardType == .definition ? 1 : 0)
-                    .allowsHitTesting(showBack || card.cardType == .definition)
+                    .opacity(showBack || card.cardType == .definition || card.cardType == .appreciation ? 1 : 0)
+                    .allowsHitTesting(showBack || card.cardType == .definition || card.cardType == .appreciation)
             }
         }
         .animation(Self.revealAnimation, value: showBack)
@@ -431,7 +441,8 @@ struct CardReviewSessionView: View {
 
     private func speakButton(for card: FlashCard) -> some View {
         Button {
-            SpeechService.speak(card.word)
+            let text = card.cardType == .appreciation ? card.sentence : card.word
+            SpeechService.speak(text)
         } label: {
             Image(systemName: "speaker.wave.2.fill")
                 .font(.system(size: 20, weight: .semibold))
@@ -454,9 +465,9 @@ struct CardReviewSessionView: View {
 
         return SelectableStudyText(
             text: card.displayFront,
-            highlightTerms: card.cardType == .definition || showBack
-                ? [card.displayHighlight]
-                : [],
+            highlightTerms: card.cardType == .appreciation
+                ? []
+                : (card.cardType == .definition || showBack ? [card.displayHighlight] : []),
             matchStyle: .wordBounded,
             font: literaryFont,
             onLookup: { _ in
@@ -501,6 +512,58 @@ struct CardReviewSessionView: View {
 
     @ViewBuilder
     private func answerSection(for card: FlashCard, scrollProxy: ScrollViewProxy? = nil) -> some View {
+        if card.cardType == .appreciation {
+            appreciationAnswerSection(for: card, scrollProxy: scrollProxy)
+        } else {
+            vocabularyAnswerSection(for: card, scrollProxy: scrollProxy)
+        }
+    }
+
+    @ViewBuilder
+    private func appreciationAnswerSection(for card: FlashCard, scrollProxy: ScrollViewProxy? = nil) -> some View {
+        let theme = CardContentFormatter.senseText(card.back)
+        let translation = CardContentFormatter.sentenceTranslation(card.contextNote)
+        let appreciation = card.usageNote?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let source = card.sourceAttribution?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
+            if !theme.isEmpty {
+                reviewModule(title: L10n.reviewAppreciationThemeSection, titleStrong: true) {
+                    Text(theme)
+                        .font(AppFont.body().weight(.medium))
+                        .foregroundStyle(AppColor.textPrimary)
+                }
+            }
+
+            if let translation, !translation.isEmpty {
+                reviewModule(title: L10n.reviewTranslationSection, titleStrong: true) {
+                    Text(translation)
+                        .font(AppFont.body())
+                        .foregroundStyle(AppColor.textBody)
+                }
+            }
+
+            if !appreciation.isEmpty {
+                reviewModule(title: L10n.reviewAppreciationSection, titleStrong: true) {
+                    Text(appreciation)
+                        .font(AppFont.secondary())
+                        .foregroundStyle(AppColor.textBody)
+                }
+            }
+
+            if !source.isEmpty {
+                Text(L10n.cardSource(source))
+                    .font(AppFont.helper())
+                    .foregroundStyle(AppColor.textTertiary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(L10n.backLabel)
+    }
+
+    @ViewBuilder
+    private func vocabularyAnswerSection(for card: FlashCard, scrollProxy: ScrollViewProxy? = nil) -> some View {
         let sense = CardContentFormatter.senseText(card.back)
         let translation = CardContentFormatter.sentenceTranslation(card.contextNote)
         let highlightTerms = CardContentFormatter.translationHighlightTerms(

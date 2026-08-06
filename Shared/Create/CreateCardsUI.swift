@@ -131,7 +131,17 @@ struct DraftPreviewCard: View {
                     }
                 }
                 Spacer()
-                CardTypeChip(title: draft.cardType.displayName)
+                HStack(spacing: 6) {
+                    if draft.isRecommended {
+                        Text(L10n.createCardRecommendedBadge)
+                            .font(AppFont.weak().weight(.semibold))
+                            .foregroundStyle(AppColor.accent)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(AppColor.accentBackground(0.14), in: Capsule())
+                    }
+                    CardTypeChip(title: draft.cardType.displayName)
+                }
             }
 
             Toggle(L10n.includeInLibrary, isOn: $draft.isSelected)
@@ -309,10 +319,16 @@ struct DraftPreviewCard: View {
             .pickerStyle(.segmented)
         }
         .padding(AppSpacing.md)
-        .background(.background, in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
+        .background(
+            draft.isRecommended ? AppColor.surface : AppColor.surfaceMuted.opacity(0.55),
+            in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+        )
         .overlay {
             RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                .strokeBorder(.quaternary, lineWidth: 0.5)
+                .strokeBorder(
+                    draft.isRecommended ? AppColor.accent.opacity(0.22) : AppColor.borderSubtle,
+                    lineWidth: 1
+                )
         }
     }
 }

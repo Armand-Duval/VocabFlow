@@ -59,7 +59,7 @@ struct CardGenerationQueueView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            Text(job.sentencePreview)
+            Text(job.displayTitle)
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)

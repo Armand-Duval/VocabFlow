@@ -253,24 +253,10 @@ struct DeckStoreView: View {
                 .foregroundStyle(AppColor.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
-            if checkedCardCount > 0 {
-                Menu {
-                    Button(L10n.deckQuickExportDeckApkg) {
-                        exportCheckedDecksApkg()
-                    }
-                    Button(L10n.deckQuickExportDeckJSON) {
-                        exportCheckedDecksJSON()
-                    }
-                } label: {
-                    Text(L10n.deckQuickExportAction)
-                        .font(AppFont.caption().weight(.semibold))
-                        .foregroundStyle(AppColor.accent)
-                }
-            }
         }
         .padding(.horizontal, AppSpacing.sm)
-        .padding(.vertical, 10)
-        .background(AppColor.accentBackground(0.12), in: RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous))
+        .padding(.vertical, 8)
+        .background(AppColor.accentBackground(0.1), in: RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous))
     }
 
     private var myDecksCard: some View {
@@ -342,6 +328,9 @@ struct DeckStoreView: View {
                                 .font(AppFont.caption().weight(.medium))
                                 .foregroundStyle(AppColor.textSecondary)
                                 .monospacedDigit()
+                            Text(L10n.deckTotalCardsShort)
+                                .font(AppFont.weak())
+                                .foregroundStyle(AppColor.textMuted)
                             Text("/")
                                 .font(AppFont.caption())
                                 .foregroundStyle(AppColor.textTertiary)
@@ -349,6 +338,9 @@ struct DeckStoreView: View {
                                 .font(AppFont.caption().weight(.semibold))
                                 .foregroundStyle(due > 0 ? AppColor.accent : AppColor.textTertiary)
                                 .monospacedDigit()
+                            Text(L10n.deckDueCardsShort)
+                                .font(AppFont.weak())
+                                .foregroundStyle(AppColor.textMuted)
                                 .accessibilityLabel(L10n.deckDueShort(due))
                         }
 
@@ -1083,7 +1075,7 @@ struct DeckCatalogView: View {
     private var openSourceCard: some View {
         AppSurfaceCard {
             VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                Text(L10n.deckOpenSourceSection)
+                Text(L10n.deckDirectDownloadSection)
                     .font(AppFont.sectionTitle())
                     .foregroundStyle(AppColor.textPrimary)
 
@@ -1100,7 +1092,7 @@ struct DeckCatalogView: View {
     private var communityCard: some View {
         AppSurfaceCard {
             VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                Text(L10n.deckCommunitySection)
+                Text(L10n.deckCommunitySearchSection)
                     .font(AppFont.sectionTitle())
                     .foregroundStyle(AppColor.textPrimary)
 
@@ -1164,9 +1156,6 @@ struct DeckCatalogView: View {
                         .font(AppFont.caption())
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
-                    Text(pack.licenseLabel)
-                        .font(AppFont.caption())
-                        .foregroundStyle(.tertiary)
                 }
 
                 Spacer(minLength: AppSpacing.xs)
