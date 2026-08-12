@@ -226,13 +226,9 @@ private struct ReviewHomeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppSpacing.section) {
-                homeHeader
-                    .opacity(appeared ? 1 : 0)
-                    .offset(y: appeared ? 0 : 8)
-
                 dueComposition
                     .opacity(appeared ? 1 : 0)
-                    .offset(y: appeared ? 0 : 14)
+                    .offset(y: appeared ? 0 : 8)
 
                 if let dailyReflection {
                     literaryZone(dailyReflection)
@@ -255,19 +251,6 @@ private struct ReviewHomeView: View {
         .sheet(isPresented: $showReflectionPreferences) {
             DailyReflectionPreferencesSheet(onSaved: onPreferencesSaved)
         }
-    }
-
-    private var homeHeader: some View {
-        HStack(alignment: .firstTextBaseline) {
-            BrandMark(compact: false)
-            Spacer(minLength: 0)
-            if hasAnyCards, StudyStreakStore.currentStreak > 0 {
-                Text("\(L10n.homeStatStreak) \(L10n.homeStatStreakValue(StudyStreakStore.currentStreak))")
-                    .font(AppFont.helper())
-                    .foregroundStyle(AppColor.textMuted)
-            }
-        }
-        .padding(.top, AppSpacing.xs)
     }
 
     private var dueComposition: some View {
@@ -362,7 +345,11 @@ private struct ReviewHomeView: View {
     }
 
     private var quotaMetaLine: String {
-        var parts = [L10n.reviewHomeStudiedToday(studiedToday)]
+        var parts: [String] = []
+        if hasAnyCards, StudyStreakStore.currentStreak > 0 {
+            parts.append("\(L10n.homeStatStreak) \(L10n.homeStatStreakValue(StudyStreakStore.currentStreak))")
+        }
+        parts.append(L10n.reviewHomeStudiedToday(studiedToday))
         if let todayCapture {
             parts.append(L10n.reviewHomeActivityToday(todayCapture.uniqueWords, todayCapture.uniqueSentences))
         } else if let recentActivity, recentActivity.spanDays > 1 {

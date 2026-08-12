@@ -159,9 +159,6 @@ struct CreateCardsView: View {
     private var scrollContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
-                BrandMark(compact: true)
-                    .padding(.top, 2)
-
                 if hasPendingDrafts, let pendingDrafts = shareImport.pendingDrafts {
                     PendingCardsBannerView(
                         title: L10n.createPendingImportTitle,

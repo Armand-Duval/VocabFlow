@@ -35,7 +35,10 @@ struct SettingsView: View {
         NavigationStack {
             settingsScrollContent(reviewSettings: reviewSettings)
                 .appPageBackground()
-                .appNavTitle(isPresentedAsSheet ? L10n.settingsTitle : L10n.tabSettings)
+                .appNavTitle(
+                    isPresentedAsSheet ? L10n.settingsTitle : L10n.tabSettings,
+                    style: isPresentedAsSheet ? .primary : .hidden
+                )
                 .toolbar {
                     if isPresentedAsSheet {
                         ToolbarItem(placement: .cancellationAction) {
