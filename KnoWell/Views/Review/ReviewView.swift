@@ -39,7 +39,6 @@ struct ReviewView: View {
                         ReviewHomeView(
                             plan: plan,
                             hasAnyCards: hasAnyCards,
-                            lifetimeStudiedCount: lifetimeStudiedCount,
                             todayCapture: todayCapture,
                             dailyReflection: dailyReflection,
                             isRefreshingReflection: isRefreshingReflection,
@@ -67,7 +66,7 @@ struct ReviewView: View {
             .toolbar(isSessionActive ? .hidden : .automatic, for: .navigationBar)
             .sheet(isPresented: $showQuotaDetail) {
                 if let plan {
-                    ReviewQuotaDetailSheet(plan: plan)
+                    ReviewQuotaDetailSheet(plan: plan, lifetimeStudiedCount: lifetimeStudiedCount)
                 }
             }
         }
@@ -198,7 +197,6 @@ struct ReviewView: View {
 private struct ReviewHomeView: View {
     let plan: ReviewQueuePlan
     let hasAnyCards: Bool
-    let lifetimeStudiedCount: Int
     let todayCapture: CaptureStatsStore.Summary?
     let dailyReflection: DailyReflection?
     let isRefreshingReflection: Bool
@@ -271,10 +269,9 @@ private struct ReviewHomeView: View {
 
     private var compactStatsLine: some View {
         Button(action: onShowQuota) {
-            HStack(spacing: AppSpacing.md) {
+            HStack(spacing: AppSpacing.lg) {
                 miniStat(value: "\(plan.newStudiedToday)", label: L10n.reviewHomeStatsNew)
                 miniStat(value: "\(plan.reviewStudiedToday)", label: L10n.reviewHomeStatsReview)
-                miniStat(value: "\(lifetimeStudiedCount)", label: L10n.reviewHomeLifetimeStudied)
                 miniStat(value: "\(todayCapture?.cardCount ?? 0)", label: L10n.reviewHomeStatsCaptured)
                 Spacer(minLength: 0)
             }
@@ -440,6 +437,7 @@ private struct ReviewHomeView: View {
 private struct ReviewQuotaDetailSheet: View {
     @Environment(\.dismiss) private var dismiss
     let plan: ReviewQueuePlan
+    let lifetimeStudiedCount: Int
 
     var body: some View {
         NavigationStack {
@@ -467,6 +465,19 @@ private struct ReviewQuotaDetailSheet: View {
                                 deferred: plan.deferredReviewCount
                             )
                         }
+                    }
+
+                    AppSurfaceCard {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(L10n.reviewHomeLifetimeStudied)
+                                .font(AppFont.caption())
+                                .foregroundStyle(AppColor.textSecondary)
+                            Text("\(lifetimeStudiedCount)")
+                                .font(AppFont.statValue())
+                                .foregroundStyle(AppColor.textPrimary)
+                                .monospacedDigit()
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
                     if plan.hasDeferredCards {
