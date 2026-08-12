@@ -99,12 +99,14 @@ AppRadius:  card=16  button=12  chip=999(capsule)
 
 | 角色 | 样式 |
 |------|------|
-| 复习单词 | `studyWord()` — 34pt semibold rounded |
-| Section 标题 | `sectionTitle()` — title3 semibold |
-| 统计数字 | `statValue()` — title2 semibold |
+| 复习单词 | `studyWord()` — 32pt semibold rounded |
+| 品牌 | `brand()` — 28pt semibold serif |
+| Section 标题 | `sectionTitle()` — title3 semibold rounded |
+| 统计数字 | `statValue()` — 20pt semibold rounded |
 | 正文 | `body()` |
-| 辅助 | `secondary()` / `caption()` |
-| 导航标题 | `navTitle()` — callout medium, `#666` 风格 |
+| 辅助 | `secondary()` / `caption()` / `helper()` |
+| 导航标题 | `navTitle()` — callout medium |
+| 今日一句 | `literaryQuote()` — 20pt serif |
 
 ---
 
