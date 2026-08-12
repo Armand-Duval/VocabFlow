@@ -12,12 +12,10 @@ struct ReviewView: View {
     @State private var isSessionActive = false
     @State private var sessionEpoch = 0
     @State private var dailyReflection: DailyReflection?
-    @State private var totalCardCount = 0
     @State private var lifetimeStudiedCount = 0
     @State private var isRefreshingReflection = false
     @State private var isCollectingReflection = false
     @State private var todayCapture: CaptureStatsStore.Summary?
-    @State private var recentActivity: StudyActivityStore.Summary?
 
     private var activeDeckID: UUID? {
         DeckSettings.lastSelectedDeckID
@@ -41,10 +39,8 @@ struct ReviewView: View {
                         ReviewHomeView(
                             plan: plan,
                             hasAnyCards: hasAnyCards,
-                            totalCardCount: totalCardCount,
                             lifetimeStudiedCount: lifetimeStudiedCount,
                             todayCapture: todayCapture,
-                            recentActivity: recentActivity,
                             dailyReflection: dailyReflection,
                             isRefreshingReflection: isRefreshingReflection,
                             isCollectingReflection: isCollectingReflection,
@@ -128,10 +124,8 @@ struct ReviewView: View {
         hasAnyCards = !((try? modelContext.fetch(emptyDescriptor)) ?? []).isEmpty
 
         let allLibrary = (try? modelContext.fetch(FetchDescriptor<FlashCard>())) ?? []
-        totalCardCount = allLibrary.count
         lifetimeStudiedCount = allLibrary.filter { $0.reviewCount > 0 }.count
         todayCapture = CaptureStatsStore.todaySummary(in: modelContext)
-        recentActivity = StudyActivityStore.recentSummary()
 
         let dueDate = Date.now
         let descriptor = FetchDescriptor<FlashCard>(
@@ -204,10 +198,8 @@ struct ReviewView: View {
 private struct ReviewHomeView: View {
     let plan: ReviewQueuePlan
     let hasAnyCards: Bool
-    let totalCardCount: Int
     let lifetimeStudiedCount: Int
     let todayCapture: CaptureStatsStore.Summary?
-    let recentActivity: StudyActivityStore.Summary?
     let dailyReflection: DailyReflection?
     let isRefreshingReflection: Bool
     let isCollectingReflection: Bool
@@ -278,27 +270,17 @@ private struct ReviewHomeView: View {
     }
 
     private var compactStatsLine: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: AppSpacing.lg) {
+        Button(action: onShowQuota) {
+            HStack(spacing: AppSpacing.md) {
                 miniStat(value: "\(plan.newStudiedToday)", label: L10n.reviewHomeStatsNew)
                 miniStat(value: "\(plan.reviewStudiedToday)", label: L10n.reviewHomeStatsReview)
                 miniStat(value: "\(lifetimeStudiedCount)", label: L10n.reviewHomeLifetimeStudied)
+                miniStat(value: "\(todayCapture?.cardCount ?? 0)", label: L10n.reviewHomeStatsCaptured)
                 Spacer(minLength: 0)
             }
-
-            if let quotaMetaLine {
-                Button(action: onShowQuota) {
-                    Text(quotaMetaLine)
-                        .font(AppFont.helper())
-                        .foregroundStyle(AppColor.textMuted)
-                        .lineLimit(2)
-                        .multilineTextAlignment(.leading)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .buttonStyle(SoftPressButtonStyle(pressedScale: 0.99, pressedOpacity: 0.9))
-                .accessibilityLabel(quotaMetaLine)
-            }
         }
+        .buttonStyle(SoftPressButtonStyle(pressedScale: 0.99, pressedOpacity: 0.92))
+        .accessibilityLabel(L10n.reviewHomeQuotaLink)
     }
 
     private func miniStat(value: String, label: String) -> some View {
@@ -349,23 +331,6 @@ private struct ReviewHomeView: View {
         .accessibilityLabel(dueCount > 0 ? L10n.reviewHomeStart : L10n.reviewHomeStartDone)
     }
 
-
-    private var quotaMetaLine: String? {
-        if let todayCapture {
-            return L10n.reviewHomeActivityToday(todayCapture.uniqueWords, todayCapture.uniqueSentences)
-        }
-        if let recentActivity, recentActivity.spanDays > 1 {
-            return L10n.reviewHomeActivityRecent(
-                recentActivity.spanDays,
-                recentActivity.uniqueWords,
-                recentActivity.uniqueSentences
-            )
-        }
-        if totalCardCount > 0 {
-            return "\(L10n.reviewHomeTotalCards) \(totalCardCount)"
-        }
-        return nil
-    }
 
     private var emptyCTA: some View {
         Button {

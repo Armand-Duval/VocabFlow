@@ -307,6 +307,7 @@ enum L10n {
     static var reviewHomeStatsTitle: String { tr("review.home.statsTitle") }
     static var reviewHomeStatsNew: String { tr("review.home.statsNew") }
     static var reviewHomeStatsReview: String { tr("review.home.statsReview") }
+    static var reviewHomeStatsCaptured: String { tr("review.home.statsCaptured") }
     static var reviewHomeStatsTotal: String { tr("review.home.statsTotal") }
     static func reviewHomeWeekActivity(_ words: Int, _ sentences: Int) -> String {
         tf("review.home.weekActivity", words, sentences)
