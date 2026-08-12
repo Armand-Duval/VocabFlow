@@ -479,6 +479,70 @@ enum DailyReflectionService {
         var isManualRefresh = false
         var refreshAttempt = 1
         var excludedSentences: [String] = []
+        var excludedSources: [String] = []
+        var dailyAngle: String?
+    }
+
+    private static let recentDedupDays = 14
+
+    /// Rotate the reading lens each day so the same 3 keywords don't collapse onto one famous line.
+    private static let dailyAngles: [String] = [
+        "开篇：选作品开头最能立住气质的一句",
+        "口吻：选一句能听出说话人性格的台词或旁白",
+        "景物：写景或物象，但不堆砌季节词",
+        "关系：人与人之间的一句（相遇、离别、对峙）",
+        "记忆：关于时间、过去或逝去的一句",
+        "决意：正在做或将要做的一句",
+        "机锋：克制的反讽或冷幽默，不要段子",
+        "收束：章节或作品近结尾、有余味的一句",
+        "意象：用一个具体物象撑起的一句",
+        "独白：不喊口号的自我省察",
+        "闲笔：对话或叙述里看似最轻、实有分量的一句",
+        "旅途：在路上、异乡或逆旅中的一句"
+    ]
+
+    private static func dailyAngle(for day: Date, refreshAttempt: Int) -> String {
+        let dayOfYear = Calendar.current.ordinality(of: .day, in: .year, for: day) ?? 1
+        let index = abs(dayOfYear + max(0, refreshAttempt - 1) * 3) % dailyAngles.count
+        return dailyAngles[index]
+    }
+
+    private static func recentExclusion(for day: Date, extraSentences: [String] = []) -> (sentences: [String], sources: [String]) {
+        let calendar = Calendar.current
+        let start = calendar.startOfDay(for: day)
+        let minKey: String
+        if let windowStart = calendar.date(byAdding: .day, value: -(recentDedupDays - 1), to: start) {
+            minKey = dayKey(windowStart)
+        } else {
+            minKey = dayKey(day)
+        }
+        let todayKey = dayKey(day)
+
+        var sentenceSeen = Set<String>()
+        var sentences: [String] = []
+        for sentence in extraSentences {
+            let trimmed = sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { continue }
+            if sentenceSeen.insert(normalizedSentenceKey(trimmed)).inserted {
+                sentences.append(trimmed)
+            }
+        }
+
+        var sourceSeen = Set<String>()
+        var sources: [String] = []
+
+        for item in loadHistoryRaw() where item.dayKey >= minKey && item.dayKey <= todayKey {
+            let sentence = item.sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !sentence.isEmpty, sentenceSeen.insert(normalizedSentenceKey(sentence)).inserted {
+                sentences.append(sentence)
+            }
+            if let source = item.source?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !source.isEmpty,
+               sourceSeen.insert(source.lowercased()).inserted {
+                sources.append(source)
+            }
+        }
+        return (sentences, sources)
     }
 
     private static func sentencesArchivedToday(dayKey: String) -> [String] {
@@ -510,6 +574,14 @@ enum DailyReflectionService {
     }
 
     private static func fetchAndPersist(for day: Date, dayKey key: String, options: FetchOptions) async -> DailyReflection {
+        var options = options
+        let recent = recentExclusion(for: day, extraSentences: options.excludedSentences)
+        options.excludedSentences = recent.sentences
+        options.excludedSources = recent.sources
+        if options.dailyAngle == nil {
+            options.dailyAngle = dailyAngle(for: day, refreshAttempt: options.refreshAttempt)
+        }
+
         let fallback = curated(for: day, variantOffset: options.isManualRefresh ? options.refreshAttempt : 0)
 
         guard APISettings.canUseAI else {
@@ -517,7 +589,7 @@ enum DailyReflectionService {
             return fallback
         }
 
-        let attempts = options.isManualRefresh ? 2 : 1
+        let attempts = options.excludedSentences.isEmpty ? (options.isManualRefresh ? 2 : 1) : 2
         for attempt in 0..<attempts {
             do {
                 let ai = try await fetchAIReflection(
@@ -613,40 +685,59 @@ enum DailyReflectionService {
         2. 现代汉语原文：translation 与 source_zh 留空
         3. source / source_zh 无把握则空字符串，禁止编造
         4. 不要鸡汤口号、不要催学习、不要广告
-        5. 连续多日轮换题材与语种，避免重复同一作者或同一季节景物
+        5. 连续多日必须换作品（或同一作家的另一部作品），并换切入角度；禁止连续使用同一原文
+        6. 用户关键词是气质/口味，不是必须写进句子的字；禁止为了贴关键词而选最烂熟的那一句
         """
 
         let preferenceHint: String
         if let snippet = DailyReflectionPreferences.promptSnippet {
-            preferenceHint = "用户偏好关键词：\(snippet)。优先选气质相符的经典名句，作为软偏好；不要硬凑关键词、不要降低文学性。"
+            preferenceHint = """
+            用户口味关键词：\(snippet)。这是选书/选作者的气质，不是造句素材。
+            - 从符合这一气质的作家或作品里选一句可核对的原文
+            - 禁止把关键词塞进句子，禁止每天都用同一部代表作里最著名的那一句
+            - 今天必须换一部与近期不同的作品；同一作家可以，但要换篇
+            """
         } else {
-            preferenceHint = "用户未设置偏好关键词，按默认优先级选句。"
+            preferenceHint = "用户未设置口味关键词。按默认优先级选句，今天仍须换作品、换角度。"
         }
+
+        let angle = options.dailyAngle ?? dailyAngle(for: day, refreshAttempt: options.refreshAttempt)
+        let excludedSentences = options.excludedSentences
+        let excludedSources = options.excludedSources
+        let exclusionBlock: String = {
+            if excludedSentences.isEmpty && excludedSources.isEmpty {
+                return "近期尚无已展示句子。"
+            }
+            var lines: [String] = []
+            if !excludedSentences.isEmpty {
+                lines.append("近期已展示原文（禁止重复）：")
+                lines.append(contentsOf: excludedSentences.prefix(12).enumerated().map { index, sentence in
+                    let preview = sentence.replacingOccurrences(of: "\n", with: " ")
+                    let clipped = preview.count > 72 ? String(preview.prefix(72)) + "…" : preview
+                    return "\(index + 1). \(clipped)"
+                })
+            }
+            if !excludedSources.isEmpty {
+                lines.append("近期出处（今天请换作品）：")
+                lines.append(contentsOf: excludedSources.prefix(8).map { "- \($0)" })
+            }
+            return lines.joined(separator: "\n")
+        }()
 
         let refreshHint: String
         if options.isManualRefresh {
-            let excludedBlock: String
-            if options.excludedSentences.isEmpty {
-                excludedBlock = "（今日尚无历史句）"
-            } else {
-                excludedBlock = options.excludedSentences
-                    .prefix(8)
-                    .enumerated()
-                    .map { index, sentence in
-                        let preview = sentence.replacingOccurrences(of: "\n", with: " ")
-                        let clipped = preview.count > 72 ? String(preview.prefix(72)) + "…" : preview
-                        return "\(index + 1). \(clipped)"
-                    }
-                    .joined(separator: "\n")
-            }
             refreshHint = """
             这是用户第 \(options.refreshAttempt) 次刷新今日一句：必须换一句与下方列表完全不同的经典名句。
-            禁止重复同一原文（不要只改 translation/source）；优先换作者、语种或题材。
-            今日已展示过的原文（禁止重复）：
-            \(excludedBlock)
+            禁止重复同一原文（不要只改 translation/source）；必须换作品，并换切入角度。
+            今天切入角度：\(angle)
+            \(exclusionBlock)
             """
         } else {
-            refreshHint = "这是今日首次生成，按默认规则选句即可。"
+            refreshHint = """
+            这是今日首次生成。必须与近期已展示原文完全不同，并换一部作品。
+            今天切入角度：\(angle)
+            \(exclusionBlock)
+            """
         }
 
         let userPrompt = """
@@ -657,13 +748,21 @@ enum DailyReflectionService {
         \(refreshHint)
 
         请给出今日一句。要求：
-        - 原文原汁原味；需要时再给中文翻译
+        - 按今天的切入角度选一句可核对的原文；需要时再给中文翻译
+        - 必须换一部与近期不同的作品，不要回到最著名的那一句
         - 默认单行输出；只有短诗且分行是原文形式时才用真实换行，散文/戏剧台词不要拆行
         - 外文必须同时给出外文 source 与中文 source_zh
         - 季节不必强行呼应
         """
 
-        let preferredTemperature = options.isManualRefresh ? (retryBoost ? 1.0 : 0.92) : 0.7
+        let preferredTemperature: Double
+        if options.isManualRefresh {
+            preferredTemperature = retryBoost ? 1.0 : 0.92
+        } else if retryBoost || DailyReflectionPreferences.hasKeywords {
+            preferredTemperature = 0.85
+        } else {
+            preferredTemperature = 0.7
+        }
         let body: [String: Any] = [
             "model": APISettings.effectiveModel,
             "messages": [
