@@ -158,7 +158,10 @@ struct CreateCardsView: View {
 
     private var scrollContent: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+            VStack(alignment: .leading, spacing: AppSpacing.md) {
+                BrandMark(compact: true)
+                    .padding(.top, 2)
+
                 if hasPendingDrafts, let pendingDrafts = shareImport.pendingDrafts {
                     PendingCardsBannerView(
                         title: L10n.createPendingImportTitle,
@@ -203,7 +206,7 @@ struct CreateCardsView: View {
                 wordsCard
             }
             .padding(.horizontal, AppSpacing.md)
-            .padding(.top, AppSpacing.md)
+            .padding(.top, AppSpacing.sm)
             .padding(.bottom, AppSpacing.md)
         }
         .scrollBounceBehavior(.basedOnSize)
@@ -486,7 +489,15 @@ struct CreateCardsView: View {
         }
         .padding(.top, AppSpacing.sm)
         .padding(.bottom, AppSpacing.sm)
-        .background(AppColor.pageBackground)
+        .background {
+            AppColor.pageBackground
+                .overlay(alignment: .top) {
+                    Rectangle()
+                        .fill(AppColor.borderSubtle)
+                        .frame(height: 1)
+                }
+                .ignoresSafeArea(edges: .bottom)
+        }
     }
 
     private func openShareDraftPreview() {

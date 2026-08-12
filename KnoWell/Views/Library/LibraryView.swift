@@ -146,8 +146,13 @@ struct LibraryView: View {
                 }
             }
             .padding(.horizontal, 12)
-            .padding(.vertical, 9)
-            .background(AppColor.surfaceMuted, in: Capsule())
+            .padding(.vertical, 10)
+            .background(AppColor.surface, in: Capsule())
+            .overlay {
+                Capsule()
+                    .strokeBorder(AppColor.borderSubtle, lineWidth: 1)
+            }
+            .appSoftShadow()
 
             if hasAnyCards {
                 cardFilterMenu

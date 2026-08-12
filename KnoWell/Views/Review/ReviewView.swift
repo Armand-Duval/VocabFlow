@@ -219,30 +219,35 @@ private struct ReviewHomeView: View {
 
     @State private var showReflectionHistory = false
     @State private var showReflectionPreferences = false
+    @State private var appeared = false
 
     private var dueCount: Int { plan.sessionCards.count }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppSpacing.section) {
-                AppSurfaceCard(padding: AppSpacing.md) {
-                    dueZone
-                }
+                homeHeader
+                    .opacity(appeared ? 1 : 0)
+                    .offset(y: appeared ? 0 : 8)
 
-                if hasAnyCards {
-                    todayStatsCard
-                    libraryStatsRow
-                }
+                dueComposition
+                    .opacity(appeared ? 1 : 0)
+                    .offset(y: appeared ? 0 : 14)
 
                 if let dailyReflection {
-                    AppSurfaceCard(padding: AppSpacing.sm) {
-                        literaryReflection(dailyReflection)
-                    }
+                    literaryZone(dailyReflection)
+                        .opacity(appeared ? 1 : 0)
+                        .offset(y: appeared ? 0 : 18)
                 }
             }
             .padding(.horizontal, AppSpacing.md)
-            .padding(.top, AppSpacing.md)
-            .padding(.bottom, AppSpacing.lg)
+            .padding(.top, AppSpacing.sm)
+            .padding(.bottom, AppSpacing.xl)
+        }
+        .onAppear {
+            withAnimation(.spring(response: 0.55, dampingFraction: 0.86)) {
+                appeared = true
+            }
         }
         .sheet(isPresented: $showReflectionHistory) {
             DailyReflectionHistoryView(onCollect: onCollectReflection)
@@ -252,102 +257,80 @@ private struct ReviewHomeView: View {
         }
     }
 
-    private var todayStatsCard: some View {
-        AppSurfaceCard(padding: AppSpacing.md) {
-            VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                Text(L10n.reviewHomeStatsTitle)
-                    .font(AppFont.weak())
-                    .foregroundStyle(AppColor.textMuted)
-
-                HStack(spacing: 0) {
-                    libraryStat(
-                        value: "\(plan.newStudiedToday)",
-                        label: L10n.reviewHomeStatsNew
-                    )
-                    libraryStat(
-                        value: "\(plan.reviewStudiedToday)",
-                        label: L10n.reviewHomeStatsReview
-                    )
-                    libraryStat(
-                        value: "\(studiedToday)",
-                        label: L10n.reviewHomeStatsTotal
-                    )
-                }
-
-                if let todayCapture {
-                    Text(L10n.reviewHomeActivityToday(todayCapture.uniqueWords, todayCapture.uniqueSentences))
-                        .font(AppFont.helper())
-                        .foregroundStyle(AppColor.textSecondary)
-                }
-
-                if let recentActivity, recentActivity.spanDays > 1 {
-                    Text(
-                        L10n.reviewHomeActivityRecent(
-                            recentActivity.spanDays,
-                            recentActivity.uniqueWords,
-                            recentActivity.uniqueSentences
-                        )
-                    )
+    private var homeHeader: some View {
+        HStack(alignment: .firstTextBaseline) {
+            BrandMark(compact: false)
+            Spacer(minLength: 0)
+            if hasAnyCards, StudyStreakStore.currentStreak > 0 {
+                Text("\(L10n.homeStatStreak) \(L10n.homeStatStreakValue(StudyStreakStore.currentStreak))")
                     .font(AppFont.helper())
-                    .foregroundStyle(AppColor.textTertiary)
-                }
+                    .foregroundStyle(AppColor.textMuted)
             }
         }
+        .padding(.top, AppSpacing.xs)
     }
 
-    private var dueZone: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+    private var dueComposition: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
             dueHero
 
-            if hasAnyCards, let metaLine = compactMetaLine {
-                Button(action: onShowQuota) {
-                    Text(metaLine)
-                        .font(AppFont.weak())
-                        .foregroundStyle(AppColor.textMuted)
-                        .lineLimit(2)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .buttonStyle(SoftPressButtonStyle(pressedScale: 0.99, pressedOpacity: 0.9))
-                .accessibilityLabel(metaLine)
+            if hasAnyCards {
+                compactStatsLine
             }
 
             if !hasAnyCards {
                 emptyCTA
-                    .padding(.top, AppSpacing.xs)
             } else if dueCount > 0 {
                 startReviewButton
-                    .padding(.top, AppSpacing.xs)
+            } else {
+                Text(L10n.reviewHomeDoneToday)
+                    .font(AppFont.secondary())
+                    .foregroundStyle(AppColor.textSecondary)
             }
         }
-    }
-
-    private var libraryStatsRow: some View {
-        HStack(spacing: 0) {
-            libraryStat(value: "\(lifetimeStudiedCount)", label: L10n.reviewHomeLifetimeStudied)
-            libraryStat(value: "\(totalCardCount)", label: L10n.reviewHomeTotalCards)
-        }
-        .padding(.vertical, AppSpacing.sm)
+        .padding(AppSpacing.lg)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(AppColor.surface, in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
+        .appSoftShadow()
     }
 
-    private func libraryStat(value: String, label: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+    private var compactStatsLine: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: AppSpacing.lg) {
+                miniStat(value: "\(plan.newStudiedToday)", label: L10n.reviewHomeStatsNew)
+                miniStat(value: "\(plan.reviewStudiedToday)", label: L10n.reviewHomeStatsReview)
+                miniStat(value: "\(lifetimeStudiedCount)", label: L10n.reviewHomeLifetimeStudied)
+                Spacer(minLength: 0)
+            }
+
+            Button(action: onShowQuota) {
+                Text(quotaMetaLine)
+                    .font(AppFont.helper())
+                    .foregroundStyle(AppColor.textMuted)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .buttonStyle(SoftPressButtonStyle(pressedScale: 0.99, pressedOpacity: 0.9))
+            .accessibilityLabel(quotaMetaLine)
+        }
+    }
+
+    private func miniStat(value: String, label: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
             Text(value)
                 .font(AppFont.statValue())
                 .foregroundStyle(AppColor.textPrimary)
                 .monospacedDigit()
+                .contentTransition(.numericText())
             Text(label)
-                .font(AppFont.weak())
+                .font(AppFont.statLabel())
                 .foregroundStyle(AppColor.textMuted)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, AppSpacing.md)
     }
 
     private var dueHero: some View {
-        HStack(alignment: .firstTextBaseline, spacing: AppSpacing.sm) {
+        HStack(alignment: .lastTextBaseline, spacing: AppSpacing.sm) {
             Text("\(dueCount)")
                 .font(AppFont.heroValue())
                 .foregroundStyle(AppColor.textPrimary)
@@ -355,8 +338,9 @@ private struct ReviewHomeView: View {
                 .accessibilityLabel(L10n.reviewHomeDueCount(dueCount))
 
             Text(L10n.homeStatDue)
-                .font(AppFont.caption())
-                .foregroundStyle(AppColor.textTertiary.opacity(0.85))
+                .font(AppFont.secondary().weight(.medium))
+                .foregroundStyle(AppColor.textTertiary)
+                .padding(.bottom, 8)
 
             Spacer(minLength: 0)
         }
@@ -377,40 +361,48 @@ private struct ReviewHomeView: View {
         plan.newStudiedToday + plan.reviewStudiedToday
     }
 
-    private var compactMetaLine: String? {
-        guard hasAnyCards else { return nil }
-        return [
-            L10n.reviewHomeStudiedToday(studiedToday),
-            "\(L10n.homeStatStreak) \(L10n.homeStatStreakValue(StudyStreakStore.currentStreak))"
-        ].joined(separator: " · ")
+    private var quotaMetaLine: String {
+        var parts = [L10n.reviewHomeStudiedToday(studiedToday)]
+        if let todayCapture {
+            parts.append(L10n.reviewHomeActivityToday(todayCapture.uniqueWords, todayCapture.uniqueSentences))
+        } else if let recentActivity, recentActivity.spanDays > 1 {
+            parts.append(
+                L10n.reviewHomeActivityRecent(
+                    recentActivity.spanDays,
+                    recentActivity.uniqueWords,
+                    recentActivity.uniqueSentences
+                )
+            )
+        } else if totalCardCount > 0 {
+            parts.append("\(L10n.reviewHomeTotalCards) \(totalCardCount)")
+        }
+        return parts.joined(separator: " · ")
     }
 
     private var emptyCTA: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            Button {
-                AppTab.request(.create)
-            } label: {
-                Text(L10n.reviewEmptyStartCreate)
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(PrimaryButtonStyle(prominent: true))
+        Button {
+            AppTab.request(.create)
+        } label: {
+            Text(L10n.reviewEmptyStartCreate)
+                .frame(maxWidth: .infinity)
         }
+        .buttonStyle(PrimaryButtonStyle(prominent: true))
     }
 
-    private func literaryReflection(_ reflection: DailyReflection) -> some View {
-        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+    private func literaryZone(_ reflection: DailyReflection) -> some View {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
             HStack(spacing: 6) {
                 Text(L10n.reviewDailyTitle)
-                    .font(AppFont.weak())
-                    .foregroundStyle(AppColor.textMuted.opacity(0.75))
+                    .font(AppFont.helper())
+                    .foregroundStyle(AppColor.textMuted)
                 if let occasion = reflection.occasion?.trimmingCharacters(in: .whitespacesAndNewlines),
                    !occasion.isEmpty {
                     Text("·")
-                        .font(AppFont.weak())
-                        .foregroundStyle(AppColor.textMuted.opacity(0.35))
+                        .font(AppFont.helper())
+                        .foregroundStyle(AppColor.textMuted.opacity(0.45))
                     Text(occasion)
-                        .font(AppFont.weak())
-                        .foregroundStyle(AppColor.textMuted.opacity(0.55))
+                        .font(AppFont.helper())
+                        .foregroundStyle(AppColor.textMuted.opacity(0.7))
                         .lineLimit(1)
                 }
                 Spacer(minLength: 0)
@@ -448,34 +440,21 @@ private struct ReviewHomeView: View {
                 .accessibilityLabel(L10n.reviewDailyRefresh)
             }
 
-            if DailyReflectionPreferences.hasKeywords {
-                Text(L10n.reviewDailyPreferencesActive + "：" + DailyReflectionPreferences.keywords.joined(separator: " · "))
-                    .font(AppFont.weak())
-                    .foregroundStyle(AppColor.textMuted.opacity(0.7))
-                    .lineLimit(1)
-            }
-
             LiteraryQuoteLines(text: reflection.displaySentence)
 
             if let quoteSource = reflection.quoteSourceAttribution {
                 Text("— \(quoteSource)")
-                    .font(AppFont.weak())
+                    .font(AppFont.helper())
                     .foregroundStyle(AppColor.textMuted)
             }
 
             if let translation = reflection.displayTranslation {
                 LiteraryQuoteLines(
                     text: translation,
-                    font: AppFont.helper(),
-                    foreground: AppColor.textSecondary.opacity(0.9),
-                    lineSpacing: 3
+                    font: AppFont.secondary(),
+                    foreground: AppColor.textSecondary.opacity(0.92),
+                    lineSpacing: 4
                 )
-            }
-
-            if let translationSource = reflection.translationSourceAttribution {
-                Text("—— \(translationSource)")
-                    .font(AppFont.weak())
-                    .foregroundStyle(AppColor.textMuted)
             }
 
             HStack(spacing: AppSpacing.md) {
@@ -488,13 +467,11 @@ private struct ReviewHomeView: View {
                     showReflectionHistory = true
                 }
                 Spacer(minLength: 0)
-                Text(L10n.brandName)
-                    .font(AppFont.weak())
-                    .foregroundStyle(AppColor.textMuted.opacity(0.4))
-                    .accessibilityHidden(true)
             }
             .padding(.top, 2)
         }
+        .padding(.horizontal, 4)
+        .padding(.vertical, AppSpacing.sm)
     }
 }
 

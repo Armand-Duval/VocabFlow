@@ -390,8 +390,9 @@ struct CardReviewSessionView: View {
             }
 
             Text(L10n.reviewProgress(currentIndex + 1, max(sessionQueue.count, 1)))
-                .font(AppFont.weak())
-                .foregroundStyle(AppColor.textTertiary)
+                .font(AppFont.helper())
+                .foregroundStyle(AppColor.textMuted)
+                .monospacedDigit()
 
             Spacer(minLength: 0)
             trailing
@@ -461,7 +462,7 @@ struct CardReviewSessionView: View {
                             .foregroundStyle(AppColor.textTertiary)
                     } else {
                         Text(card.word)
-                            .font(.system(size: 30, weight: .bold))
+                            .font(AppFont.studyWord())
                             .foregroundStyle(AppColor.accent)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .transition(.opacity.combined(with: .move(edge: .leading)))

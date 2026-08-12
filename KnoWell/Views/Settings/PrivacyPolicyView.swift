@@ -62,11 +62,9 @@ struct FirstLaunchGateView: View {
     private var introPage: some View {
         VStack(alignment: .leading, spacing: AppSpacing.lg) {
             Spacer(minLength: AppSpacing.xl)
-            Text(L10n.brandName)
-                .font(AppFont.heroValue())
-                .foregroundStyle(AppColor.accent)
+            BrandMark(compact: false)
             Text(L10n.onboardingHeadline)
-                .font(AppFont.sectionTitle())
+                .font(AppFont.literaryQuote())
                 .foregroundStyle(AppColor.textPrimary)
             Text(L10n.onboardingBody)
                 .font(AppFont.body())
