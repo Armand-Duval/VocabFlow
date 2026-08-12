@@ -18,6 +18,15 @@ enum L10n {
     /// Locale-aware display brand: 致知 / KnoWell.
     static var brandName: String { tr("brand.name") }
     static var brandActionName: String { tr("brand.name.action") }
+
+    static var onboardingHeadline: String { tr("onboarding.headline") }
+    static var onboardingBody: String { tr("onboarding.body") }
+    static var onboardingPointCapture: String { tr("onboarding.point.capture") }
+    static var onboardingPointReview: String { tr("onboarding.point.review") }
+    static var onboardingPointRemember: String { tr("onboarding.point.remember") }
+    static var onboardingContinue: String { tr("onboarding.continue") }
+    static var onboardingBack: String { tr("onboarding.back") }
+
     static var homeStatDue: String { tr("home.stat.due") }
     static var homeStatNewQuota: String { tr("home.stat.newQuota") }
     static var homeStatStreak: String { tr("home.stat.streak") }
@@ -171,6 +180,8 @@ enum L10n {
     static var extensionMissingKey: String { tr("extension.error.missingKey") }
     static var extensionNoContent: String { tr("extension.error.noContent") }
     static var extensionNoText: String { tr("extension.error.noText") }
+    static var extensionOCRFailed: String { tr("extension.error.ocrFailed") }
+    static var extensionTimeout: String { tr("extension.error.timeout") }
     static var extensionOpeningCreate: String { tr("extension.openingCreate") }
 
     // MARK: - Preview
@@ -256,6 +267,12 @@ enum L10n {
     static var tapToFlipBack: String { tr("review.tapFlipBack") }
     static var showAnswer: String { tr("review.showAnswer") }
     static var reviewScrollForAnswer: String { tr("review.scrollForAnswer") }
+    static var reviewSwipeCoachTitle: String { tr("review.swipeCoach.title") }
+    static var reviewSwipeCoachReveal: String { tr("review.swipeCoach.reveal") }
+    static var reviewSwipeCoachAgain: String { tr("review.swipeCoach.again") }
+    static var reviewSwipeCoachEasy: String { tr("review.swipeCoach.easy") }
+    static var reviewSwipeCoachGood: String { tr("review.swipeCoach.good") }
+    static var reviewSwipeCoachGotIt: String { tr("review.swipeCoach.gotIt") }
     static var reviewCollapseAnswer: String { tr("review.collapseAnswer") }
     static var reviewCollapseModules: String { tr("review.collapseModules") }
     static var reviewMeaningSection: String { tr("review.meaning") }
@@ -287,6 +304,10 @@ enum L10n {
     static func reviewHomeStudiedToday(_ count: Int) -> String {
         tf("review.home.studiedToday", count)
     }
+    static var reviewHomeStatsTitle: String { tr("review.home.statsTitle") }
+    static var reviewHomeStatsNew: String { tr("review.home.statsNew") }
+    static var reviewHomeStatsReview: String { tr("review.home.statsReview") }
+    static var reviewHomeStatsTotal: String { tr("review.home.statsTotal") }
     static func reviewHomeWeekActivity(_ words: Int, _ sentences: Int) -> String {
         tf("review.home.weekActivity", words, sentences)
     }
@@ -571,6 +592,9 @@ enum L10n {
 
     static var privacyTitle: String { tr("privacy.title") }
     static var privacyIntro: String { tr("privacy.intro") }
+    static var privacyConsentTitle: String { tr("privacy.consent.title") }
+    static var privacyConsentBody: String { tr("privacy.consent.body") }
+    static var privacyAccept: String { tr("privacy.accept") }
     static var privacyDataCollectionTitle: String { tr("privacy.data.title") }
     static var privacyDataCollectionBody: String { tr("privacy.data.body") }
     static var privacyAITitle: String { tr("privacy.ai.title") }

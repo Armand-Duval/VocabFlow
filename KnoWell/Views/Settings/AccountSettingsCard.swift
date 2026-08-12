@@ -24,15 +24,10 @@ struct AccountSettingsCard: View {
                 }
             }
         }
-        .alert(L10n.accountSignInFailed, isPresented: Binding(
-            get: { errorMessage != nil },
-            set: { if !$0 { errorMessage = nil } }
-        )) {
-            Button(L10n.ok, role: .cancel) {}
-        } message: {
-            if let errorMessage {
-                Text(errorMessage)
-            }
+        .onChange(of: errorMessage) { _, message in
+            guard let message, !message.isEmpty else { return }
+            ToastCenter.shared.show("\(L10n.accountSignInFailed)：\(message)")
+            errorMessage = nil
         }
     }
 

@@ -34,6 +34,14 @@ final class FlashCard {
     var repetitions: Int
     var reviewCount: Int
     var learningStep: Int
+    /// FSRS stability (days); 0 means not yet migrated / new.
+    var stability: Double = 0
+    /// FSRS difficulty in 1...10.
+    var difficulty: Double = 0
+    /// `FSRSCardState` raw value.
+    var fsrsStateRaw: Int = 0
+    var lapses: Int = 0
+    var lastReviewDate: Date?
     var isSuspended: Bool = false
     var deck: Deck?
 
@@ -106,6 +114,11 @@ final class FlashCard {
         self.repetitions = 0
         self.reviewCount = 0
         self.learningStep = 0
+        self.stability = 0
+        self.difficulty = 0
+        self.fsrsStateRaw = FSRSCardState.new.rawValue
+        self.lapses = 0
+        self.lastReviewDate = nil
         self.isSuspended = false
     }
 }

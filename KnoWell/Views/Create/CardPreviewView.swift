@@ -7,10 +7,6 @@ struct CardPreviewView: View {
     @State private var drafts: [GeneratedCardDraft]
     var onComplete: () -> Void
 
-    @State private var didSave = false
-    @State private var saveAlertTitle = L10n.savedTitle
-    @State private var saveAlertMessage = L10n.savedMessage
-
     init(drafts: [GeneratedCardDraft], selectedDeckID: Binding<UUID?>, onComplete: @escaping () -> Void) {
         _drafts = State(initialValue: drafts)
         _selectedDeckID = selectedDeckID
@@ -48,13 +44,6 @@ struct CardPreviewView: View {
                 .disabled(selectedCount == 0)
             }
         }
-        .alert(saveAlertTitle, isPresented: $didSave) {
-            Button(L10n.done) {
-                onComplete()
-            }
-        } message: {
-            Text(saveAlertMessage)
-        }
     }
 
     private func saveSelectedCards() {
@@ -62,25 +51,21 @@ struct CardPreviewView: View {
         let result = FlashCardSaver.save(drafts: drafts, to: modelContext, deck: deck)
 
         if result.skippedAll {
-            saveAlertTitle = L10n.saveAllDuplicatesTitle
-            saveAlertMessage = L10n.saveAllDuplicatesMessage
-            didSave = true
+            ToastCenter.shared.show(L10n.saveAllDuplicatesMessage)
             return
         }
 
         guard result.didSaveAny else { return }
 
         selectedDeckID = deck.id
-        saveAlertTitle = L10n.savedTitle
         if result.skippedDuplicateCount > 0 {
-            saveAlertMessage = L10n.savePartialDuplicates(
-                result.savedCount,
-                skipped: result.skippedDuplicateCount
+            ToastCenter.shared.show(
+                L10n.savePartialDuplicates(result.savedCount, skipped: result.skippedDuplicateCount)
             )
         } else {
-            saveAlertMessage = L10n.savedMessage
+            ToastCenter.shared.show(L10n.savedMessage)
         }
-        didSave = true
+        onComplete()
     }
 }
 

@@ -32,6 +32,8 @@ struct CardReviewSessionView: View {
     @State private var contentRevision = 0
 
     @AppStorage("review.hasSeenScrollHint") private var hasSeenScrollHint = false
+    @AppStorage("review.hasSeenSwipeCoach") private var hasSeenSwipeCoach = false
+    @State private var showSwipeCoach = false
 
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     private let swipeThreshold: CGFloat = 72
@@ -133,6 +135,61 @@ struct CardReviewSessionView: View {
 
     private func prepareRevealState(for card: FlashCard?) {
         showBack = card.map(shouldAutoRevealAnswer(for:)) ?? false
+        maybePresentSwipeCoach(for: card)
+    }
+
+    private func maybePresentSwipeCoach(for card: FlashCard?) {
+        guard !hasSeenSwipeCoach, let card, showBack || shouldAutoRevealAnswer(for: card) else { return }
+        showSwipeCoach = true
+    }
+
+    private var swipeCoachOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.28)
+                .ignoresSafeArea()
+                .onTapGesture { dismissSwipeCoach() }
+
+            VStack(alignment: .leading, spacing: AppSpacing.md) {
+                Text(L10n.reviewSwipeCoachTitle)
+                    .font(AppFont.sectionTitle())
+                    .foregroundStyle(AppColor.textPrimary)
+
+                coachRow(icon: "arrow.down", text: L10n.reviewSwipeCoachReveal)
+                coachRow(icon: "arrow.left", text: L10n.reviewSwipeCoachAgain)
+                coachRow(icon: "arrow.right", text: L10n.reviewSwipeCoachEasy)
+                coachRow(icon: "hand.tap", text: L10n.reviewSwipeCoachGood)
+
+                Button(action: dismissSwipeCoach) {
+                    Text(L10n.reviewSwipeCoachGotIt)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(PrimaryButtonStyle(prominent: true))
+                .padding(.top, AppSpacing.xs)
+            }
+            .padding(AppSpacing.lg)
+            .background(AppColor.surface, in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
+            .appSoftShadow()
+            .padding(.horizontal, AppSpacing.lg)
+        }
+        .accessibilityElement(children: .contain)
+    }
+
+    private func coachRow(icon: String, text: String) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: icon)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(AppColor.accent)
+                .frame(width: 22)
+            Text(text)
+                .font(AppFont.secondary())
+                .foregroundStyle(AppColor.textBody)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private func dismissSwipeCoach() {
+        hasSeenSwipeCoach = true
+        showSwipeCoach = false
     }
 
     private func reviewContent(for card: FlashCard) -> some View {
@@ -159,7 +216,14 @@ struct CardReviewSessionView: View {
                 revealCardBody(for: card)
             }
         }
+        .overlay {
+            if showSwipeCoach {
+                swipeCoachOverlay
+                    .transition(.opacity)
+            }
+        }
         .animation(Self.revealAnimation, value: showBack)
+        .animation(.easeInOut(duration: 0.22), value: showSwipeCoach)
     }
 
     private static let revealAnimation: Animation = .spring(response: 0.42, dampingFraction: 0.88)
@@ -279,6 +343,11 @@ struct CardReviewSessionView: View {
         withAnimation(Self.revealAnimation) {
             showBack = true
         }
+        if !hasSeenSwipeCoach {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                showSwipeCoach = true
+            }
+        }
         if let proxy {
             DispatchQueue.main.async {
                 withAnimation(.easeOut(duration: 0.28)) {
@@ -294,6 +363,11 @@ struct CardReviewSessionView: View {
                 showBack = toBack
             } else {
                 showBack.toggle()
+            }
+        }
+        if showBack, !hasSeenSwipeCoach {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                showSwipeCoach = true
             }
         }
     }

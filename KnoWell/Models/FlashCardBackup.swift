@@ -31,6 +31,11 @@ struct FlashCardBackup: Codable {
     let repetitions: Int
     let reviewCount: Int
     let learningStep: Int
+    let stability: Double
+    let difficulty: Double
+    let fsrsStateRaw: Int
+    let lapses: Int
+    let lastReviewDate: Date?
     let isSuspended: Bool
     let deckId: UUID?
 
@@ -39,6 +44,7 @@ struct FlashCardBackup: Codable {
         case usageNote, etymology, synonyms, antonyms, paraphrases
         case sourceAttribution, sourceImagePath, highlightText
         case createdAt, nextReviewDate, intervalDays, easeFactor, repetitions, reviewCount, learningStep
+        case stability, difficulty, fsrsStateRaw, lapses, lastReviewDate
         case isSuspended, deckId
     }
 
@@ -66,6 +72,11 @@ struct FlashCardBackup: Codable {
         repetitions = card.repetitions
         reviewCount = card.reviewCount
         learningStep = card.learningStep
+        stability = card.stability
+        difficulty = card.difficulty
+        fsrsStateRaw = card.fsrsStateRaw
+        lapses = card.lapses
+        lastReviewDate = card.lastReviewDate
         isSuspended = card.isSuspended
         deckId = card.deck?.id
     }
@@ -95,6 +106,11 @@ struct FlashCardBackup: Codable {
         repetitions = try container.decode(Int.self, forKey: .repetitions)
         reviewCount = try container.decodeIfPresent(Int.self, forKey: .reviewCount) ?? 0
         learningStep = try container.decodeIfPresent(Int.self, forKey: .learningStep) ?? 0
+        stability = try container.decodeIfPresent(Double.self, forKey: .stability) ?? 0
+        difficulty = try container.decodeIfPresent(Double.self, forKey: .difficulty) ?? 0
+        fsrsStateRaw = try container.decodeIfPresent(Int.self, forKey: .fsrsStateRaw) ?? 0
+        lapses = try container.decodeIfPresent(Int.self, forKey: .lapses) ?? 0
+        lastReviewDate = try container.decodeIfPresent(Date.self, forKey: .lastReviewDate)
         isSuspended = try container.decodeIfPresent(Bool.self, forKey: .isSuspended) ?? false
         deckId = try container.decodeIfPresent(UUID.self, forKey: .deckId)
     }
@@ -124,6 +140,11 @@ struct FlashCardBackup: Codable {
         try container.encode(repetitions, forKey: .repetitions)
         try container.encode(reviewCount, forKey: .reviewCount)
         try container.encode(learningStep, forKey: .learningStep)
+        try container.encode(stability, forKey: .stability)
+        try container.encode(difficulty, forKey: .difficulty)
+        try container.encode(fsrsStateRaw, forKey: .fsrsStateRaw)
+        try container.encode(lapses, forKey: .lapses)
+        try container.encodeIfPresent(lastReviewDate, forKey: .lastReviewDate)
         try container.encode(isSuspended, forKey: .isSuspended)
         try container.encode(deckId, forKey: .deckId)
     }
@@ -151,6 +172,11 @@ struct FlashCardBackup: Codable {
         card.repetitions = repetitions
         card.reviewCount = reviewCount
         card.learningStep = learningStep
+        card.stability = stability
+        card.difficulty = difficulty
+        card.fsrsStateRaw = fsrsStateRaw
+        card.lapses = lapses
+        card.lastReviewDate = lastReviewDate
         card.isSuspended = isSuspended
         if let deckId, let deck = deckLookup[deckId] {
             card.deck = deck
@@ -185,6 +211,11 @@ struct FlashCardBackup: Codable {
         card.repetitions = repetitions
         card.reviewCount = reviewCount
         card.learningStep = learningStep
+        card.stability = stability
+        card.difficulty = difficulty
+        card.fsrsStateRaw = fsrsStateRaw
+        card.lapses = lapses
+        card.lastReviewDate = lastReviewDate
         card.isSuspended = isSuspended
         if let deckId, let deck = deckLookup[deckId] {
             card.deck = deck

@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import UniformTypeIdentifiers
 
 /// Share / Action entry: extract content, then keep the create form on screen.
 /// Never auto-dismiss on load failure — that felt like a flash crash.
@@ -35,13 +36,66 @@ class ExtensionImportViewController: UIViewController {
         Task { @MainActor in
             await Task.yield()
 
-            if let text = await ShareTextExtractor.loadText(from: inputItems) {
+            let outcome = await Self.loadSharedContent(from: inputItems, timeoutSeconds: 20)
+            switch outcome {
+            case .text(let text):
                 presentEditor(sentence: text, highlightedWords: [], sourceHint: nil, sourceImagePath: nil, preferSharedSentence: false)
-            } else if let ocr = await ShareTextExtractor.loadOCRFromImages(from: inputItems) {
+            case .ocr(let ocr):
                 presentOCREditor(ocr)
-            } else {
+            case .ocrFailed:
+                showRecoverableError(L10n.extensionOCRFailed)
+            case .timeout:
+                showRecoverableError(L10n.extensionTimeout)
+            case .empty:
                 showRecoverableError(L10n.extensionNoText)
             }
+        }
+    }
+
+    private enum SharedLoadOutcome {
+        case text(String)
+        case ocr(OCRResult)
+        case ocrFailed
+        case timeout
+        case empty
+    }
+
+    private static func loadSharedContent(
+        from inputItems: [NSExtensionItem],
+        timeoutSeconds: Double
+    ) async -> SharedLoadOutcome {
+        await withTaskGroup(of: SharedLoadOutcome.self) { group in
+            group.addTask {
+                if let text = await ShareTextExtractor.loadText(from: inputItems) {
+                    return .text(text)
+                }
+
+                #if canImport(UIKit)
+                let providers = inputItems.flatMap { $0.attachments ?? [] }
+                let hasImage = providers.contains { provider in
+                    provider.hasItemConformingToTypeIdentifier(UTType.image.identifier)
+                        || provider.hasItemConformingToTypeIdentifier(UTType.jpeg.identifier)
+                        || provider.hasItemConformingToTypeIdentifier(UTType.png.identifier)
+                        || provider.hasItemConformingToTypeIdentifier("public.image")
+                }
+                if hasImage {
+                    if let ocr = await ShareTextExtractor.loadOCRFromImages(from: inputItems) {
+                        return .ocr(ocr)
+                    }
+                    return .ocrFailed
+                }
+                #endif
+
+                return .empty
+            }
+            group.addTask {
+                try? await Task.sleep(for: .seconds(timeoutSeconds))
+                return .timeout
+            }
+
+            let first = await group.next() ?? .empty
+            group.cancelAll()
+            return first
         }
     }
 

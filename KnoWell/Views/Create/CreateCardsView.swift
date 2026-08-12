@@ -733,13 +733,10 @@ private struct CreateCardsAlertsModifier: ViewModifier {
     @Binding var errorMessage: String?
 
     func body(content: Content) -> some View {
-        content.alert(L10n.generateFailedTitle, isPresented: Binding(
-            get: { errorMessage != nil },
-            set: { if !$0 { errorMessage = nil } }
-        )) {
-            Button(L10n.ok, role: .cancel) {}
-        } message: {
-            Text(errorMessage ?? "")
+        content.onChange(of: errorMessage) { _, message in
+            guard let message, !message.isEmpty else { return }
+            ToastCenter.shared.show(message)
+            errorMessage = nil
         }
     }
 }

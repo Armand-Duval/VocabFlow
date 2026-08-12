@@ -28,9 +28,6 @@ struct SettingsView: View {
 
     @State private var showResetAllConfirm = false
     @State private var showMigrateCardsConfirm = false
-    @State private var maintenanceAlertTitle = ""
-    @State private var maintenanceAlertMessage = ""
-    @State private var showMaintenanceAlert = false
 
     var body: some View {
         @Bindable var reviewSettings = reviewSettings
@@ -73,11 +70,6 @@ struct SettingsView: View {
                         }
                     }
                 ))
-                .alert(maintenanceAlertTitle, isPresented: $showMaintenanceAlert) {
-                    Button(L10n.ok, role: .cancel) {}
-                } message: {
-                    Text(maintenanceAlertMessage)
-                }
                 .appConfirmSheet(
                     isPresented: $showResetAllConfirm,
                     title: L10n.settingsResetAllSRS,
@@ -516,9 +508,7 @@ struct SettingsView: View {
     }
 
     private func showMaintenanceResult(title: String, message: String) {
-        maintenanceAlertTitle = title
-        maintenanceAlertMessage = message
-        showMaintenanceAlert = true
+        ToastCenter.shared.show("\(title)：\(message)")
     }
 }
 

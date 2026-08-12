@@ -42,7 +42,7 @@
 | 1 | 复习 | 默认首页 |
 | 2 | 词库 | 卡组与检索 |
 | 3 | 制卡 | AI 制卡 |
-| — | 设置 | 右上角 ⚙️ Sheet |
+| 4 | 设置 | 账号 / API / 备份（底栏第四 Tab） |
 
 ### 1.6 竞品调研
 
@@ -128,7 +128,8 @@ AppRadius:  card=16  button=12  chip=999(capsule)
 ### 复习（Review）
 - 顶部：进度 `2/10` + 可选 deck 名
 - 中部：Teal 大号单词 + 音标 + 白卡片（正面/背面）
-- 底部：「查看答案」→ 三档评分：不会 / 良好 / 简单（带间隔预览）
+- 底部：「查看答案」→ 三档评分：不会 / 良好 / 简单（带间隔预览；Hard 并入不会）
+- 调度：FSRS-4.5（赏析卡略高保留率）
 
 ### 列表（Library / DeckStore）
 - `ScrollView` + `AppSurfaceCard` 分区（避免纯系统 List 设置风）
@@ -151,7 +152,7 @@ AppRadius:  card=16  button=12  chip=999(capsule)
 | 1 | 复习 | clock |
 | 2 | 词库 | books.vertical.fill |
 | 3 | 创建 | plus.circle |
-| 4 | 我的 | person.crop.circle |
+| 4 | 设置 | person.crop.circle |
 
 ---
 

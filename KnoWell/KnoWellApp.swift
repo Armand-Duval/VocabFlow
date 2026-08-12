@@ -6,12 +6,21 @@ struct KnoWellApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @StateObject private var shareImport = ShareImportCoordinator()
     private let clipboardImport = ClipboardImportCoordinator()
+    @AppStorage("privacy.hasAccepted") private var hasAcceptedPrivacy = false
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environmentObject(shareImport)
-                .environment(ReviewSettingsStore.shared)
+            Group {
+                if hasAcceptedPrivacy {
+                    ContentView()
+                        .environmentObject(shareImport)
+                        .environment(ReviewSettingsStore.shared)
+                } else {
+                    FirstLaunchGateView {
+                        hasAcceptedPrivacy = true
+                    }
+                }
+            }
                 .onOpenURL { url in
                     if WeChatSignInService.handleOpenURL(url) {
                         return
@@ -23,6 +32,7 @@ struct KnoWellApp: App {
                     }
                 }
                 .onAppear {
+                    migratePrivacyAcceptanceIfNeeded()
                     APISettings.migrateToAppGroupIfNeeded()
                     WeChatSignInService.registerIfNeeded()
                     AppTabBarChrome.apply()
@@ -33,7 +43,14 @@ struct KnoWellApp: App {
                     }
                 }
                 .task {
+                    guard hasAcceptedPrivacy else { return }
                     _ = await ShareExtensionNotifier.requestAuthorizationIfNeeded()
+                }
+                .onChange(of: hasAcceptedPrivacy) { _, accepted in
+                    guard accepted else { return }
+                    Task {
+                        _ = await ShareExtensionNotifier.requestAuthorizationIfNeeded()
+                    }
                 }
         }
         .modelContainer(AppModelContainer.shared)
@@ -57,6 +74,20 @@ struct KnoWellApp: App {
         shareImport.refreshAll()
         if hadPendingJob || shareImport.hasPendingImport {
             AppTab.request(.create)
+        }
+    }
+
+    /// Returning installs skip the first-launch gate.
+    private func migratePrivacyAcceptanceIfNeeded() {
+        guard !hasAcceptedPrivacy else { return }
+        let defaults = UserDefaults.standard
+        let returningUser =
+            defaults.object(forKey: "review.hasSeenScrollHint") != nil
+            || defaults.object(forKey: "com.knowell.study.streak") != nil
+            || defaults.object(forKey: "com.knowell.study.activity.v1") != nil
+            || defaults.object(forKey: "review.hasSeenSwipeCoach") != nil
+        if returningUser {
+            hasAcceptedPrivacy = true
         }
     }
 }

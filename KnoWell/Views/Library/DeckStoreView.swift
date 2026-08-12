@@ -25,9 +25,6 @@ struct DeckStoreView: View {
     @State private var allowedImportTypes: [UTType] = [.json]
     @State private var pendingFileExport: PendingFileExport?
     @State private var showFileExporter = false
-    @State private var alertTitle = ""
-    @State private var alertMessage = ""
-    @State private var showAlert = false
     @State private var downloadingPackID: String?
     @State private var importProgress: ImportProgressState?
     @State private var isImportingJSON = false
@@ -105,11 +102,6 @@ struct DeckStoreView: View {
                 case .failure(let error):
                     showResult(title: L10n.exportFailed, message: error.localizedDescription)
                 }
-            }
-            .alert(alertTitle, isPresented: $showAlert) {
-                Button(L10n.ok, role: .cancel) {}
-            } message: {
-                Text(alertMessage)
             }
             .alert(L10n.deckCommunityImportGuideTitle, isPresented: $showApkgImportGuide) {
                 Button(L10n.deckCommunityImportNow) {
@@ -922,12 +914,11 @@ struct DeckStoreView: View {
     }
 
     private func showResult(title: String, message: String) {
-        alertTitle = title
-        alertMessage = message
-        showAlert = true
         if title == L10n.importComplete || title == L10n.deckImportComplete {
             ToastCenter.shared.show(message)
+            return
         }
+        ToastCenter.shared.show("\(title)：\(message)")
     }
 }
 
@@ -1045,9 +1036,6 @@ struct DeckCatalogView: View {
     @State private var downloadingPackID: String?
     @State private var importProgress: CatalogImportProgress?
     @State private var showApkgImportGuide = false
-    @State private var alertTitle = ""
-    @State private var alertMessage = ""
-    @State private var showAlert = false
 
     var body: some View {
         ScrollView {
@@ -1060,11 +1048,6 @@ struct DeckCatalogView: View {
         .appPageBackground()
         .navigationTitle(L10n.deckCatalogTitle)
         .navigationBarTitleDisplayMode(.inline)
-        .alert(alertTitle, isPresented: $showAlert) {
-            Button(L10n.ok, role: .cancel) {}
-        } message: {
-            Text(alertMessage)
-        }
         .alert(L10n.deckCommunityImportGuideTitle, isPresented: $showApkgImportGuide) {
             Button(L10n.ok, role: .cancel) {}
         } message: {
@@ -1253,9 +1236,7 @@ struct DeckCatalogView: View {
     }
 
     private func showResult(title: String, message: String) {
-        alertTitle = title
-        alertMessage = message
-        showAlert = true
+        ToastCenter.shared.show("\(title)：\(message)")
     }
 }
 

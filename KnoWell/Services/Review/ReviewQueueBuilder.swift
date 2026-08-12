@@ -130,6 +130,9 @@ extension FlashCard {
     /// 从未成功进入复习阶段的卡片（含刚创建、Again 后重置的卡片）。
     var isNewCard: Bool {
         if reviewCount > 0 { return false }
+        let state = FSRSCardState(rawValue: fsrsStateRaw) ?? .new
+        if state == .review { return false }
+        if stability > 0, state != .new, state != .learning { return false }
         return repetitions == 0 && intervalDays == 0
     }
 }

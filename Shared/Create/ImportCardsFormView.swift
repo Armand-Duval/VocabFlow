@@ -89,13 +89,11 @@ struct ImportCardsFormView: View {
                         Button(L10n.cancel, action: onCancel)
                     }
                 }
-                .alert(L10n.extensionSubmitFailedTitle, isPresented: Binding(
-                    get: { errorMessage != nil },
-                    set: { if !$0 { errorMessage = nil } }
-                )) {
-                    Button(L10n.ok, role: .cancel) {}
-                } message: {
-                    Text(errorMessage ?? "")
+                .appToast(bottomPadding: 120)
+                .onChange(of: errorMessage) { _, message in
+                    guard let message, !message.isEmpty else { return }
+                    ToastCenter.shared.show(message)
+                    errorMessage = nil
                 }
                 .onAppear { reloadDecks() }
                 .onChange(of: trimmedSentence.isEmpty) { _, isEmpty in

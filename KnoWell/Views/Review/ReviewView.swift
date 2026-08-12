@@ -16,6 +16,8 @@ struct ReviewView: View {
     @State private var lifetimeStudiedCount = 0
     @State private var isRefreshingReflection = false
     @State private var isCollectingReflection = false
+    @State private var todayCapture: CaptureStatsStore.Summary?
+    @State private var recentActivity: StudyActivityStore.Summary?
 
     private var activeDeckID: UUID? {
         DeckSettings.lastSelectedDeckID
@@ -41,6 +43,8 @@ struct ReviewView: View {
                             hasAnyCards: hasAnyCards,
                             totalCardCount: totalCardCount,
                             lifetimeStudiedCount: lifetimeStudiedCount,
+                            todayCapture: todayCapture,
+                            recentActivity: recentActivity,
                             dailyReflection: dailyReflection,
                             isRefreshingReflection: isRefreshingReflection,
                             isCollectingReflection: isCollectingReflection,
@@ -126,6 +130,8 @@ struct ReviewView: View {
         let allLibrary = (try? modelContext.fetch(FetchDescriptor<FlashCard>())) ?? []
         totalCardCount = allLibrary.count
         lifetimeStudiedCount = allLibrary.filter { $0.reviewCount > 0 }.count
+        todayCapture = CaptureStatsStore.todaySummary(in: modelContext)
+        recentActivity = StudyActivityStore.recentSummary()
 
         let dueDate = Date.now
         let descriptor = FetchDescriptor<FlashCard>(
@@ -200,6 +206,8 @@ private struct ReviewHomeView: View {
     let hasAnyCards: Bool
     let totalCardCount: Int
     let lifetimeStudiedCount: Int
+    let todayCapture: CaptureStatsStore.Summary?
+    let recentActivity: StudyActivityStore.Summary?
     let dailyReflection: DailyReflection?
     let isRefreshingReflection: Bool
     let isCollectingReflection: Bool
@@ -222,6 +230,7 @@ private struct ReviewHomeView: View {
                 }
 
                 if hasAnyCards {
+                    todayStatsCard
                     libraryStatsRow
                 }
 
@@ -240,6 +249,49 @@ private struct ReviewHomeView: View {
         }
         .sheet(isPresented: $showReflectionPreferences) {
             DailyReflectionPreferencesSheet(onSaved: onPreferencesSaved)
+        }
+    }
+
+    private var todayStatsCard: some View {
+        AppSurfaceCard(padding: AppSpacing.md) {
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                Text(L10n.reviewHomeStatsTitle)
+                    .font(AppFont.weak())
+                    .foregroundStyle(AppColor.textMuted)
+
+                HStack(spacing: 0) {
+                    libraryStat(
+                        value: "\(plan.newStudiedToday)",
+                        label: L10n.reviewHomeStatsNew
+                    )
+                    libraryStat(
+                        value: "\(plan.reviewStudiedToday)",
+                        label: L10n.reviewHomeStatsReview
+                    )
+                    libraryStat(
+                        value: "\(studiedToday)",
+                        label: L10n.reviewHomeStatsTotal
+                    )
+                }
+
+                if let todayCapture {
+                    Text(L10n.reviewHomeActivityToday(todayCapture.uniqueWords, todayCapture.uniqueSentences))
+                        .font(AppFont.helper())
+                        .foregroundStyle(AppColor.textSecondary)
+                }
+
+                if let recentActivity, recentActivity.spanDays > 1 {
+                    Text(
+                        L10n.reviewHomeActivityRecent(
+                            recentActivity.spanDays,
+                            recentActivity.uniqueWords,
+                            recentActivity.uniqueSentences
+                        )
+                    )
+                    .font(AppFont.helper())
+                    .foregroundStyle(AppColor.textTertiary)
+                }
+            }
         }
     }
 
