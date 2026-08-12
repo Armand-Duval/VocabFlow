@@ -29,8 +29,7 @@ enum L10n {
 
     static var homeStatDue: String { tr("home.stat.due") }
     static var homeStatNewQuota: String { tr("home.stat.newQuota") }
-    static var homeStatStreak: String { tr("home.stat.streak") }
-    static func homeStatStreakValue(_ days: Int) -> String { tf("home.stat.streakValue", days) }
+    static func homeStatTotalDays(_ days: Int) -> String { tf("home.stat.totalDays", days) }
     static var homeRecentDecks: String { tr("home.recentDecks") }
     static var createAIGenerate: String { tr("create.aiGenerate") }
     static var createPastePlaceholder: String { tr("create.pastePlaceholder") }

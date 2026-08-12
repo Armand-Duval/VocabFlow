@@ -125,6 +125,14 @@ struct ReviewView: View {
         let allLibrary = (try? modelContext.fetch(FetchDescriptor<FlashCard>())) ?? []
         lifetimeStudiedCount = allLibrary.filter { $0.reviewCount > 0 }.count
         todayCapture = CaptureStatsStore.todaySummary(in: modelContext)
+        let calendar = Calendar.current
+        let cardReviewDays = Set(
+            allLibrary.compactMap { card -> Date? in
+                guard let date = card.lastReviewDate else { return nil }
+                return calendar.startOfDay(for: date)
+            }
+        ).count
+        StudyStreakStore.reconcileTotalDays(max(StudyActivityStore.recordedDayCount(), cardReviewDays))
 
         let dueDate = Date.now
         let descriptor = FetchDescriptor<FlashCard>(
@@ -308,8 +316,8 @@ private struct ReviewHomeView: View {
 
             Spacer(minLength: 0)
 
-            if hasAnyCards, StudyStreakStore.currentStreak > 0 {
-                Text("\(L10n.homeStatStreak) \(L10n.homeStatStreakValue(StudyStreakStore.currentStreak))")
+            if hasAnyCards, StudyStreakStore.totalStudyDays > 0 {
+                Text(L10n.homeStatTotalDays(StudyStreakStore.totalStudyDays))
                     .font(AppFont.helper())
                     .foregroundStyle(AppColor.textMuted)
                     .padding(.bottom, 6)
