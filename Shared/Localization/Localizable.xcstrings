@@ -8746,8 +8746,8 @@
     "review.daily.preferences.footer" : {
       "extractionState" : "manual",
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Up to 3 keywords as a soft hint for AI curation. Saving clears today's cache; refresh to apply." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最多 3 个关键词，作为选句软偏好。保存后会清除今日缓存，刷新即可生效。" } }
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Up to 3 keywords as a soft hint for AI. After saving, today's line regenerates automatically; your keywords appear next to 今日一句." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最多 3 个关键词，作为 AI 选句的软偏好。保存后会自动重生成今日一句，并在标题旁显示你的偏好。" } }
       }
     },
     "review.daily.preferences.placeholder" : {

@@ -348,8 +348,17 @@ private struct ReviewHomeView: View {
                 Text(L10n.reviewDailyTitle)
                     .font(AppFont.helper())
                     .foregroundStyle(AppColor.textMuted)
-                if let occasion = reflection.occasion?.trimmingCharacters(in: .whitespacesAndNewlines),
-                   !occasion.isEmpty {
+                // Prefer showing the user's keywords — AI "occasion" is not the preference they set.
+                if let preferenceLabel = DailyReflectionPreferences.promptSnippet {
+                    Text("·")
+                        .font(AppFont.helper())
+                        .foregroundStyle(AppColor.textMuted.opacity(0.45))
+                    Text(preferenceLabel)
+                        .font(AppFont.helper())
+                        .foregroundStyle(AppColor.accent.opacity(0.8))
+                        .lineLimit(1)
+                } else if let occasion = reflection.occasion?.trimmingCharacters(in: .whitespacesAndNewlines),
+                          !occasion.isEmpty {
                     Text("·")
                         .font(AppFont.helper())
                         .foregroundStyle(AppColor.textMuted.opacity(0.45))
