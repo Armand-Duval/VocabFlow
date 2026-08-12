@@ -58,6 +58,34 @@ enum DailyReflectionPreferences {
         return items.joined(separator: "、")
     }
 
+    /// How the daily line should pick its original language from user taste.
+    enum OriginalLanguageBias {
+        case chinese
+        case english
+        case unspecified
+    }
+
+    static var originalLanguageBias: OriginalLanguageBias {
+        let items = keywords
+        guard !items.isEmpty else { return .unspecified }
+
+        let englishMarkers = ["英文诗", "英文", "英语", "english", "poetry"]
+        let chineseMarkers = ["文言", "古文", "诗词", "古龙", "江湖", "武侠", "哲理", "浪漫", "智慧"]
+
+        let wantsEnglish = items.contains { word in
+            englishMarkers.contains { word.lowercased().contains($0) }
+        }
+        let wantsChinese = items.contains { word in
+            chineseMarkers.contains(where: { word.contains($0) })
+                || word.contains(where: { $0 >= "\u{4E00}" && $0 <= "\u{9FFF}" })
+        }
+
+        if wantsEnglish && !wantsChinese { return .english }
+        if wantsChinese && !wantsEnglish { return .chinese }
+        if wantsChinese { return .chinese }
+        return .unspecified
+    }
+
     static func toggleKeyword(_ raw: String) {
         guard let word = sanitize(raw) else { return }
         var current = keywords

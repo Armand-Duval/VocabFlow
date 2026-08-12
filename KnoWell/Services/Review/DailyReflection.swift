@@ -691,11 +691,29 @@ enum DailyReflectionService {
 
         let preferenceHint: String
         if let snippet = DailyReflectionPreferences.promptSnippet {
+            let languageLock: String
+            switch DailyReflectionPreferences.originalLanguageBias {
+            case .chinese:
+                languageLock = """
+                【原文语言 — 必须遵守】
+                用户口味是中文语境。sentence 必须是中文原文（白话、文言或小说原文），禁止用英文/法文等外文原句再配翻译来凑这一口味。
+                原文已是现代汉语：translation 留空。文言可给一句极短白话，也可留空。
+                """
+            case .english:
+                languageLock = """
+                【原文语言 — 必须遵守】
+                用户口味偏英文。sentence 必须是英文（或作品原来的西文）原文，并给出中文 translation。
+                """
+            case .unspecified:
+                languageLock = "原文语言跟随作品本身；不要为了换作品而跳出用户口味的语言世界。"
+            }
             preferenceHint = """
             用户口味关键词：\(snippet)。这是选书/选作者的气质，不是造句素材。
+            \(languageLock)
             - 从符合这一气质的作家或作品里选一句可核对的原文
             - 禁止把关键词塞进句子，禁止每天都用同一部代表作里最著名的那一句
             - 今天必须换一部与近期不同的作品；同一作家可以，但要换篇
+            - 「换作品」只在同一语言/文化圈内换，不要从古龙跳到法国随笔
             """
         } else {
             preferenceHint = "用户未设置口味关键词。按默认优先级选句，今天仍须换作品、换角度。"

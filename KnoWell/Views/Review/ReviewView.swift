@@ -419,7 +419,7 @@ private struct ReviewHomeView: View {
                 LiteraryQuoteLines(
                     text: translation,
                     font: AppFont.secondary(),
-                    foreground: AppColor.textSecondary.opacity(0.92),
+                    foreground: AppColor.textSecondary,
                     lineSpacing: 4
                 )
             }
