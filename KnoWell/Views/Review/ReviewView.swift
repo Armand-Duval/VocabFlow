@@ -286,16 +286,18 @@ private struct ReviewHomeView: View {
                 Spacer(minLength: 0)
             }
 
-            Button(action: onShowQuota) {
-                Text(quotaMetaLine)
-                    .font(AppFont.helper())
-                    .foregroundStyle(AppColor.textMuted)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            if let quotaMetaLine {
+                Button(action: onShowQuota) {
+                    Text(quotaMetaLine)
+                        .font(AppFont.helper())
+                        .foregroundStyle(AppColor.textMuted)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(SoftPressButtonStyle(pressedScale: 0.99, pressedOpacity: 0.9))
+                .accessibilityLabel(quotaMetaLine)
             }
-            .buttonStyle(SoftPressButtonStyle(pressedScale: 0.99, pressedOpacity: 0.9))
-            .accessibilityLabel(quotaMetaLine)
         }
     }
 
@@ -326,6 +328,13 @@ private struct ReviewHomeView: View {
                 .padding(.bottom, 8)
 
             Spacer(minLength: 0)
+
+            if hasAnyCards, StudyStreakStore.currentStreak > 0 {
+                Text("\(L10n.homeStatStreak) \(L10n.homeStatStreakValue(StudyStreakStore.currentStreak))")
+                    .font(AppFont.helper())
+                    .foregroundStyle(AppColor.textMuted)
+                    .padding(.bottom, 6)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -340,30 +349,22 @@ private struct ReviewHomeView: View {
         .accessibilityLabel(dueCount > 0 ? L10n.reviewHomeStart : L10n.reviewHomeStartDone)
     }
 
-    private var studiedToday: Int {
-        plan.newStudiedToday + plan.reviewStudiedToday
-    }
 
-    private var quotaMetaLine: String {
-        var parts: [String] = []
-        if hasAnyCards, StudyStreakStore.currentStreak > 0 {
-            parts.append("\(L10n.homeStatStreak) \(L10n.homeStatStreakValue(StudyStreakStore.currentStreak))")
-        }
-        parts.append(L10n.reviewHomeStudiedToday(studiedToday))
+    private var quotaMetaLine: String? {
         if let todayCapture {
-            parts.append(L10n.reviewHomeActivityToday(todayCapture.uniqueWords, todayCapture.uniqueSentences))
-        } else if let recentActivity, recentActivity.spanDays > 1 {
-            parts.append(
-                L10n.reviewHomeActivityRecent(
-                    recentActivity.spanDays,
-                    recentActivity.uniqueWords,
-                    recentActivity.uniqueSentences
-                )
-            )
-        } else if totalCardCount > 0 {
-            parts.append("\(L10n.reviewHomeTotalCards) \(totalCardCount)")
+            return L10n.reviewHomeActivityToday(todayCapture.uniqueWords, todayCapture.uniqueSentences)
         }
-        return parts.joined(separator: " · ")
+        if let recentActivity, recentActivity.spanDays > 1 {
+            return L10n.reviewHomeActivityRecent(
+                recentActivity.spanDays,
+                recentActivity.uniqueWords,
+                recentActivity.uniqueSentences
+            )
+        }
+        if totalCardCount > 0 {
+            return "\(L10n.reviewHomeTotalCards) \(totalCardCount)"
+        }
+        return nil
     }
 
     private var emptyCTA: some View {
