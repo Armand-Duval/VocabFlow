@@ -683,11 +683,11 @@ enum DailyReflectionService {
         其他规则：
         1. sentence 必须是可核对的原文，不超过约 120 字符
         2. 现代汉语原文：translation 留空
-        2b. 外文原文：translation 必须是完整中文翻译，缺翻译视为无效
-        3. source / source_zh 无把握则空字符串，禁止编造
-        4. 不要鸡汤口号、不要催学习、不要广告
-        5. 连续多日必须换作品（或同一作家的另一部作品），并换切入角度；禁止连续使用同一原文
-        6. 用户关键词是气质/口味，不是必须写进句子的字；禁止为了贴关键词而选最烂熟的那一句
+        3. 外文原文：translation 必须是完整中文翻译，缺翻译视为无效
+        4. source / source_zh 无把握则空字符串，禁止编造
+        5. 不要鸡汤口号、不要催学习、不要广告
+        6. 连续多日必须换作品（或同一作家的另一部作品），并换切入角度；禁止连续使用同一原文
+        7. 用户关键词是气质/口味，不是必须写进句子的字；禁止为了贴关键词而选最烂熟的那一句
         """
 
         let preferenceHint: String
@@ -695,8 +695,9 @@ enum DailyReflectionService {
             preferenceHint = """
             用户口味关键词：\(snippet)。这是选书/选作者的气质，不是造句素材。
             - 从符合这一气质的作家或作品里选一句可核对的原文，sentence 必须是作品本来的语言
-            - 外文原文必须同时给出完整中文 translation，两行都要有，缺一不可
-            - 现代汉语原文：translation 留空，不要再造一句同义中文
+        - 外文原文必须同时给出完整中文 translation，两行都要有，缺一不可
+        - 外文必须同时给出外文 source 与中文 source_zh（中文出处跟在翻译后面），缺中文出处视为无效
+        - 现代汉语原文：translation 留空，不要再造一句同义中文
             - 禁止把关键词塞进句子，禁止每天都用同一部代表作里最著名的那一句
             - 今天必须换一部与近期不同的作品；同一作家可以，但要换篇
             """
@@ -890,6 +891,8 @@ enum DailyReflectionService {
         if isForeignOriginal(sentence) {
             let translation = reflection.translation?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             guard !translation.isEmpty, hanCount(translation) >= 2 else { return false }
+            let source = reflection.source?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            guard hanCount(source) >= 2 else { return false }
         }
         return true
     }

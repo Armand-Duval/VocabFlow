@@ -424,6 +424,12 @@ private struct ReviewHomeView: View {
                 )
             }
 
+            if let translationSource = reflection.translationSourceAttribution {
+                Text("— \(translationSource)")
+                    .font(AppFont.helper())
+                    .foregroundStyle(AppColor.textMuted)
+            }
+
             HStack(spacing: AppSpacing.md) {
                 TextLinkAction(title: isCollectingReflection ? L10n.reviewDailyCollecting : L10n.reviewDailyCollect) {
                     guard !isCollectingReflection else { return }
