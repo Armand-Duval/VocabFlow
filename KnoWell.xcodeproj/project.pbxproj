@@ -16,6 +16,9 @@
 		AA0000010000000000000027 /* ReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000017 /* ReviewView.swift */; };
 		AA0000010000000000000028 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000018 /* LibraryView.swift */; };
 		AA0000010000000000000029 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000019 /* Assets.xcassets */; };
+		PRIVACY0010000000000000002 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = PRIVACY0010000000000000010 /* PrivacyInfo.xcprivacy */; };
+		PRIVACY0010000000000000003 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = PRIVACY0010000000000000010 /* PrivacyInfo.xcprivacy */; };
+		PRIVACY0010000000000000004 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = PRIVACY0010000000000000010 /* PrivacyInfo.xcprivacy */; };
 		AA0000010000000000000034 /* APISettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000035 /* APISettings.swift */; };
 		AA0000010000000000000036 /* KimiCardGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000037 /* KimiCardGenerator.swift */; };
 		AA0000010000000000000038 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000045 /* SettingsView.swift */; };
@@ -285,6 +288,7 @@
 		HH0000010000000000000011 /* ImportTextAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportTextAnalyzer.swift; sourceTree = "<group>"; };
 		HH0000010000000000000012 /* CreateCardsUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateCardsUI.swift; sourceTree = "<group>"; };
 		HH0000010000000000000013 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		PRIVACY0010000000000000010 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		HLMTCH001000000000000010 /* HighlightMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightMatcher.swift; sourceTree = "<group>"; };
 		IMGSRC001000000000000010 /* CardSourceImageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardSourceImageStore.swift; sourceTree = "<group>"; };
 		IMGSRC001000000000000011 /* CardSourceImageThumbnail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardSourceImageThumbnail.swift; sourceTree = "<group>"; };
@@ -465,6 +469,7 @@
 			children = (
 				SHRDGRP000000000000000001 /* Design */,
 				SHRDGRP000000000000000002 /* Localization */,
+				PRIVACY0010000000000000010 /* PrivacyInfo.xcprivacy */,
 				SHRDGRP000000000000000003 /* OCR */,
 				SHRDGRP000000000000000004 /* Create */,
 				SHRDGRP000000000000000005 /* Share */,
@@ -802,6 +807,7 @@
 				AA0000010000000000000029 /* Assets.xcassets in Resources */,
 				HH000001000000000000000A /* Localizable.xcstrings in Resources */,
 				IPL00100000000000000002 /* InfoPlist.xcstrings in Resources */,
+				PRIVACY0010000000000000002 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -811,6 +817,7 @@
 			files = (
 				HH000001000000000000000B /* Localizable.xcstrings in Resources */,
 				IPL00100000000000000004 /* InfoPlist.xcstrings in Resources */,
+				PRIVACY0010000000000000003 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -820,6 +827,7 @@
 			files = (
 				HH000001000000000000000C /* Localizable.xcstrings in Resources */,
 				IPL00100000000000000006 /* InfoPlist.xcstrings in Resources */,
+				PRIVACY0010000000000000004 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1096,6 +1104,7 @@
 				DEVELOPMENT_TEAM = ALYZC7B762;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_FILE = KnoWell/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = KnoWell;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -1130,6 +1139,7 @@
 				DEVELOPMENT_TEAM = ALYZC7B762;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_FILE = KnoWell/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = KnoWell;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -1160,6 +1170,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = ALYZC7B762;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_FILE = KnoWellShare/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = KnoWell;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -1187,6 +1198,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = ALYZC7B762;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_FILE = KnoWellShare/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = KnoWell;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -1214,6 +1226,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = ALYZC7B762;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_FILE = KnoWellAction/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "KnoWell Create";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -1241,6 +1254,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = ALYZC7B762;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_FILE = KnoWellAction/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "KnoWell Create";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;

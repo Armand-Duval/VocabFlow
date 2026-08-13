@@ -30,6 +30,14 @@ enum AccountAuthConfig {
         wechatAppID != nil && wechatUniversalLink != nil
     }
 
+    static var isWeChatSignInAvailable: Bool {
+        isWeChatConfigured && WeChatSDKBridge.isLinked
+    }
+
+    static var hasAnySignInMethod: Bool {
+        isAppleSignInAvailable || isWeChatSignInAvailable
+    }
+
     /// Controlled by Info.plist `APPLE_SIGN_IN_ENABLED` and Sign in with Apple entitlement.
     static var isAppleSignInAvailable: Bool {
         Bundle.main.object(forInfoDictionaryKey: "APPLE_SIGN_IN_ENABLED") as? Bool ?? false

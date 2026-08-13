@@ -10,6 +10,12 @@ struct AccountSettingsCard: View {
     @State private var errorMessage: String?
 
     var body: some View {
+        if accountSession.profile != nil || AccountAuthConfig.hasAnySignInMethod {
+            signedInOrSignInCard
+        }
+    }
+
+    private var signedInOrSignInCard: some View {
         AppSurfaceCard(padding: compact ? AppSpacing.sm : AppSpacing.md) {
             VStack(alignment: .leading, spacing: compact ? AppSpacing.sm : AppSpacing.md) {
                 if let profile = accountSession.profile {
@@ -75,21 +81,23 @@ struct AccountSettingsCard: View {
                 .disabled(isSigningInApple || isSigningInWeChat)
             }
 
-            Button {
-                Task { await signInWithWeChat() }
-            } label: {
-                HStack(spacing: AppSpacing.sm) {
-                    Image(systemName: "message.fill")
-                    Text(L10n.accountSignInWeChat)
-                        .fontWeight(.semibold)
+            if AccountAuthConfig.isWeChatSignInAvailable {
+                Button {
+                    Task { await signInWithWeChat() }
+                } label: {
+                    HStack(spacing: AppSpacing.sm) {
+                        Image(systemName: "message.fill")
+                        Text(L10n.accountSignInWeChat)
+                            .fontWeight(.semibold)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, compact ? 10 : 14)
+                    .foregroundStyle(.white)
+                    .background(Color(red: 0.09, green: 0.72, blue: 0.27), in: RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous))
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, compact ? 10 : 14)
-                .foregroundStyle(.white)
-                .background(Color(red: 0.09, green: 0.72, blue: 0.27), in: RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous))
+                .buttonStyle(.plain)
+                .disabled(isSigningInApple || isSigningInWeChat)
             }
-            .buttonStyle(.plain)
-            .disabled(isSigningInApple || isSigningInWeChat)
 
             if isSigningInApple || isSigningInWeChat {
                 ProgressView()
