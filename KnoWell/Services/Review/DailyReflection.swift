@@ -682,7 +682,8 @@ enum DailyReflectionService {
 
         其他规则：
         1. sentence 必须是可核对的原文，不超过约 120 字符
-        2. 现代汉语原文：translation 与 source_zh 留空
+        2. 现代汉语原文：translation 留空
+        2b. 外文原文：translation 必须是完整中文翻译，缺翻译视为无效
         3. source / source_zh 无把握则空字符串，禁止编造
         4. 不要鸡汤口号、不要催学习、不要广告
         5. 连续多日必须换作品（或同一作家的另一部作品），并换切入角度；禁止连续使用同一原文
@@ -691,32 +692,19 @@ enum DailyReflectionService {
 
         let preferenceHint: String
         if let snippet = DailyReflectionPreferences.promptSnippet {
-            let languageLock: String
-            switch DailyReflectionPreferences.originalLanguageBias {
-            case .chinese:
-                languageLock = """
-                【原文语言 — 必须遵守】
-                用户口味是中文语境。sentence 必须是中文原文（白话、文言或小说原文），禁止用英文/法文等外文原句再配翻译来凑这一口味。
-                原文已是现代汉语：translation 留空。文言可给一句极短白话，也可留空。
-                """
-            case .english:
-                languageLock = """
-                【原文语言 — 必须遵守】
-                用户口味偏英文。sentence 必须是英文（或作品原来的西文）原文，并给出中文 translation。
-                """
-            case .unspecified:
-                languageLock = "原文语言跟随作品本身；不要为了换作品而跳出用户口味的语言世界。"
-            }
             preferenceHint = """
             用户口味关键词：\(snippet)。这是选书/选作者的气质，不是造句素材。
-            \(languageLock)
-            - 从符合这一气质的作家或作品里选一句可核对的原文
+            - 从符合这一气质的作家或作品里选一句可核对的原文，sentence 必须是作品本来的语言
+            - 外文原文必须同时给出完整中文 translation，两行都要有，缺一不可
+            - 现代汉语原文：translation 留空，不要再造一句同义中文
             - 禁止把关键词塞进句子，禁止每天都用同一部代表作里最著名的那一句
             - 今天必须换一部与近期不同的作品；同一作家可以，但要换篇
-            - 「换作品」只在同一语言/文化圈内换，不要从古龙跳到法国随笔
             """
         } else {
-            preferenceHint = "用户未设置口味关键词。按默认优先级选句，今天仍须换作品、换角度。"
+            preferenceHint = """
+            用户未设置口味关键词。按默认优先级选句，今天仍须换作品、换角度。
+            原文在前；外文必须另给中文翻译。
+            """
         }
 
         let angle = options.dailyAngle ?? dailyAngle(for: day, refreshAttempt: options.refreshAttempt)
@@ -766,8 +754,9 @@ enum DailyReflectionService {
         \(refreshHint)
 
         请给出今日一句。要求：
-        - 按今天的切入角度选一句可核对的原文；需要时再给中文翻译
-        - 必须换一部与近期不同的作品，不要回到最著名的那一句
+        - sentence 是作品原文（本来是什么语言就用什么语言）
+        - 外文原文必须另给完整中文 translation；现代汉语原文 translation 留空
+        - 按今天的切入角度选句；换一部与近期不同的作品
         - 默认单行输出；只有短诗且分行是原文形式时才用真实换行，散文/戏剧台词不要拆行
         - 外文必须同时给出外文 source 与中文 source_zh
         - 季节不必强行呼应
@@ -896,7 +885,17 @@ enum DailyReflectionService {
     }
 
     private static func isWellFormed(_ reflection: DailyReflection) -> Bool {
-        !reflection.sentence.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let sentence = reflection.sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !sentence.isEmpty else { return false }
+        if isForeignOriginal(sentence) {
+            let translation = reflection.translation?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            guard !translation.isEmpty, hanCount(translation) >= 2 else { return false }
+        }
+        return true
+    }
+
+    private static func isForeignOriginal(_ text: String) -> Bool {
+        latinLetterCount(text) >= 4 && latinLetterCount(text) > hanCount(text)
     }
 
     private static func latinLetterCount(_ text: String) -> Int {
