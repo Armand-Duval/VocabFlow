@@ -242,14 +242,17 @@ struct ImportCardsFormView: View {
                     .font(AppFont.secondary())
                     .foregroundStyle(.secondary)
             } else {
-                Picker(L10n.deckTarget, selection: $selectedDeckID) {
-                    ForEach(decks) { deck in
-                        Text(deck.name).tag(deck.id)
+                AppSpinner(
+                    title: L10n.deckTarget,
+                    titlePlacement: .hidden,
+                    value: decks.first(where: { $0.id == selectedDeckID })?.name ?? L10n.deckDefaultName,
+                    options: decks.map { AppSelectionOption(id: $0.id, title: $0.name) },
+                    selectedID: selectedDeckID.uuidString
+                ) { raw in
+                    if let id = UUID(uuidString: raw) {
+                        selectedDeckID = id
+                        SharedDeckStore.lastSelectedDeckID = id
                     }
-                }
-                .labelsHidden()
-                .onChange(of: selectedDeckID) { _, newValue in
-                    SharedDeckStore.lastSelectedDeckID = newValue
                 }
             }
         }

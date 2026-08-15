@@ -49,6 +49,33 @@ struct CardParaphrase: Equatable, Identifiable {
     var note: String?
 }
 
+enum CardReplaceReason: String, CaseIterable, Identifiable {
+    case wrongSense
+    case tooHard
+    case tooEasy
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .wrongSense: L10n.createPreviewReplaceWrongSense
+        case .tooHard: L10n.createPreviewReplaceTooHard
+        case .tooEasy: L10n.createPreviewReplaceTooEasy
+        }
+    }
+
+    var promptInstruction: String {
+        switch self {
+        case .wrongSense:
+            "上一张卡的义项不对。请按原句里真正的意思重做，不要沿用刚才的释义。"
+        case .tooHard:
+            "上一张卡太难、信息太满。请更短、更贴近本句，降低难度。"
+        case .tooEasy:
+            "上一张卡太浅，几乎不用想。请抓住本句里更值得记的一点，让正面需要真正回忆。"
+        }
+    }
+}
+
 enum CardGenerationMode: String, CaseIterable, Identifiable {
     case compact
     case full

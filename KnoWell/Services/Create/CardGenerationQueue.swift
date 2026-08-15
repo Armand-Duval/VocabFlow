@@ -6,6 +6,18 @@ import SwiftData
 final class CardGenerationQueue: ObservableObject {
     static let shared = CardGenerationQueue()
 
+    private init() {
+        pendingTriages = ShareImportStore.loadTriageBatches().map {
+            ReadyPreview(
+                id: $0.id,
+                drafts: $0.drafts,
+                deckID: $0.deckID,
+                cursor: $0.cursor,
+                skippedDuplicates: 0
+            )
+        }
+    }
+
     enum JobKind: Equatable {
         case create
         case migrate
@@ -74,15 +86,22 @@ final class CardGenerationQueue: ObservableObject {
         }
     }
 
-    struct ReadyPreview: Equatable {
-        let jobID: UUID
-        let drafts: [GeneratedCardDraft]
-        let deckID: UUID
-        let skippedDuplicates: Int
+    struct ReadyPreview: Equatable, Identifiable {
+        let id: UUID
+        var drafts: [GeneratedCardDraft]
+        var deckID: UUID
+        var cursor: Int
+        var skippedDuplicates: Int
     }
 
     @Published private(set) var jobs: [Job] = []
-    @Published var readyPreview: ReadyPreview?
+    @Published private(set) var pendingTriages: [ReadyPreview] = []
+
+    var readyPreview: ReadyPreview? { pendingTriages.first }
+
+    var pendingTriageCardCount: Int {
+        pendingTriages.reduce(0) { $0 + $1.drafts.count }
+    }
 
     private var isProcessing = false
     private var migrationContext: ModelContext?
@@ -221,8 +240,61 @@ final class CardGenerationQueue: ObservableObject {
         return job.id
     }
 
-    func dismissReadyPreview() {
-        readyPreview = nil
+    func enqueueTriage(
+        drafts: [GeneratedCardDraft],
+        deckID: UUID,
+        skippedDuplicates: Int = 0
+    ) {
+        let selected = drafts.filter(\.isSelected)
+        let items = selected.isEmpty ? drafts : selected
+        guard !items.isEmpty else { return }
+        pendingTriages.append(
+            ReadyPreview(
+                id: UUID(),
+                drafts: items,
+                deckID: deckID,
+                cursor: 0,
+                skippedDuplicates: skippedDuplicates
+            )
+        )
+        persistTriages()
+    }
+
+    func replaceCurrentTriage(
+        drafts: [GeneratedCardDraft],
+        deckID: UUID? = nil,
+        cursor: Int = 0
+    ) {
+        guard !pendingTriages.isEmpty else { return }
+        if drafts.isEmpty {
+            finishCurrentTriage()
+            return
+        }
+        pendingTriages[0].drafts = drafts
+        pendingTriages[0].cursor = min(max(cursor, 0), drafts.count - 1)
+        if let deckID {
+            pendingTriages[0].deckID = deckID
+        }
+        persistTriages()
+    }
+
+    func finishCurrentTriage() {
+        guard !pendingTriages.isEmpty else { return }
+        pendingTriages.removeFirst()
+        persistTriages()
+    }
+
+    private func persistTriages() {
+        ShareImportStore.saveTriageBatches(
+            pendingTriages.map {
+                ShareImportStore.PersistedTriageBatch(
+                    id: $0.id,
+                    deckID: $0.deckID,
+                    drafts: $0.drafts,
+                    cursor: $0.cursor
+                )
+            }
+        )
     }
 
     func removeFinished(_ id: UUID) {
@@ -475,8 +547,7 @@ final class CardGenerationQueue: ObservableObject {
         }
 
         let skipped = jobs[index].skippedDuplicates
-        readyPreview = ReadyPreview(
-            jobID: jobID,
+        enqueueTriage(
             drafts: stamped,
             deckID: jobs[index].deckID,
             skippedDuplicates: skipped

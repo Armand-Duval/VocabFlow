@@ -630,10 +630,9 @@ enum DailyReflectionService {
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("Bearer \(APISettings.effectiveAPIKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.timeoutInterval = 25
-        applyProviderHeaders(to: &request)
+        APISettings.applyChatHeaders(to: &request)
 
         let dateText = day.formatted(Date.FormatStyle(date: .complete, time: .omitted).locale(Locale(identifier: "zh_CN")))
         let season = northernSeasonName(for: day)
@@ -917,16 +916,6 @@ enum DailyReflectionService {
             return String(trimmed[start...end])
         }
         return trimmed
-    }
-
-    private static func applyProviderHeaders(to request: inout URLRequest) {
-        switch APISettings.effectiveProvider {
-        case .openrouter:
-            request.setValue("https://knowell.app", forHTTPHeaderField: "HTTP-Referer")
-            request.setValue("KnoWell", forHTTPHeaderField: "X-Title")
-        case .moonshot, .openai, .deepseek, .custom:
-            break
-        }
     }
 
     private static func northernSeasonName(for day: Date) -> String {

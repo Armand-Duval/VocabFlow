@@ -174,12 +174,18 @@ struct SettingsView: View {
 
     private var aiCard: some View {
         settingsSection(title: L10n.settingsAISectionCompact) {
-            Picker(L10n.aiProviderSection, selection: $selectedProvider) {
-                ForEach(AIProvider.allCases) { provider in
-                    Text(provider.displayName).tag(provider)
+            AppSpinner(
+                title: L10n.aiProviderSection,
+                value: selectedProvider.displayName,
+                options: AIProvider.allCases.map {
+                    AppSelectionOption(id: $0.rawValue, title: $0.displayName)
+                },
+                selectedID: selectedProvider.rawValue
+            ) { raw in
+                if let provider = AIProvider(rawValue: raw) {
+                    selectedProvider = provider
                 }
             }
-            .font(AppFont.secondary())
 
             if selectedProvider.supportsCustomBaseURL {
                 TextField(L10n.aiCustomBaseURLPlaceholder, text: $customBaseURL)
@@ -191,14 +197,21 @@ struct SettingsView: View {
             }
 
             if !selectedProvider.suggestedModels.isEmpty {
-                Picker(L10n.modelSection, selection: $selectedModel) {
-                    ForEach(selectedProvider.suggestedModels, id: \.self) { model in
-                        Text(model).tag(model)
-                    }
+                AppSpinner(
+                    title: L10n.modelSection,
+                    value: selectedModel,
+                    isEnabled: customModelID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                    options: selectedProvider.suggestedModels.map {
+                        AppSelectionOption(
+                            id: $0,
+                            title: $0,
+                            subtitle: APISettings.modelDescription(for: $0)
+                        )
+                    },
+                    selectedID: selectedModel
+                ) { model in
+                    selectedModel = model
                 }
-                .font(AppFont.secondary())
-                .disabled(!customModelID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                .opacity(customModelID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 1 : 0.45)
             }
 
             TextField(L10n.aiCustomModelPlaceholder, text: $customModelID)
@@ -359,6 +372,7 @@ struct SettingsView: View {
     private var liveKeySourceDescription: String {
         let trimmed = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmed.isEmpty { return L10n.keySourceUser }
+        if KnoWellCloud.isEnabled { return L10n.keySourceCloud }
         if selectedProvider == .deepseek,
            !DefaultAPIKey.deepseek.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             return L10n.keySourceDefault
@@ -379,13 +393,8 @@ struct SettingsView: View {
     private var canTestCurrentAI: Bool {
         let trimmedKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmedKey.isEmpty {
-            if selectedProvider == .deepseek {
-                return !DefaultAPIKey.deepseek.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            }
-            if selectedProvider == .moonshot {
-                return !DefaultAPIKey.kimi.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            }
-            return !DefaultAPIKey.deepseek.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            return KnoWellCloud.isEnabled
+                || !DefaultAPIKey.deepseek.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 || !DefaultAPIKey.kimi.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
         if selectedProvider == .custom {

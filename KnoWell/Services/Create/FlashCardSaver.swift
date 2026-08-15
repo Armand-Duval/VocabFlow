@@ -1,9 +1,10 @@
 import Foundation
 import SwiftData
 
-struct FlashCardSaveResult: Equatable {
+struct FlashCardSaveResult {
     let savedCount: Int
     let skippedDuplicateCount: Int
+    var savedCards: [FlashCard] = []
 
     var didSaveAny: Bool { savedCount > 0 }
     var skippedAll: Bool { savedCount == 0 && skippedDuplicateCount > 0 }
@@ -20,7 +21,7 @@ enum FlashCardSaver {
 
         let existing = FlashCardDeduper.cards(in: deck, context: context)
         var savedKeys = Set<String>()
-        var savedCount = 0
+        var savedCards: [FlashCard] = []
         var skippedDuplicateCount = 0
 
         for draft in selected {
@@ -39,10 +40,10 @@ enum FlashCardSaver {
             let card = CardContentSync.makeCard(from: draft, deck: deck)
             context.insert(card)
             savedKeys.insert(key)
-            savedCount += 1
+            savedCards.append(card)
         }
 
-        guard savedCount > 0 else {
+        guard !savedCards.isEmpty else {
             return FlashCardSaveResult(savedCount: 0, skippedDuplicateCount: skippedDuplicateCount)
         }
 
@@ -53,7 +54,7 @@ enum FlashCardSaver {
         }
 
         DeckSettings.lastSelectedDeckID = deck.id
-        DeckCardCountService.adjust(deck: deck, by: savedCount, in: context)
+        DeckCardCountService.adjust(deck: deck, by: savedCards.count, in: context)
         DeckCardCountService.notifyCatalogChanged()
         SharedDedupeIndex.insert(
             deckID: deck.id,
@@ -64,7 +65,11 @@ enum FlashCardSaver {
                 return (word, sentence)
             }
         )
-        return FlashCardSaveResult(savedCount: savedCount, skippedDuplicateCount: skippedDuplicateCount)
+        return FlashCardSaveResult(
+            savedCount: savedCards.count,
+            skippedDuplicateCount: skippedDuplicateCount,
+            savedCards: savedCards
+        )
     }
 
     private static func duplicateKey(word: String, sentence: String, cardType: CardType) -> String {

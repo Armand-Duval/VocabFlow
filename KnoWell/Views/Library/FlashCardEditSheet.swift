@@ -133,25 +133,33 @@ struct FlashCardEditorForm: View {
     var body: some View {
         Form {
             Section {
-                labeledPicker(L10n.deckTarget) {
-                    Picker(L10n.deckTarget, selection: $fields.deckID) {
-                        ForEach(decks) { deck in
-                            Text(deck.name).tag(deck.id)
-                        }
+                AppSpinner(
+                    title: L10n.deckTarget,
+                    titlePlacement: .above,
+                    value: decks.first(where: { $0.id == fields.deckID })?.name ?? L10n.deckDefaultName,
+                    options: decks.map { AppSelectionOption(id: $0.id, title: $0.name) },
+                    selectedID: fields.deckID.uuidString
+                ) { raw in
+                    if let id = UUID(uuidString: raw) {
+                        fields.deckID = id
                     }
-                    .labelsHidden()
                 }
 
                 labeledField(L10n.wordLabel, text: $fields.word)
                 labeledField(L10n.phoneticLabel, text: $fields.phonetic, prompt: L10n.phoneticPlaceholder)
 
-                labeledPicker(L10n.typeLabel) {
-                    Picker(L10n.typeLabel, selection: $fields.cardType) {
-                        ForEach(CardType.allCases, id: \.self) { type in
-                            Text(type.displayName).tag(type)
-                        }
+                AppSpinner(
+                    title: L10n.typeLabel,
+                    titlePlacement: .above,
+                    value: fields.cardType.displayName,
+                    options: CardType.allCases.map {
+                        AppSelectionOption(id: $0.rawValue, title: $0.displayName)
+                    },
+                    selectedID: fields.cardType.rawValue
+                ) { raw in
+                    if let type = CardType(rawValue: raw) {
+                        fields.cardType = type
                     }
-                    .labelsHidden()
                 }
 
                 labeledField(L10n.cardSourceLabel, text: $fields.sourceAttribution, prompt: L10n.cardSourceLabel)
@@ -293,20 +301,6 @@ struct FlashCardEditorForm: View {
             } else {
                 TextField(prompt ?? title, text: text)
             }
-        }
-        .padding(.vertical, 2)
-    }
-
-    private func labeledPicker<Content: View>(
-        _ title: String,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title)
-                .font(AppFont.caption().weight(.medium))
-                .foregroundStyle(AppColor.textSecondary)
-            content()
-                .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.vertical, 2)
     }

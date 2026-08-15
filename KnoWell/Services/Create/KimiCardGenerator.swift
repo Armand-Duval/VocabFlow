@@ -184,7 +184,8 @@ enum KimiCardGenerator {
                                 sourceHint: sourceHint,
                                 deckName: deckName,
                                 mode: mode,
-                                requiredCardType: requiredCardType
+                                requiredCardType: requiredCardType,
+                                revisionHint: nil
                             )
                             return (job, .success(drafts))
                         } catch {
@@ -265,13 +266,52 @@ enum KimiCardGenerator {
         return units
     }
 
+    /// Replace one preview draft using the user's keep/drop reason.
+    static func regenerate(
+        draft: GeneratedCardDraft,
+        reason: CardReplaceReason,
+        deckName: String? = nil
+    ) async throws -> GeneratedCardDraft {
+        guard APISettings.canUseAI else {
+            throw KimiCardGeneratorError.missingAPIKey
+        }
+        let word = draft.word.trimmingCharacters(in: .whitespacesAndNewlines)
+        let sentence = draft.sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !word.isEmpty, !sentence.isEmpty else {
+            throw KimiCardGeneratorError.parseError(L10n.generateFormatErrorDetail)
+        }
+
+        let drafts = try await generateForSingleContext(
+            sentence: sentence,
+            words: [word],
+            sourceHint: draft.sourceAttribution,
+            deckName: usefulDeckName(deckName),
+            mode: .compact,
+            requiredCardType: draft.cardType,
+            revisionHint: reason.promptInstruction
+        )
+        guard var next = drafts.first(where: {
+            $0.cardType == draft.cardType
+                && $0.word.caseInsensitiveCompare(word) == .orderedSame
+        }) ?? drafts.first(where: {
+            $0.word.caseInsensitiveCompare(word) == .orderedSame
+        }) else {
+            throw KimiCardGeneratorError.parseError(L10n.generateFormatErrorDetail)
+        }
+        next.sourceImagePath = draft.sourceImagePath
+        next.isSelected = true
+        next.isRecommended = true
+        return next
+    }
+
     private static func generateForSingleContext(
         sentence: String,
         words: [String],
         sourceHint: String?,
         deckName: String?,
         mode: CardGenerationMode,
-        requiredCardType: CardType?
+        requiredCardType: CardType?,
+        revisionHint: String?
     ) async throws -> [GeneratedCardDraft] {
         try await withRetry(attempts: 2) {
             let content = try await requestCards(
@@ -280,7 +320,8 @@ enum KimiCardGenerator {
                 sourceHint: sourceHint,
                 deckName: deckName,
                 mode: mode,
-                requiredCardType: requiredCardType
+                requiredCardType: requiredCardType,
+                revisionHint: revisionHint
             )
             return try parseCards(
                 from: content,
@@ -356,7 +397,8 @@ enum KimiCardGenerator {
         sourceHint: String?,
         deckName: String?,
         mode: CardGenerationMode,
-        requiredCardType: CardType?
+        requiredCardType: CardType?,
+        revisionHint: String? = nil
     ) async throws -> String {
         guard let url = URL(string: APISettings.chatCompletionsURL) else {
             throw KimiCardGeneratorError.invalidResponse
@@ -364,10 +406,9 @@ enum KimiCardGenerator {
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("Bearer \(APISettings.effectiveAPIKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.timeoutInterval = requestTimeout
-        applyProviderHeaders(to: &request)
+        APISettings.applyChatHeaders(to: &request)
 
         let wordsList = words.joined(separator: ", ")
         let cardCountRule: String
@@ -451,6 +492,9 @@ enum KimiCardGenerator {
         if let sourceHint, !sourceHint.isEmpty {
             userPrompt += "\n页面提示（可能含书名/标题/作者，供判断出处）：\(sourceHint)"
         }
+        if let revisionHint, !revisionHint.isEmpty {
+            userPrompt += "\n重做要求：\(revisionHint)\n请给出与上一版明显不同的 front/back/usage_note，不要只改几个字。"
+        }
 
         let body: [String: Any] = [
             "model": APISettings.effectiveModel,
@@ -496,6 +540,22 @@ enum KimiCardGenerator {
     }
 
     static func testConnection(apiKey: String, model: String) async throws {
+        if APISettings.usesCloudProxy {
+            guard let url = URL(string: KnoWellCloud.healthURL) else {
+                throw KimiCardGeneratorError.invalidResponse
+            }
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+            request.timeoutInterval = 20
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+                let message = extractErrorMessage(from: data) ?? "HTTP \((response as? HTTPURLResponse)?.statusCode ?? 0)"
+                throw KimiCardGeneratorError.apiError(message)
+            }
+            _ = model
+            return
+        }
+
         let trimmedKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedKey.isEmpty else {
             throw KimiCardGeneratorError.missingAPIKey
@@ -507,9 +567,9 @@ enum KimiCardGenerator {
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        request.setValue("Bearer \(trimmedKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.timeoutInterval = 20
-        applyProviderHeaders(to: &request)
+        APISettings.applyChatHeaders(to: &request)
 
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse else {
@@ -522,16 +582,6 @@ enum KimiCardGenerator {
         }
 
         _ = model
-    }
-
-    private static func applyProviderHeaders(to request: inout URLRequest) {
-        switch APISettings.effectiveProvider {
-        case .openrouter:
-            request.setValue("https://knowell.app", forHTTPHeaderField: "HTTP-Referer")
-            request.setValue("KnoWell", forHTTPHeaderField: "X-Title")
-        case .moonshot, .openai, .deepseek, .custom:
-            break
-        }
     }
 
     private static func parseCards(

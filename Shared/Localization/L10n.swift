@@ -53,6 +53,25 @@ enum L10n {
     static var createCardRecommendedBadge: String { tr("create.cardRecommended.badge") }
     static var createPreviewSectionCards: String { tr("create.preview.sectionCards") }
     static var createPreviewFooterCompact: String { tr("create.preview.footerCompact") }
+    static var createPreviewKeep: String { tr("create.preview.keep") }
+    static var createPreviewDrop: String { tr("create.preview.drop") }
+    static var createPreviewLater: String { tr("create.preview.later") }
+    static var createPreviewReplace: String { tr("create.preview.replace") }
+    static var createPreviewReplaceTitle: String { tr("create.preview.replace.title") }
+    static var createPreviewReplaceWrongSense: String { tr("create.preview.replace.wrongSense") }
+    static var createPreviewReplaceTooHard: String { tr("create.preview.replace.tooHard") }
+    static var createPreviewReplaceTooEasy: String { tr("create.preview.replace.tooEasy") }
+    static func createPreviewProgress(_ current: Int, _ total: Int) -> String {
+        tf("create.preview.progress", current, total)
+    }
+    static var createPreviewReveal: String { tr("create.preview.reveal") }
+    static var createPreviewTapHint: String { tr("create.preview.tapHint") }
+    static var createPreviewReplacing: String { tr("create.preview.replacing") }
+    static var createPreviewDoneTitle: String { tr("create.preview.doneTitle") }
+    static var createPreviewDoneEmpty: String { tr("create.preview.doneEmpty") }
+    static func createPreviewReviewNow(_ count: Int) -> String { tf("create.preview.reviewNow", count) }
+    static var createPreviewDoneAction: String { tr("create.preview.doneAction") }
+    static func createPreviewMoreWaiting(_ count: Int) -> String { tf("create.preview.moreWaiting", count) }
     static var createAddWord: String { tr("create.addWord") }
     static var createManageDeck: String { tr("create.manageDeck") }
     static var createScanExcerpt: String { tr("create.scan.excerpt") }
@@ -346,6 +365,7 @@ enum L10n {
     static var ratingGood: String { tr("rating.good") }
     static var ratingEasy: String { tr("rating.easy") }
     static var ratingAppreciationAgain: String { tr("rating.appreciation.again") }
+    static var ratingAppreciationHard: String { tr("rating.appreciation.hard") }
     static var ratingAppreciationGood: String { tr("rating.appreciation.good") }
     static var ratingAppreciationEasy: String { tr("rating.appreciation.easy") }
     static func intervalMinutes(_ count: Int) -> String { tf("interval.minutes", count) }
@@ -548,6 +568,7 @@ enum L10n {
     static var statusReady: String { tr("settings.status.ready") }
     static var statusMissingKey: String { tr("settings.status.missing") }
     static var keySourceUser: String { tr("settings.key.user") }
+    static var keySourceCloud: String { tr("settings.key.cloud") }
     static var keySourceDefault: String { tr("settings.key.default") }
     static var keySourceMissing: String { tr("settings.key.missing") }
 

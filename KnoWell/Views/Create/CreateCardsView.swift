@@ -89,19 +89,29 @@ struct CreateCardsView: View {
                     message: isGeneratingAppreciation ? L10n.createAppreciationGenerating : L10n.recognizingPhoto
                 )
                 .navigationDestination(isPresented: $showPreview) {
-                    CardPreviewView(drafts: drafts, selectedDeckID: $selectedDeckID) {
+                    CardPreviewView(selectedDeckID: $selectedDeckID) {
                         showPreview = false
                     }
                 }
                 .sheet(isPresented: $showGenerationQueue) {
                     CardGenerationQueueView(queue: generationQueue)
                 }
-                .onChange(of: generationQueue.readyPreview) { _, preview in
-                    guard let preview else { return }
-                    selectedDeckID = preview.deckID
-                    drafts = preview.drafts
+                .onChange(of: generationQueue.pendingTriageCardCount) { oldCount, count in
+                    guard count > oldCount else { return }
+                    if let deckID = generationQueue.readyPreview?.deckID {
+                        selectedDeckID = deckID
+                    }
                     showPreview = true
-                    generationQueue.dismissReadyPreview()
+                }
+                .onChange(of: shareImport.pendingDrafts) { _, _ in
+                    ingestShareDraftsIfNeeded()
+                }
+                .onAppear {
+                    if generationQueue.readyPreview != nil {
+                        selectedDeckID = generationQueue.readyPreview?.deckID ?? selectedDeckID
+                        showPreview = true
+                    }
+                    ingestShareDraftsIfNeeded()
                 }
                 .modifier(CreateCardsAlertsModifier(errorMessage: $errorMessage))
                 .modifier(CreateCardsLifecycleModifier(
@@ -165,7 +175,18 @@ struct CreateCardsView: View {
                         subtitle: L10n.createPendingDraftsSubtitle(pendingDrafts.count),
                         systemImage: "sparkles.rectangle.stack.fill",
                         actionTitle: L10n.createPendingAction,
-                        action: openShareDraftPreview
+                        action: ingestShareDraftsIfNeeded
+                    )
+                } else if !showPreview, generationQueue.pendingTriageCardCount > 0 {
+                    PendingCardsBannerView(
+                        title: L10n.createPendingImportTitle,
+                        subtitle: L10n.createPendingDraftsSubtitle(generationQueue.pendingTriageCardCount),
+                        systemImage: "checklist",
+                        actionTitle: L10n.createPendingAction,
+                        action: {
+                            selectedDeckID = generationQueue.readyPreview?.deckID ?? selectedDeckID
+                            showPreview = true
+                        }
                     )
                 }
 
@@ -497,12 +518,11 @@ struct CreateCardsView: View {
         }
     }
 
-    private func openShareDraftPreview() {
+    private func ingestShareDraftsIfNeeded() {
         guard let pendingDrafts = shareImport.pendingDrafts, !pendingDrafts.isEmpty else { return }
-        drafts = pendingDrafts
-        if selectedDeckID == nil {
-            selectedDeckID = SharedDeckStore.resolvedSelectedDeckID()
-        }
+        let deck = DeckService.resolvedDeck(id: selectedDeckID, in: modelContext)
+        selectedDeckID = deck.id
+        generationQueue.enqueueTriage(drafts: pendingDrafts, deckID: deck.id)
         shareImport.acknowledgeDrafts()
         showPreview = true
     }
@@ -729,7 +749,7 @@ struct CreateCardsView: View {
                 deck = DeckService.fetchOrCreateDailyReflectionDeck(in: modelContext)
             }
             selectedDeckID = deck.id
-            drafts = [draft]
+            generationQueue.enqueueTriage(drafts: [draft], deckID: deck.id)
             showPreview = true
         } catch {
             errorMessage = error.localizedDescription
@@ -768,11 +788,8 @@ private struct CreateCardsLifecycleModifier: ViewModifier {
             .onChange(of: shareImport.pendingPayload) { _, _ in
                 onAppearImport()
             }
-            .onChange(of: showPreview) { _, isShowing in
-                guard !isShowing else { return }
-                DispatchQueue.main.async {
-                    drafts.removeAll()
-                }
+            .onChange(of: shareImport.pendingDrafts) { _, _ in
+                onAppearImport()
             }
             .onChange(of: sentence) { oldValue, newValue in
                 guard oldValue.count <= 800, newValue.count > 800, pendingLongText != newValue else { return }

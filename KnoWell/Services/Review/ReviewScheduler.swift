@@ -6,8 +6,8 @@ enum ReviewRating: Int, CaseIterable {
     case good = 2
     case easy = 3
 
-    /// Visible review choices — Hard is folded into Again (short relearn).
-    static var userChoices: [ReviewRating] { [.again, .good, .easy] }
+    /// Visible review choices: Forgot / Fuzzy / Easy (Good omitted).
+    static var userChoices: [ReviewRating] { [.again, .hard, .easy] }
 
     private var vocabularyTitle: String {
         switch self {
@@ -24,7 +24,7 @@ enum ReviewRating: Int, CaseIterable {
         if cardType == .appreciation {
             switch self {
             case .again: return L10n.ratingAppreciationAgain
-            case .hard: return L10n.ratingHard
+            case .hard: return L10n.ratingAppreciationHard
             case .good: return L10n.ratingAppreciationGood
             case .easy: return L10n.ratingAppreciationEasy
             }
@@ -89,7 +89,7 @@ struct ReviewSnapshot {
     }
 }
 
-/// FSRS-4.5 scheduler (Again / Good / Easy; Hard folded into Again).
+/// FSRS-4.5 scheduler (Again / Hard / Easy; Good omitted from the UI).
 enum ReviewScheduler {
     /// Default FSRS-4.5 weights.
     private static let w: [Double] = [
@@ -197,11 +197,16 @@ enum ReviewScheduler {
         snapshot.stability = initialStability(grade: grade, cardType: cardType)
         snapshot.learningStep = 0
 
-        if grade <= 2 {
+        if grade == 1 {
             snapshot.fsrsState = .learning
             snapshot.learningStep = 1
             snapshot.intervalDays = 0
             snapshot.nextReviewDate = addMinutes(learningStepsMinutes[0], to: now)
+        } else if grade == 2 {
+            snapshot.fsrsState = .learning
+            snapshot.learningStep = 1
+            snapshot.intervalDays = 0
+            snapshot.nextReviewDate = addMinutes(learningStepsMinutes[1], to: now)
         } else {
             graduateToReview(snapshot: &snapshot, now: now, retention: retention)
         }

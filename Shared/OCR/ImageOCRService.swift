@@ -92,40 +92,57 @@ enum ImageOCRService {
         let tokens: [OCRToken]
     }
 
+    private struct LineHit {
+        let string: String
+        let box: CGRect
+        let candidate: VNRecognizedText
+        let confidence: Float
+    }
+
     private static func recognizeVision(in cgImage: CGImage) async throws -> VisionPayload {
+        // One mixed-language request + auto-detect often keeps SKIP / names and drops
+        // wrapped English dialogue (common on CN game screenshots).
+        async let latin = recognizeLines(
+            in: cgImage,
+            languages: ["en-US"],
+            languageCorrection: true
+        )
+        async let cjk = recognizeLines(
+            in: cgImage,
+            languages: ["zh-Hans", "zh-Hant", "ja-JP", "ko-KR"],
+            languageCorrection: false
+        )
+        let merged = mergeLineHits(try await latin, try await cjk)
+            .sorted(by: readingOrder)
+
+        var lines: [String] = []
+        var tokens: [OCRToken] = []
+        for (lineIndex, hit) in merged.enumerated() {
+            lines.append(hit.string)
+            tokens.append(contentsOf: tokenize(hit.candidate, lineIndex: lineIndex))
+        }
+        return VisionPayload(
+            fullText: sanitizeOCRText(lines.joined(separator: "\n")),
+            tokens: tokens
+        )
+    }
+
+    private static func recognizeLines(
+        in cgImage: CGImage,
+        languages: [String],
+        languageCorrection: Bool
+    ) async throws -> [LineHit] {
         try await withCheckedThrowingContinuation { continuation in
             let request = VNRecognizeTextRequest { request, error in
                 if let error {
                     continuation.resume(throwing: error)
                     return
                 }
-
-                let observations = (request.results as? [VNRecognizedTextObservation] ?? [])
-                    .sorted { lhs, rhs in
-                        let l = lhs.boundingBox
-                        let r = rhs.boundingBox
-                        if abs(l.maxY - r.maxY) > 0.02 {
-                            return l.maxY > r.maxY
-                        }
-                        return l.minX < r.minX
-                    }
-
-                var lines: [String] = []
-                var tokens: [OCRToken] = []
-                for (lineIndex, observation) in observations.enumerated() {
-                    guard let candidate = observation.topCandidates(1).first else { continue }
-                    lines.append(candidate.string)
-                    tokens.append(contentsOf: tokenize(candidate, lineIndex: lineIndex))
-                }
-                continuation.resume(
-                    returning: VisionPayload(
-                        fullText: sanitizeOCRText(lines.joined(separator: "\n")),
-                        tokens: tokens
-                    )
-                )
+                let observations = request.results as? [VNRecognizedTextObservation] ?? []
+                let hits = observations.compactMap(bestLineHit(from:))
+                continuation.resume(returning: hits)
             }
-
-            configure(request)
+            configure(request, languages: languages, languageCorrection: languageCorrection)
             let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
             do {
                 try handler.perform([request])
@@ -133,6 +150,65 @@ enum ImageOCRService {
                 continuation.resume(throwing: error)
             }
         }
+    }
+
+    /// Prefer a complete line over a truncated top candidate with slightly higher confidence.
+    private static func bestLineHit(from observation: VNRecognizedTextObservation) -> LineHit? {
+        let candidates = observation.topCandidates(3)
+        guard let best = candidates.max(by: { lineScore($0) < lineScore($1) }) else { return nil }
+        let text = best.string.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return nil }
+        return LineHit(
+            string: text,
+            box: observation.boundingBox,
+            candidate: best,
+            confidence: best.confidence
+        )
+    }
+
+    private static func lineScore(_ candidate: VNRecognizedText) -> Float {
+        let text = candidate.string.trimmingCharacters(in: .whitespacesAndNewlines)
+        let letters = text.unicodeScalars.filter { CharacterSet.letters.contains($0) }.count
+        return candidate.confidence * 0.55
+            + Float(letters) * 0.012
+            + Float(text.count) * 0.004
+    }
+
+    private static func mergeLineHits(_ lhs: [LineHit], _ rhs: [LineHit]) -> [LineHit] {
+        var merged = lhs
+        for hit in rhs {
+            if let index = merged.firstIndex(where: { boxesOverlap($0.box, hit.box) }) {
+                if shouldReplace(merged[index], with: hit) {
+                    merged[index] = hit
+                }
+            } else {
+                merged.append(hit)
+            }
+        }
+        return merged
+    }
+
+    private static func shouldReplace(_ current: LineHit, with incoming: LineHit) -> Bool {
+        if incoming.string.count >= current.string.count + 3 { return true }
+        if incoming.string.count + 3 <= current.string.count { return false }
+        return incoming.confidence > current.confidence + 0.08
+    }
+
+    private static func boxesOverlap(_ a: CGRect, _ b: CGRect) -> Bool {
+        let inter = a.intersection(b)
+        guard !inter.isNull, !inter.isEmpty else { return false }
+        let union = a.union(b)
+        let iou = (inter.width * inter.height) / max(union.width * union.height, 0.0001)
+        return iou >= 0.45
+    }
+
+    private static func readingOrder(_ lhs: LineHit, _ rhs: LineHit) -> Bool {
+        let l = lhs.box
+        let r = rhs.box
+        if abs(l.maxY - r.maxY) > 0.02 {
+            return l.maxY > r.maxY
+        }
+        return l.minX < r.minX
     }
 
     private static func tokenize(_ candidate: VNRecognizedText, lineIndex: Int) -> [OCRToken] {
@@ -239,24 +315,25 @@ enum ImageOCRService {
         return unique
     }
 
-    private static func configure(_ request: VNRecognizeTextRequest) {
+    private static func configure(
+        _ request: VNRecognizeTextRequest,
+        languages: [String],
+        languageCorrection: Bool
+    ) {
         request.recognitionLevel = .accurate
-        // Language correction often mangles CJK into Latin symbols.
-        request.usesLanguageCorrection = false
+        request.usesLanguageCorrection = languageCorrection
+        // Catch wrapped / smaller dialogue lines on screenshots.
+        request.minimumTextHeight = 0.008
 
         if #available(iOS 16.0, *) {
-            request.automaticallyDetectsLanguage = true
+            request.automaticallyDetectsLanguage = false
             request.revision = VNRecognizeTextRequestRevision3
         }
 
-        let preferred = ["zh-Hans", "zh-Hant", "en-US", "ja-JP", "ko-KR"]
-        let supported = Set(
-            (try? request.supportedRecognitionLanguages()) ?? preferred
-        )
-        let languages = preferred.filter(supported.contains)
-        if !languages.isEmpty {
-            // Chinese first — English-first ordering commonly breaks 中文 OCR.
-            request.recognitionLanguages = languages
+        let supported = Set((try? request.supportedRecognitionLanguages()) ?? languages)
+        let filtered = languages.filter(supported.contains)
+        if !filtered.isEmpty {
+            request.recognitionLanguages = filtered
         }
     }
 

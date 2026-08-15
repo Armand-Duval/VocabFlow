@@ -1,5 +1,13 @@
 import Foundation
 
+enum KnoWellCloud {
+    static let origin = "https://api.knowellcards.com"
+    static let baseURL = origin + "/v1"
+    static let healthURL = origin + "/health"
+    static let appToken = "3b9dbb99ba2999efc87fdaebead29ca8ce5203a1c5304a9c"
+    static var isEnabled: Bool { !appToken.isEmpty }
+}
+
 enum APISettings {
     private static let apiKeyKey = "kimi_api_key"
     private static let modelKey = "kimi_model"
@@ -99,14 +107,30 @@ enum APISettings {
         !defaultAPIKey(for: .deepseek).isEmpty || !defaultAPIKey(for: .moonshot).isEmpty
     }
 
-    /// Empty user key → using a bundled default for the effective provider.
+    /// Empty user key → official proxy, else a bundled default key.
     static var isUsingDefaultKey: Bool {
-        !hasUserAPIKey && !defaultAPIKey(for: effectiveProvider).isEmpty
+        !hasUserAPIKey && !usesCloudProxy && !defaultAPIKey(for: effectiveProvider).isEmpty
     }
 
-    /// Prefer user key; otherwise provider-specific default (DeepSeek / Moonshot).
+    /// No personal key → talk to KnoWell's proxy (upstream key stays on the server).
+    static var usesCloudProxy: Bool {
+        !hasUserAPIKey && KnoWellCloud.isEnabled
+    }
+
+    static var deviceID: String {
+        let key = "knowell_device_id"
+        if let existing = defaults.string(forKey: key), !existing.isEmpty {
+            return existing
+        }
+        let id = UUID().uuidString
+        defaults.set(id, forKey: key)
+        return id
+    }
+
+    /// Prefer user key; otherwise the cloud token, then bundled DeepSeek / Moonshot.
     static var effectiveAPIKey: String {
         if hasUserAPIKey { return kimiAPIKey }
+        if usesCloudProxy { return KnoWellCloud.appToken }
         let forProvider = defaultAPIKey(for: provider)
         if !forProvider.isEmpty { return forProvider }
         if !defaultAPIKey(for: .deepseek).isEmpty { return defaultAPIKey(for: .deepseek) }
@@ -114,9 +138,11 @@ enum APISettings {
     }
 
     /// Requests use the selected provider when the user supplied a key, or when that
-    /// provider has a bundled default. Otherwise fall back to DeepSeek, then Moonshot.
+    /// provider has a bundled default. Cloud proxy keeps the user's picker but
+    /// sends traffic to KnoWellCloud.
     static var effectiveProvider: AIProvider {
         if hasUserAPIKey { return provider }
+        if usesCloudProxy { return provider }
         if !defaultAPIKey(for: provider).isEmpty { return provider }
         if !defaultAPIKey(for: .deepseek).isEmpty { return .deepseek }
         if !defaultAPIKey(for: .moonshot).isEmpty { return .moonshot }
@@ -126,21 +152,39 @@ enum APISettings {
     static var canUseKimi: Bool { canUseAI }
 
     static var canUseAI: Bool {
-        !effectiveAPIKey.isEmpty && !baseURL.isEmpty && !effectiveModel.isEmpty
+        if usesCloudProxy { return true }
+        return !effectiveAPIKey.isEmpty && !baseURL.isEmpty && !effectiveModel.isEmpty
     }
 
     static var keySourceDescription: String {
         if hasUserAPIKey { return L10n.keySourceUser }
+        if usesCloudProxy { return L10n.keySourceCloud }
         if isUsingDefaultKey { return L10n.keySourceDefault }
         return L10n.keySourceMissing
     }
 
     static var baseURL: String {
+        if usesCloudProxy {
+            return KnoWellCloud.baseURL
+        }
         switch effectiveProvider {
         case .custom:
             return normalizedBaseURL(customBaseURL)
         default:
             return effectiveProvider.defaultBaseURL
+        }
+    }
+
+    static func applyChatHeaders(to request: inout URLRequest) {
+        if usesCloudProxy {
+            request.setValue(KnoWellCloud.appToken, forHTTPHeaderField: "X-KnoWell-Token")
+            request.setValue(deviceID, forHTTPHeaderField: "X-Device-Id")
+            return
+        }
+        request.setValue("Bearer \(effectiveAPIKey)", forHTTPHeaderField: "Authorization")
+        if effectiveProvider == .openrouter {
+            request.setValue("https://knowell.app", forHTTPHeaderField: "HTTP-Referer")
+            request.setValue("KnoWell", forHTTPHeaderField: "X-Title")
         }
     }
 

@@ -2168,6 +2168,74 @@
         }
       }
     },
+    "create.preview.doneAction" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成"
+          }
+        }
+      }
+    },
+    "create.preview.doneEmpty" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No cards kept"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有留下卡片"
+          }
+        }
+      }
+    },
+    "create.preview.doneTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已保存"
+          }
+        }
+      }
+    },
+    "create.preview.drop" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drop"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "丢掉"
+          }
+        }
+      }
+    },
     "create.preview.footerCompact" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2181,6 +2249,227 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "带「AI 推荐」标签的卡片默认入库；另一种类型可手动打开「加入词库」。"
+          }
+        }
+      }
+    },
+    "create.preview.moreWaiting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld more waiting after this batch"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这批之后还有 %lld 张待确认"
+          }
+        }
+      }
+    },
+    "create.preview.later" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Later"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "稍后"
+          }
+        }
+      }
+    },
+    "create.preview.keep" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "留下"
+          }
+        }
+      }
+    },
+    "create.preview.progress" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld / %2$lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld / %2$lld"
+          }
+        }
+      }
+    },
+    "create.preview.replace" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replace"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "换一张"
+          }
+        }
+      }
+    },
+    "create.preview.replace.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What should change?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "哪里不满意"
+          }
+        }
+      }
+    },
+    "create.preview.replace.tooEasy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Too easy"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "太浅"
+          }
+        }
+      }
+    },
+    "create.preview.replace.tooHard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Too hard"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "太难"
+          }
+        }
+      }
+    },
+    "create.preview.replace.wrongSense" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wrong sense"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "义项不对"
+          }
+        }
+      }
+    },
+    "create.preview.replacing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replacing…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在换一张…"
+          }
+        }
+      }
+    },
+    "create.preview.reveal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap to see the back"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点按查看背面"
+          }
+        }
+      }
+    },
+    "create.preview.reviewNow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review %lld cards"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "去复习这 %lld 张"
+          }
+        }
+      }
+    },
+    "create.preview.tapHint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check the front first — keep only cards you can study."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "先看正面，只留下能背的卡。"
           }
         }
       }
@@ -8029,7 +8318,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "不会"
+            "value" : "忘记"
           }
         }
       }
@@ -8085,6 +8374,23 @@
         }
       }
     },
+    "rating.appreciation.hard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recognized"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有印象"
+          }
+        }
+      }
+    },
     "rating.appreciation.good" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8114,7 +8420,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "简单"
+            "value" : "很熟"
           }
         }
       }
@@ -8176,13 +8482,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hard"
+            "value" : "Fuzzy"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "困难"
+            "value" : "模糊"
           }
         }
       }
@@ -9630,13 +9936,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Swipe left Forgot · right Easy · down Good"
+            "value" : "Swipe left Forgot · right Easy · tap Fuzzy"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "左滑不会 · 右滑简单 · 下滑良好"
+            "value" : "左滑忘记 · 右滑很熟 · 点按模糊"
           }
         }
       }
@@ -9647,13 +9953,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Swipe left: Again"
+            "value" : "Swipe left: Forgot"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "左滑：不会"
+            "value" : "左滑：忘记"
           }
         }
       }
@@ -9670,7 +9976,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "右滑：简单"
+            "value" : "右滑：很熟"
           }
         }
       }
@@ -9681,13 +9987,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tap Good in the bottom bar"
+            "value" : "Tap Fuzzy in the bottom bar"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "良好请点底部按钮"
+            "value" : "模糊请点底部按钮"
           }
         }
       }
@@ -10292,13 +10598,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your key takes priority. Leave empty to use the built-in default key."
+            "value" : "Your key takes priority. Leave empty to use KnoWell's official server."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "填写你自己的 Key 会优先使用；留空则自动使用内置默认 Key。"
+            "value" : "填写你自己的 Key 会优先直连；留空则使用致知官方服务。"
           }
         }
       }
@@ -11038,6 +11344,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "选择导入方式"
+          }
+        }
+      }
+    },
+    "settings.key.cloud" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Using KnoWell official server"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用致知官方服务"
           }
         }
       }

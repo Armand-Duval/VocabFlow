@@ -987,9 +987,9 @@ struct CardReviewSessionView: View {
         #if canImport(UIKit)
         let style: UIImpactFeedbackGenerator.FeedbackStyle
         switch rating {
-        case .again, .hard:
+        case .again:
             style = .medium
-        case .good, .easy:
+        case .hard, .good, .easy:
             style = .light
         }
         UIImpactFeedbackGenerator(style: style).impactOccurred()
@@ -1062,7 +1062,7 @@ private struct PendingLearningCard: Identifiable {
     var id: UUID { card.id }
 }
 
-private struct ReviewRatingButtonStyle: ButtonStyle {
+struct ReviewRatingButtonStyle: ButtonStyle {
     let rating: ReviewRating
 
     func makeBody(configuration: Configuration) -> some View {

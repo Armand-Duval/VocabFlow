@@ -51,6 +51,7 @@ enum ShareImportStore {
     private static let payloadFileName = "share-import.json"
     private static let draftsFileName = "share-drafts.json"
     private static let generationJobFileName = "share-generation-job.json"
+    private static let triageFileName = "pending-triage.json"
 
     private struct StoredPayload: Codable {
         let sentence: String
@@ -102,6 +103,7 @@ enum ShareImportStore {
         let paraphrases: String?
         let sourceAttribution: String?
         let sourceImagePath: String?
+        let isSelected: Bool
 
         init(from draft: GeneratedCardDraft) {
             word = draft.word
@@ -118,12 +120,13 @@ enum ShareImportStore {
             paraphrases = draft.paraphrases
             sourceAttribution = draft.sourceAttribution
             sourceImagePath = draft.sourceImagePath
+            isSelected = draft.isSelected
         }
 
         enum CodingKeys: String, CodingKey {
             case word, phonetic, sentence, cardTypeRaw, front, back, contextNote
             case usageNote, etymology, synonyms, antonyms, paraphrases
-            case sourceAttribution, sourceImagePath
+            case sourceAttribution, sourceImagePath, isSelected
         }
 
         init(from decoder: Decoder) throws {
@@ -142,6 +145,7 @@ enum ShareImportStore {
             paraphrases = try container.decodeIfPresent(String.self, forKey: .paraphrases)
             sourceAttribution = try container.decodeIfPresent(String.self, forKey: .sourceAttribution)
             sourceImagePath = try container.decodeIfPresent(String.self, forKey: .sourceImagePath)
+            isSelected = try container.decodeIfPresent(Bool.self, forKey: .isSelected) ?? true
         }
 
         func encode(to encoder: Encoder) throws {
@@ -160,6 +164,63 @@ enum ShareImportStore {
             try container.encodeIfPresent(paraphrases, forKey: .paraphrases)
             try container.encodeIfPresent(sourceAttribution, forKey: .sourceAttribution)
             try container.encodeIfPresent(sourceImagePath, forKey: .sourceImagePath)
+            try container.encode(isSelected, forKey: .isSelected)
+        }
+
+        func makeDraft() -> GeneratedCardDraft? {
+            guard let type = CardType(rawValue: cardTypeRaw) else { return nil }
+            return GeneratedCardDraft(
+                word: word,
+                phonetic: phonetic,
+                sentence: sentence,
+                cardType: type,
+                front: front,
+                back: back,
+                contextNote: contextNote,
+                usageNote: usageNote,
+                etymology: etymology,
+                synonyms: synonyms,
+                antonyms: antonyms,
+                paraphrases: paraphrases,
+                sourceAttribution: sourceAttribution,
+                sourceImagePath: sourceImagePath,
+                isSelected: isSelected
+            )
+        }
+    }
+
+    struct PersistedTriageBatch: Codable, Equatable {
+        let id: UUID
+        let deckID: UUID
+        let drafts: [GeneratedCardDraft]
+        let cursor: Int
+
+        init(id: UUID, deckID: UUID, drafts: [GeneratedCardDraft], cursor: Int = 0) {
+            self.id = id
+            self.deckID = deckID
+            self.drafts = drafts
+            self.cursor = cursor
+        }
+
+        private enum CodingKeys: String, CodingKey {
+            case id, deckID, drafts, cursor
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(UUID.self, forKey: .id)
+            deckID = try container.decode(UUID.self, forKey: .deckID)
+            let stored = try container.decode([StoredCardDraft].self, forKey: .drafts)
+            drafts = stored.compactMap { $0.makeDraft() }
+            cursor = try container.decodeIfPresent(Int.self, forKey: .cursor) ?? 0
+        }
+
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(id, forKey: .id)
+            try container.encode(deckID, forKey: .deckID)
+            try container.encode(drafts.map { StoredCardDraft(from: $0) }, forKey: .drafts)
+            try container.encode(cursor, forKey: .cursor)
         }
     }
 
@@ -297,30 +358,37 @@ enum ShareImportStore {
         }
 
         clearDrafts()
-        return payload.drafts.compactMap { stored in
-            guard let type = CardType(rawValue: stored.cardTypeRaw) else { return nil }
-            return GeneratedCardDraft(
-                word: stored.word,
-                phonetic: stored.phonetic,
-                sentence: stored.sentence,
-                cardType: type,
-                front: stored.front,
-                back: stored.back,
-                contextNote: stored.contextNote,
-                usageNote: stored.usageNote,
-                etymology: stored.etymology,
-                synonyms: stored.synonyms,
-                antonyms: stored.antonyms,
-                paraphrases: stored.paraphrases,
-                sourceAttribution: stored.sourceAttribution,
-                sourceImagePath: stored.sourceImagePath
-            )
-        }
+        return payload.drafts.compactMap { $0.makeDraft() }
     }
 
     static func clearDrafts() {
         guard let url = draftsURL else { return }
         try? FileManager.default.removeItem(at: url)
+    }
+
+    private static var triageURL: URL? {
+        FileManager.default
+            .containerURL(forSecurityApplicationGroupIdentifier: appGroupID)?
+            .appendingPathComponent(triageFileName)
+    }
+
+    static func saveTriageBatches(_ batches: [PersistedTriageBatch]) {
+        guard let url = triageURL else { return }
+        if batches.isEmpty {
+            try? FileManager.default.removeItem(at: url)
+            return
+        }
+        guard let data = try? JSONEncoder().encode(batches) else { return }
+        try? data.write(to: url, options: .atomic)
+    }
+
+    static func loadTriageBatches() -> [PersistedTriageBatch] {
+        guard let url = triageURL,
+              let data = try? Data(contentsOf: url),
+              let batches = try? JSONDecoder().decode([PersistedTriageBatch].self, from: data) else {
+            return []
+        }
+        return batches.filter { !$0.drafts.isEmpty }
     }
 
     static func savePendingGenerationJob(

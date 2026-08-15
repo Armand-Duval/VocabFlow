@@ -11,6 +11,39 @@ enum CardContentRegeneratorError: LocalizedError {
     }
 }
 
+/// Preview triage: replace a draft before it is saved.
+enum CardDraftRegenerator {
+    @MainActor
+    static func replace(
+        _ draft: GeneratedCardDraft,
+        reason: CardReplaceReason,
+        deckName: String?
+    ) async throws -> GeneratedCardDraft {
+        if draft.cardType == .appreciation {
+            let reflection = DailyReflection(
+                sentence: draft.sentence,
+                translation: draft.contextNote,
+                source: draft.sourceAttribution,
+                occasion: draft.back,
+                isAI: true
+            )
+            var next = try await LiteraryAppreciationGenerator.generate(
+                from: reflection,
+                revisionHint: reason.promptInstruction
+            )
+            next.sourceImagePath = draft.sourceImagePath
+            next.isSelected = true
+            next.isRecommended = true
+            return next
+        }
+        return try await KimiCardGenerator.regenerate(
+            draft: draft,
+            reason: reason,
+            deckName: deckName
+        )
+    }
+}
+
 /// Single-card AI regenerate using the same generator rules as new cards / bulk migrate.
 enum CardContentRegenerator {
     @MainActor
@@ -94,7 +127,10 @@ enum LiteraryAppreciationGeneratorError: LocalizedError {
 enum LiteraryAppreciationGenerator {
     private static let requestTimeout: TimeInterval = 45
 
-    static func generate(from reflection: DailyReflection) async throws -> GeneratedCardDraft {
+    static func generate(
+        from reflection: DailyReflection,
+        revisionHint: String? = nil
+    ) async throws -> GeneratedCardDraft {
         let sentence = reflection.sentence.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !sentence.isEmpty else {
             throw LiteraryAppreciationGeneratorError.emptySentence
@@ -102,7 +138,7 @@ enum LiteraryAppreciationGenerator {
 
         if APISettings.canUseAI {
             do {
-                return try await fetchAppreciation(from: reflection)
+                return try await fetchAppreciation(from: reflection, revisionHint: revisionHint)
             } catch {
                 return fallbackDraft(from: reflection)
             }
@@ -110,25 +146,31 @@ enum LiteraryAppreciationGenerator {
         return fallbackDraft(from: reflection)
     }
 
-    private static func fetchAppreciation(from reflection: DailyReflection) async throws -> GeneratedCardDraft {
+    private static func fetchAppreciation(
+        from reflection: DailyReflection,
+        revisionHint: String?
+    ) async throws -> GeneratedCardDraft {
         guard APISettings.canUseAI else {
             throw LiteraryAppreciationGeneratorError.missingAPIKey
         }
 
-        let content = try await requestAppreciation(from: reflection)
+        let content = try await requestAppreciation(from: reflection, revisionHint: revisionHint)
         return try parseAppreciation(from: content, reflection: reflection)
     }
 
-    private static func requestAppreciation(from reflection: DailyReflection) async throws -> String {
+    private static func requestAppreciation(
+        from reflection: DailyReflection,
+        revisionHint: String?
+    ) async throws -> String {
         guard let url = URL(string: APISettings.chatCompletionsURL) else {
             throw LiteraryAppreciationGeneratorError.invalidResponse
         }
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("Bearer \(APISettings.effectiveAPIKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.timeoutInterval = requestTimeout
+        APISettings.applyChatHeaders(to: &request)
 
         let sentence = reflection.sentence.trimmingCharacters(in: .whitespacesAndNewlines)
         let translation = reflection.translation?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
@@ -167,6 +209,9 @@ enum LiteraryAppreciationGenerator {
         }
         if !occasion.isEmpty {
             userPrompt += "\n缘由：\(occasion)"
+        }
+        if let revisionHint, !revisionHint.isEmpty {
+            userPrompt += "\n重做要求：\(revisionHint)\n请换一个切入角度，不要重复上一版赏析。"
         }
 
         let body: [String: Any] = [

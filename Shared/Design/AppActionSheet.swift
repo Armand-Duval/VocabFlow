@@ -294,6 +294,126 @@ struct AppSelectionSheet: View {
     }
 }
 
+enum AppSpinnerTitlePlacement {
+    /// Settings row: title on the left, value + chevron on the right.
+    case leading
+    /// Form field: title above a full-width value row.
+    case above
+    /// Compact trigger used next to other controls.
+    case hidden
+}
+
+/// Custom dropdown — replaces native `Picker` menu / navigation chrome.
+struct AppSpinner: View {
+    var title: String? = nil
+    var titlePlacement: AppSpinnerTitlePlacement = .leading
+    let value: String
+    var isEnabled: Bool = true
+    let options: [AppSelectionOption]
+    let selectedID: String?
+    let onSelect: (String) -> Void
+
+    @State private var isPresented = false
+
+    var body: some View {
+        Group {
+            switch titlePlacement {
+            case .leading:
+                leadingBody
+            case .above:
+                aboveBody
+            case .hidden:
+                compactTrigger
+            }
+        }
+        .opacity(isEnabled ? 1 : 0.45)
+        .disabled(!isEnabled)
+        .appSelectionSheet(
+            isPresented: $isPresented,
+            title: title ?? value,
+            options: options,
+            selectedID: selectedID,
+            onSelect: onSelect
+        )
+    }
+
+    private var leadingBody: some View {
+        Button {
+            isPresented = true
+        } label: {
+            HStack(spacing: AppSpacing.sm) {
+                if let title {
+                    Text(title)
+                        .font(AppFont.secondary())
+                        .foregroundStyle(AppColor.textPrimary)
+                }
+                Spacer(minLength: AppSpacing.sm)
+                HStack(spacing: 4) {
+                    Text(value)
+                        .font(AppFont.secondary())
+                        .foregroundStyle(AppColor.textSecondary)
+                        .lineLimit(1)
+                    Image(systemName: "chevron.down")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(AppColor.textTertiary)
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var aboveBody: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+            if let title {
+                Text(title)
+                    .font(AppFont.helper())
+                    .foregroundStyle(AppColor.textMuted)
+            }
+            Button {
+                isPresented = true
+            } label: {
+                HStack(spacing: 6) {
+                    Text(value)
+                        .font(AppFont.secondary().weight(.medium))
+                        .foregroundStyle(AppColor.textPrimary)
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                    Image(systemName: "chevron.down")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(AppColor.textTertiary)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 9)
+                .background(
+                    AppColor.surfaceMuted,
+                    in: RoundedRectangle(cornerRadius: 8, style: .continuous)
+                )
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var compactTrigger: some View {
+        Button {
+            isPresented = true
+        } label: {
+            HStack(spacing: 6) {
+                Text(value)
+                    .font(AppFont.secondary().weight(.medium))
+                    .foregroundStyle(AppColor.textPrimary)
+                    .lineLimit(1)
+                Image(systemName: "chevron.down")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(AppColor.textTertiary)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
 private struct DestructiveSheetButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
