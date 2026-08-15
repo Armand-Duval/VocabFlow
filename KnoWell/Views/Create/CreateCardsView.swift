@@ -16,6 +16,8 @@ struct CreateCardsView: View {
     @State private var selectedDeckID: UUID?
     @ObservedObject private var generationQueue = CardGenerationQueue.shared
     @State private var showPreview = false
+    /// User left confirmation with cards still waiting — don't force the sheet back open.
+    @State private var deferredPreview = false
     @State private var showGenerationQueue = false
     @State private var errorMessage: String?
     @State private var selectedText = ""
@@ -90,6 +92,7 @@ struct CreateCardsView: View {
                 )
                 .navigationDestination(isPresented: $showPreview) {
                     CardPreviewView(selectedDeckID: $selectedDeckID) {
+                        deferredPreview = generationQueue.pendingTriageCardCount > 0
                         showPreview = false
                     }
                 }
@@ -98,6 +101,7 @@ struct CreateCardsView: View {
                 }
                 .onChange(of: generationQueue.pendingTriageCardCount) { oldCount, count in
                     guard count > oldCount else { return }
+                    deferredPreview = false
                     if let deckID = generationQueue.readyPreview?.deckID {
                         selectedDeckID = deckID
                     }
@@ -107,11 +111,10 @@ struct CreateCardsView: View {
                     ingestShareDraftsIfNeeded()
                 }
                 .onAppear {
-                    if generationQueue.readyPreview != nil {
-                        selectedDeckID = generationQueue.readyPreview?.deckID ?? selectedDeckID
-                        showPreview = true
-                    }
                     ingestShareDraftsIfNeeded()
+                    guard !deferredPreview, generationQueue.readyPreview != nil else { return }
+                    selectedDeckID = generationQueue.readyPreview?.deckID ?? selectedDeckID
+                    showPreview = true
                 }
                 .modifier(CreateCardsAlertsModifier(errorMessage: $errorMessage))
                 .modifier(CreateCardsLifecycleModifier(
@@ -184,6 +187,7 @@ struct CreateCardsView: View {
                         systemImage: "checklist",
                         actionTitle: L10n.createPendingAction,
                         action: {
+                            deferredPreview = false
                             selectedDeckID = generationQueue.readyPreview?.deckID ?? selectedDeckID
                             showPreview = true
                         }

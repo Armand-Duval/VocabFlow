@@ -114,7 +114,7 @@ struct CardPreviewView: View {
                         .appSoftShadow()
                 }
                 .buttonStyle(SoftPressButtonStyle())
-                .accessibilityLabel(cursor > 0 ? L10n.back : L10n.createPreviewLater)
+                .accessibilityLabel(L10n.createPreviewLater)
 
                 Text(navigationTitle)
                     .font(AppFont.helper())
@@ -369,14 +369,8 @@ struct CardPreviewView: View {
     }
 
     private func goBackOrDismiss() {
-        if cursor > 0 {
-            cursor -= 1
-            showBack = false
-            persistFullProgress()
-        } else {
-            persistProgressIfNeeded()
-            onComplete()
-        }
+        persistProgressIfNeeded()
+        onComplete()
     }
 
     private func loadCurrentBatch() {

@@ -310,34 +310,33 @@ final class CardGenerationQueue: ObservableObject {
     /// Pull Share / Action pending jobs into the in-app generation queue.
     func ingestPendingShareJobsIfNeeded() {
         ShareImportStore.resetStaleProcessingJob()
-        guard let job = ShareImportStore.claimPendingGenerationJob() else { return }
+        let pending = ShareImportStore.takeAllPendingGenerationJobs()
+        guard !pending.isEmpty else { return }
 
-        guard let deckID = SharedDeckStore.pendingTargetDeckID
+        let fallbackDeckID = SharedDeckStore.consumePendingTargetDeckID()
             ?? SharedDeckStore.lastSelectedDeckID
-            ?? SharedDeckStore.resolvedSelectedDeckID() else {
-            ShareImportStore.clearGenerationJob()
-            ToastCenter.shared.show(L10n.deckExtensionEmptyCatalogHint)
-            return
-        }
+            ?? SharedDeckStore.resolvedSelectedDeckID()
+        let catalog = SharedDeckStore.loadCatalog()
 
-        let deckName = SharedDeckStore.loadCatalog()
-            .first(where: { $0.id == deckID })?
-            .name
-
-        do {
-            _ = try enqueue(
-                sentence: job.sentence,
-                words: job.words,
-                deckID: deckID,
-                deckName: deckName,
-                sourceHint: job.sourceHint,
-                sourceImagePath: job.sourceImagePath
-            )
-            ShareImportStore.clearGenerationJob()
-        } catch {
-            ShareImportStore.clearGenerationJob()
-            ToastCenter.shared.show(error.localizedDescription)
-            ShareExtensionNotifier.scheduleNoticeNotification(body: error.localizedDescription)
+        for job in pending {
+            guard let deckID = job.deckID ?? fallbackDeckID else {
+                ToastCenter.shared.show(L10n.deckExtensionEmptyCatalogHint)
+                continue
+            }
+            let deckName = catalog.first(where: { $0.id == deckID })?.name
+            do {
+                _ = try enqueue(
+                    sentence: job.sentence,
+                    words: job.words,
+                    deckID: deckID,
+                    deckName: deckName,
+                    sourceHint: job.sourceHint,
+                    sourceImagePath: job.sourceImagePath
+                )
+            } catch {
+                ToastCenter.shared.show(error.localizedDescription)
+                ShareExtensionNotifier.scheduleNoticeNotification(body: error.localizedDescription)
+            }
         }
     }
 

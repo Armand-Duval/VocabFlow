@@ -28,6 +28,14 @@ enum ImportSource: Equatable {
     case clipboard
 }
 
+struct PendingShareGenerationJob: Equatable {
+    let sentence: String
+    let words: [String]
+    let sourceHint: String?
+    let sourceImagePath: String?
+    let deckID: UUID?
+}
+
 extension ShareImportPayload {
     var bannerMessage: String {
         let hasSentence = !sentence.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -51,6 +59,7 @@ enum ShareImportStore {
     private static let payloadFileName = "share-import.json"
     private static let draftsFileName = "share-drafts.json"
     private static let generationJobFileName = "share-generation-job.json"
+    private static let generationJobsDirectoryName = "share-generation-jobs"
     private static let triageFileName = "pending-triage.json"
 
     private struct StoredPayload: Codable {
@@ -235,37 +244,71 @@ enum ShareImportStore {
     }
 
     private struct StoredGenerationJob: Codable {
+        let id: UUID
         let sentence: String
         let words: [String]
         let sourceHint: String?
         let sourceImagePath: String?
+        let deckID: UUID?
         var status: GenerationJobStatus
 
         enum CodingKeys: String, CodingKey {
-            case sentence, words, sourceHint, sourceImagePath, status
+            case id, sentence, words, sourceHint, sourceImagePath, deckID, status
         }
 
         init(
+            id: UUID = UUID(),
             sentence: String,
             words: [String],
             sourceHint: String? = nil,
             sourceImagePath: String? = nil,
+            deckID: UUID? = nil,
             status: GenerationJobStatus
         ) {
+            self.id = id
             self.sentence = sentence
             self.words = words
             self.sourceHint = sourceHint
             self.sourceImagePath = sourceImagePath
+            self.deckID = deckID
             self.status = status
         }
 
         init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
             sentence = try container.decode(String.self, forKey: .sentence)
             words = try container.decode([String].self, forKey: .words)
             sourceHint = try container.decodeIfPresent(String.self, forKey: .sourceHint)
             sourceImagePath = try container.decodeIfPresent(String.self, forKey: .sourceImagePath)
-            status = try container.decode(GenerationJobStatus.self, forKey: .status)
+            deckID = try container.decodeIfPresent(UUID.self, forKey: .deckID)
+            status = try container.decodeIfPresent(GenerationJobStatus.self, forKey: .status) ?? .pending
+        }
+
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(id, forKey: .id)
+            try container.encode(sentence, forKey: .sentence)
+            try container.encode(words, forKey: .words)
+            try container.encodeIfPresent(sourceHint, forKey: .sourceHint)
+            try container.encodeIfPresent(sourceImagePath, forKey: .sourceImagePath)
+            try container.encodeIfPresent(deckID, forKey: .deckID)
+            try container.encode(status, forKey: .status)
+        }
+
+        func makePending() -> PendingShareGenerationJob? {
+            let sentence = sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+            let words = words
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+            guard !sentence.isEmpty, !words.isEmpty else { return nil }
+            return PendingShareGenerationJob(
+                sentence: sentence,
+                words: words,
+                sourceHint: sourceHint,
+                sourceImagePath: sourceImagePath,
+                deckID: deckID
+            )
         }
     }
 
@@ -395,58 +438,43 @@ enum ShareImportStore {
         sentence: String,
         words: [String],
         sourceHint: String? = nil,
-        sourceImagePath: String? = nil
+        sourceImagePath: String? = nil,
+        deckID: UUID? = nil
     ) {
         let job = StoredGenerationJob(
             sentence: sentence,
             words: words,
             sourceHint: sourceHint,
             sourceImagePath: sourceImagePath,
+            deckID: deckID,
             status: .pending
         )
-        guard let url = generationJobURL,
-              let data = try? JSONEncoder().encode(job) else {
+        guard let directory = generationJobsDirectoryURL else { return }
+        do {
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        } catch {
             return
         }
+        let url = directory.appendingPathComponent("\(job.id.uuidString).json")
+        guard let data = try? JSONEncoder().encode(job) else { return }
         try? data.write(to: url, options: .atomic)
     }
 
-    static func claimPendingGenerationJob() -> (
-        sentence: String,
-        words: [String],
-        sourceHint: String?,
-        sourceImagePath: String?
-    )? {
-        guard let url = generationJobURL,
-              let data = try? Data(contentsOf: url),
-              var job = try? JSONDecoder().decode(StoredGenerationJob.self, from: data) else {
-            return nil
-        }
-
-        guard job.status == .pending else {
-            return nil
-        }
-
-        job.status = .processing
-        guard let updated = try? JSONEncoder().encode(job) else { return nil }
-        try? updated.write(to: url, options: .atomic)
-
-        let sentence = job.sentence.trimmingCharacters(in: .whitespacesAndNewlines)
-        let words = job.words
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-
-        guard !sentence.isEmpty, !words.isEmpty else {
-            clearGenerationJob()
-            return nil
-        }
-
-        return (sentence, words, job.sourceHint, job.sourceImagePath)
+    /// Drain every queued share job (new directory + legacy single file).
+    static func takeAllPendingGenerationJobs() -> [PendingShareGenerationJob] {
+        var jobs: [PendingShareGenerationJob] = []
+        jobs.append(contentsOf: takeLegacyGenerationJob())
+        jobs.append(contentsOf: takeQueuedGenerationJobs())
+        return jobs
     }
 
     static func clearGenerationJob() {
-        guard let url = generationJobURL else { return }
-        try? FileManager.default.removeItem(at: url)
+        if let url = generationJobURL {
+            try? FileManager.default.removeItem(at: url)
+        }
+        if let directory = generationJobsDirectoryURL {
+            try? FileManager.default.removeItem(at: directory)
+        }
     }
 
     static func resetStaleProcessingJob() {
@@ -463,12 +491,63 @@ enum ShareImportStore {
     }
 
     static var hasPendingGenerationJob: Bool {
+        if let url = generationJobURL,
+           let data = try? Data(contentsOf: url),
+           let job = try? JSONDecoder().decode(StoredGenerationJob.self, from: data),
+           job.status == .pending || job.status == .processing {
+            return true
+        }
+        guard let directory = generationJobsDirectoryURL else { return false }
+        let urls = (try? FileManager.default.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: nil,
+            options: [.skipsHiddenFiles]
+        )) ?? []
+        return urls.contains { $0.pathExtension.lowercased() == "json" }
+    }
+
+    private static var generationJobsDirectoryURL: URL? {
+        FileManager.default
+            .containerURL(forSecurityApplicationGroupIdentifier: appGroupID)?
+            .appendingPathComponent(generationJobsDirectoryName, isDirectory: true)
+    }
+
+    private static func takeLegacyGenerationJob() -> [PendingShareGenerationJob] {
         guard let url = generationJobURL,
               let data = try? Data(contentsOf: url),
-              let job = try? JSONDecoder().decode(StoredGenerationJob.self, from: data) else {
-            return false
+              let stored = try? JSONDecoder().decode(StoredGenerationJob.self, from: data) else {
+            return []
         }
-        return job.status == .pending || job.status == .processing
+        try? FileManager.default.removeItem(at: url)
+        guard let job = stored.makePending() else { return [] }
+        return [job]
+    }
+
+    private static func takeQueuedGenerationJobs() -> [PendingShareGenerationJob] {
+        guard let directory = generationJobsDirectoryURL else { return [] }
+        let urls = ((try? FileManager.default.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: [.creationDateKey],
+            options: [.skipsHiddenFiles]
+        )) ?? [])
+        .filter { $0.pathExtension.lowercased() == "json" }
+        .sorted { lhs, rhs in
+            let left = (try? lhs.resourceValues(forKeys: [.creationDateKey]).creationDate) ?? .distantPast
+            let right = (try? rhs.resourceValues(forKeys: [.creationDateKey]).creationDate) ?? .distantPast
+            return left < right
+        }
+
+        var jobs: [PendingShareGenerationJob] = []
+        for url in urls {
+            defer { try? FileManager.default.removeItem(at: url) }
+            guard let data = try? Data(contentsOf: url),
+                  let stored = try? JSONDecoder().decode(StoredGenerationJob.self, from: data),
+                  let job = stored.makePending() else {
+                continue
+            }
+            jobs.append(job)
+        }
+        return jobs
     }
 }
 

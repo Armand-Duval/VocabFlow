@@ -25,8 +25,10 @@ enum ShareCardGenerationRunner {
             sentence: sentence,
             words: keptWords,
             sourceHint: sourceHint,
-            sourceImagePath: sourceImagePath
+            sourceImagePath: sourceImagePath,
+            deckID: targetDeckID
         )
+        ShareImportStore.clear()
         #if canImport(UIKit)
         UIPasteboard.general.string = sentence
         #endif

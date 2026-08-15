@@ -36,7 +36,8 @@ enum ImageOCRService {
         let vision = try await recognizeVision(in: cgImage)
         log("""
         2) Vision lines=\(vision.fullText.split(separator: "\n").count) tokens=\(vision.tokens.count)
-           fullText preview: \(vision.fullText.prefix(160).replacingOccurrences(of: "\n", with: "↵"))
+           fullText:
+        \(vision.fullText.replacingOccurrences(of: "\n", with: "\n           "))
         """)
 
         let mask = await maskTask
@@ -85,6 +86,7 @@ enum ImageOCRService {
         let text: String
         let boundingBox: CGRect
         let lineIndex: Int
+        let lineText: String
     }
 
     private struct VisionPayload {
@@ -97,11 +99,13 @@ enum ImageOCRService {
         let box: CGRect
         let candidate: VNRecognizedText
         let confidence: Float
+        /// Pixel crop in the full image (top-left origin). Nil = recognized on the full frame.
+        var crop: CGRect? = nil
     }
 
     private static func recognizeVision(in cgImage: CGImage) async throws -> VisionPayload {
-        // One mixed-language request + auto-detect often keeps SKIP / names and drops
-        // wrapped English dialogue (common on CN game screenshots).
+        // One mixed-language request + auto-detect often keeps HUD chips / names and
+        // drops wrapped English dialogue (common on CN game screenshots).
         async let latin = recognizeLines(
             in: cgImage,
             languages: ["en-US"],
@@ -112,18 +116,51 @@ enum ImageOCRService {
             languages: ["zh-Hans", "zh-Hant", "ja-JP", "ko-KR"],
             languageCorrection: false
         )
-        let merged = mergeLineHits(try await latin, try await cjk)
-            .sorted(by: readingOrder)
+        let fullSize = CGSize(width: cgImage.width, height: cgImage.height)
+        var merged = mergeLineHits(try await latin, try await cjk)
+
+        if let band = lowerBandCrop(cgImage) {
+            let bandHits = try await recognizeLines(
+                in: band.image,
+                languages: ["en-US"],
+                languageCorrection: false
+            )
+            let remapped = bandHits.map { hit in
+                LineHit(
+                    string: hit.string,
+                    box: remapVisionBox(hit.box, crop: band.rect, full: fullSize),
+                    candidate: hit.candidate,
+                    confidence: hit.confidence,
+                    crop: band.rect
+                )
+            }
+            log("2b) lower-band crop \(Int(band.rect.width))x\(Int(band.rect.height)) @y=\(Int(band.rect.minY)) extraLines=\(remapped.count) \(remapped.map(\.string))")
+            merged = mergeLineHits(merged, remapped)
+        }
+
+        let ordered = merged.sorted(by: readingOrder)
+        log("2c) merged lines:\n" + ordered.enumerated().map { index, hit in
+            String(
+                format: "   L%02d conf=%.2f box=(%.2f,%.2f %.2fx%.2f) %@",
+                index,
+                hit.confidence,
+                hit.box.minX,
+                hit.box.minY,
+                hit.box.width,
+                hit.box.height,
+                hit.string as NSString
+            )
+        }.joined(separator: "\n"))
 
         var lines: [String] = []
-        var tokens: [OCRToken] = []
-        for (lineIndex, hit) in merged.enumerated() {
+        var allTokens: [OCRToken] = []
+        for (lineIndex, hit) in ordered.enumerated() {
             lines.append(hit.string)
-            tokens.append(contentsOf: tokenize(hit.candidate, lineIndex: lineIndex))
+            allTokens.append(contentsOf: tokens(from: hit, lineIndex: lineIndex, fullSize: fullSize))
         }
         return VisionPayload(
             fullText: sanitizeOCRText(lines.joined(separator: "\n")),
-            tokens: tokens
+            tokens: allTokens
         )
     }
 
@@ -162,7 +199,8 @@ enum ImageOCRService {
             string: text,
             box: observation.boundingBox,
             candidate: best,
-            confidence: best.confidence
+            confidence: best.confidence,
+            crop: nil
         )
     }
 
@@ -211,6 +249,36 @@ enum ImageOCRService {
         return l.minX < r.minX
     }
 
+    private static func lowerBandCrop(_ image: CGImage, topFraction: CGFloat = 0.40) -> (image: CGImage, rect: CGRect)? {
+        let y = Int((CGFloat(image.height) * topFraction).rounded(.down))
+        let rect = CGRect(x: 0, y: y, width: image.width, height: image.height - y)
+        guard rect.height >= 96, let cropped = image.cropping(to: rect) else { return nil }
+        return (cropped, rect)
+    }
+
+    /// Map a Vision box from a pixel crop (top-left origin) onto the full image.
+    private static func remapVisionBox(_ box: CGRect, crop: CGRect, full: CGSize) -> CGRect {
+        let cropFromBottom = full.height - (crop.minY + crop.height)
+        let minX = (crop.minX + box.minX * crop.width) / full.width
+        let maxX = (crop.minX + box.maxX * crop.width) / full.width
+        let minY = (cropFromBottom + box.minY * crop.height) / full.height
+        let maxY = (cropFromBottom + box.maxY * crop.height) / full.height
+        return CGRect(x: minX, y: minY, width: max(maxX - minX, 0), height: max(maxY - minY, 0))
+    }
+
+    private static func tokens(from hit: LineHit, lineIndex: Int, fullSize: CGSize) -> [OCRToken] {
+        let raw = tokenize(hit.candidate, lineIndex: lineIndex)
+        guard let crop = hit.crop else { return raw }
+        return raw.map { token in
+            OCRToken(
+                text: token.text,
+                boundingBox: remapVisionBox(token.boundingBox, crop: crop, full: fullSize),
+                lineIndex: token.lineIndex,
+                lineText: token.lineText
+            )
+        }
+    }
+
     private static func tokenize(_ candidate: VNRecognizedText, lineIndex: Int) -> [OCRToken] {
         let string = candidate.string
         guard !string.isEmpty else { return [] }
@@ -241,7 +309,7 @@ enum ImageOCRService {
 
         if ranges.isEmpty {
             if let box = try? candidate.boundingBox(for: string.startIndex..<string.endIndex) {
-                return [OCRToken(text: string, boundingBox: box.boundingBox, lineIndex: lineIndex)]
+                return [OCRToken(text: string, boundingBox: box.boundingBox, lineIndex: lineIndex, lineText: string)]
             }
             return []
         }
@@ -252,7 +320,7 @@ enum ImageOCRService {
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             guard !text.isEmpty else { continue }
             guard let box = try? candidate.boundingBox(for: range) else { continue }
-            tokens.append(OCRToken(text: text, boundingBox: box.boundingBox, lineIndex: lineIndex))
+            tokens.append(OCRToken(text: text, boundingBox: box.boundingBox, lineIndex: lineIndex, lineText: string))
         }
         return tokens
     }
@@ -275,7 +343,14 @@ enum ImageOCRService {
         let threshold = HighlightPhraseMerger.hitThreshold
         var coverageRows: [String] = []
         let mergerTokens: [HighlightPhraseMerger.Token] = tokens.enumerated().map { index, token in
-            let coverage = mask.highlightCoverage(ofNormalizedBox: token.boundingBox)
+            let boxArea = token.boundingBox.width * token.boundingBox.height
+            let overlay = OCRChromeFilter.looksLikeOverlayControl(
+                token: token.text,
+                lineText: token.lineText,
+                boxArea: boxArea
+            )
+            // Overlay glow must not seed the highlighter merger (logging-only skip leaked hits).
+            let coverage = overlay ? 0 : mask.highlightCoverage(ofNormalizedBox: token.boundingBox)
             let hit = coverage >= threshold
             if hit || coverage >= 0.20 {
                 coverageRows.append(
@@ -344,9 +419,9 @@ enum ImageOCRService {
             .filter { !$0.isEmpty }
             .joined(separator: "\n")
             .replacingOccurrences(of: #"\s{2,}"#, with: " ", options: .regularExpression)
-            // Book OCR: "pret-\nty" / "pret- ty" → "pretty"
+            // Book wrap only: "pret-\nty" / "pret- ty". Do not strip real hyphens ("well-practiced").
             .replacingOccurrences(
-                of: #"([A-Za-z])-\s*([a-z])"#,
+                of: #"([A-Za-z])-(?:\n\s*|\s+)([a-z])"#,
                 with: "$1$2",
                 options: .regularExpression
             )

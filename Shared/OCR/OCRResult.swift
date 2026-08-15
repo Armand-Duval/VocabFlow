@@ -54,9 +54,10 @@ struct OCRResult: Equatable, Sendable {
             guard !words.isEmpty else { return nil }
             return OCRImportUnit(sentence: unit.sentence, words: words)
         }
+        let cleanedFullText = OCRChromeFilter.strippingChromeLines(from: fullText)
 
         var result = OCRResult(
-            fullText: fullText,
+            fullText: cleanedFullText,
             highlightedWords: cleanedWords,
             importUnits: cleanedUnits,
             sourceImagePath: sourceImagePath
@@ -64,7 +65,7 @@ struct OCRResult: Equatable, Sendable {
 
         if result.shouldDiscardHighlightContext {
             return OCRResult(
-                fullText: fullText,
+                fullText: cleanedFullText,
                 highlightedWords: [],
                 importUnits: [],
                 sourceImagePath: sourceImagePath
@@ -84,6 +85,10 @@ struct OCRResult: Equatable, Sendable {
         guard !unitText.isEmpty else { return false }
 
         if OCRChromeFilter.looksLikeChromeBlob(unitText) { return true }
+
+        // Overlay glow often trips the highlighter mask. If every hit is overlay /
+        // App chrome, fall back to the full OCR page — not a per-screenshot word list.
+        if highlightedWords.allSatisfy(OCRChromeFilter.isChromePhrase) { return true }
 
         // Extremely short chrome strip vs long OCR page (e.g. nav labels only).
         let full = fullText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -112,6 +117,7 @@ enum OCRChromeFilter {
 
         let key = trimmed.lowercased()
         if exactChrome.contains(key) { return true }
+        if looksLikeLatinHUDChip(trimmed) { return true }
 
         // Multi-token chrome glued by softJoin: "Manage Decks Generate cards".
         let tokens = key
@@ -130,6 +136,48 @@ enum OCRChromeFilter {
         return false
     }
 
+    /// Overlay control vs body text. Geometry / typography only — screenshots
+    /// differ, so never match a list of button captions.
+    static func looksLikeOverlayControl(token: String, lineText: String, boxArea: CGFloat) -> Bool {
+        if boxArea > 0, boxArea < 0.0012 { return true }
+        if looksLikeLatinHUDChip(token) { return true }
+        if looksLikeStandaloneChip(token: token, line: lineText) { return true }
+        return false
+    }
+
+    /// HUD chips: short ALL-CAPS Latin, no CJK, no digits/punctuation.
+    /// Length band is the button shape, not any particular word.
+    static func looksLikeLatinHUDChip(_ raw: String) -> Bool {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        let letters = trimmed.filter(\.isLetter)
+        guard letters.count >= 3, letters.count <= 8 else { return false }
+        if trimmed.unicodeScalars.contains(where: { (0x4E00...0x9FFF).contains($0.value) }) {
+            return false
+        }
+        let nonSpace = trimmed.filter { !$0.isWhitespace && $0 != "-" }
+        guard !nonSpace.isEmpty, nonSpace.allSatisfy(\.isLetter) else { return false }
+        return letters.allSatisfy { character in
+            character.isASCII && character.isUppercase
+        }
+    }
+
+    /// Vocabulary sits inside a sentence. A control is usually the whole OCR line.
+    /// Latin-only: short CJK lines are often real dialogue.
+    static func looksLikeStandaloneChip(token: String, line: String) -> Bool {
+        let line = line.trimmingCharacters(in: .whitespacesAndNewlines)
+        let token = token.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard token.count >= 2, line.count <= 12 else { return false }
+        if line.unicodeScalars.contains(where: { (0x4E00...0x9FFF).contains($0.value) }) {
+            return false
+        }
+        let sentenceMarks = CharacterSet(charactersIn: ".!?。！？…,;:\"'“”")
+        if line.unicodeScalars.contains(where: { sentenceMarks.contains($0) }) { return false }
+        if line.contains(where: { $0.isASCII && $0.isLetter && $0.isLowercase }) { return false }
+        let compactLine = line.filter { !$0.isWhitespace }
+        let compactToken = token.filter { !$0.isWhitespace }
+        return compactLine.compare(compactToken, options: .caseInsensitive) == .orderedSame
+    }
+
     static func looksLikeChromeBlob(_ text: String) -> Bool {
         let lower = text.lowercased()
         let markers = [
@@ -138,5 +186,18 @@ enum OCRChromeFilter {
         ]
         let hits = markers.filter { lower.contains($0) }.count
         return hits >= 2
+    }
+
+    static func strippingChromeLines(from text: String) -> String {
+        text
+            .components(separatedBy: .newlines)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { line in
+                guard !line.isEmpty else { return false }
+                if isChromePhrase(line) { return false }
+                if looksLikeLatinHUDChip(line) { return false }
+                return true
+            }
+            .joined(separator: "\n")
     }
 }
