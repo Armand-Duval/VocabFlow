@@ -24,7 +24,7 @@ enum DeckDownloadService {
         pack: DeckRemotePack,
         in context: ModelContext,
         progress: ImportProgressHandler? = nil
-    ) async throws -> (deck: Deck, importedCards: Int) {
+    ) async throws -> (deck: Deck, importedCards: Int, original: OriginalPackRecord?) {
         let data: Data
         do {
             var request = URLRequest(url: pack.url)
@@ -40,6 +40,18 @@ enum DeckDownloadService {
             throw DeckDownloadError.network(error)
         }
 
+        var original: OriginalPackRecord?
+        do {
+            original = try OriginalPackArchive.save(
+                data: data,
+                suggestedName: pack.slug,
+                fileExtension: pack.url.pathExtension.isEmpty ? "json" : pack.url.pathExtension,
+                sourceURL: pack.url
+            )
+        } catch {
+            AppLog.error("Original pack archive failed: \(error.localizedDescription)", category: "Library")
+        }
+
         let deckPack = try await Task.detached(priority: .userInitiated) {
             try DeckPackConverter.deckPack(from: data, format: pack.format, remote: pack)
         }.value
@@ -49,16 +61,18 @@ enum DeckDownloadService {
 
         if let existing = DeckService.fetchDeck(slug: pack.slug, in: context) {
             if existing.cardCount == 0 {
-                return try await DeckService.importStarterCardsPublicAsync(
+                let imported = try await DeckService.importStarterCardsPublicAsync(
                     from: deckPack,
                     into: existing,
                     context: context,
                     progress: progress
                 )
+                return (imported.deck, imported.importedCards, original)
             }
-            return (existing, 0)
+            return (existing, 0, original)
         }
 
-        return try await DeckService.importPackAsync(deckPack, in: context, markBuiltIn: true, progress: progress)
+        let imported = try await DeckService.importPackAsync(deckPack, in: context, markBuiltIn: true, progress: progress)
+        return (imported.deck, imported.importedCards, original)
     }
 }

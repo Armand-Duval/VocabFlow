@@ -2,121 +2,143 @@ import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
 
-/// Share / Action entry: extract content, then keep the create form on screen.
-/// Never auto-dismiss on load failure — that felt like a flash crash.
+/// Share / Action: copy images to the app, keep text editing here.
 class ExtensionImportViewController: UIViewController {
     private var didFinishRequest = false
+    private var didStartHandoff = false
     private var hostingController: UIHostingController<AnyView>?
-    private var statusLabel: UILabel?
-    private var closeButton: UIButton?
+    private let session = ExtensionImportSession()
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        preferredContentSize = CGSize(width: 390, height: 640)
         view.backgroundColor = UIColor { traits in
             traits.userInterfaceStyle == .dark
                 ? UIColor(red: 0.11, green: 0.12, blue: 0.12, alpha: 1)
                 : UIColor(red: 0.965, green: 0.961, blue: 0.949, alpha: 1)
         }
-        showStatus(L10n.extensionHint)
-        extractSharedContent()
+        AppLog.bootstrap()
+        AppLog.info(
+            "viewDidLoad frame=\(Int(view.bounds.width))x\(Int(view.bounds.height)) items=\(extensionContext?.inputItems.count ?? -1)",
+            category: "Share"
+        )
+        installRoot()
+        startHandoffIfNeeded()
     }
 
-    private func extractSharedContent() {
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        AppLog.info(
+            "viewWillAppear frame=\(Int(view.bounds.width))x\(Int(view.bounds.height))",
+            category: "Share"
+        )
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        AppLog.info(
+            "viewDidAppear frame=\(Int(view.frame.width))x\(Int(view.frame.height))",
+            category: "Share"
+        )
+        startHandoffIfNeeded()
+    }
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        AppLog.info("viewDidDisappear finished=\(didFinishRequest)", category: "Share")
+    }
+
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        AppLog.warn("memory warning", category: "Share")
+    }
+
+    private func installRoot() {
+        let root = ExtensionImportRoot(
+            session: session,
+            onSubmit: { [weak self] in
+                self?.completeExtension()
+            },
+            onOpenApp: { [weak self] responder in
+                self?.openHostAppFromUserTap(from: responder)
+            },
+            onFinish: { [weak self] in
+                self?.completeExtension()
+            },
+            onCancel: { [weak self] in
+                self?.cancelExtension()
+            }
+        )
+        let host = UIHostingController(rootView: AnyView(root))
+        addChild(host)
+        host.view.translatesAutoresizingMaskIntoConstraints = false
+        host.view.backgroundColor = .clear
+        view.addSubview(host.view)
+        NSLayoutConstraint.activate([
+            host.view.topAnchor.constraint(equalTo: view.topAnchor),
+            host.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            host.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            host.view.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+        host.didMove(toParent: self)
+        hostingController = host
+    }
+
+    private func startHandoffIfNeeded() {
+        guard !didStartHandoff else { return }
+        didStartHandoff = true
+        handoffSharedContent()
+    }
+
+    private func handoffSharedContent() {
         guard let inputItems = extensionContext?.inputItems as? [NSExtensionItem], !inputItems.isEmpty else {
-            showRecoverableError(L10n.extensionNoContent)
+            AppLog.warn("handoff: no input items", category: "Share")
+            session.fail(L10n.extensionNoContent)
             return
         }
 
-        if let text = ShareTextExtractor.attributedText(from: inputItems) {
-            presentEditor(sentence: text, highlightedWords: [], sourceHint: nil, sourceImagePath: nil, preferSharedSentence: false)
-            return
-        }
+        let attachmentCount = inputItems.reduce(0) { $0 + ($1.attachments?.count ?? 0) }
+        AppLog.info("handoff start items=\(inputItems.count) attachments=\(attachmentCount)", category: "Share")
 
-        Task { @MainActor in
-            await Task.yield()
-
-            let outcome = await Self.loadSharedContent(from: inputItems, timeoutSeconds: 20)
-            switch outcome {
-            case .text(let text):
-                presentEditor(sentence: text, highlightedWords: [], sourceHint: nil, sourceImagePath: nil, preferSharedSentence: false)
-            case .ocr(let ocr):
-                presentOCREditor(ocr)
-            case .ocrFailed:
-                showRecoverableError(L10n.extensionOCRFailed)
-            case .timeout:
-                showRecoverableError(L10n.extensionTimeout)
-            case .empty:
-                showRecoverableError(L10n.extensionNoText)
-            }
-        }
-    }
-
-    private enum SharedLoadOutcome {
-        case text(String)
-        case ocr(OCRResult)
-        case ocrFailed
-        case timeout
-        case empty
-    }
-
-    private static func loadSharedContent(
-        from inputItems: [NSExtensionItem],
-        timeoutSeconds: Double
-    ) async -> SharedLoadOutcome {
-        await withTaskGroup(of: SharedLoadOutcome.self) { group in
-            group.addTask {
-                if let text = await ShareTextExtractor.loadText(from: inputItems) {
-                    return .text(text)
-                }
-
-                #if canImport(UIKit)
-                let providers = inputItems.flatMap { $0.attachments ?? [] }
-                let hasImage = providers.contains { provider in
-                    provider.hasItemConformingToTypeIdentifier(UTType.image.identifier)
-                        || provider.hasItemConformingToTypeIdentifier(UTType.jpeg.identifier)
-                        || provider.hasItemConformingToTypeIdentifier(UTType.png.identifier)
-                        || provider.hasItemConformingToTypeIdentifier("public.image")
-                }
-                if hasImage {
-                    if let ocr = await ShareTextExtractor.loadOCRFromImages(from: inputItems) {
-                        return .ocr(ocr)
+        Task {
+            if ShareTextExtractor.hasImageAttachment(in: inputItems) {
+                if let relativePath = await ShareTextExtractor.ingestFirstImage(from: inputItems) {
+                    AppLog.info("handoff inbox file=\(relativePath)", category: "Share")
+                    ShareImportStore.saveInbox(
+                        ShareInboxPayload(kind: .image, text: nil, relativePath: relativePath)
+                    )
+                    await MainActor.run {
+                        finishHandoff(autoOpen: true)
                     }
-                    return .ocrFailed
+                } else {
+                    AppLog.warn("handoff image ingest failed", category: "Share")
+                    await MainActor.run {
+                        session.fail(L10n.extensionNoContent)
+                    }
                 }
-                #endif
-
-                return .empty
-            }
-            group.addTask {
-                try? await Task.sleep(for: .seconds(timeoutSeconds))
-                return .timeout
+                return
             }
 
-            let first = await group.next() ?? .empty
-            group.cancelAll()
-            return first
-        }
-    }
-
-    private func presentOCREditor(_ ocr: OCRResult) {
-        let hint = OCRContextExtractor.sourceHint(from: ocr.fullText)
-        if ocr.hasHighlightContext {
-            presentEditor(
-                sentence: ocr.preferredImportSentence,
-                highlightedWords: ocr.preferredImportWords,
-                sourceHint: hint,
-                sourceImagePath: ocr.sourceImagePath,
-                preferSharedSentence: true
-            )
-        } else {
-            presentEditor(
-                sentence: ocr.fullText,
-                highlightedWords: ocr.highlightedWords,
-                sourceHint: hint,
-                sourceImagePath: ocr.sourceImagePath,
-                preferSharedSentence: false
-            )
+            let text: String?
+            if let attributed = ShareTextExtractor.attributedText(from: inputItems) {
+                text = attributed
+            } else {
+                text = await ShareTextExtractor.loadText(from: inputItems)
+            }
+            await MainActor.run {
+                if let text {
+                    AppLog.info("extension text chars=\(text.count)", category: "Share")
+                    presentEditor(
+                        sentence: text,
+                        highlightedWords: [],
+                        sourceHint: nil,
+                        sourceImagePath: nil,
+                        preferSharedSentence: false
+                    )
+                } else {
+                    AppLog.warn("handoff empty", category: "Share")
+                    session.fail(L10n.extensionNoText)
+                }
+            }
         }
     }
 
@@ -141,109 +163,257 @@ class ExtensionImportViewController: UIViewController {
         }
 
         guard !sentence.isEmpty else {
-            showRecoverableError(L10n.extensionNoText)
+            AppLog.warn("presentEditor empty sentence", category: "Share")
+            session.fail(L10n.extensionNoText)
             return
         }
 
-        ShareImportStore.save(
+        AppLog.info(
+            "presentEditor chars=\(sentence.count) words=\(words.count) hint=\(sourceHint ?? "-") image=\(sourceImagePath != nil)",
+            category: "Share"
+        )
+        session.showForm(
             sentence: sentence,
             selectedWord: words.isEmpty ? nil : VocabularyWords.join(words),
             sourceHint: sourceHint,
             sourceImagePath: sourceImagePath
         )
-
-        let form = ImportCardsFormView(
-            sentence: sentence,
-            selectedWord: words.isEmpty ? nil : VocabularyWords.join(words),
-            sourceHint: sourceHint,
-            sourceImagePath: sourceImagePath,
-            onSubmit: { [weak self] in
-                self?.completeExtension()
-            },
-            onCancel: { [weak self] in
-                ShareImportStore.clear()
-                self?.cancelExtension()
-            }
-        )
-
-        statusLabel?.removeFromSuperview()
-        statusLabel = nil
-        closeButton?.removeFromSuperview()
-        closeButton = nil
-
-        hostingController?.willMove(toParent: nil)
-        hostingController?.view.removeFromSuperview()
-        hostingController?.removeFromParent()
-
-        let host = UIHostingController(rootView: AnyView(form))
-        addChild(host)
-        host.view.translatesAutoresizingMaskIntoConstraints = false
-        host.view.backgroundColor = .clear
-        view.addSubview(host.view)
-        NSLayoutConstraint.activate([
-            host.view.topAnchor.constraint(equalTo: view.topAnchor),
-            host.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            host.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            host.view.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-        ])
-        host.didMove(toParent: self)
-        hostingController = host
     }
 
-    private func showStatus(_ message: String) {
-        let label = statusLabel ?? {
-            let created = UILabel()
-            created.textAlignment = .center
-            created.numberOfLines = 0
-            created.font = .preferredFont(forTextStyle: .body)
-            created.textColor = .secondaryLabel
-            created.translatesAutoresizingMaskIntoConstraints = false
-            view.addSubview(created)
-            NSLayoutConstraint.activate([
-                created.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-                created.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -24),
-                created.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
-                created.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -28)
-            ])
-            statusLabel = created
-            return created
-        }()
-        label.text = message
+    /// Images are handed to the host app. Open immediately; keep a button if iOS blocks the jump.
+    private func finishHandoff(autoOpen: Bool) {
+        AppLog.info("handoff ready autoOpen=\(autoOpen)", category: "Share")
+        if autoOpen, openContainingApp(from: self) {
+            AppLog.info("auto-open dispatched — completing extension", category: "Share")
+            completeExtension()
+            return
+        }
+        session.markHandedOff()
     }
 
-    /// Stay on screen — auto cancelRequest looked like a crash to users.
-    private func showRecoverableError(_ message: String) {
-        showStatus(message)
-        if closeButton == nil {
-            let button = UIButton(type: .system)
-            button.setTitle(L10n.close, for: .normal)
-            button.titleLabel?.font = .preferredFont(forTextStyle: .headline)
-            button.translatesAutoresizingMaskIntoConstraints = false
-            button.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
-            view.addSubview(button)
-            NSLayoutConstraint.activate([
-                button.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-                button.topAnchor.constraint(equalTo: statusLabel?.bottomAnchor ?? view.centerYAnchor, constant: 20)
-            ])
-            closeButton = button
+    private func openHostAppFromUserTap(from responder: UIResponder?) {
+        AppLog.info("open host from button", category: "Share")
+        let opened = openContainingApp(from: responder) || openContainingApp(from: self)
+        AppLog.info("open host dispatched=\(opened)", category: "Share")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
+            self?.completeExtension()
         }
     }
 
-    @objc private func closeTapped() {
-        cancelExtension()
+    @discardableResult
+    private func openContainingApp(from responder: UIResponder?) -> Bool {
+        guard let url = URL(string: ShareImportStore.createURLString) else { return false }
+        let starts: [UIResponder] = [responder, self, hostingController, view.window, view].compactMap { $0 }
+        var seen = Set<ObjectIdentifier>()
+        for start in starts {
+            let id = ObjectIdentifier(start)
+            guard seen.insert(id).inserted else { continue }
+            if KWExtensionOpenURL(url, start) {
+                AppLog.info("KWExtensionOpenURL from \(type(of: start))", category: "Share")
+                return true
+            }
+        }
+        if let application = uiApplicationShared() {
+            AppLog.info("UIApplication via sharedApplication selector", category: "Share")
+            application.open(url, options: [:]) { success in
+                AppLog.info("sharedApplication.open success=\(success)", category: "Share")
+            }
+            return true
+        }
+        extensionContext?.open(url) { success in
+            AppLog.info("extensionContext.open success=\(success)", category: "Share")
+        }
+        return false
+    }
+
+    private func uiApplicationShared() -> UIApplication? {
+        let selector = NSSelectorFromString("sharedApplication")
+        let appClass = unsafeBitCast(UIApplication.self, to: AnyObject.self)
+        guard appClass.responds(to: selector) else { return nil }
+        return appClass.perform(selector)?.takeUnretainedValue() as? UIApplication
     }
 
     private func completeExtension() {
         guard !didFinishRequest else { return }
         didFinishRequest = true
+        AppLog.info("completeRequest", category: "Share")
         extensionContext?.completeRequest(returningItems: nil)
     }
 
     private func cancelExtension() {
         guard !didFinishRequest else { return }
         didFinishRequest = true
+        AppLog.info("cancelRequest", category: "Share")
         extensionContext?.cancelRequest(withError: NSError(domain: "KnoWellShare", code: 0, userInfo: [
             NSLocalizedDescriptionKey: L10n.cancel
         ]))
+    }
+}
+
+@MainActor
+final class ExtensionImportSession: ObservableObject {
+    enum Phase {
+        case loading
+        case ready(sentence: String, selectedWord: String?, sourceHint: String?, sourceImagePath: String?)
+        case handedOff
+        case failed(String)
+    }
+
+    @Published var phase: Phase = .loading
+
+    func showForm(
+        sentence: String,
+        selectedWord: String?,
+        sourceHint: String?,
+        sourceImagePath: String?
+    ) {
+        phase = .ready(
+            sentence: sentence,
+            selectedWord: selectedWord,
+            sourceHint: sourceHint,
+            sourceImagePath: sourceImagePath
+        )
+    }
+
+    func markHandedOff() {
+        phase = .handedOff
+    }
+
+    func fail(_ message: String) {
+        phase = .failed(message)
+    }
+}
+
+private struct ExtensionImportRoot: View {
+    @ObservedObject var session: ExtensionImportSession
+    let onSubmit: () -> Void
+    let onOpenApp: (UIResponder?) -> Void
+    let onFinish: () -> Void
+    let onCancel: () -> Void
+
+    var body: some View {
+        switch session.phase {
+        case .loading:
+            NavigationStack {
+                VStack(spacing: AppSpacing.md) {
+                    ProgressView()
+                    Text(L10n.extensionHint)
+                        .font(AppFont.secondary())
+                        .foregroundStyle(AppColor.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, AppSpacing.lg)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .appPageBackground()
+                .navigationTitle(L10n.createTitle)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button(L10n.cancel, action: onCancel)
+                    }
+                }
+            }
+        case let .ready(sentence, selectedWord, sourceHint, sourceImagePath):
+            ImportCardsFormView(
+                sentence: sentence,
+                selectedWord: selectedWord,
+                sourceHint: sourceHint,
+                sourceImagePath: sourceImagePath,
+                onSubmit: onSubmit,
+                onCancel: onCancel
+            )
+        case .handedOff:
+            NavigationStack {
+                VStack(spacing: AppSpacing.md) {
+                    Image(systemName: "photo")
+                        .font(.system(size: 36))
+                        .foregroundStyle(AppColor.accent)
+                    Text(L10n.extensionHandedOff)
+                        .font(AppFont.secondary().weight(.semibold))
+                        .foregroundStyle(AppColor.textPrimary)
+                    Text(L10n.extensionHandedOffReason)
+                        .font(AppFont.secondary())
+                        .foregroundStyle(AppColor.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, AppSpacing.lg)
+                    HostOpenButton(title: L10n.extensionOpenApp) { button in
+                        onOpenApp(button)
+                    }
+                    .frame(height: 48)
+                    .padding(.horizontal, AppSpacing.xl)
+                    .padding(.top, AppSpacing.sm)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .appPageBackground()
+                .navigationTitle(L10n.createTitle)
+                .navigationBarTitleDisplayMode(.inline)
+            }
+        case let .failed(message):
+            NavigationStack {
+                VStack(spacing: AppSpacing.md) {
+                    Text(message)
+                        .font(AppFont.secondary())
+                        .foregroundStyle(AppColor.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, AppSpacing.lg)
+                    Button(L10n.close, action: onCancel)
+                        .buttonStyle(PrimaryButtonStyle())
+                        .padding(.horizontal, AppSpacing.xl)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .appPageBackground()
+                .navigationTitle(L10n.createTitle)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button(L10n.cancel, action: onCancel)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// UIKit control so the tap stays a real user gesture on the responder chain.
+private struct HostOpenButton: UIViewRepresentable {
+    let title: String
+    let onTap: (UIButton) -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onTap: onTap)
+    }
+
+    func makeUIView(context: Context) -> UIButton {
+        var config = UIButton.Configuration.filled()
+        config.title = title
+        config.baseBackgroundColor = UIColor(AppColor.accent)
+        config.baseForegroundColor = .white
+        config.cornerStyle = .large
+        config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)
+        config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+            var outgoing = incoming
+            outgoing.font = .systemFont(ofSize: 16, weight: .semibold)
+            return outgoing
+        }
+        let button = UIButton(configuration: config)
+        button.addTarget(context.coordinator, action: #selector(Coordinator.tapped(_:)), for: .touchUpInside)
+        return button
+    }
+
+    func updateUIView(_ uiView: UIButton, context: Context) {
+        context.coordinator.onTap = onTap
+        uiView.configuration?.title = title
+    }
+
+    final class Coordinator: NSObject {
+        var onTap: (UIButton) -> Void
+
+        init(onTap: @escaping (UIButton) -> Void) {
+            self.onTap = onTap
+        }
+
+        @objc func tapped(_ sender: UIButton) {
+            onTap(sender)
+        }
     }
 }

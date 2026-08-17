@@ -6,6 +6,12 @@ struct OCRImportUnit: Equatable, Sendable {
     var words: [String]
 }
 
+enum OCRImportKind: Equatable, Sendable {
+    case none
+    case highlight
+    case vocabPage
+}
+
 /// Unified OCR output for create / share flows (ready for Android ML Kit later).
 struct OCRResult: Equatable, Sendable {
     var fullText: String
@@ -15,8 +21,16 @@ struct OCRResult: Equatable, Sendable {
     var importUnits: [OCRImportUnit]
     /// App Group relative path for the source image used for OCR, if saved.
     var sourceImagePath: String?
+    /// How `importUnits` were produced. Share/create use units whenever they are non-empty.
+    var importKind: OCRImportKind = .none
 
-    static let empty = OCRResult(fullText: "", highlightedWords: [], importUnits: [], sourceImagePath: nil)
+    static let empty = OCRResult(
+        fullText: "",
+        highlightedWords: [],
+        importUnits: [],
+        sourceImagePath: nil,
+        importKind: .none
+    )
 
     /// Sentence field for the single-box create UI.
     /// Highlight imports: one block per marked sentence (not the whole page).
@@ -48,19 +62,26 @@ struct OCRResult: Equatable, Sendable {
 
     /// Drop false highlighter hits (App chrome / truncated body) so share-OCR keeps page prose.
     func sanitizedForImport() -> OCRResult {
-        let cleanedWords = highlightedWords.filter { !OCRChromeFilter.isChromePhrase($0) }
+        let cleanedFullText = OCRChromeFilter.strippingChromeLines(from: fullText)
+        let cleanedWords = highlightedWords.filter { word in
+            !OCRChromeFilter.isChromePhrase(word)
+                && OCRChromeFilter.isPlausibleVocabularyToken(word, in: cleanedFullText)
+        }
         let cleanedUnits = importUnits.compactMap { unit -> OCRImportUnit? in
-            let words = unit.words.filter { !OCRChromeFilter.isChromePhrase($0) }
+            let words = unit.words.filter { word in
+                !OCRChromeFilter.isChromePhrase(word)
+                    && OCRChromeFilter.isPlausibleVocabularyToken(word, in: cleanedFullText)
+            }
             guard !words.isEmpty else { return nil }
             return OCRImportUnit(sentence: unit.sentence, words: words)
         }
-        let cleanedFullText = OCRChromeFilter.strippingChromeLines(from: fullText)
 
-        var result = OCRResult(
+        let result = OCRResult(
             fullText: cleanedFullText,
             highlightedWords: cleanedWords,
             importUnits: cleanedUnits,
-            sourceImagePath: sourceImagePath
+            sourceImagePath: sourceImagePath,
+            importKind: importKind
         )
 
         if result.shouldDiscardHighlightContext {
@@ -68,7 +89,8 @@ struct OCRResult: Equatable, Sendable {
                 fullText: cleanedFullText,
                 highlightedWords: [],
                 importUnits: [],
-                sourceImagePath: sourceImagePath
+                sourceImagePath: sourceImagePath,
+                importKind: .none
             )
         }
         return result
@@ -134,6 +156,26 @@ enum OCRChromeFilter {
         }.count
         if tokens.count >= 2, chromeHitCount * 2 >= tokens.count { return true }
         return false
+    }
+
+    /// Drop OCR shards ("ing", "ning", "zontal") that are not standalone words on the page.
+    static func isPlausibleVocabularyToken(_ raw: String, in fullText: String) -> Bool {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+
+        let hasCJK = trimmed.unicodeScalars.contains { scalar in
+            (0x4E00...0x9FFF).contains(scalar.value) || (0x3400...0x4DBF).contains(scalar.value)
+        }
+        if hasCJK {
+            return trimmed.count <= 8
+        }
+
+        let letters = trimmed.filter(\.isLetter)
+        guard letters.count >= 4 else { return false }
+
+        let escaped = NSRegularExpression.escapedPattern(for: trimmed)
+        let pattern = "\\b\(escaped)\\b"
+        return fullText.range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil
     }
 
     /// Overlay control vs body text. Geometry / typography only — screenshots

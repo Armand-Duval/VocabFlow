@@ -2,6 +2,8 @@
 xcuserdata/
 DerivedData/
 *.xcuserstate
+**/__pycache__/
+*.pyc
 
 # API Keys — 切勿提交
 KnoWell/Services/Settings/DefaultAPIKey.swift

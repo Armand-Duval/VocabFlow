@@ -1,8 +1,9 @@
 import Foundation
 import os
 
-/// Lightweight file logger. Writes under Documents/Logs so files are visible in
-/// Files → On My iPhone → KnoWell → Logs (requires UIFileSharingEnabled).
+/// Lightweight file logger. App Group `Logs/` so each process writes its own
+/// daily file: `knowell-*.log`, `share-*.log`, `action-*.log`. Settings exports
+/// those files as-is — they are never concatenated.
 enum AppLog {
     enum Level: String {
         case debug = "DEBUG"
@@ -11,15 +12,21 @@ enum AppLog {
         case error = "ERROR"
     }
 
-    private static let subsystem = Bundle.main.bundleIdentifier ?? "com.knowell.app1"
+    private static let subsystem = Bundle.main.bundleIdentifier ?? "com.knowellcards.app"
     private static let keepDays = 14
-    private static let queue = DispatchQueue(label: "com.knowell.app1.applog", qos: .utility)
+    private static let queue = DispatchQueue(label: "com.knowellcards.app.applog", qos: .utility)
     private static let isoFormatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter
     }()
 
+    private static let processTag: String = {
+        let id = Bundle.main.bundleIdentifier ?? "unknown"
+        if id.hasSuffix(".share") { return "share" }
+        if id.hasSuffix(".action") { return "action" }
+        return "app"
+    }()
     private static let osLog = Logger(subsystem: subsystem, category: "App")
 
     // MARK: - Public API
@@ -44,14 +51,15 @@ enum AppLog {
 
     /// Call once at launch: ensure folder exists, prune old files, write a boot line.
     static func bootstrap() {
-        queue.async {
+        // Share/Action can be killed before an async write lands — always flush now.
+        queue.sync {
             do {
                 let folder = try logsDirectory()
                 try pruneOldLogs(in: folder, keepingDays: keepDays)
                 appendUnlocked(
                     level: .info,
                     category: "Lifecycle",
-                    message: "AppLog ready → \(folder.path)",
+                    message: "AppLog ready process=\(processTag) → \(folder.path)",
                     file: #fileID,
                     line: #line
                 )
@@ -65,6 +73,26 @@ enum AppLog {
         try? logsDirectory()
     }
 
+    static func allLogFiles() -> [URL] {
+        guard let folder = try? logsDirectory() else { return [] }
+        let files = (try? FileManager.default.contentsOfDirectory(
+            at: folder,
+            includingPropertiesForKeys: [.contentModificationDateKey],
+            options: [.skipsHiddenFiles]
+        )) ?? []
+        return files
+            .filter { $0.pathExtension == "log" }
+            .sorted { lhs, rhs in
+                lhs.lastPathComponent < rhs.lastPathComponent
+            }
+    }
+
+    /// Flush pending writes, then return every log file for AirDrop / Mail.
+    static func exportAllLogs() -> [URL] {
+        queue.sync {}
+        return allLogFiles()
+    }
+
     // MARK: - Internals
 
     private static func write(
@@ -75,8 +103,15 @@ enum AppLog {
         line: Int
     ) {
         mirrorToOSLog(level, category: category, message: message)
-        queue.async {
-            appendUnlocked(level: level, category: category, message: message, file: file, line: line)
+        // Extension processes die quickly; never defer the file write.
+        if processTag == "app" {
+            queue.async {
+                appendUnlocked(level: level, category: category, message: message, file: file, line: line)
+            }
+        } else {
+            queue.sync {
+                appendUnlocked(level: level, category: category, message: message, file: file, line: line)
+            }
         }
     }
 
@@ -89,20 +124,25 @@ enum AppLog {
     ) {
         do {
             let folder = try logsDirectory()
-            let url = folder.appendingPathComponent(logFileName(for: .now))
-            if !FileManager.default.fileExists(atPath: url.path) {
-                FileManager.default.createFile(atPath: url.path, contents: nil)
-            }
+            let shortFile = file.split(separator: "/").last.map(String.init) ?? file
+            let lineText = "\(isoFormatter.string(from: .now)) [\(processTag)] [\(level.rawValue)] [\(category)] \(message) (\(shortFile):\(line))\n"
+            guard let data = lineText.data(using: .utf8) else { return }
+
+            try append(data, to: folder.appendingPathComponent(logFileName(for: .now)))
+        } catch {
+            osLog.error("AppLog write failed: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    private static func append(_ data: Data, to url: URL) throws {
+        if FileManager.default.fileExists(atPath: url.path) {
             let handle = try FileHandle(forWritingTo: url)
             defer { try? handle.close() }
             try handle.seekToEnd()
-            let shortFile = file.split(separator: "/").last.map(String.init) ?? file
-            let lineText = "\(isoFormatter.string(from: .now)) [\(level.rawValue)] [\(category)] \(message) (\(shortFile):\(line))\n"
-            if let data = lineText.data(using: .utf8) {
-                try handle.write(contentsOf: data)
-            }
-        } catch {
-            osLog.error("AppLog write failed: \(error.localizedDescription, privacy: .public)")
+            try handle.write(contentsOf: data)
+            try handle.synchronize()
+        } else {
+            try data.write(to: url, options: .atomic)
         }
     }
 
@@ -121,6 +161,13 @@ enum AppLog {
     }
 
     private static func logsDirectory() throws -> URL {
+        if let group = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: ShareImportStore.appGroupID
+        ) {
+            let folder = group.appendingPathComponent("Logs", isDirectory: true)
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            return folder
+        }
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
             ?? FileManager.default.temporaryDirectory
         let folder = docs.appendingPathComponent("Logs", isDirectory: true)
@@ -130,7 +177,12 @@ enum AppLog {
 
     private static func logFileName(for day: Date) -> String {
         let c = Calendar.current.dateComponents([.year, .month, .day], from: day)
-        return String(format: "knowell-%04d-%02d-%02d.log", c.year ?? 0, c.month ?? 0, c.day ?? 0)
+        let stamp = String(format: "%04d-%02d-%02d", c.year ?? 0, c.month ?? 0, c.day ?? 0)
+        switch processTag {
+        case "share": return "share-\(stamp).log"
+        case "action": return "action-\(stamp).log"
+        default: return "knowell-\(stamp).log"
+        }
     }
 
     private static func pruneOldLogs(in folder: URL, keepingDays: Int) throws {

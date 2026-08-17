@@ -43,6 +43,14 @@ struct VocabularyWordsEditor: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             if !words.isEmpty {
+                HStack {
+                    Spacer(minLength: 0)
+                    Button(L10n.clear) {
+                        words.removeAll()
+                    }
+                    .font(AppFont.helper())
+                    .foregroundStyle(AppColor.accent)
+                }
                 VocabularyWordFlowLayout(spacing: 8) {
                     ForEach(Array(words.enumerated()), id: \.offset) { index, word in
                         VocabularyWordChip(word: word) {

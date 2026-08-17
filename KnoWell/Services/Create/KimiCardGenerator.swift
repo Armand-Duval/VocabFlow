@@ -8,6 +8,8 @@ enum KimiCardGeneratorError: LocalizedError {
     case timedOut
     /// All requested words already exist in the target deck for this sentence.
     case allDuplicates
+    /// Cloud free quota is counted per vocabulary word, not per HTTP batch.
+    case quotaInsufficient(needed: Int, remaining: Int)
 
     var errorDescription: String? {
         switch self {
@@ -23,6 +25,8 @@ enum KimiCardGeneratorError: LocalizedError {
             L10n.generateTimeoutError
         case .allDuplicates:
             L10n.createGenerateAllDuplicates
+        case .quotaInsufficient(let needed, let remaining):
+            L10n.cloudQuotaInsufficient(needed, remaining)
         }
     }
 }
@@ -72,6 +76,7 @@ enum KimiCardGenerator {
     ///   before calling the model. Use for **new** cards only — regenerators must leave this `nil`.
     /// - Parameter requiredCardType: When set, each word yields only that card type (for regenerate).
     /// - Parameter onProgress: Invoked on the main actor as each batch finishes `(completed, total)`.
+    /// - Parameter onBatchStarted: Per-batch words that just began an upstream request.
     /// - Parameter onBatchFinished: Per-batch word outcomes for queue / progress UIs.
     static func generate(
         sentence: String,
@@ -82,6 +87,7 @@ enum KimiCardGenerator {
         requiredCardType: CardType? = nil,
         skipExistingInDeckID: UUID? = nil,
         onProgress: (@MainActor (Int, Int) -> Void)? = nil,
+        onBatchStarted: (@MainActor (_ sentence: String, _ words: [String]) -> Void)? = nil,
         onBatchFinished: (@MainActor (_ sentence: String, _ words: [String], _ drafts: [GeneratedCardDraft], _ error: Error?) -> Void)? = nil
     ) async throws -> [GeneratedCardDraft] {
         guard APISettings.canUseAI else {
@@ -100,6 +106,7 @@ enum KimiCardGenerator {
             mode: mode,
             requiredCardType: requiredCardType,
             onProgress: onProgress,
+            onBatchStarted: onBatchStarted,
             onBatchFinished: onBatchFinished
         )
     }
@@ -111,6 +118,7 @@ enum KimiCardGenerator {
         mode: CardGenerationMode? = nil,
         requiredCardType: CardType? = nil,
         onProgress: (@MainActor (Int, Int) -> Void)? = nil,
+        onBatchStarted: (@MainActor (_ sentence: String, _ words: [String]) -> Void)? = nil,
         onBatchFinished: (@MainActor (_ sentence: String, _ words: [String], _ drafts: [GeneratedCardDraft], _ error: Error?) -> Void)? = nil
     ) async throws -> [GeneratedCardDraft] {
         guard APISettings.canUseAI else {
@@ -141,6 +149,7 @@ enum KimiCardGenerator {
             mode: mode ?? CardGenerationPreferences.mode,
             requiredCardType: requiredCardType,
             onProgress: onProgress,
+            onBatchStarted: onBatchStarted,
             onBatchFinished: onBatchFinished
         )
 
@@ -158,6 +167,7 @@ enum KimiCardGenerator {
         mode: CardGenerationMode,
         requiredCardType: CardType?,
         onProgress: (@MainActor (Int, Int) -> Void)?,
+        onBatchStarted: (@MainActor (_ sentence: String, _ words: [String]) -> Void)?,
         onBatchFinished: (@MainActor (_ sentence: String, _ words: [String], _ drafts: [GeneratedCardDraft], _ error: Error?) -> Void)?
     ) async -> (drafts: [GeneratedCardDraft], lastError: Error?) {
         let total = jobs.count
@@ -177,6 +187,9 @@ enum KimiCardGenerator {
                     nextIndex += 1
                     inFlight += 1
                     group.addTask {
+                        await MainActor.run {
+                            onBatchStarted?(job.sentence, job.words)
+                        }
                         do {
                             let drafts = try await generateForSingleContext(
                                 sentence: job.sentence,
@@ -359,6 +372,7 @@ enum KimiCardGenerator {
             case .timedOut, .parseError, .invalidResponse:
                 return true
             case .apiError(let message):
+                if CloudAIQuota.looksLike(message) { return false }
                 let lower = message.lowercased()
                 return lower.contains("timeout")
                     || lower.contains("timed out")
@@ -366,7 +380,7 @@ enum KimiCardGenerator {
                     || lower.contains("429")
                     || lower.contains("503")
                     || lower.contains("502")
-            case .missingAPIKey, .allDuplicates:
+            case .missingAPIKey, .allDuplicates, .quotaInsufficient:
                 return false
             }
         }
@@ -409,6 +423,9 @@ enum KimiCardGenerator {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.timeoutInterval = requestTimeout
         APISettings.applyChatHeaders(to: &request)
+        if APISettings.usesCloudProxy {
+            request.setValue(String(max(words.count, 1)), forHTTPHeaderField: "X-KnoWell-Units")
+        }
 
         let wordsList = words.joined(separator: ", ")
         let cardCountRule: String
@@ -514,9 +531,11 @@ enum KimiCardGenerator {
         guard let http = response as? HTTPURLResponse else {
             throw KimiCardGeneratorError.invalidResponse
         }
+        CloudAIQuota.ingest(http: http, data: data)
 
         if http.statusCode != 200 {
-            let message = extractErrorMessage(from: data) ?? "HTTP \(http.statusCode)"
+            let raw = extractErrorMessage(from: data) ?? "HTTP \(http.statusCode)"
+            let message = CloudAIQuota.mappedMessage(statusCode: http.statusCode, raw: raw) ?? raw
             throw KimiCardGeneratorError.apiError(message)
         }
 
@@ -744,14 +763,14 @@ enum KimiCardGenerator {
     }
 
     private static func extractErrorMessage(from data: Data) -> String? {
-        guard
-            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-            let error = json["error"] as? [String: Any],
-            let message = error["message"] as? String
-        else {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             return String(data: data, encoding: .utf8)
         }
-        return message
+        if let message = json["error"] as? String { return message }
+        if let error = json["error"] as? [String: Any], let message = error["message"] as? String {
+            return message
+        }
+        return String(data: data, encoding: .utf8)
     }
 }
 

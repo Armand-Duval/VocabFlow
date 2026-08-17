@@ -10,7 +10,7 @@
    免费个人团队不能上架。付费后把 Xcode 的 Team 换成付费团队。
 
 2. **在 App Store Connect 创建 App**  
-   Bundle ID：`com.knowell.app1`  
+   Bundle ID：`com.knowellcards.app`  
    名称建议：KnoWell；副标题可用：记住读过的 · 情景复习
 
 3. **挂一份可公开访问的隐私政策 URL**  

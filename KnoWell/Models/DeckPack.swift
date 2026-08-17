@@ -16,6 +16,30 @@ struct DeckPackCard: Codable {
     let front: String
     let back: String
     let contextNote: String?
+    let synonyms: String?
+    let sourceAttribution: String?
+
+    init(
+        word: String,
+        phonetic: String? = nil,
+        sentence: String,
+        cardType: String? = nil,
+        front: String,
+        back: String,
+        contextNote: String? = nil,
+        synonyms: String? = nil,
+        sourceAttribution: String? = nil
+    ) {
+        self.word = word
+        self.phonetic = phonetic
+        self.sentence = sentence
+        self.cardType = cardType
+        self.front = front
+        self.back = back
+        self.contextNote = contextNote
+        self.synonyms = synonyms
+        self.sourceAttribution = sourceAttribution
+    }
 }
 
 struct DeckBackup: Codable, Hashable {

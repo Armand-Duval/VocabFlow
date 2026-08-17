@@ -73,8 +73,17 @@ final class CardGenerationQueue: ObservableObject {
         var migrationReport: CardContentMigrationReport?
 
         var progressFraction: Double {
+            if !words.isEmpty {
+                return Double(completedWordCount) / Double(words.count)
+            }
             guard totalBatches > 0 else { return status == .succeeded ? 1 : 0 }
             return Double(completedBatches) / Double(totalBatches)
+        }
+
+        var completedWordCount: Int {
+            words.filter {
+                $0.status == .done || $0.status == .failed || $0.status == .skipped
+            }.count
         }
 
         var isActive: Bool {
@@ -132,6 +141,9 @@ final class CardGenerationQueue: ObservableObject {
         let active = activeJobs
         guard let first = active.first else { return "" }
         if active.count == 1 {
+            if first.status == .running, !first.words.isEmpty {
+                return L10n.generatingProgress(first.completedWordCount, first.words.count)
+            }
             if first.status == .running, first.totalBatches > 0 {
                 return L10n.generatingProgress(first.completedBatches, first.totalBatches)
             }
@@ -160,6 +172,10 @@ final class CardGenerationQueue: ObservableObject {
             for word in unit.words {
                 wordItems.append(WordItem(word: word, sentence: unit.sentence))
             }
+        }
+
+        if let error = CloudAIQuota.insufficientError(needed: wordItems.count) {
+            throw error
         }
 
         let preview = sentence
@@ -369,6 +385,13 @@ final class CardGenerationQueue: ObservableObject {
                 deckName: job.deckName
             ) { [weak self] completed, total in
                 self?.updateProgress(jobID: job.id, completed: completed, total: total)
+            } onBatchStarted: { [weak self] sentence, words in
+                self?.markWords(
+                    jobID: job.id,
+                    sentence: sentence,
+                    words: words,
+                    status: .running
+                )
             } onBatchFinished: { [weak self] sentence, words, drafts, error in
                 self?.applyBatch(
                     jobID: job.id,
@@ -447,10 +470,54 @@ final class CardGenerationQueue: ObservableObject {
         migrationContext = nil
     }
 
+    private func mutateJob(id: UUID, _ body: (inout Job) -> Void) {
+        guard let index = jobs.firstIndex(where: { $0.id == id }) else { return }
+        objectWillChange.send()
+        body(&jobs[index])
+    }
+
+    private func mutateMatchingWords(
+        jobID: UUID,
+        sentence: String,
+        words: [String],
+        _ body: (inout WordItem) -> Void
+    ) {
+        let sentenceKey = SharedDedupeIndex.normalizedSentence(sentence)
+        let wordKeys = Set(words.map(SharedDedupeIndex.normalizedWord))
+        mutateJob(id: jobID) { job in
+            for i in job.words.indices {
+                let item = job.words[i]
+                guard SharedDedupeIndex.normalizedSentence(item.sentence) == sentenceKey,
+                      wordKeys.contains(SharedDedupeIndex.normalizedWord(item.word)) else {
+                    continue
+                }
+                body(&job.words[i])
+            }
+        }
+    }
+
+    private func refreshCloudQuota() {
+        Task { await CloudAIQuotaStore.shared.refresh(force: true) }
+    }
+
     private func updateProgress(jobID: UUID, completed: Int, total: Int) {
-        guard let index = jobs.firstIndex(where: { $0.id == jobID }) else { return }
-        jobs[index].completedBatches = completed
-        jobs[index].totalBatches = max(total, jobs[index].totalBatches)
+        mutateJob(id: jobID) { job in
+            job.completedBatches = completed
+            job.totalBatches = max(total, job.totalBatches)
+        }
+    }
+
+    private func markWords(
+        jobID: UUID,
+        sentence: String,
+        words: [String],
+        status: WordStatus
+    ) {
+        mutateMatchingWords(jobID: jobID, sentence: sentence, words: words) { item in
+            if item.status == .pending || item.status == .running {
+                item.status = status
+            }
+        }
     }
 
     private func applyBatch(
@@ -460,26 +527,19 @@ final class CardGenerationQueue: ObservableObject {
         drafts: [GeneratedCardDraft],
         error: Error?
     ) {
-        guard let index = jobs.firstIndex(where: { $0.id == jobID }) else { return }
-        let sentenceKey = SharedDedupeIndex.normalizedSentence(sentence)
-        let wordKeys = Set(words.map(SharedDedupeIndex.normalizedWord))
         let draftWordKeys = Set(drafts.map { SharedDedupeIndex.normalizedWord($0.word) })
-
-        for i in jobs[index].words.indices {
-            let item = jobs[index].words[i]
-            guard SharedDedupeIndex.normalizedSentence(item.sentence) == sentenceKey,
-                  wordKeys.contains(SharedDedupeIndex.normalizedWord(item.word)) else {
-                continue
-            }
+        mutateMatchingWords(jobID: jobID, sentence: sentence, words: words) { item in
             if error != nil {
-                jobs[index].words[i].status = .failed
+                item.status = .failed
             } else if draftWordKeys.contains(SharedDedupeIndex.normalizedWord(item.word)) {
-                jobs[index].words[i].status = .done
+                item.status = .done
             } else {
-                jobs[index].words[i].status = .failed
+                item.status = .failed
             }
         }
-        jobs[index].drafts.append(contentsOf: drafts)
+        mutateJob(id: jobID) { job in
+            job.drafts.append(contentsOf: drafts)
+        }
     }
 
     private func applyMigrationBatch(
@@ -524,6 +584,7 @@ final class CardGenerationQueue: ObservableObject {
                 jobs[index].words[i].status = .failed
             }
             ToastCenter.shared.show(L10n.generateEmptyError)
+            refreshCloudQuota()
             return
         }
 
@@ -556,6 +617,7 @@ final class CardGenerationQueue: ObservableObject {
         } else {
             ToastCenter.shared.show(L10n.createGenerateSuccess(stamped.count))
         }
+        refreshCloudQuota()
     }
 
     private func finishMigrationSuccess(jobID: UUID, report: CardContentMigrationReport) {
@@ -582,6 +644,7 @@ final class CardGenerationQueue: ObservableObject {
         }
 
         ToastCenter.shared.show(report.summaryMessage)
+        refreshCloudQuota()
     }
 
     private func finishFailure(jobID: UUID, message: String) {
@@ -601,5 +664,6 @@ final class CardGenerationQueue: ObservableObject {
         }
         AppLog.error("Card generation failed: \(message)", category: "Create")
         ToastCenter.shared.show(message)
+        refreshCloudQuota()
     }
 }

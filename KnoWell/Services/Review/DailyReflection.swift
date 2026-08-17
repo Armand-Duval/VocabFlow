@@ -217,7 +217,6 @@ enum DailyReflectionService {
 
     /// Instant: today's AI cache if any, otherwise curated (stable for the day).
     static func cachedOrCurated(for day: Date = .now) -> DailyReflection {
-        seedManualPastLinesIfNeeded(relativeTo: day)
         restoreSummerFlowerLineIfNeeded(for: day)
         let key = dayKey(day)
         if let cached = loadCache(), cached.dayKey == key {
@@ -316,11 +315,8 @@ enum DailyReflectionService {
 
     // MARK: - History
 
-    private static let pastSeedDefaultsKey = "knowell.dailyReflection.history.pastSeed.v1"
-
     /// Newest first. Empty `query` returns the full archive.
     static func history(matching query: String = "") -> [ArchivedDailyReflection] {
-        seedManualPastLinesIfNeeded()
         let needle = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         let items = loadHistory().sorted {
             if $0.dayKey != $1.dayKey { return $0.dayKey > $1.dayKey }
@@ -337,13 +333,11 @@ enum DailyReflectionService {
     }
 
     static var historyCount: Int {
-        seedManualPastLinesIfNeeded()
-        return loadHistory().count
+        loadHistory().count
     }
 
     /// Keep every distinct sentence for a day (refresh must not erase the previous line).
     static func archive(_ reflection: DailyReflection, for day: Date = .now) {
-        seedManualPastLinesIfNeeded(relativeTo: day)
         archive(reflection, dayKey: dayKey(day))
     }
 
@@ -391,56 +385,8 @@ enum DailyReflectionService {
         saveHistory(items)
     }
 
-    /// One-time: fill yesterday + day-before with chosen literary lines; later days append normally.
-    private static func seedManualPastLinesIfNeeded(relativeTo day: Date = .now) {
-        guard !UserDefaults.standard.bool(forKey: pastSeedDefaultsKey) else { return }
-        let calendar = Calendar.current
-        let start = calendar.startOfDay(for: day)
-        guard
-            let yesterday = calendar.date(byAdding: .day, value: -1, to: start),
-            let dayBefore = calendar.date(byAdding: .day, value: -2, to: start)
-        else { return }
-
-        forceUpsert(
-            ArchivedDailyReflection(
-                dayKey: dayKey(yesterday),
-                sentence: "Whose woods these are I think I know.",
-                translation: "我想我知道这些树林是谁的。",
-                source: "Stopping by Woods on a Snowy Evening · Robert Frost（雪夜林边驻马）",
-                occasion: nil,
-                isAI: false,
-                isManualSeed: true
-            )
-        )
-        forceUpsert(
-            ArchivedDailyReflection(
-                dayKey: dayKey(dayBefore),
-                sentence: "Summer afternoon—summer afternoon; to me those have always been the two most beautiful words in the English language.",
-                translation: "夏日午后——夏日午后，于我而言始终是英文里最美的两个词。",
-                source: "Henry James（亨利·詹姆斯）",
-                occasion: nil,
-                isAI: false,
-                isManualSeed: true
-            )
-        )
-        UserDefaults.standard.set(true, forKey: pastSeedDefaultsKey)
-    }
-
-    private static func forceUpsert(_ item: ArchivedDailyReflection) {
-        var items = loadHistoryRaw()
-        if let index = items.firstIndex(where: { $0.dayKey == item.dayKey && $0.isManualSeed }) {
-            items[index] = item
-        } else if let index = items.firstIndex(where: { $0.dayKey == item.dayKey }) {
-            items[index] = item
-        } else {
-            items.append(item)
-        }
-        saveHistory(items)
-    }
-
     private static func loadHistory() -> [ArchivedDailyReflection] {
-        seedManualPastLinesIfNeeded()
-        return loadHistoryRaw()
+        loadHistoryRaw()
     }
 
     private static func loadHistoryRaw() -> [ArchivedDailyReflection] {
@@ -546,7 +492,6 @@ enum DailyReflectionService {
     }
 
     private static func sentencesArchivedToday(dayKey: String) -> [String] {
-        seedManualPastLinesIfNeeded()
         var seen = Set<String>()
         return loadHistoryRaw()
             .filter { $0.dayKey == dayKey }
@@ -782,7 +727,15 @@ enum DailyReflectionService {
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
         let (data, response) = try await URLSession.shared.data(for: request)
-        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+        guard let http = response as? HTTPURLResponse else {
+            throw KimiCardGeneratorError.invalidResponse
+        }
+        CloudAIQuota.ingest(http: http, data: data)
+        guard http.statusCode == 200 else {
+            let raw = String(data: data, encoding: .utf8) ?? "HTTP \(http.statusCode)"
+            if let message = CloudAIQuota.mappedMessage(statusCode: http.statusCode, raw: raw) {
+                throw KimiCardGeneratorError.apiError(message)
+            }
             throw KimiCardGeneratorError.invalidResponse
         }
         guard

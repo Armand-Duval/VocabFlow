@@ -58,8 +58,13 @@ struct FlashCardDetailView: View {
                 confirmTitle: L10n.libraryDeleteCard,
                 confirmRole: .destructive
             ) {
+                if let deck = card.deck {
+                    DeckCardCountService.adjust(deck: deck, by: -1, in: modelContext, save: false)
+                }
                 modelContext.delete(card)
+                try? modelContext.save()
                 DeckCardCountService.notifyDataMaintenance()
+                SharedDedupeSync.rebuild(in: modelContext)
                 dismiss()
             }
             .appConfirmSheet(

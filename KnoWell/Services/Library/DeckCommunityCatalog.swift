@@ -12,6 +12,10 @@ struct DeckCommunityEntry: Identifiable {
         guard let estimatedCards else { return nil }
         return L10n.deckCommunityEstimatedCards(estimatedCards)
     }
+
+    var sourceFormatLabel: String {
+        L10n.deckSourceFormatAnki
+    }
 }
 
 enum DeckCommunityCatalog {

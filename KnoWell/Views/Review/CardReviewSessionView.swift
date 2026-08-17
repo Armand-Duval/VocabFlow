@@ -7,7 +7,6 @@ import UIKit
 
 struct CardReviewSessionView: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(ReviewSettingsStore.self) private var reviewSettings
     @EnvironmentObject private var shareImport: ShareImportCoordinator
 
     let cards: [FlashCard]
@@ -25,26 +24,16 @@ struct CardReviewSessionView: View {
     @State private var showCardActions = false
     @State private var showRegenerateConfirm = false
     @State private var isRegenerating = false
-    @State private var relatedWordsExpanded = false
-    @State private var aiExpanded = false
-    @State private var paraphrasesExpanded = false
     /// Bumps when card content changes so the face re-renders without resetting the queue.
     @State private var contentRevision = 0
 
-    @AppStorage("review.hasSeenScrollHint") private var hasSeenScrollHint = false
     @AppStorage("review.hasSeenSwipeCoach") private var hasSeenSwipeCoach = false
     @State private var showSwipeCoach = false
 
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-    private let swipeThreshold: CGFloat = 72
-    private let answerAnchorID = "review-answer"
 
     /// Library push uses dismiss; Review tab uses onSessionComplete — both get the same back chrome.
     private var canLeaveSession: Bool { dismissWhenComplete || onSessionComplete != nil }
-
-    private var usesFlipStyle: Bool {
-        reviewSettings.cardRevealStyle == .flip
-    }
 
     var body: some View {
         Group {
@@ -196,11 +185,6 @@ struct CardReviewSessionView: View {
         VStack(spacing: 0) {
             sessionTopBar(trailing: topTrailingActions(for: card))
 
-            wordTitleBlock(for: card)
-                .padding(.horizontal, AppSpacing.md)
-                .padding(.top, AppSpacing.xs)
-                .padding(.bottom, AppSpacing.sm)
-
             if showDeckName, let deckName = card.deck?.name, !deckName.isEmpty {
                 Text(deckName)
                     .font(AppFont.caption())
@@ -210,11 +194,34 @@ struct CardReviewSessionView: View {
                     .padding(.bottom, AppSpacing.xs)
             }
 
-            if usesFlipStyle {
-                flipCardBody(for: card)
-            } else {
-                revealCardBody(for: card)
-            }
+            CardStudyFaceView(
+                content: card.studyContent,
+                showBack: $showBack,
+                dragOffset: $dragOffset,
+                allowsReviewGestures: true,
+                onHighlight: { term in
+                    card.highlightText = term
+                    contentRevision &+= 1
+                    ToastCenter.shared.show(L10n.studySelectionHighlightUpdated)
+                },
+                onCreateCard: { term in
+                    shareImport.importPayload(
+                        ShareImportPayload(
+                            sentence: card.sentence,
+                            selectedWord: term,
+                            source: .clipboard
+                        )
+                    )
+                    AppTab.request(.create)
+                },
+                onRevealed: {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        maybePresentSwipeCoach(for: card)
+                    }
+                },
+                onSwipeAgain: { submit(rating: .again, for: card) },
+                onSwipeEasy: { submit(rating: .easy, for: card) }
+            )
         }
         .overlay {
             if showSwipeCoach {
@@ -222,152 +229,11 @@ struct CardReviewSessionView: View {
                     .transition(.opacity)
             }
         }
-        .animation(Self.revealAnimation, value: showBack)
         .animation(.easeInOut(duration: 0.22), value: showSwipeCoach)
-    }
-
-    private static let revealAnimation: Animation = .spring(response: 0.42, dampingFraction: 0.88)
-
-    private func revealCardBody(for card: FlashCard) -> some View {
-        ScrollViewReader { proxy in
-            ScrollView {
-                VStack(alignment: .leading, spacing: AppSpacing.md) {
-                    promptSection(for: card)
-                        .frame(minHeight: showBack ? nil : 168, alignment: .topLeading)
-
-                    if !showBack, card.cardType != .appreciation {
-                        scrollHintRow {
-                            revealAnswer(proxy: proxy)
-                        }
-                        .padding(.top, AppSpacing.sm)
-                    } else if showBack {
-                        Divider()
-                            .overlay(AppColor.border.opacity(0.55))
-                            .padding(.top, AppSpacing.xs)
-
-                        answerSection(for: card, scrollProxy: proxy)
-                            .id(answerAnchorID)
-                    }
-
-                    Color.clear.frame(height: AppSpacing.sm)
-                }
-                .padding(.horizontal, AppSpacing.md)
-                .padding(.top, AppSpacing.xs)
-                .padding(.bottom, AppSpacing.md)
-                .textSelection(.enabled)
-            }
-            .simultaneousGesture(revealAndRateGesture(for: card, proxy: proxy))
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                if showBack {
-                    ratingButtons(for: card)
-                        .transition(.opacity.combined(with: .move(edge: .bottom)))
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .offset(x: dragOffset.width * 0.18)
-    }
-
-    private func flipCardBody(for card: FlashCard) -> some View {
-        VStack(spacing: 0) {
-            ZStack {
-                flipFacePanel {
-                    VStack(alignment: .leading, spacing: AppSpacing.md) {
-                        promptSection(for: card)
-                        Text(L10n.tapToReveal)
-                            .font(AppFont.helper())
-                            .foregroundStyle(AppColor.textTertiary)
-                            .frame(maxWidth: .infinity)
-                            .padding(.top, AppSpacing.sm)
-                    }
-                }
-                .opacity(showBack ? 0 : 1)
-                .rotation3DEffect(.degrees(showBack ? 180 : 0), axis: (x: 0, y: 1, z: 0), perspective: 0.65)
-                .allowsHitTesting(!showBack)
-                .onTapGesture { flipCard(toBack: true) }
-
-                flipFacePanel {
-                    VStack(alignment: .leading, spacing: AppSpacing.md) {
-                        // Complete back: keep the stem, then the full reveal content.
-                        promptSection(for: card)
-                        Divider().overlay(AppColor.border.opacity(0.7))
-                        answerSection(for: card, scrollProxy: nil)
-                    }
-                }
-                .opacity(showBack ? 1 : 0)
-                .rotation3DEffect(.degrees(showBack ? 0 : -180), axis: (x: 0, y: 1, z: 0), perspective: 0.65)
-                .allowsHitTesting(showBack)
-                .onTapGesture { flipCard(toBack: false) }
-            }
-            .padding(.horizontal, AppSpacing.md)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .offset(x: dragOffset.width * 0.18)
-            .simultaneousGesture(flipRateGesture(for: card))
-            .accessibilityAddTraits(.isButton)
-            .accessibilityLabel(showBack ? L10n.backLabel : L10n.frontLabel)
-            .accessibilityHint(showBack ? L10n.tapToFlipBack : L10n.tapToReveal)
-
+        .safeAreaInset(edge: .bottom, spacing: 0) {
             if showBack {
                 ratingButtons(for: card)
                     .transition(.opacity.combined(with: .move(edge: .bottom)))
-            } else {
-                Button {
-                    flipCard(toBack: true)
-                } label: {
-                    Label(L10n.showAnswer, systemImage: "arrow.triangle.2.circlepath")
-                }
-                .buttonStyle(RevealAnswerButtonStyle())
-                .padding(.horizontal, AppSpacing.md)
-                .padding(.bottom, AppSpacing.sm)
-            }
-        }
-    }
-
-    private func flipFacePanel<Content: View>(@ViewBuilder content: () -> Content) -> some View {
-        ScrollView {
-            content()
-                .lineSpacing(6)
-                .frame(maxWidth: .infinity, minHeight: 200, alignment: .topLeading)
-                .textSelection(.enabled)
-                .padding(AppSpacing.md)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(
-            AppColor.surface,
-            in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-        )
-    }
-
-    private func revealAnswer(proxy: ScrollViewProxy? = nil) {
-        hasSeenScrollHint = true
-        withAnimation(Self.revealAnimation) {
-            showBack = true
-        }
-        if !hasSeenSwipeCoach {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                showSwipeCoach = true
-            }
-        }
-        if let proxy {
-            DispatchQueue.main.async {
-                withAnimation(.easeOut(duration: 0.28)) {
-                    proxy.scrollTo(answerAnchorID, anchor: .top)
-                }
-            }
-        }
-    }
-
-    private func flipCard(toBack: Bool? = nil) {
-        withAnimation(Self.revealAnimation) {
-            if let toBack {
-                showBack = toBack
-            } else {
-                showBack.toggle()
-            }
-        }
-        if showBack, !hasSeenSwipeCoach {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                showSwipeCoach = true
             }
         }
     }
@@ -447,469 +313,6 @@ struct CardReviewSessionView: View {
         }
     }
 
-    @ViewBuilder
-    private func wordTitleBlock(for card: FlashCard) -> some View {
-        HStack(alignment: .top, spacing: AppSpacing.sm) {
-            VStack(alignment: .leading, spacing: 4) {
-                if showBack || card.cardType == .definition || card.cardType == .appreciation {
-                    if card.cardType == .appreciation {
-                        Text(card.word)
-                            .font(AppFont.sectionTitle())
-                            .foregroundStyle(AppColor.textPrimary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        Text(L10n.cardTypeAppreciation)
-                            .font(AppFont.caption())
-                            .foregroundStyle(AppColor.textTertiary)
-                    } else {
-                        Text(card.word)
-                            .font(AppFont.studyWord())
-                            .foregroundStyle(AppColor.accent)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .transition(.opacity.combined(with: .move(edge: .leading)))
-
-                        if let phonetic = card.phonetic?.trimmingCharacters(in: .whitespacesAndNewlines),
-                           !phonetic.isEmpty {
-                            Text(phonetic.hasPrefix("/") || phonetic.hasPrefix("[") ? phonetic : "/\(phonetic)/")
-                                .font(AppFont.secondary())
-                                .foregroundStyle(AppColor.textSecondary)
-                        }
-                    }
-                } else {
-                    Text(L10n.cardTypeCloze)
-                        .font(AppFont.caption().weight(.medium))
-                        .foregroundStyle(AppColor.textTertiary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .transition(.opacity)
-                }
-            }
-
-            HStack(alignment: .top, spacing: 8) {
-                if showBack {
-                    compactCollapseButton
-                        .padding(.top, 2)
-                        .transition(.opacity.combined(with: .scale(scale: 0.85)))
-                }
-
-                speakButton(for: card)
-                    .padding(.top, 2)
-                    .opacity(showBack || card.cardType == .definition || card.cardType == .appreciation ? 1 : 0)
-                    .allowsHitTesting(showBack || card.cardType == .definition || card.cardType == .appreciation)
-            }
-        }
-        .animation(Self.revealAnimation, value: showBack)
-    }
-
-    private var anyModuleExpanded: Bool {
-        relatedWordsExpanded || aiExpanded || paraphrasesExpanded
-    }
-
-    /// Compact control in the title row — no dedicated vertical band.
-    private var compactCollapseButton: some View {
-        Button {
-            withAnimation(Self.revealAnimation) {
-                if anyModuleExpanded {
-                    collapseAllModules()
-                } else {
-                    showBack = false
-                }
-            }
-        } label: {
-            Image(systemName: "chevron.up")
-                .font(.system(size: 14, weight: .bold))
-                .frame(width: 36, height: 36)
-                .foregroundStyle(AppColor.textSecondary)
-                .background(AppColor.surfaceMuted, in: Circle())
-        }
-        .buttonStyle(SoftPressButtonStyle())
-        .accessibilityLabel(
-            anyModuleExpanded ? L10n.reviewCollapseModules : L10n.reviewCollapseAnswer
-        )
-    }
-
-    private func speakButton(for card: FlashCard) -> some View {
-        Button {
-            let text = card.cardType == .appreciation ? card.sentence : card.word
-            SpeechService.speak(text)
-        } label: {
-            Image(systemName: "speaker.wave.2.fill")
-                .font(.system(size: 20, weight: .semibold))
-                .frame(width: 44, height: 44)
-                .foregroundStyle(AppColor.accent)
-                .background(AppColor.accentBackground(0.14), in: Circle())
-        }
-        .buttonStyle(SoftPressButtonStyle())
-        .accessibilityLabel(L10n.speakWord)
-    }
-
-    private func promptSection(for card: FlashCard) -> some View {
-        let literaryFont: UIFont = {
-            let base = UIFont.preferredFont(forTextStyle: .body)
-            if let descriptor = base.fontDescriptor.withDesign(.serif) {
-                return UIFont(descriptor: descriptor, size: 18)
-            }
-            return base.withSize(18)
-        }()
-
-        return SelectableStudyText(
-            text: card.displayFront,
-            highlightTerms: card.cardType == .appreciation
-                ? []
-                : (card.cardType == .definition || showBack ? [card.displayHighlight] : []),
-            matchStyle: .wordBounded,
-            font: literaryFont,
-            onLookup: { _ in
-                // Lookup is presented from the text view responder chain inside SelectableStudyText.
-            },
-            onSetHighlight: { term in
-                card.highlightText = term
-                contentRevision &+= 1
-                ToastCenter.shared.show(L10n.studySelectionHighlightUpdated)
-            },
-            onCreateCard: { term in
-                shareImport.importPayload(
-                    ShareImportPayload(
-                        sentence: card.sentence,
-                        selectedWord: term,
-                        source: .clipboard
-                    )
-                )
-                AppTab.request(.create)
-            }
-        )
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityLabel(L10n.frontLabel)
-    }
-
-    private func scrollHintRow(action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 6) {
-                Image(systemName: "chevron.down")
-                    .font(.caption.weight(.semibold))
-                Text(L10n.reviewScrollForAnswer)
-                    .font(AppFont.helper())
-            }
-            .foregroundStyle(AppColor.textTertiary)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, AppSpacing.xs)
-            .opacity(hasSeenScrollHint ? 0.72 : 1)
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(L10n.reviewScrollForAnswer)
-    }
-
-    @ViewBuilder
-    private func answerSection(for card: FlashCard, scrollProxy: ScrollViewProxy? = nil) -> some View {
-        if card.cardType == .appreciation {
-            appreciationAnswerSection(for: card, scrollProxy: scrollProxy)
-        } else {
-            vocabularyAnswerSection(for: card, scrollProxy: scrollProxy)
-        }
-    }
-
-    @ViewBuilder
-    private func appreciationAnswerSection(for card: FlashCard, scrollProxy: ScrollViewProxy? = nil) -> some View {
-        let theme = CardContentFormatter.senseText(card.back)
-        let translation = CardContentFormatter.sentenceTranslation(card.contextNote)
-        let appreciation = card.usageNote?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let source = card.sourceAttribution?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-
-        VStack(alignment: .leading, spacing: AppSpacing.md) {
-            if !theme.isEmpty {
-                reviewModule(title: L10n.reviewAppreciationThemeSection, titleStrong: true) {
-                    Text(theme)
-                        .font(AppFont.body().weight(.medium))
-                        .foregroundStyle(AppColor.textPrimary)
-                }
-            }
-
-            if let translation, !translation.isEmpty {
-                reviewModule(title: L10n.reviewTranslationSection, titleStrong: true) {
-                    Text(translation)
-                        .font(AppFont.body())
-                        .foregroundStyle(AppColor.textBody)
-                }
-            }
-
-            if !appreciation.isEmpty {
-                reviewModule(title: L10n.reviewAppreciationSection, titleStrong: true) {
-                    Text(appreciation)
-                        .font(AppFont.secondary())
-                        .foregroundStyle(AppColor.textBody)
-                }
-            }
-
-            if !source.isEmpty {
-                Text(L10n.cardSource(source))
-                    .font(AppFont.helper())
-                    .foregroundStyle(AppColor.textTertiary)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(L10n.backLabel)
-    }
-
-    @ViewBuilder
-    private func vocabularyAnswerSection(for card: FlashCard, scrollProxy: ScrollViewProxy? = nil) -> some View {
-        let sense = CardContentFormatter.senseText(card.back)
-        let translation = CardContentFormatter.sentenceTranslation(card.contextNote)
-        let highlightTerms = CardContentFormatter.translationHighlightTerms(
-            contextNote: card.contextNote,
-            sense: sense
-        )
-        let usage = card.usageNote?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let etymology = card.etymology?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let synonymList = Array(CardContentFormatter.splitRelatedWords(card.synonyms).prefix(3))
-        let antonymList = Array(CardContentFormatter.splitRelatedWords(card.antonyms).prefix(2))
-        let paraphrases = Array(CardContentFormatter.decodeParaphrases(card.paraphrases).prefix(2))
-        let source = card.sourceAttribution?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let hasExtension =
-            !synonymList.isEmpty || !antonymList.isEmpty || !usage.isEmpty || !paraphrases.isEmpty
-
-        VStack(alignment: .leading, spacing: AppSpacing.md) {
-            // Base layer — always on: sense → translation → roots (understand first, then remember).
-            VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                if !sense.isEmpty {
-                    reviewModule(title: L10n.reviewMeaningSection, titleStrong: true) {
-                        Text(sense)
-                            .font(AppFont.body().weight(.medium))
-                            .foregroundStyle(AppColor.textPrimary)
-                    }
-                } else if translation == nil || translation?.isEmpty == true {
-                    Text(card.displayBack)
-                        .font(AppFont.body())
-                        .foregroundStyle(AppColor.textPrimary)
-                }
-
-                if let translation, !translation.isEmpty {
-                    reviewModule(title: L10n.reviewTranslationSection, titleStrong: true) {
-                        HighlightedText(
-                            text: translation,
-                            terms: highlightTerms,
-                            font: AppFont.body(),
-                            emphasizeForeground: true
-                        )
-                        .foregroundStyle(AppColor.textBody)
-                    }
-                }
-
-                if !etymology.isEmpty {
-                    reviewModule(title: L10n.cardEtymologyLabel) {
-                        Text(etymology)
-                            .font(AppFont.helper())
-                            .foregroundStyle(AppColor.textTertiary)
-                    }
-                }
-
-                if !source.isEmpty || card.sourceImagePath != nil {
-                    VStack(alignment: .leading, spacing: 4) {
-                        if !source.isEmpty {
-                            Text(L10n.cardSource(source))
-                                .font(AppFont.helper())
-                                .foregroundStyle(AppColor.textTertiary)
-                        }
-                        CardSourceImageThumbnail(relativePath: card.sourceImagePath, maxHeight: 88)
-                    }
-                }
-            }
-
-            if hasExtension {
-                Divider()
-                    .overlay(AppColor.border.opacity(0.55))
-
-                // Extension layer — opt-in depth for writing / contrast study.
-                VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                    if !synonymList.isEmpty || !antonymList.isEmpty {
-                        reviewDisclosure(
-                            title: L10n.reviewRelatedWordsSection,
-                            anchorID: "review-module-related",
-                            isExpanded: $relatedWordsExpanded,
-                            scrollProxy: scrollProxy
-                        ) {
-                            VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                                if !synonymList.isEmpty {
-                                    relatedWordsRow(
-                                        label: L10n.cardSynonymsLabel,
-                                        value: synonymList.joined(separator: " · ")
-                                    )
-                                }
-                                if !antonymList.isEmpty {
-                                    relatedWordsRow(
-                                        label: L10n.cardAntonymsLabel,
-                                        value: antonymList.joined(separator: " · ")
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    if !usage.isEmpty {
-                        reviewDisclosure(
-                            title: L10n.reviewAIInsightSection,
-                            anchorID: "review-module-ai",
-                            isExpanded: $aiExpanded,
-                            scrollProxy: scrollProxy
-                        ) {
-                            Text(usage)
-                                .font(AppFont.secondary())
-                                .foregroundStyle(AppColor.textBody)
-                        }
-                    }
-
-                    if !paraphrases.isEmpty {
-                        reviewDisclosure(
-                            title: L10n.reviewParaphrasesSection,
-                            anchorID: "review-module-paraphrases",
-                            isExpanded: $paraphrasesExpanded,
-                            scrollProxy: scrollProxy
-                        ) {
-                            VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                                ForEach(paraphrases) { item in
-                                    paraphraseBlock(item)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(L10n.backLabel)
-    }
-
-    private func reviewDisclosure<Content: View>(
-        title: String,
-        anchorID: String,
-        isExpanded: Binding<Bool>,
-        scrollProxy: ScrollViewProxy?,
-        @ViewBuilder content: @escaping () -> Content
-    ) -> some View {
-        DisclosureGroup(isExpanded: isExpanded) {
-            content()
-                .padding(.top, AppSpacing.xs)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        } label: {
-            Text(title)
-                .font(AppFont.secondary().weight(.semibold))
-                .foregroundStyle(AppColor.textSecondary)
-        }
-        .tint(AppColor.textSecondary)
-        .id(anchorID)
-        .onChange(of: isExpanded.wrappedValue) { _, expanded in
-            guard expanded else { return }
-            scrollToModule(anchorID, proxy: scrollProxy)
-        }
-    }
-
-    private func scrollToModule(_ anchorID: String, proxy: ScrollViewProxy?) {
-        guard let proxy else { return }
-        DispatchQueue.main.async {
-            withAnimation(.easeOut(duration: 0.28)) {
-                proxy.scrollTo(anchorID, anchor: .top)
-            }
-        }
-    }
-
-    private func collapseAllModules() {
-        relatedWordsExpanded = false
-        aiExpanded = false
-        paraphrasesExpanded = false
-    }
-
-    private func relatedWordsRow(label: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(label)
-                .font(AppFont.weak().weight(.medium))
-                .foregroundStyle(AppColor.textTertiary)
-            Text(value)
-                .font(AppFont.secondary())
-                .foregroundStyle(AppColor.textBody)
-        }
-    }
-
-    private func paraphraseBlock(_ item: CardParaphrase) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            if !item.scene.isEmpty {
-                Text(item.scene)
-                    .font(AppFont.weak().weight(.medium))
-                    .foregroundStyle(AppColor.textTertiary)
-            }
-            Text(item.sentence)
-                .font(AppFont.secondary())
-                .foregroundStyle(AppColor.textBody)
-            if let note = item.note, !note.isEmpty {
-                Text(note)
-                    .font(AppFont.helper())
-                    .foregroundStyle(AppColor.textTertiary)
-            }
-        }
-    }
-
-    private func reviewModule<Content: View>(
-        title: String,
-        titleStrong: Bool = false,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title)
-                .font(titleStrong ? AppFont.secondary().weight(.bold) : AppFont.caption().weight(.semibold))
-                .foregroundStyle(titleStrong ? AppColor.textSecondary : AppColor.textTertiary)
-            content()
-        }
-    }
-
-    private func revealAndRateGesture(for card: FlashCard, proxy: ScrollViewProxy) -> some Gesture {
-        DragGesture(minimumDistance: 28)
-            .onChanged { value in
-                guard showBack else { return }
-                // Only drive horizontal rating preview — never fight vertical scroll.
-                guard abs(value.translation.width) > abs(value.translation.height) + 12 else { return }
-                dragOffset = value.translation
-            }
-            .onEnded { value in
-                defer { dragOffset = .zero }
-
-                let horizontal = value.translation.width
-                let vertical = value.translation.height
-
-                // Reveal only: swipe down while the answer is hidden.
-                // Do NOT collapse on swipe up — that conflicts with scrolling long answers.
-                if !showBack, vertical > 56, abs(vertical) > abs(horizontal) {
-                    revealAnswer(proxy: proxy)
-                    return
-                }
-
-                guard showBack else { return }
-                guard abs(horizontal) > abs(vertical) + 8 else { return }
-
-                if horizontal <= -swipeThreshold {
-                    submit(rating: .again, for: card)
-                } else if horizontal >= swipeThreshold {
-                    submit(rating: .easy, for: card)
-                }
-            }
-    }
-
-    private func flipRateGesture(for card: FlashCard) -> some Gesture {
-        DragGesture(minimumDistance: 28)
-            .onChanged { value in
-                guard showBack else { return }
-                guard abs(value.translation.width) > abs(value.translation.height) + 12 else { return }
-                dragOffset = value.translation
-            }
-            .onEnded { value in
-                defer { dragOffset = .zero }
-                guard showBack else { return }
-                guard abs(value.translation.width) > abs(value.translation.height) else { return }
-                if value.translation.width <= -swipeThreshold {
-                    submit(rating: .again, for: card)
-                } else if value.translation.width >= swipeThreshold {
-                    submit(rating: .easy, for: card)
-                }
-            }
-    }
-
     private func learningWaitState(nextAvailable: Date) -> some View {
         VStack(spacing: AppSpacing.md) {
             if canLeaveSession {
@@ -958,7 +361,6 @@ struct CardReviewSessionView: View {
         NotificationCenter.default.post(name: .reviewQueueDidChange, object: nil)
         showBack = false
         dragOffset = .zero
-        collapseAllModules()
 
         sessionQueue.removeAll { $0.id == card.id }
 

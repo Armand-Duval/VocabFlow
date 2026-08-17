@@ -23,6 +23,18 @@ struct ShareImportPayload: Equatable {
     }
 }
 
+struct ShareInboxPayload: Equatable, Codable {
+    enum Kind: String, Codable, Equatable {
+        case text
+        case image
+    }
+
+    let kind: Kind
+    let text: String?
+    /// App Group relative path, e.g. `share-inbox/{uuid}.heic`. Not a decoded bitmap.
+    let relativePath: String?
+}
+
 enum ImportSource: Equatable {
     case shareExtension
     case clipboard
@@ -54,9 +66,11 @@ extension ShareImportPayload {
 }
 
 enum ShareImportStore {
-    static let appGroupID = "group.com.knowell.app1"
+    static let appGroupID = "group.com.knowellcards.app"
     static let createURLString = "knowell://create"
+    static let inboxFolderName = "share-inbox"
     private static let payloadFileName = "share-import.json"
+    private static let inboxManifestName = "share-inbox.json"
     private static let draftsFileName = "share-drafts.json"
     private static let generationJobFileName = "share-generation-job.json"
     private static let generationJobsDirectoryName = "share-generation-jobs"
@@ -328,6 +342,83 @@ enum ShareImportStore {
         FileManager.default
             .containerURL(forSecurityApplicationGroupIdentifier: appGroupID)?
             .appendingPathComponent(generationJobFileName)
+    }
+
+    static func inboxDirectory() throws -> URL {
+        guard let group = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: appGroupID
+        ) else {
+            throw CocoaError(.fileNoSuchFile)
+        }
+        let folder = group.appendingPathComponent(inboxFolderName, isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        return folder
+    }
+
+    static func inboxFileURL(relativePath: String) -> URL? {
+        let trimmed = relativePath.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty,
+              !trimmed.contains(".."),
+              trimmed.hasPrefix(inboxFolderName + "/") else {
+            return nil
+        }
+        return FileManager.default
+            .containerURL(forSecurityApplicationGroupIdentifier: appGroupID)?
+            .appendingPathComponent(trimmed)
+    }
+
+    /// Copy bytes on disk. Do not decode the image in the extension.
+    static func importInboxFile(from sourceURL: URL, fileExtension: String) throws -> String {
+        let ext = fileExtension.trimmingCharacters(in: CharacterSet(charactersIn: ".")).lowercased()
+        let safeExt = ext.isEmpty ? "img" : ext
+        let name = "\(UUID().uuidString).\(safeExt)"
+        let destination = try inboxDirectory().appendingPathComponent(name)
+        if FileManager.default.fileExists(atPath: destination.path) {
+            try FileManager.default.removeItem(at: destination)
+        }
+        try FileManager.default.copyItem(at: sourceURL, to: destination)
+        return "\(inboxFolderName)/\(name)"
+    }
+
+    static func importInboxData(_ data: Data, fileExtension: String) throws -> String {
+        let ext = fileExtension.trimmingCharacters(in: CharacterSet(charactersIn: ".")).lowercased()
+        let safeExt = ext.isEmpty ? "img" : ext
+        let name = "\(UUID().uuidString).\(safeExt)"
+        let destination = try inboxDirectory().appendingPathComponent(name)
+        try data.write(to: destination, options: .atomic)
+        return "\(inboxFolderName)/\(name)"
+    }
+
+    static func saveInbox(_ payload: ShareInboxPayload) {
+        guard let group = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: appGroupID
+        ),
+              let data = try? JSONEncoder().encode(payload) else {
+            return
+        }
+        let url = group.appendingPathComponent(inboxManifestName)
+        try? data.write(to: url, options: .atomic)
+    }
+
+    static func consumeInbox() -> ShareInboxPayload? {
+        guard let group = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: appGroupID
+        ) else {
+            return nil
+        }
+        let url = group.appendingPathComponent(inboxManifestName)
+        guard let data = try? Data(contentsOf: url),
+              let payload = try? JSONDecoder().decode(ShareInboxPayload.self, from: data) else {
+            return nil
+        }
+        try? FileManager.default.removeItem(at: url)
+        return payload
+    }
+
+    static func removeInboxFile(_ relativePath: String?) {
+        guard let relativePath,
+              let url = inboxFileURL(relativePath: relativePath) else { return }
+        try? FileManager.default.removeItem(at: url)
     }
 
     static func save(
@@ -618,6 +709,43 @@ enum ShareExtensionNotifier {
         )
     }
 
+    static func scheduleInboxHandoffNotification(completion: ((Bool) -> Void)? = nil) {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            switch settings.authorizationStatus {
+            case .authorized, .provisional, .ephemeral:
+                break
+            default:
+                DispatchQueue.main.async {
+                    completion?(false)
+                }
+                return
+            }
+
+            let content = UNMutableNotificationContent()
+            content.title = L10n.brandName
+            content.body = L10n.notificationShareInbox
+            content.sound = .default
+            content.userInfo = [
+                "open": "create",
+                "knowell": "share-inbox"
+            ]
+            content.interruptionLevel = .timeSensitive
+            content.relevanceScore = 1
+
+            let request = UNNotificationRequest(
+                identifier: "\(notificationPrefix).inbox",
+                content: content,
+                trigger: UNTimeIntervalNotificationTrigger(timeInterval: 0.15, repeats: false)
+            )
+
+            UNUserNotificationCenter.current().add(request) { error in
+                DispatchQueue.main.async {
+                    completion?(error == nil)
+                }
+            }
+        }
+    }
+
     /// Soft notice (no "failed" prefix) — e.g. all words already in deck.
     static func scheduleNoticeNotification(
         body: String,
@@ -633,10 +761,14 @@ enum ShareExtensionNotifier {
     private static func scheduleNotification(
         identifier: String,
         body: String,
+        delay: TimeInterval = 0.5,
         completion: ((Bool) -> Void)? = nil
     ) {
         UNUserNotificationCenter.current().getNotificationSettings { settings in
-            guard settings.authorizationStatus == .authorized else {
+            switch settings.authorizationStatus {
+            case .authorized, .provisional, .ephemeral:
+                break
+            default:
                 DispatchQueue.main.async {
                     completion?(false)
                 }
@@ -647,8 +779,9 @@ enum ShareExtensionNotifier {
             content.title = L10n.brandName
             content.body = body
             content.sound = .default
+            content.userInfo = ["open": "create"]
 
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.5, repeats: false)
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: max(delay, 0.1), repeats: false)
             let request = UNNotificationRequest(
                 identifier: identifier,
                 content: content,

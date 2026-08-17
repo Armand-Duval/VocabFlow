@@ -2,13 +2,8 @@ import SwiftUI
 import UIKit
 
 struct CreateCardsView: View {
-    private enum LongTextSuggestion {
-        case none
-        case keepSingleSentence
-        case splitIntoWords
-    }
-
     @Environment(\.modelContext) private var modelContext
+    @Environment(CloudAIQuotaStore.self) private var aiQuota
     @EnvironmentObject private var shareImport: ShareImportCoordinator
     @State private var sentence = ""
     @State private var words: [String] = []
@@ -30,9 +25,6 @@ struct CreateCardsView: View {
     @State private var appreciationSource = ""
     @State private var showPhotoLibrary = false
     @State private var showCamera = false
-    @State private var showLongTextPrompt = false
-    @State private var pendingLongText = ""
-    @State private var longTextChoiceMade = false
     @State private var isManualEditing = false
     @State private var sourceHint: String?
     @State private var sourceImagePath: String?
@@ -110,19 +102,21 @@ struct CreateCardsView: View {
                 .onChange(of: shareImport.pendingDrafts) { _, _ in
                     ingestShareDraftsIfNeeded()
                 }
+                .onChange(of: shareImport.pendingInbox) { _, _ in
+                    Task { await applyShareInboxIfNeeded() }
+                }
+                .task {
+                    await aiQuota.refresh()
+                }
                 .onAppear {
                     ingestShareDraftsIfNeeded()
+                    Task { await applyShareInboxIfNeeded() }
                     guard !deferredPreview, generationQueue.readyPreview != nil else { return }
                     selectedDeckID = generationQueue.readyPreview?.deckID ?? selectedDeckID
                     showPreview = true
                 }
                 .modifier(CreateCardsAlertsModifier(errorMessage: $errorMessage))
                 .modifier(CreateCardsLifecycleModifier(
-                    sentence: $sentence,
-                    pendingLongText: $pendingLongText,
-                    showLongTextPrompt: $showLongTextPrompt,
-                    showPreview: $showPreview,
-                    drafts: $drafts,
                     shareImport: shareImport,
                     onAppearImport: applyShareImportIfNeeded
                 ))
@@ -137,31 +131,6 @@ struct CreateCardsView: View {
                         Task { await importCapturedImage(image, successBanner: L10n.importFromCameraSuccess) }
                     }
                     .ignoresSafeArea()
-                }
-                .appActionSheet(
-                    isPresented: $showLongTextPrompt,
-                    title: L10n.createLongTextTitle,
-                    message: L10n.createLongTextMessage,
-                    actions: [
-                        AppSheetAction(title: L10n.createLongTextKeepSentence, systemImage: "text.alignleft") {
-                            longTextChoiceMade = true
-                            applyLongTextSuggestion(.keepSingleSentence)
-                        },
-                        AppSheetAction(title: L10n.createLongTextSplitWords, systemImage: "list.bullet") {
-                            longTextChoiceMade = true
-                            applyLongTextSuggestion(.splitIntoWords)
-                        }
-                    ]
-                )
-                .onChange(of: showLongTextPrompt) { _, isPresented in
-                    if !isPresented {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                            if !longTextChoiceMade {
-                                pendingLongText = ""
-                            }
-                            longTextChoiceMade = false
-                        }
-                    }
                 }
                 .onChange(of: trimmedSentence.isEmpty) { _, isEmpty in
                     if isEmpty { sourceMode = .edit }
@@ -231,7 +200,7 @@ struct CreateCardsView: View {
             .padding(.top, AppSpacing.sm)
             .padding(.bottom, AppSpacing.md)
         }
-        .scrollBounceBehavior(.basedOnSize)
+        .appVerticalBounce()
     }
 
     private var optionalSourceField: some View {
@@ -461,14 +430,39 @@ struct CreateCardsView: View {
         .buttonStyle(.plain)
     }
 
+    private var isCloudQuotaExhausted: Bool {
+        APISettings.usesCloudProxy && (aiQuota.snapshot?.isExhausted == true)
+    }
+
+    private var cloudQuotaNeeded: Int {
+        willGenerateAppreciation ? 1 : max(words.count, 1)
+    }
+
+    private var isCloudQuotaInsufficient: Bool {
+        guard APISettings.usesCloudProxy, let snapshot = aiQuota.snapshot else { return false }
+        return snapshot.blocks(needed: cloudQuotaNeeded)
+    }
+
     private var generateFooter: some View {
         VStack(spacing: AppSpacing.xs) {
-            if !canGenerate {
-                Text(L10n.createGenerateHintEmpty)
-                    .font(AppFont.weak())
-                    .foregroundStyle(AppColor.textMuted)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, AppSpacing.md)
+            if APISettings.usesCloudProxy, let snapshot = aiQuota.snapshot {
+                Text(
+                    snapshot.isExhausted
+                        ? L10n.cloudQuotaExhausted
+                        : L10n.cloudQuotaRemaining(snapshot.remaining, snapshot.limit)
+                )
+                .font(AppFont.weak())
+                .foregroundStyle(snapshot.isExhausted ? AppColor.warning : AppColor.textMuted)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, AppSpacing.md)
+
+                if isCloudQuotaInsufficient, !snapshot.isExhausted, canGenerate {
+                    Text(L10n.cloudQuotaInsufficient(cloudQuotaNeeded, snapshot.remaining))
+                        .font(AppFont.weak())
+                        .foregroundStyle(AppColor.warning)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, AppSpacing.md)
+                }
             }
 
             if canGenerate {
@@ -506,7 +500,7 @@ struct CreateCardsView: View {
                 Text(L10n.createAIGenerate)
             }
             .buttonStyle(PrimaryButtonStyle(soft: true))
-            .disabled(!canGenerate || isGeneratingAppreciation)
+            .disabled(!canGenerate || isGeneratingAppreciation || isCloudQuotaExhausted || isCloudQuotaInsufficient)
             .padding(.horizontal, AppSpacing.md)
         }
         .padding(.top, AppSpacing.sm)
@@ -529,24 +523,6 @@ struct CreateCardsView: View {
         generationQueue.enqueueTriage(drafts: pendingDrafts, deckID: deck.id)
         shareImport.acknowledgeDrafts()
         showPreview = true
-    }
-
-    private func applyLongTextSuggestion(_ suggestion: LongTextSuggestion) {
-        defer { pendingLongText = "" }
-
-        switch suggestion {
-        case .none, .keepSingleSentence:
-            break
-        case .splitIntoWords:
-            let parsed = ImportTextAnalyzer.parse(sentence)
-            if !parsed.prefilledWords.isEmpty {
-                for word in parsed.prefilledWords {
-                    _ = appendCreateWord(word)
-                }
-            } else {
-                showToast(L10n.createLongTextSplitFallback)
-            }
-        }
     }
 
     @MainActor
@@ -584,7 +560,10 @@ struct CreateCardsView: View {
                 }
             }
 
-            if result.hasHighlightContext {
+            if result.importKind == .vocabPage {
+                showToast(L10n.ocrVocabPage(result.preferredImportWords.count))
+                sourceMode = .pick
+            } else if result.hasHighlightContext {
                 showToast(L10n.ocrHighlightContext(
                     addedHighlights,
                     result.importUnits.count
@@ -687,6 +666,43 @@ struct CreateCardsView: View {
         shareImport.acknowledgeImport()
     }
 
+    @MainActor
+    private func applyShareInboxIfNeeded() async {
+        guard let inbox = shareImport.pendingInbox else { return }
+        shareImport.acknowledgeInbox()
+        switch inbox.kind {
+        case .text:
+            let text = inbox.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            guard !text.isEmpty else { return }
+            sentence = text
+            words = []
+            sourceMode = .edit
+            showToast(L10n.importShareSentence)
+        case .image:
+            guard let relativePath = inbox.relativePath,
+                  let url = ShareImportStore.inboxFileURL(relativePath: relativePath) else {
+                errorMessage = L10n.extensionNoContent
+                return
+            }
+            AppLog.info("inbox OCR file=\(relativePath)", category: "Share")
+            guard let image = CardSourceImageStore.imageForOCR(at: url) else {
+                ShareImportStore.removeInboxFile(relativePath)
+                errorMessage = L10n.ocrEmpty
+                return
+            }
+            AppLog.info(
+                "inbox OCR image \(Int(image.size.width))x\(Int(image.size.height))",
+                category: "Share"
+            )
+            isRecognizingPhoto = true
+            defer {
+                isRecognizingPhoto = false
+                ShareImportStore.removeInboxFile(relativePath)
+            }
+            await recognizeImage(image, successBanner: L10n.importShareSentence)
+        }
+    }
+
     private func performGeneration() {
         if willGenerateAppreciation {
             Task { await generateAppreciationCard() }
@@ -697,6 +713,13 @@ struct CreateCardsView: View {
 
     private func enqueueGeneration() {
         errorMessage = nil
+        Task {
+            await aiQuota.refresh(force: true)
+            enqueueGenerationNow()
+        }
+    }
+
+    private func enqueueGenerationNow() {
         SharedDedupeSync.rebuild(in: modelContext)
         let deck = DeckService.resolvedDeck(id: selectedDeckID, in: modelContext)
         if selectedDeckID == nil {
@@ -741,7 +764,7 @@ struct CreateCardsView: View {
         )
 
         do {
-            var draft = try await LiteraryAppreciationGenerator.generate(from: reflection)
+            var draft = try await LiteraryAppreciationGenerator.generate(from: reflection, allowFallback: false)
             if let path = sourceImagePath?.trimmingCharacters(in: .whitespacesAndNewlines), !path.isEmpty {
                 draft.sourceImagePath = path
             }
@@ -774,12 +797,6 @@ private struct CreateCardsAlertsModifier: ViewModifier {
 }
 
 private struct CreateCardsLifecycleModifier: ViewModifier {
-    @Binding var sentence: String
-    @Binding var pendingLongText: String
-    @Binding var showLongTextPrompt: Bool
-    @Binding var showPreview: Bool
-    @Binding var drafts: [GeneratedCardDraft]
-
     let shareImport: ShareImportCoordinator
     let onAppearImport: () -> Void
 
@@ -795,15 +812,11 @@ private struct CreateCardsLifecycleModifier: ViewModifier {
             .onChange(of: shareImport.pendingDrafts) { _, _ in
                 onAppearImport()
             }
-            .onChange(of: sentence) { oldValue, newValue in
-                guard oldValue.count <= 800, newValue.count > 800, pendingLongText != newValue else { return }
-                pendingLongText = newValue
-                showLongTextPrompt = true
-            }
     }
 }
 
 #Preview {
     CreateCardsView()
         .environmentObject(ShareImportCoordinator())
+        .environment(CloudAIQuotaStore.shared)
 }

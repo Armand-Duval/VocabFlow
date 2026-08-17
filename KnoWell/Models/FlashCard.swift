@@ -52,24 +52,37 @@ final class FlashCard {
 
     /// Phrase highlighted in the study sentence (manual override or study word).
     var displayHighlight: String {
-        let custom = highlightText?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        if !custom.isEmpty { return custom }
-        return word
+        studyContent.displayHighlight
     }
 
     /// 复习正面：释义卡用完整原句（兼容旧数据里 front 只有单词）
     var displayFront: String {
-        CardContentFormatter.displayFront(
-            front: front,
-            sentence: sentence,
-            word: word,
-            cardType: cardType
-        )
+        studyContent.displayFront
     }
 
     /// 复习时显示的背面：合并 back 与 contextNote（兼容旧数据）
     var displayBack: String {
-        CardContentFormatter.displayBack(back: back, contextNote: contextNote)
+        studyContent.displayBack
+    }
+
+    var studyContent: CardStudyContent {
+        CardStudyContent(
+            word: word,
+            phonetic: phonetic,
+            sentence: sentence,
+            cardType: cardType,
+            front: front,
+            back: back,
+            contextNote: contextNote,
+            usageNote: usageNote,
+            etymology: etymology,
+            synonyms: synonyms,
+            antonyms: antonyms,
+            paraphrases: paraphrases,
+            sourceAttribution: sourceAttribution,
+            sourceImagePath: sourceImagePath,
+            highlightText: highlightText
+        )
     }
 
     init(

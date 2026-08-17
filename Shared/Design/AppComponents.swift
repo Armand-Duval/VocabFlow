@@ -509,6 +509,11 @@ extension View {
         padding(.horizontal, AppSpacing.md)
     }
 
+    /// Short pages (review home, empty create) still rubber-band on tall phones.
+    func appVerticalBounce() -> some View {
+        scrollBounceBehavior(.always, axes: .vertical)
+    }
+
     func appPageBackground() -> some View {
         background {
             ZStack {

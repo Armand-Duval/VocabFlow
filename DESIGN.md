@@ -29,7 +29,7 @@
 | **中文显示名** | 致知 |
 | **英文** | KnoWell |
 | **副标题** | 文本精读闪卡 · 兼容 Anki |
-| **工程 Bundle** | `com.knowell.app1` |
+| **工程 Bundle** | `com.knowellcards.app` |
 
 ### 1.4 Daily Tone
 

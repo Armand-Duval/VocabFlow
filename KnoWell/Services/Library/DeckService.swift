@@ -429,6 +429,8 @@ enum DeckService {
             front: item.front,
             back: item.back,
             contextNote: item.contextNote,
+            synonyms: item.synonyms,
+            sourceAttribution: item.sourceAttribution,
             phonetic: item.phonetic,
             deck: deck
         )

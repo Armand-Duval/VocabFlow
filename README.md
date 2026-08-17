@@ -18,7 +18,7 @@
 ### 开通开发者账号后需确认
 
 1. Xcode → Target **KnoWell** 和 **KnoWellShare** → **Signing & Capabilities**
-2. 两个 Target 都添加 **App Groups**：`group.com.knowell.app1`
+2. 两个 Target 都添加 **App Groups**：`group.com.knowellcards.app`
 3. 选择你的 **Paid Team** 重新签名
 4. 真机安装后，在 Safari 选中文字 → 分享 → 更多 → 打开 KnoWell
 

@@ -42,7 +42,7 @@ final class AccountSession {
 }
 
 enum AccountKeychain {
-    private static let service = "com.knowell.app1.account"
+    private static let service = "com.knowellcards.app.account"
 
     static func save<T: Encodable>(_ value: T, for key: String) throws {
         let data = try JSONEncoder().encode(value)

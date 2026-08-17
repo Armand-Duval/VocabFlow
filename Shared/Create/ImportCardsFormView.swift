@@ -136,7 +136,7 @@ struct ImportCardsFormView: View {
             .padding(.top, AppSpacing.md)
             .padding(.bottom, AppSpacing.md)
         }
-        .scrollBounceBehavior(.basedOnSize)
+        .appVerticalBounce()
     }
 
     private var pasteToolbar: some View {

@@ -40,6 +40,63 @@ struct GeneratedCardDraft: Identifiable, Equatable {
     var isSelected: Bool = true
     /// AI-recommended primary card for this word (shown in compact mode).
     var isRecommended: Bool = false
+
+    var studyContent: CardStudyContent {
+        CardStudyContent(
+            word: word,
+            phonetic: phonetic,
+            sentence: sentence,
+            cardType: cardType,
+            front: front,
+            back: back,
+            contextNote: contextNote,
+            usageNote: usageNote,
+            etymology: etymology,
+            synonyms: synonyms,
+            antonyms: antonyms,
+            paraphrases: paraphrases,
+            sourceAttribution: sourceAttribution,
+            sourceImagePath: sourceImagePath
+        )
+    }
+}
+
+/// Display snapshot shared by review and create-preview.
+struct CardStudyContent: Equatable {
+    var word: String
+    var phonetic: String?
+    var sentence: String
+    var cardType: CardType
+    var front: String
+    var back: String
+    var contextNote: String?
+    var usageNote: String?
+    var etymology: String?
+    var synonyms: String?
+    var antonyms: String?
+    var paraphrases: String?
+    var sourceAttribution: String?
+    var sourceImagePath: String?
+    var highlightText: String? = nil
+
+    var displayHighlight: String {
+        let custom = highlightText?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !custom.isEmpty { return custom }
+        return word
+    }
+
+    var displayFront: String {
+        CardContentFormatter.displayFront(
+            front: front,
+            sentence: sentence,
+            word: word,
+            cardType: cardType
+        )
+    }
+
+    var displayBack: String {
+        CardContentFormatter.displayBack(back: back, contextNote: contextNote)
+    }
 }
 
 struct CardParaphrase: Equatable, Identifiable {
@@ -235,9 +292,56 @@ enum CardContentFormatter {
         trimmed(back)
     }
 
+    /// True when the card has a real example sentence, not just the headword.
+    static func hasExamplePrompt(sentence: String, word: String) -> Bool {
+        let trimmedSentence = trimmed(sentence)
+        guard !trimmedSentence.isEmpty else { return false }
+        return !isWordOnlyFront(trimmedSentence, word: word)
+    }
+
     static func sentenceTranslation(_ contextNote: String?) -> String? {
         let value = stripHighlightMarkers(trimmed(contextNote))
-        return value.isEmpty ? nil : value
+        guard !value.isEmpty else { return nil }
+        if isNonTranslationNote(value) { return nil }
+        return value
+    }
+
+    /// POS tags and pack labels were once written into `contextNote`; they are not 译文.
+    private static func isNonTranslationNote(_ text: String) -> Bool {
+        let folded = text
+            .lowercased()
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "."))
+        let partOfSpeech: Set<String> = [
+            "noun", "verb", "adjective", "adverb", "pronoun", "preposition",
+            "conjunction", "interjection", "determiner", "article",
+            "n", "v", "adj", "adv", "prep", "conj"
+        ]
+        if partOfSpeech.contains(folded) { return true }
+        if folded == "ngsl 1.2" || folded == "nawl 1.2" { return true }
+        return false
+    }
+
+    /// Generic type name used when AI never wrote a real theme.
+    static func isPlaceholderAppreciationTheme(_ theme: String) -> Bool {
+        let value = trimmed(theme)
+        if value.isEmpty { return true }
+        if value.caseInsensitiveCompare(L10n.cardTypeAppreciation) == .orderedSame { return true }
+        return ["赏析", "appreciation"].contains { $0.caseInsensitiveCompare(value) == .orderedSame }
+    }
+
+    static func isHollowAppreciation(_ draft: GeneratedCardDraft) -> Bool {
+        isHollowAppreciation(
+            theme: draft.back,
+            translation: draft.contextNote,
+            appreciation: draft.usageNote
+        )
+    }
+
+    static func isHollowAppreciation(theme: String, translation: String?, appreciation: String?) -> Bool {
+        let note = trimmed(appreciation)
+        let trans = sentenceTranslation(translation) ?? ""
+        return note.isEmpty && trans.isEmpty
     }
 
     /// Terms to emphasize in the sentence translation (marked spans first, then gloss fallback).

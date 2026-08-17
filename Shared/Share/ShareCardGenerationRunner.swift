@@ -60,6 +60,7 @@ enum ShareCardGenerationRunner {
         }
 
         ShareExtensionNotifier.scheduleNoticeNotification(body: L10n.createQueuedToast)
+        AppLog.info("submitFromShareExtension deck=\(targetDeckID) words=\(words.count)", category: "Share")
         exitExtension()
     }
 }

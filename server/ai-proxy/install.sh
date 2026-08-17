@@ -67,6 +67,7 @@ UPSTREAM_API_KEY=
 UPSTREAM_BASE=https://api.deepseek.com/v1
 UPSTREAM_MODEL=deepseek-chat
 DAILY_LIMIT=20
+DEVICE_LIMITS=
 LISTEN_HOST=127.0.0.1
 LISTEN_PORT=8787
 DATA_DIR=${DATA_DIR}
@@ -111,6 +112,8 @@ systemctl --no-pager --full status knowell-ai-proxy || true
 echo
 echo "本机探测：curl -sS http://127.0.0.1:8787/health"
 curl -sS http://127.0.0.1:8787/health || true
+echo
+echo "额度查询：GET /v1/quota（需 X-KnoWell-Token + X-Device-Id，不消耗次数）"
 echo
 echo "Caddy 增加（把域名换成你的，然后 reload caddy）："
 echo

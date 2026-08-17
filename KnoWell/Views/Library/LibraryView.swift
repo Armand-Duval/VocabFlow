@@ -37,6 +37,12 @@ struct LibraryView: View {
     @State private var showDeckStore = false
     @State private var searchDebounceTask: Task<Void, Never>?
     @State private var autoBackupBannerText: String?
+    @State private var listRevision = 0
+    @State private var isSelecting = false
+    @State private var selectedCardIDs: Set<UUID> = []
+    @State private var listedCardIDs: [UUID] = []
+    @State private var showMigrateSheet = false
+    @State private var migrateToDeckID: UUID?
 
     private var totalCardCount: Int {
         LibraryCatalogCache.shared.totalCount(from: decks)
@@ -58,11 +64,13 @@ struct LibraryView: View {
                         cardFilter: cardFilter,
                         decks: decks,
                         forceGrouped: forceGrouped,
+                        catalogRevision: listRevision,
+                        isSelecting: isSelecting,
+                        selectedCardIDs: $selectedCardIDs,
+                        listedCardIDs: $listedCardIDs,
+                        migrateToDeckID: $migrateToDeckID,
                         onCardsDeleted: {
-                            LibraryCatalogCache.shared.invalidateListCache()
-                            DeckCardCountService.notifyCatalogChanged()
-                            SharedDedupeSync.rebuild(in: modelContext)
-                            Task { await refreshHasAnyCards() }
+                            handleLibraryMutation()
                         }
                     )
                 }
@@ -76,6 +84,11 @@ struct LibraryView: View {
                     }
                     libraryChromeRow
                     deckFilterBar
+                }
+            }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if isSelecting, hasAnyCards {
+                    selectionToolbar
                 }
             }
             .navigationDestination(isPresented: $showDeckStore) {
@@ -101,6 +114,7 @@ struct LibraryView: View {
             }
             .onReceive(NotificationCenter.default.publisher(for: .libraryCatalogDidChange)) { _ in
                 LibraryCatalogCache.shared.invalidateListCache()
+                listRevision += 1
                 Task { await refreshHasAnyCards() }
             }
             .onReceive(NotificationCenter.default.publisher(for: .dailyAutoBackupBannerDidChange)) { _ in
@@ -113,6 +127,23 @@ struct LibraryView: View {
                     guard !Task.isCancelled else { return }
                     debouncedSearchText = newValue
                 }
+            }
+            .onChange(of: filterDeckID) { _, _ in
+                selectedCardIDs = []
+            }
+            .onChange(of: isSelecting) { _, selecting in
+                if !selecting {
+                    selectedCardIDs = []
+                    showMigrateSheet = false
+                }
+            }
+            .appSelectionSheet(
+                isPresented: $showMigrateSheet,
+                title: L10n.libraryMigrateTitle,
+                options: decks.map { AppSelectionOption(id: $0.id, title: $0.name) },
+                selectedID: filterDeckID
+            ) { deckID in
+                migrateToDeckID = deckID
             }
         }
     }
@@ -156,6 +187,14 @@ struct LibraryView: View {
 
             if hasAnyCards {
                 cardFilterMenu
+
+                Button {
+                    isSelecting.toggle()
+                } label: {
+                    AppIcon.symbol(isSelecting ? "checkmark.circle.fill" : "checkmark.circle")
+                }
+                .buttonStyle(SoftPressButtonStyle())
+                .accessibilityLabel(isSelecting ? L10n.librarySelectDone : L10n.librarySelect)
             }
 
             Button {
@@ -237,6 +276,67 @@ struct LibraryView: View {
         var descriptor = FetchDescriptor<FlashCard>()
         descriptor.fetchLimit = 1
         hasAnyCards = !((try? modelContext.fetch(descriptor)) ?? []).isEmpty
+        if !hasAnyCards {
+            isSelecting = false
+            selectedCardIDs = []
+        }
+    }
+
+    private func handleLibraryMutation() {
+        LibraryCatalogCache.shared.invalidateListCache()
+        DeckCardCountService.notifyCatalogChanged()
+        SharedDedupeSync.rebuild(in: modelContext)
+        Task { await refreshHasAnyCards() }
+    }
+
+    private var selectionToolbar: some View {
+        VStack(spacing: 0) {
+            Rectangle()
+                .fill(AppColor.borderSubtle)
+                .frame(height: 1)
+
+            HStack(spacing: AppSpacing.sm) {
+                Button {
+                    if selectedCardIDs.count == listedCardIDs.count, !listedCardIDs.isEmpty {
+                        selectedCardIDs = []
+                    } else {
+                        selectedCardIDs = Set(listedCardIDs)
+                    }
+                } label: {
+                    Text(
+                        selectedCardIDs.count == listedCardIDs.count && !listedCardIDs.isEmpty
+                            ? L10n.deckDeselectAll
+                            : L10n.deckSelectAll
+                    )
+                    .font(AppFont.helper().weight(.semibold))
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(AppColor.accent)
+                .disabled(listedCardIDs.isEmpty)
+
+                Text(L10n.librarySelectedCount(selectedCardIDs.count))
+                    .font(AppFont.helper())
+                    .foregroundStyle(AppColor.textSecondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                Button {
+                    showMigrateSheet = true
+                } label: {
+                    Text(L10n.libraryMigrate)
+                        .font(AppFont.helper().weight(.semibold))
+                        .foregroundStyle(Color.white)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(AppColor.accentStrong, in: Capsule())
+                }
+                .buttonStyle(SoftPressButtonStyle())
+                .disabled(selectedCardIDs.isEmpty)
+                .opacity(selectedCardIDs.isEmpty ? 0.45 : 1)
+            }
+            .padding(.horizontal, AppSpacing.md)
+            .padding(.vertical, 10)
+            .background(AppColor.pageBackground)
+        }
     }
 
     private var emptyLibraryState: some View {
@@ -368,6 +468,11 @@ private struct LibraryGroupedList: View {
     let cardFilter: LibraryCardFilter
     let decks: [Deck]
     let forceGrouped: Bool
+    let catalogRevision: Int
+    let isSelecting: Bool
+    @Binding var selectedCardIDs: Set<UUID>
+    @Binding var listedCardIDs: [UUID]
+    @Binding var migrateToDeckID: UUID?
     let onCardsDeleted: () -> Void
 
     @Environment(\.modelContext) private var modelContext
@@ -380,9 +485,14 @@ private struct LibraryGroupedList: View {
     @State private var dueCards: [FlashCard] = []
     @State private var visibleItemCount = LibraryCardGrouper.groupPageSize
     @State private var isLoadingGroups = false
+    @State private var lastGroupingToken = ""
+
+    private var groupingToken: String {
+        "\(filterDeckID?.uuidString ?? "all")|\(searchText)|\(forceGrouped)|\(cardFilter.rawValue)"
+    }
 
     private var refreshToken: String {
-        "\(filterDeckID?.uuidString ?? "all")|\(searchText)|\(forceGrouped)|\(cardFilter.rawValue)"
+        "\(groupingToken)|\(catalogRevision)"
     }
 
     var body: some View {
@@ -404,6 +514,11 @@ private struct LibraryGroupedList: View {
         }
         .task(id: refreshToken) {
             await rebuildGroups()
+        }
+        .onChange(of: migrateToDeckID) { _, deckID in
+            guard let deckID else { return }
+            migrateToDeckID = nil
+            migrateSelected(to: deckID)
         }
     }
 
@@ -450,27 +565,16 @@ private struct LibraryGroupedList: View {
         Section {
             ForEach(flatCardIDs.prefix(visibleItemCount), id: \.self) { cardID in
                 if let card = cardsByID[cardID] {
-                    NavigationLink {
-                        FlashCardDetailView(card: card)
-                    } label: {
-                        LibraryCardRow(
-                            card: card,
-                            showsDeckName: filterDeckID == nil,
-                            searchHighlight: searchText
-                        )
-                    }
-                    .buttonStyle(SoftPressButtonStyle(pressedScale: 0.99, pressedOpacity: 0.92))
+                    cardRow(card: card, cardID: cardID)
                 }
             }
-            .onDelete { offsets in
-                deleteFlatCards(at: offsets)
-            }
+            .onDelete(perform: isSelecting ? nil : deleteFlatCards)
         }
     }
 
     @ViewBuilder
     private var groupedListContent: some View {
-        if let filterDeckID, let deck = decks.first(where: { $0.id == filterDeckID }), !dueCards.isEmpty {
+        if let filterDeckID, let deck = decks.first(where: { $0.id == filterDeckID }), !dueCards.isEmpty, !isSelecting {
             Section {
                 NavigationLink {
                     CardReviewSessionView(cards: dueCards, dismissWhenComplete: true)
@@ -488,23 +592,15 @@ private struct LibraryGroupedList: View {
             Section {
                 ForEach(group.cardIDs, id: \.self) { cardID in
                     if let card = cardsByID[cardID] {
-                        NavigationLink {
-                            FlashCardDetailView(card: card)
-                        } label: {
-                            LibraryCardRow(
-                                card: card,
-                                showsDeckName: filterDeckID == nil,
-                                searchHighlight: searchText
-                            )
-                        }
-                        .buttonStyle(SoftPressButtonStyle(pressedScale: 0.99, pressedOpacity: 0.92))
+                        cardRow(card: card, cardID: cardID)
                     }
                 }
-                .onDelete { offsets in
+                .onDelete(perform: isSelecting ? nil : { offsets in
                     deleteCards(in: group, at: offsets)
-                }
+                })
 
-                if group.cardIDs.count > 1,
+                if !isSelecting,
+                   group.cardIDs.count > 1,
                    let reviewCards = resolvedCards(for: group.cardIDs) {
                     NavigationLink {
                         CardReviewSessionView(cards: reviewCards, dismissWhenComplete: true)
@@ -522,18 +618,61 @@ private struct LibraryGroupedList: View {
         }
     }
 
+    @ViewBuilder
+    private func cardRow(card: FlashCard, cardID: UUID) -> some View {
+        let row = LibraryCardRow(
+            card: card,
+            showsDeckName: filterDeckID == nil,
+            searchHighlight: searchText,
+            showsSelection: isSelecting,
+            isSelected: selectedCardIDs.contains(cardID)
+        )
+
+        if isSelecting {
+            Button {
+                toggleSelection(cardID)
+            } label: {
+                row
+            }
+            .buttonStyle(SoftPressButtonStyle(pressedScale: 0.99, pressedOpacity: 0.92))
+        } else {
+            NavigationLink {
+                FlashCardDetailView(card: card)
+            } label: {
+                row
+            }
+            .buttonStyle(SoftPressButtonStyle(pressedScale: 0.99, pressedOpacity: 0.92))
+        }
+    }
+
+    private func toggleSelection(_ cardID: UUID) {
+        if selectedCardIDs.contains(cardID) {
+            selectedCardIDs.remove(cardID)
+        } else {
+            selectedCardIDs.insert(cardID)
+        }
+    }
+
     private var currentTotalItems: Int {
         useFlatList ? flatCardIDs.count : groups.count
     }
 
     @MainActor
     private func rebuildGroups() async {
-        isLoadingGroups = true
-        visibleItemCount = LibraryCardGrouper.groupPageSize
+        let shouldShowLoading = groups.isEmpty && flatCardIDs.isEmpty
+        if shouldShowLoading {
+            isLoadingGroups = true
+        }
+        if lastGroupingToken != groupingToken {
+            visibleItemCount = LibraryCardGrouper.groupPageSize
+            lastGroupingToken = groupingToken
+        }
         defer { isLoadingGroups = false }
 
-        await Task.yield()
-        try? await Task.sleep(for: .milliseconds(16))
+        if shouldShowLoading {
+            await Task.yield()
+            try? await Task.sleep(for: .milliseconds(16))
+        }
 
         let fetchedCards = fetchCards(for: filterDeckID, filter: cardFilter)
         cards = fetchedCards
@@ -583,6 +722,8 @@ private struct LibraryGroupedList: View {
         }
 
         cardsByID = cardLookup
+        listedCardIDs = useFlatList ? flatCardIDs : groups.flatMap(\.cardIDs)
+        selectedCardIDs = selectedCardIDs.intersection(listedCardIDs)
     }
 
     private func cacheEntryResolves(_ entry: LibraryListCacheEntry, in lookup: [UUID: FlashCard]) -> Bool {
@@ -632,27 +773,65 @@ private struct LibraryGroupedList: View {
     }
 
     private func deleteCards(in group: LibraryWordGroup, at offsets: IndexSet) {
-        let deleted = offsets
-            .compactMap { group.cardIDs[$0] }
-            .compactMap { cardsByID[$0] }
-        deleted.forEach { card in
-            if let deck = card.deck {
-                DeckCardCountService.adjust(deck: deck, by: -1, in: modelContext)
-            }
-            modelContext.delete(card)
-        }
-        onCardsDeleted()
+        let ids = Set(offsets.compactMap { group.cardIDs[safe: $0] })
+        deleteCards(ids: ids)
     }
 
     private func deleteFlatCards(at offsets: IndexSet) {
-        let ids = offsets.compactMap { flatCardIDs[safe: $0] }
-        ids.compactMap { cardsByID[$0] }.forEach { card in
-            if let deck = card.deck {
-                DeckCardCountService.adjust(deck: deck, by: -1, in: modelContext)
-            }
+        let ids = Set(offsets.compactMap { flatCardIDs[safe: $0] })
+        deleteCards(ids: ids)
+    }
+
+    private func deleteCards(ids: Set<UUID>) {
+        guard !ids.isEmpty else { return }
+        let cards = ids.compactMap { cardsByID[$0] }
+        removeFromSnapshot(ids: ids)
+        selectedCardIDs.subtract(ids)
+
+        for card in cards {
+            DeckCardCountService.adjust(deck: card.deck, by: -1, in: modelContext, save: false)
             modelContext.delete(card)
         }
+        try? modelContext.save()
         onCardsDeleted()
+    }
+
+    private func migrateSelected(to deckID: UUID) {
+        guard let target = decks.first(where: { $0.id == deckID }) else { return }
+        let cards = selectedCardIDs.compactMap { cardsByID[$0] }
+        guard !cards.isEmpty else { return }
+
+        let moved = DeckCardCountService.moveCards(cards, to: target, in: modelContext)
+        guard moved > 0 else { return }
+
+        if let filterDeckID, filterDeckID != target.id {
+            let movedIDs = Set(cards.compactMap { card in
+                card.deck?.id == target.id ? card.id : nil
+            })
+            removeFromSnapshot(ids: movedIDs)
+            selectedCardIDs.subtract(movedIDs)
+        }
+
+        SharedDedupeSync.rebuild(in: modelContext)
+        DeckCardCountService.notifyCatalogChanged()
+        ToastCenter.shared.show(L10n.libraryMigrateDone(moved, target.name))
+    }
+
+    private func removeFromSnapshot(ids: Set<UUID>) {
+        guard !ids.isEmpty else { return }
+        cards.removeAll { ids.contains($0.id) }
+        dueCards.removeAll { ids.contains($0.id) }
+        ids.forEach { cardsByID.removeValue(forKey: $0) }
+        if useFlatList {
+            flatCardIDs.removeAll { ids.contains($0) }
+        } else {
+            groups = groups.compactMap { group in
+                let remaining = group.cardIDs.filter { !ids.contains($0) }
+                guard !remaining.isEmpty else { return nil }
+                return LibraryWordGroup(wordKey: group.wordKey, word: group.word, cardIDs: remaining)
+            }
+        }
+        listedCardIDs = useFlatList ? flatCardIDs : groups.flatMap(\.cardIDs)
     }
 }
 
@@ -666,9 +845,18 @@ private struct LibraryCardRow: View {
     let card: FlashCard
     let showsDeckName: Bool
     var searchHighlight: String = ""
+    var showsSelection: Bool = false
+    var isSelected: Bool = false
 
     var body: some View {
         HStack(alignment: .center, spacing: AppSpacing.sm) {
+            if showsSelection {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundStyle(isSelected ? AppColor.accent : AppColor.textTertiary)
+                    .accessibilityHidden(true)
+            }
+
             VStack(alignment: .leading, spacing: 4) {
                 HighlightedText(
                     text: card.word,

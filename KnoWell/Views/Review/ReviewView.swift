@@ -9,6 +9,9 @@ struct ReviewView: View {
     @State private var hasAnyCards = false
     @State private var isLoading = true
     @State private var showQuotaDetail = false
+    @State private var quotaSheetPlan: ReviewQueuePlan?
+    @State private var showReflectionHistory = false
+    @State private var showReflectionPreferences = false
     @State private var isSessionActive = false
     @State private var sessionEpoch = 0
     @State private var dailyReflection: DailyReflection?
@@ -47,11 +50,13 @@ struct ReviewView: View {
                                 sessionEpoch &+= 1
                                 isSessionActive = true
                             },
-                            onShowQuota: { showQuotaDetail = true },
-                            onRefreshReflection: {
-                                Task { await refreshDailyReflection(force: true) }
+                            onShowQuota: {
+                                quotaSheetPlan = plan
+                                showQuotaDetail = true
                             },
-                            onPreferencesSaved: {
+                            onShowReflectionHistory: { showReflectionHistory = true },
+                            onShowReflectionPreferences: { showReflectionPreferences = true },
+                            onRefreshReflection: {
                                 Task { await refreshDailyReflection(force: true) }
                             },
                             onCollectReflection: { reflection in
@@ -65,9 +70,28 @@ struct ReviewView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(isSessionActive ? .hidden : .automatic, for: .navigationBar)
             .sheet(isPresented: $showQuotaDetail) {
-                if let plan {
-                    ReviewQuotaDetailSheet(plan: plan, lifetimeStudiedCount: lifetimeStudiedCount)
-                }
+                ReviewQuotaDetailSheet(
+                    plan: quotaSheetPlan ?? plan ?? ReviewQueuePlan(
+                        sessionCards: [],
+                        newStudiedToday: 0,
+                        reviewStudiedToday: 0,
+                        newLimit: 0,
+                        reviewLimit: 0,
+                        deferredNewCount: 0,
+                        deferredReviewCount: 0
+                    ),
+                    lifetimeStudiedCount: lifetimeStudiedCount
+                )
+            }
+            .sheet(isPresented: $showReflectionHistory) {
+                DailyReflectionHistoryView(onCollect: { reflection in
+                    Task { await collectReflection(reflection) }
+                })
+            }
+            .sheet(isPresented: $showReflectionPreferences) {
+                DailyReflectionPreferencesSheet(onSaved: {
+                    Task { await refreshDailyReflection(force: true) }
+                })
             }
         }
         .task(id: refreshToken) {
@@ -122,22 +146,19 @@ struct ReviewView: View {
         emptyDescriptor.fetchLimit = 1
         hasAnyCards = !((try? modelContext.fetch(emptyDescriptor)) ?? []).isEmpty
 
-        let allLibrary = (try? modelContext.fetch(FetchDescriptor<FlashCard>())) ?? []
-        lifetimeStudiedCount = allLibrary.filter { $0.reviewCount > 0 }.count
-        todayCapture = CaptureStatsStore.todaySummary(in: modelContext)
-        let calendar = Calendar.current
-        let cardReviewDays = Set(
-            allLibrary.compactMap { card -> Date? in
-                guard let date = card.lastReviewDate else { return nil }
-                return calendar.startOfDay(for: date)
+        var studiedDescriptor = FetchDescriptor<FlashCard>(
+            predicate: #Predicate<FlashCard> { card in
+                card.reviewCount > 0
             }
-        ).count
-        StudyStreakStore.reconcileTotalDays(max(StudyActivityStore.recordedDayCount(), cardReviewDays))
+        )
+        lifetimeStudiedCount = (try? modelContext.fetchCount(studiedDescriptor)) ?? 0
+        todayCapture = CaptureStatsStore.todaySummary(in: modelContext)
+        StudyStreakStore.reconcileTotalDays(StudyActivityStore.recordedDayCount())
 
         let dueDate = Date.now
         let descriptor = FetchDescriptor<FlashCard>(
             predicate: #Predicate<FlashCard> { card in
-                card.nextReviewDate <= dueDate
+                card.isSuspended == false && card.nextReviewDate <= dueDate
             },
             sortBy: [SortDescriptor(\FlashCard.nextReviewDate)]
         )
@@ -211,12 +232,11 @@ private struct ReviewHomeView: View {
     let isCollectingReflection: Bool
     let onStartReview: () -> Void
     let onShowQuota: () -> Void
+    let onShowReflectionHistory: () -> Void
+    let onShowReflectionPreferences: () -> Void
     let onRefreshReflection: () -> Void
-    let onPreferencesSaved: () -> Void
     let onCollectReflection: (DailyReflection) -> Void
 
-    @State private var showReflectionHistory = false
-    @State private var showReflectionPreferences = false
     @State private var appeared = false
 
     private var dueCount: Int { plan.sessionCards.count }
@@ -238,16 +258,11 @@ private struct ReviewHomeView: View {
             .padding(.top, AppSpacing.sm)
             .padding(.bottom, AppSpacing.xl)
         }
+        .appVerticalBounce()
         .onAppear {
             withAnimation(.spring(response: 0.55, dampingFraction: 0.86)) {
                 appeared = true
             }
-        }
-        .sheet(isPresented: $showReflectionHistory) {
-            DailyReflectionHistoryView(onCollect: onCollectReflection)
-        }
-        .sheet(isPresented: $showReflectionPreferences) {
-            DailyReflectionPreferencesSheet(onSaved: onPreferencesSaved)
         }
     }
 
@@ -374,7 +389,7 @@ private struct ReviewHomeView: View {
                 }
                 Spacer(minLength: 0)
                 Button {
-                    showReflectionPreferences = true
+                    onShowReflectionPreferences()
                 } label: {
                     Image(systemName: "slider.horizontal.3")
                         .font(.system(size: 12, weight: .medium))
@@ -437,7 +452,7 @@ private struct ReviewHomeView: View {
                 }
                 .opacity(isCollectingReflection ? 0.6 : 1)
                 TextLinkAction(title: L10n.reviewDailyHistoryLink, tone: .muted) {
-                    showReflectionHistory = true
+                    onShowReflectionHistory()
                 }
                 Spacer(minLength: 0)
             }
@@ -519,7 +534,9 @@ private struct ReviewQuotaDetailSheet: View {
                 }
             }
         }
-        .presentationDetents([.medium])
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
+        .presentationContentInteraction(.scrolls)
     }
 
     private func quotaRow(title: String, studied: Int, limit: Int, deferred: Int) -> some View {

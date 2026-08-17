@@ -377,7 +377,14 @@ struct FlashCardEditSheet: View {
     }
 
     private func save() {
+        let sourceDeck = card.deck
         fields.apply(to: card, in: modelContext)
+        if sourceDeck?.id != card.deck?.id {
+            DeckCardCountService.adjust(deck: sourceDeck, by: -1, in: modelContext, save: false)
+            DeckCardCountService.adjust(deck: card.deck, by: 1, in: modelContext, save: false)
+            SharedDedupeSync.rebuild(in: modelContext)
+        }
+        try? modelContext.save()
         DeckCardCountService.notifyCatalogChanged()
         onSaved?()
         dismiss()
@@ -411,7 +418,7 @@ struct FlashCardEditSheet: View {
                     occasion: CardContentFormatter.senseText(fields.back),
                     isAI: true
                 )
-                let draft = try await LiteraryAppreciationGenerator.generate(from: reflection)
+                let draft = try await LiteraryAppreciationGenerator.generate(from: reflection, allowFallback: false)
                 fields.applyDraft(draft)
                 ToastCenter.shared.show(L10n.cardRegenerateDone)
                 return

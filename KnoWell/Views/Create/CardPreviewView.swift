@@ -14,6 +14,7 @@ struct CardPreviewView: View {
     @State private var drafts: [GeneratedCardDraft] = []
     @State private var cursor = 0
     @State private var showBack = false
+    @State private var faceDragOffset: CGSize = .zero
     @State private var showReplaceReasons = false
     @State private var isReplacing = false
     @State private var phase: Phase = .triage
@@ -103,7 +104,7 @@ struct CardPreviewView: View {
     }
 
     private var triageHeader: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+        VStack(alignment: .leading, spacing: AppSpacing.xs) {
             HStack(spacing: AppSpacing.sm) {
                 Button(action: goBackOrDismiss) {
                     Image(systemName: "chevron.left")
@@ -121,114 +122,41 @@ struct CardPreviewView: View {
                     .foregroundStyle(AppColor.textMuted)
                     .monospacedDigit()
 
+                if laterBatchCount > 0 {
+                    Text(L10n.createPreviewMoreWaiting(laterBatchCount))
+                        .font(AppFont.weak())
+                        .foregroundStyle(AppColor.textMuted)
+                        .lineLimit(1)
+                }
+
                 Spacer(minLength: 0)
             }
 
             CreateDeckPickerCard(selectedDeckID: $selectedDeckID)
-
-            if laterBatchCount > 0 {
-                Text(L10n.createPreviewMoreWaiting(laterBatchCount))
-                    .font(AppFont.weak())
-                    .foregroundStyle(AppColor.textMuted)
-            }
         }
         .padding(.horizontal, AppSpacing.md)
         .padding(.top, AppSpacing.sm)
-        .padding(.bottom, AppSpacing.sm)
+        .padding(.bottom, AppSpacing.xs)
         .background(AppColor.pageBackground)
     }
 
     private func triageContent(for draft: GeneratedCardDraft) -> some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: AppSpacing.md) {
-                Text(L10n.createPreviewTapHint)
-                    .font(AppFont.weak())
-                    .foregroundStyle(AppColor.textMuted)
-
-                Button {
-                    withAnimation(.easeInOut(duration: 0.18)) {
-                        showBack.toggle()
-                    }
-                } label: {
-                    previewCard(for: draft)
-                }
-                .buttonStyle(.plain)
+        CardStudyFaceView(
+            content: draft.studyContent,
+            showBack: $showBack,
+            dragOffset: $faceDragOffset,
+            allowsReviewGestures: false,
+            onCreateCard: { term in
+                shareImport.importPayload(
+                    ShareImportPayload(
+                        sentence: draft.sentence,
+                        selectedWord: term,
+                        source: .clipboard
+                    )
+                )
             }
-            .padding(.horizontal, AppSpacing.md)
-            .padding(.top, AppSpacing.sm)
-            .padding(.bottom, AppSpacing.md)
-        }
-        .scrollBounceBehavior(.basedOnSize)
-    }
-
-    private func previewCard(for draft: GeneratedCardDraft) -> some View {
-        VStack(alignment: .leading, spacing: AppSpacing.md) {
-            HStack(alignment: .top, spacing: AppSpacing.sm) {
-                VStack(alignment: .leading, spacing: 4) {
-                    if showBack || draft.cardType != .cloze {
-                        Text(draft.word)
-                            .font(draft.cardType == .appreciation ? AppFont.sectionTitle() : AppFont.studyWord())
-                            .foregroundStyle(draft.cardType == .appreciation ? AppColor.textPrimary : AppColor.accent)
-                        if draft.cardType != .appreciation,
-                           let phonetic = draft.phonetic?.trimmingCharacters(in: .whitespacesAndNewlines),
-                           !phonetic.isEmpty {
-                            Text(phonetic.hasPrefix("/") || phonetic.hasPrefix("[") ? phonetic : "/\(phonetic)/")
-                                .font(AppFont.secondary())
-                                .foregroundStyle(AppColor.textSecondary)
-                        }
-                    }
-                    Text(draft.cardType.displayName)
-                        .font(AppFont.caption().weight(.medium))
-                        .foregroundStyle(AppColor.textTertiary)
-                }
-                Spacer(minLength: 0)
-            }
-
-            Text(CardContentFormatter.displayFront(
-                front: draft.front,
-                sentence: draft.sentence,
-                word: draft.word,
-                cardType: draft.cardType
-            ))
-            .font(AppFont.body())
-            .foregroundStyle(AppColor.textPrimary)
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            if showBack {
-                VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                    if !draft.back.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        Text(draft.back)
-                            .font(AppFont.secondary())
-                            .foregroundStyle(AppColor.textPrimary)
-                    }
-                    if let note = draft.contextNote?.trimmingCharacters(in: .whitespacesAndNewlines),
-                       !note.isEmpty {
-                        Text(CardContentFormatter.stripHighlightMarkers(note))
-                            .font(AppFont.helper())
-                            .foregroundStyle(AppColor.textSecondary)
-                    }
-                    if let source = draft.sourceAttribution?.trimmingCharacters(in: .whitespacesAndNewlines),
-                       !source.isEmpty {
-                        Text(source)
-                            .font(AppFont.caption())
-                            .foregroundStyle(AppColor.textTertiary)
-                    }
-                }
-                .transition(.opacity.combined(with: .move(edge: .top)))
-            } else {
-                Text(L10n.createPreviewReveal)
-                    .font(AppFont.helper())
-                    .foregroundStyle(AppColor.textTertiary)
-            }
-        }
-        .padding(AppSpacing.lg)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AppColor.surface, in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                .strokeBorder(AppColor.borderSubtle, lineWidth: 1)
-        }
-        .appSoftShadow()
+        )
+        .id(draft.id)
     }
 
     private var triageFooter: some View {

@@ -29,7 +29,8 @@ enum CardDraftRegenerator {
             )
             var next = try await LiteraryAppreciationGenerator.generate(
                 from: reflection,
-                revisionHint: reason.promptInstruction
+                revisionHint: reason.promptInstruction,
+                allowFallback: false
             )
             next.sourceImagePath = draft.sourceImagePath
             next.isSelected = true
@@ -62,7 +63,7 @@ enum CardContentRegenerator {
                 occasion: CardContentFormatter.senseText(card.back),
                 isAI: true
             )
-            let draft = try await LiteraryAppreciationGenerator.generate(from: reflection)
+            let draft = try await LiteraryAppreciationGenerator.generate(from: reflection, allowFallback: false)
             CardContentSync.applyGeneratedContent(draft, to: card)
             DeckCardCountService.notifyCatalogChanged()
             return
@@ -107,6 +108,7 @@ enum LiteraryAppreciationGeneratorError: LocalizedError {
     case apiError(String)
     case parseError(String)
     case emptySentence
+    case emptyAppreciation
 
     var errorDescription: String? {
         switch self {
@@ -120,6 +122,8 @@ enum LiteraryAppreciationGeneratorError: LocalizedError {
             L10n.parseError(message)
         case .emptySentence:
             L10n.reviewDailyCollectNeedSentence
+        case .emptyAppreciation:
+            L10n.generateEmptyAppreciationError
         }
     }
 }
@@ -129,7 +133,8 @@ enum LiteraryAppreciationGenerator {
 
     static func generate(
         from reflection: DailyReflection,
-        revisionHint: String? = nil
+        revisionHint: String? = nil,
+        allowFallback: Bool = true
     ) async throws -> GeneratedCardDraft {
         let sentence = reflection.sentence.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !sentence.isEmpty else {
@@ -138,24 +143,36 @@ enum LiteraryAppreciationGenerator {
 
         if APISettings.canUseAI {
             do {
-                return try await fetchAppreciation(from: reflection, revisionHint: revisionHint)
+                return try await fetchAppreciation(
+                    from: reflection,
+                    revisionHint: revisionHint,
+                    allowFallback: allowFallback
+                )
             } catch {
-                return fallbackDraft(from: reflection)
+                if CloudAIQuota.isExhausted(error) { throw error }
+                if let draft = usableFallback(from: reflection, allowed: allowFallback) {
+                    return draft
+                }
+                throw error
             }
         }
-        return fallbackDraft(from: reflection)
+        if let draft = usableFallback(from: reflection, allowed: allowFallback) {
+            return draft
+        }
+        throw LiteraryAppreciationGeneratorError.emptyAppreciation
     }
 
     private static func fetchAppreciation(
         from reflection: DailyReflection,
-        revisionHint: String?
+        revisionHint: String?,
+        allowFallback: Bool
     ) async throws -> GeneratedCardDraft {
         guard APISettings.canUseAI else {
             throw LiteraryAppreciationGeneratorError.missingAPIKey
         }
 
         let content = try await requestAppreciation(from: reflection, revisionHint: revisionHint)
-        return try parseAppreciation(from: content, reflection: reflection)
+        return try parseAppreciation(from: content, reflection: reflection, allowFallback: allowFallback)
     }
 
     private static func requestAppreciation(
@@ -229,8 +246,10 @@ enum LiteraryAppreciationGenerator {
         guard let http = response as? HTTPURLResponse else {
             throw LiteraryAppreciationGeneratorError.invalidResponse
         }
+        CloudAIQuota.ingest(http: http, data: data)
         if http.statusCode != 200 {
-            let message = extractErrorMessage(from: data) ?? "HTTP \(http.statusCode)"
+            let raw = extractErrorMessage(from: data) ?? "HTTP \(http.statusCode)"
+            let message = CloudAIQuota.mappedMessage(statusCode: http.statusCode, raw: raw) ?? raw
             throw LiteraryAppreciationGeneratorError.apiError(message)
         }
 
@@ -248,7 +267,8 @@ enum LiteraryAppreciationGenerator {
 
     private static func parseAppreciation(
         from content: String,
-        reflection: DailyReflection
+        reflection: DailyReflection,
+        allowFallback: Bool
     ) throws -> GeneratedCardDraft {
         let jsonString = extractJSON(from: content)
         guard let data = jsonString.data(using: .utf8) else {
@@ -278,7 +298,15 @@ enum LiteraryAppreciationGenerator {
             ?? L10n.cardTypeAppreciation
 
         if appreciation.isEmpty {
-            return fallbackDraft(from: reflection, title: title, translation: translation)
+            if let draft = usableFallback(
+                from: reflection,
+                allowed: allowFallback,
+                title: title,
+                translation: translation
+            ) {
+                return draft
+            }
+            throw LiteraryAppreciationGeneratorError.emptyAppreciation
         }
 
         return GeneratedCardDraft(
@@ -293,6 +321,17 @@ enum LiteraryAppreciationGenerator {
             isSelected: true,
             isRecommended: true
         )
+    }
+
+    private static func usableFallback(
+        from reflection: DailyReflection,
+        allowed: Bool,
+        title: String? = nil,
+        translation: String? = nil
+    ) -> GeneratedCardDraft? {
+        guard allowed else { return nil }
+        let draft = fallbackDraft(from: reflection, title: title, translation: translation)
+        return CardContentFormatter.isHollowAppreciation(draft) ? nil : draft
     }
 
     static func fallbackDraft(
@@ -341,14 +380,14 @@ enum LiteraryAppreciationGenerator {
     }
 
     private static func extractErrorMessage(from data: Data) -> String? {
-        guard
-            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-            let error = json["error"] as? [String: Any],
-            let message = error["message"] as? String
-        else {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             return String(data: data, encoding: .utf8)
         }
-        return message
+        if let message = json["error"] as? String { return message }
+        if let error = json["error"] as? [String: Any], let message = error["message"] as? String {
+            return message
+        }
+        return String(data: data, encoding: .utf8)
     }
 }
 

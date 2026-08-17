@@ -49,7 +49,9 @@ struct DeckStoreView: View {
     }
 
     private var checkedCardCount: Int {
-        fetchCards(in: checkedDeckIDs).count
+        decks.reduce(0) { partial, deck in
+            checkedDeckIDs.contains(deck.id) ? partial + max(deck.cardCount, 0) : partial
+        }
     }
 
     private var allDecksSelected: Bool {
@@ -285,7 +287,7 @@ struct DeckStoreView: View {
     }
 
     private func deckRow(_ deck: Deck) -> some View {
-        let due = deck.dueCount
+        let due = DeckCardCountService.dueCount(for: deck.id)
         let total = max(deck.cardCount, 0)
         let isChecked = checkedDeckIDs.contains(deck.id)
         let isDefault = DeckService.isDefaultDeck(deck)
@@ -538,6 +540,7 @@ struct DeckStoreView: View {
                     HStack(spacing: AppSpacing.xs) {
                         Text(pack.name)
                             .font(AppFont.sectionTitle())
+                        DeckFormatBadge(title: pack.sourceFormatLabel)
                         Text(pack.cardCountLabel)
                             .font(AppFont.caption())
                             .padding(.horizontal, 6)
@@ -584,6 +587,7 @@ struct DeckStoreView: View {
                     HStack(spacing: AppSpacing.xs) {
                         Text(entry.name)
                             .font(AppFont.sectionTitle())
+                        DeckFormatBadge(title: entry.sourceFormatLabel)
                         if let countLabel = entry.cardCountLabel {
                             Text(countLabel)
                                 .font(AppFont.caption())
@@ -636,17 +640,12 @@ struct DeckStoreView: View {
                 selectedDeckID = result.deck.id
                 DeckSettings.lastSelectedDeckID = result.deck.id
                 checkedDeckIDs.insert(result.deck.id)
-                if result.importedCards > 0 {
-                    showResult(
-                        title: L10n.deckInstallComplete,
-                        message: L10n.deckInstallWithCards(result.deck.name, count: result.importedCards)
-                    )
-                } else {
-                    showResult(
-                        title: L10n.deckInstallComplete,
-                        message: L10n.deckInstallEmpty(result.deck.name)
-                    )
-                }
+                showResult(
+                    title: L10n.deckInstallComplete,
+                    message: result.importedCards > 0
+                        ? L10n.deckInstallWithCards(result.deck.name, count: result.importedCards)
+                        : L10n.deckInstallEmpty(result.deck.name)
+                )
             } catch {
                 showResult(title: L10n.deckDownloadFailed, message: error.localizedDescription)
             }
@@ -745,6 +744,16 @@ struct DeckStoreView: View {
                 }
                 do {
                     let data = try BackupDocumentSupport.readData(from: url)
+                    do {
+                        try OriginalPackArchive.save(
+                            data: data,
+                            suggestedName: url.deletingPathExtension().lastPathComponent,
+                            fileExtension: url.pathExtension.isEmpty ? "apkg" : url.pathExtension,
+                            sourceURL: url
+                        )
+                    } catch {
+                        AppLog.error("Original apkg archive failed: \(error.localizedDescription)", category: "Library")
+                    }
                     let imported = try await ApkgImportService.importApkgAsync(
                         data: data,
                         context: modelContext
@@ -914,7 +923,9 @@ struct DeckStoreView: View {
     }
 
     private func showResult(title: String, message: String) {
-        if title == L10n.importComplete || title == L10n.deckImportComplete {
+        if title == L10n.importComplete
+            || title == L10n.deckImportComplete
+            || title == L10n.deckInstallComplete {
             ToastCenter.shared.show(message)
             return
         }
@@ -1001,7 +1012,8 @@ private struct DeckEditorSheet: View {
                 detailText = deck?.detailText ?? ""
             }
         }
-        .presentationDetents([.medium])
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 
     private func saveDeck() {
@@ -1129,6 +1141,7 @@ struct DeckCatalogView: View {
                     HStack(spacing: AppSpacing.xs) {
                         Text(pack.name)
                             .font(AppFont.sectionTitle())
+                        DeckFormatBadge(title: pack.sourceFormatLabel)
                         Text(pack.cardCountLabel)
                             .font(AppFont.caption())
                             .padding(.horizontal, 6)
@@ -1172,6 +1185,7 @@ struct DeckCatalogView: View {
                     HStack(spacing: AppSpacing.xs) {
                         Text(entry.name)
                             .font(AppFont.sectionTitle())
+                        DeckFormatBadge(title: entry.sourceFormatLabel)
                         if let countLabel = entry.cardCountLabel {
                             Text(countLabel)
                                 .font(AppFont.caption())
@@ -1236,7 +1250,24 @@ struct DeckCatalogView: View {
     }
 
     private func showResult(title: String, message: String) {
+        if title == L10n.deckInstallComplete {
+            ToastCenter.shared.show(message)
+            return
+        }
         ToastCenter.shared.show("\(title)：\(message)")
+    }
+}
+
+private struct DeckFormatBadge: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .font(AppFont.caption().weight(.medium))
+            .foregroundStyle(AppColor.textSecondary)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(AppColor.surfaceMuted, in: Capsule())
     }
 }
 

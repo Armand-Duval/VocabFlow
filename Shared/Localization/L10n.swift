@@ -177,8 +177,17 @@ enum L10n {
 
     static var generateFailedTitle: String { tr("create.error.title") }
     static var generateEmptyError: String { tr("create.error.empty") }
+    static var generateEmptyAppreciationError: String { tr("create.error.emptyAppreciation") }
     static var generateTimeoutError: String { tr("create.error.timeout") }
     static var generateFormatErrorDetail: String { tr("create.error.formatDetail") }
+    static var aiDailyQuotaReached: String { tr("create.error.dailyQuota") }
+    static func cloudQuotaRemaining(_ remaining: Int, _ limit: Int) -> String {
+        tf("cloud.quota.remaining", remaining, limit)
+    }
+    static var cloudQuotaExhausted: String { tr("cloud.quota.exhausted") }
+    static func cloudQuotaInsufficient(_ needed: Int, _ remaining: Int) -> String {
+        tf("cloud.quota.insufficient", needed, remaining)
+    }
 
     // MARK: - Words editor
 
@@ -262,6 +271,9 @@ enum L10n {
     static func ocrHighlightContext(_ wordCount: Int, _ sentenceCount: Int) -> String {
         tf("import.ocr.highlightContext", wordCount, sentenceCount)
     }
+    static func ocrVocabPage(_ count: Int) -> String {
+        tf("import.ocr.vocabPage", count)
+    }
 
     // MARK: - Card types
 
@@ -297,6 +309,7 @@ enum L10n {
     static var reviewTranslationSection: String { tr("review.translation") }
     static var reviewAppreciationSection: String { tr("review.appreciation") }
     static var reviewAppreciationThemeSection: String { tr("review.appreciation.theme") }
+    static var reviewAppreciationEmpty: String { tr("review.appreciation.empty") }
     static var reviewAIInsightSection: String { tr("review.aiInsight") }
     static var reviewRelatedWordsSection: String { tr("review.relatedWords") }
     static var reviewParaphrasesSection: String { tr("review.paraphrases") }
@@ -412,6 +425,14 @@ enum L10n {
     static var libraryResetSRSMessage: String { tr("library.resetSRS.message") }
     static var libraryDeleteCard: String { tr("library.deleteCard") }
     static var libraryDeleteCardMessage: String { tr("library.deleteCard.message") }
+    static var librarySelect: String { tr("library.select") }
+    static var librarySelectDone: String { tr("library.select.done") }
+    static func librarySelectedCount(_ count: Int) -> String { tf("library.selectedCount", count) }
+    static var libraryMigrate: String { tr("library.migrate") }
+    static var libraryMigrateTitle: String { tr("library.migrate.title") }
+    static func libraryMigrateDone(_ count: Int, _ deckName: String) -> String {
+        tf("library.migrate.done", count, deckName)
+    }
     static var libraryReviewThisCard: String { tr("library.reviewThisCard") }
     static var libraryDetailContent: String { tr("library.detail.content") }
     static var libraryDetailSRS: String { tr("library.detail.srs") }
@@ -588,6 +609,8 @@ enum L10n {
     static var settingsDailyAutoBackupEnabled: String { tr("settings.dailyAutoBackup.enabled") }
     static var settingsDailyAutoBackupFooter: String { tr("settings.dailyAutoBackup.footer") }
     static var settingsAppLogFooter: String { tr("settings.appLog.footer") }
+    static var settingsExportLogs: String { tr("settings.appLog.export") }
+    static var settingsExportLogsEmpty: String { tr("settings.appLog.exportEmpty") }
     static var libraryAutoBackupBanner: String { tr("library.autoBackup.banner") }
     static var libraryAutoBackupBannerOpenHint: String { tr("library.autoBackup.banner.openHint") }
     static var exportBackup: String { tr("settings.backup.export") }
@@ -747,6 +770,11 @@ enum L10n {
     static func deckClearResult(_ name: String, count: Int) -> String {
         tf("deck.clear.result", name, count)
     }
+    static var deckOriginalPackOpen: String { tr("deck.originalPack.open") }
+    static var deckOriginalPackEmpty: String { tr("deck.originalPack.empty") }
+    static func deckOriginalPackSaved(_ fileName: String, sha256: String) -> String {
+        tf("deck.originalPack.saved", fileName, sha256)
+    }
     static var deckImportComplete: String { tr("deck.import.complete") }
     static var deckImportFailed: String { tr("deck.import.failed") }
     static var deckImportInvalidJSON: String { tr("deck.import.invalidJSON") }
@@ -823,6 +851,9 @@ enum L10n {
         tf("deck.remote.license", license)
     }
     static var deckRemoteViewSource: String { tr("deck.remote.viewSource") }
+    static var deckSourceFormatAnki: String { tr("deck.sourceFormat.anki") }
+    static var deckSourceFormatJSON: String { tr("deck.sourceFormat.json") }
+    static var deckSourceFormatCSV: String { tr("deck.sourceFormat.csv") }
     static var deckRemoteNGSLName: String { tr("deck.remote.ngsl.name") }
     static var deckRemoteNGSLDetail: String { tr("deck.remote.ngsl.detail") }
     static var deckRemoteNAWLName: String { tr("deck.remote.nawl.name") }
@@ -880,6 +911,11 @@ enum L10n {
     static var notificationReadyGeneric: String { tr("notification.ready.generic") }
     static func notificationSaved(_ count: Int) -> String { tf("notification.saved", count) }
     static func notificationFailed(_ message: String) -> String { tf("notification.failed", message) }
+    static var notificationShareInbox: String { tr("notification.shareInbox") }
+    static var extensionHandedOff: String { tr("extension.handedOff") }
+    static var extensionHandedOffReason: String { tr("extension.handedOff.reason") }
+    static var extensionHandedOffHint: String { tr("extension.handedOff.hint") }
+    static var extensionOpenApp: String { tr("extension.openApp") }
 
     // MARK: - Errors
 
