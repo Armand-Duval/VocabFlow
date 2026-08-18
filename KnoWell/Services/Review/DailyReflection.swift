@@ -429,19 +429,19 @@ enum DailyReflectionService {
         var dailyAngle: String?
     }
 
-    private static let recentDedupDays = 14
+    private static let recentDedupDays = 45
 
     /// Rotate the reading lens each day so the same 3 keywords don't collapse onto one famous line.
     private static let dailyAngles: [String] = [
         "开篇：选作品开头最能立住气质的一句",
         "口吻：选一句能听出说话人性格的台词或旁白",
-        "景物：写景或物象，但不堆砌季节词",
+        "景物：贴合今日物候的写景，不要把节气名写进原文",
         "关系：人与人之间的一句（相遇、离别、对峙）",
         "记忆：关于时间、过去或逝去的一句",
         "决意：正在做或将要做的一句",
         "机锋：克制的反讽或冷幽默，不要段子",
         "收束：章节或作品近结尾、有余味的一句",
-        "意象：用一个具体物象撑起的一句",
+        "意象：用一个具体物象撑起的一句，物象须像这个时节",
         "独白：不喊口号的自我省察",
         "闲笔：对话或叙述里看似最轻、实有分量的一句",
         "旅途：在路上、异乡或逆旅中的一句"
@@ -506,16 +506,25 @@ enum DailyReflectionService {
     }
 
     private static func normalizedSentenceKey(_ sentence: String) -> String {
-        sentence
-            .lowercased()
-            .components(separatedBy: .whitespacesAndNewlines)
-            .filter { !$0.isEmpty }
-            .joined(separator: " ")
+        let lowered = sentence.lowercased()
+        let kept = lowered.unicodeScalars.filter {
+            CharacterSet.alphanumerics.contains($0)
+        }
+        return String(String.UnicodeScalarView(kept))
     }
 
     private static func isDuplicateSentence(_ sentence: String, excluded: [String]) -> Bool {
         let key = normalizedSentenceKey(sentence)
-        return excluded.contains { normalizedSentenceKey($0) == key }
+        guard key.count >= 8 else { return false }
+        return excluded.contains { other in
+            let otherKey = normalizedSentenceKey(other)
+            guard otherKey.count >= 8 else { return false }
+            if otherKey == key { return true }
+            if key.count >= 12, otherKey.count >= 12 {
+                return key.contains(otherKey) || otherKey.contains(key)
+            }
+            return false
+        }
     }
 
     private static func fetchAndPersist(for day: Date, dayKey key: String, options: FetchOptions) async -> DailyReflection {
@@ -580,7 +589,7 @@ enum DailyReflectionService {
         APISettings.applyChatHeaders(to: &request)
 
         let dateText = day.formatted(Date.FormatStyle(date: .complete, time: .omitted).locale(Locale(identifier: "zh_CN")))
-        let season = northernSeasonName(for: day)
+        let moment = seasonalMoment(for: day)
         let localeID = Locale.current.identifier
 
         let systemPrompt = """
@@ -622,7 +631,8 @@ enum DailyReflectionService {
         - 外文原文：source 用外文（如 William Wordsworth, The World Is Too Much With Us），source_zh 用中文
         - 中文原文：source 用中文（如《论语·为政》），source_zh 留空
 
-        选句优先级：浪漫、哲理、智慧 > 文学质地 > 季节点缀（季节不得主导选句）
+        选句优先级：今日节气与物候 > 文学质地 > 浪漫/哲理/智慧。
+        季节是主约束，不是点缀：选一句读起来就像写于这个时节的原文。不要往原文里硬塞「春夏秋冬」或节气名；也禁止选与当前时令明显相反的名句（盛夏不选踏雪，深冬不选荷花盛开）。
 
         其他规则：
         1. sentence 必须是可核对的原文，不超过约 120 字符
@@ -632,6 +642,7 @@ enum DailyReflectionService {
         5. 不要鸡汤口号、不要催学习、不要广告
         6. 连续多日必须换作品（或同一作家的另一部作品），并换切入角度；禁止连续使用同一原文
         7. 用户关键词是气质/口味，不是必须写进句子的字；禁止为了贴关键词而选最烂熟的那一句
+        8. 禁止复述近期已展示原文；宁可选较冷门、仍可核对的一句，也不要再拿各语言里被引到滥的那几句
         """
 
         let preferenceHint: String
@@ -647,7 +658,7 @@ enum DailyReflectionService {
             """
         } else {
             preferenceHint = """
-            用户未设置口味关键词。按默认优先级选句，今天仍须换作品、换角度。
+            用户未设置口味关键词。按今日节气物候选句，仍须换作品、换角度。
             原文在前；外文必须另给中文翻译。
             """
         }
@@ -661,16 +672,16 @@ enum DailyReflectionService {
             }
             var lines: [String] = []
             if !excludedSentences.isEmpty {
-                lines.append("近期已展示原文（禁止重复）：")
-                lines.append(contentsOf: excludedSentences.prefix(12).enumerated().map { index, sentence in
+                lines.append("近期已展示原文（禁止重复，包括只改标点/换行/节选）：")
+                lines.append(contentsOf: excludedSentences.prefix(24).enumerated().map { index, sentence in
                     let preview = sentence.replacingOccurrences(of: "\n", with: " ")
-                    let clipped = preview.count > 72 ? String(preview.prefix(72)) + "…" : preview
+                    let clipped = preview.count > 80 ? String(preview.prefix(80)) + "…" : preview
                     return "\(index + 1). \(clipped)"
                 })
             }
             if !excludedSources.isEmpty {
                 lines.append("近期出处（今天请换作品）：")
-                lines.append(contentsOf: excludedSources.prefix(8).map { "- \($0)" })
+                lines.append(contentsOf: excludedSources.prefix(12).map { "- \($0)" })
             }
             return lines.joined(separator: "\n")
         }()
@@ -691,20 +702,25 @@ enum DailyReflectionService {
             """
         }
 
+        let retrySeasonHint = retryBoost
+            ? "上一轮疑似重复或不够贴合时令。必须换一部与近期完全不同的作品，仍须贴合今日节气物候，不要退回最著名的那一句。"
+            : "季节与节气是今天选句的第一约束。"
+
         let userPrompt = """
         今天：\(dateText)
-        大致季节（仅供参考，优先级低）：\(season)
+        \(moment.promptBlock)
         用户地区标识：\(localeID)
         \(preferenceHint)
         \(refreshHint)
+        \(retrySeasonHint)
 
         请给出今日一句。要求：
         - sentence 是作品原文（本来是什么语言就用什么语言）
         - 外文原文必须另给完整中文 translation；现代汉语原文 translation 留空
-        - 按今天的切入角度选句；换一部与近期不同的作品
+        - 先贴合今日节气/物候，再按切入角度选句；换一部与近期不同的作品
         - 默认单行输出；只有短诗且分行是原文形式时才用真实换行，散文/戏剧台词不要拆行
         - 外文必须同时给出外文 source 与中文 source_zh
-        - 季节不必强行呼应
+        - occasion 可用极短节气或物候（如「处暑将至」），不要写成天气预报
         """
 
         let preferredTemperature: Double
@@ -713,7 +729,7 @@ enum DailyReflectionService {
         } else if retryBoost || DailyReflectionPreferences.hasKeywords {
             preferredTemperature = 0.85
         } else {
-            preferredTemperature = 0.7
+            preferredTemperature = 0.82
         }
         let body: [String: Any] = [
             "model": APISettings.effectiveModel,
@@ -871,14 +887,65 @@ enum DailyReflectionService {
         return trimmed
     }
 
-    private static func northernSeasonName(for day: Date) -> String {
-        let month = Calendar.current.component(.month, from: day)
-        switch month {
-        case 3, 4, 5: return "春"
-        case 6, 7, 8: return "夏"
-        case 9, 10, 11: return "秋"
-        default: return "冬"
+    private struct SeasonalMoment {
+        let promptBlock: String
+    }
+
+    /// Approximate northern-hemisphere solar term by month-day; good enough for prompt flavor.
+    private static let solarTerms: [(month: Int, day: Int, name: String, phenology: String)] = [
+        (1, 6, "小寒", "地冻、岁首将尽、炭火与闭门"),
+        (1, 20, "大寒", "一年最冷、残雪、闭藏"),
+        (2, 4, "立春", "冰将解、草芽、东风"),
+        (2, 19, "雨水", "解冻、润物、春寒未尽"),
+        (3, 6, "惊蛰", "雷始、虫动、草木苏"),
+        (3, 21, "春分", "昼夜均、花信、风软"),
+        (4, 5, "清明", "雨、柳、踏青与追念"),
+        (4, 20, "谷雨", "茶、牡丹、春深将尽"),
+        (5, 6, "立夏", "清和、新绿转浓、昼长"),
+        (5, 21, "小满", "麦气、晚春余温、草木盛"),
+        (6, 6, "芒种", "梅近、农忙、湿热将起"),
+        (6, 21, "夏至", "白昼极长、浓荫、炎热初盛"),
+        (7, 7, "小暑", "盛夏、蝉、荷"),
+        (7, 23, "大暑", "酷热、暴雨、伏"),
+        (8, 7, "立秋", "暑始收、一叶、新凉将起"),
+        (8, 23, "处暑", "残暑、晚蝉、早晚凉"),
+        (9, 7, "白露", "露白、桂、秋清"),
+        (9, 23, "秋分", "平分秋色、雁、叶始黄"),
+        (10, 8, "寒露", "霜意、菊、衣要添"),
+        (10, 23, "霜降", "霜、柿、秋深"),
+        (11, 7, "立冬", "闭藏、木落、初寒"),
+        (11, 22, "小雪", "薄寒、初雪或干冷"),
+        (12, 7, "大雪", "冬深、夜长、火与窗"),
+        (12, 22, "冬至", "一阳生、岁晚、最长的夜")
+    ]
+
+    private static func seasonalMoment(for day: Date) -> SeasonalMoment {
+        let calendar = Calendar.current
+        let month = calendar.component(.month, from: day)
+        let monthDay = calendar.component(.day, from: day)
+        let stamp = month * 100 + monthDay
+
+        let indexed = solarTerms.enumerated().map { index, term in
+            (index: index, stamp: term.month * 100 + term.day, term: term)
         }
+        let current = indexed.last { $0.stamp <= stamp } ?? indexed.last!
+        let next = indexed[(current.index + 1) % indexed.count]
+        let season: String
+        switch month {
+        case 3, 4, 5: season = month == 3 ? "初春" : (month == 4 ? "仲春" : "暮春")
+        case 6, 7, 8: season = month == 6 ? "初夏" : (month == 7 ? "盛夏" : "夏末")
+        case 9, 10, 11: season = month == 9 ? "仲秋" : (month == 10 ? "深秋" : "秋末")
+        default: season = month == 12 ? "仲冬" : (month == 1 ? "深冬" : "冬末春将至")
+        }
+
+        let promptBlock = """
+        季节：\(season)
+        当前节气：\(current.term.name)
+        下一节气：\(next.term.name)
+        物候线索：\(current.term.phenology)
+        选句须有这个时节的气息，不要选相反时令的名句。
+        """
+        return SeasonalMoment(promptBlock: promptBlock)
     }
 
     // MARK: - Cache

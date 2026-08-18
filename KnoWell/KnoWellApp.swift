@@ -53,6 +53,7 @@ struct KnoWellApp: App {
                     ContentView()
                         .environmentObject(shareImport)
                         .environment(ReviewSettingsStore.shared)
+                        .environment(AppAccentThemeStore.shared)
                         .environment(CloudAIQuotaStore.shared)
                 } else {
                     FirstLaunchGateView {
@@ -75,11 +76,14 @@ struct KnoWellApp: App {
                         await processShareWorkItems()
                     }
                 }
+                .onReceive(NotificationCenter.default.publisher(for: AppAccentThemeStore.didChangeNotification)) { _ in
+                    AppTabBarLiveChrome.apply()
+                }
                 .onAppear {
                     migratePrivacyAcceptanceIfNeeded()
                     APISettings.migrateToAppGroupIfNeeded()
                     WeChatSignInService.registerIfNeeded()
-                    AppTabBarChrome.apply()
+                    AppTabBarLiveChrome.apply()
                     AppLog.bootstrap()
                     Task {
                         await processShareWorkItems()
@@ -141,3 +145,46 @@ struct KnoWellApp: App {
         }
     }
 }
+
+#if canImport(UIKit)
+/// UIAppearance only affects future bars; poke the live TabView bar so selected tint updates.
+enum AppTabBarLiveChrome {
+    static func apply() {
+        AppTabBarChrome.apply()
+        let snapshot = AppTabBarChrome.makeSnapshot()
+        for scene in UIApplication.shared.connectedScenes {
+            guard let windowScene = scene as? UIWindowScene else { continue }
+            for window in windowScene.windows {
+                window.tintColor = snapshot.accent
+                apply(snapshot, to: window.rootViewController)
+                apply(snapshot, toViewsIn: window)
+            }
+        }
+    }
+
+    private static func apply(_ snapshot: AppTabBarChrome.Snapshot, to viewController: UIViewController?) {
+        guard let viewController else { return }
+        if let tab = viewController as? UITabBarController {
+            apply(snapshot, toTabBar: tab.tabBar)
+        }
+        viewController.children.forEach { apply(snapshot, to: $0) }
+        apply(snapshot, to: viewController.presentedViewController)
+    }
+
+    private static func apply(_ snapshot: AppTabBarChrome.Snapshot, toViewsIn root: UIView) {
+        if let bar = root as? UITabBar {
+            apply(snapshot, toTabBar: bar)
+        }
+        root.subviews.forEach { apply(snapshot, toViewsIn: $0) }
+    }
+
+    private static func apply(_ snapshot: AppTabBarChrome.Snapshot, toTabBar bar: UITabBar) {
+        bar.standardAppearance = snapshot.appearance
+        bar.scrollEdgeAppearance = snapshot.appearance
+        bar.tintColor = snapshot.accent
+        bar.unselectedItemTintColor = snapshot.muted
+        bar.setNeedsLayout()
+        bar.layoutIfNeeded()
+    }
+}
+#endif

@@ -501,6 +501,11 @@ enum L10n {
     static var settingsReviewRevealStyleFlipFooter: String { tr("settings.review.revealStyle.flipFooter") }
     static var settingsReviewReminderEnabled: String { tr("settings.review.reminder.enabled") }
     static var settingsReviewReminderTime: String { tr("settings.review.reminder.time") }
+    static var settingsThemeTitle: String { tr("settings.theme.title") }
+    static var settingsThemeInkTeal: String { tr("settings.theme.inkTeal") }
+    static var settingsThemeInkIndigo: String { tr("settings.theme.inkIndigo") }
+    static var settingsThemeInkViolet: String { tr("settings.theme.inkViolet") }
+    static var settingsThemeFooter: String { tr("settings.theme.footer") }
     static func reviewReminderBody(_ count: Int) -> String { tf("review.reminder.body", count) }
 
     // MARK: - Settings

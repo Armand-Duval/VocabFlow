@@ -195,5 +195,6 @@ struct ContentView: View {
     ContentView()
         .environmentObject(ShareImportCoordinator())
         .environment(ReviewSettingsStore.shared)
+        .environment(AppAccentThemeStore.shared)
         .modelContainer(for: [FlashCard.self, Deck.self], inMemory: true)
 }

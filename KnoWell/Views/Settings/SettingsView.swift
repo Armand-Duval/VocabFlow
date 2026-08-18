@@ -6,6 +6,7 @@ struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(ReviewSettingsStore.self) private var reviewSettings
+    @Environment(AppAccentThemeStore.self) private var accentTheme
     @Environment(CloudAIQuotaStore.self) private var aiQuota
     @ObservedObject private var generationQueue = CardGenerationQueue.shared
 
@@ -101,6 +102,7 @@ struct SettingsView: View {
         @Bindable var reviewSettings = reviewSettings
         ScrollView {
             VStack(spacing: AppSpacing.section) {
+                themeCard
                 reviewCard(
                     dailyNewLimit: $reviewSettings.dailyNewLimit,
                     dailyReviewLimit: $reviewSettings.dailyReviewLimit
@@ -116,6 +118,57 @@ struct SettingsView: View {
             .padding(.bottom, AppSpacing.lg)
         }
         .appVerticalBounce()
+    }
+
+    private var themeCard: some View {
+        settingsSection(title: L10n.settingsThemeTitle) {
+            LazyVGrid(
+                columns: [
+                    GridItem(.flexible(), spacing: AppSpacing.sm),
+                    GridItem(.flexible(), spacing: AppSpacing.sm),
+                    GridItem(.flexible(), spacing: AppSpacing.sm)
+                ],
+                spacing: AppSpacing.sm
+            ) {
+                ForEach(AppAccentTheme.allCases) { theme in
+                    let selected = accentTheme.theme == theme
+                    Button {
+                        accentTheme.setTheme(theme)
+                    } label: {
+                        VStack(spacing: 6) {
+                            Circle()
+                                .fill(theme.swatch)
+                                .frame(width: 18, height: 18)
+                            Text(theme.title)
+                                .font(AppFont.caption())
+                                .fontWeight(selected ? .semibold : .regular)
+                                .foregroundStyle(selected ? AppColor.textPrimary : AppColor.textSecondary)
+                                .lineLimit(1)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(
+                            selected ? AppColor.accentBackground(0.16) : AppColor.surfaceMuted,
+                            in: RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
+                        )
+                        .overlay {
+                            RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
+                                .strokeBorder(
+                                    selected ? AppColor.accent.opacity(0.35) : Color.clear,
+                                    lineWidth: 1
+                                )
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(selected ? .isSelected : [])
+                }
+            }
+
+            Text(L10n.settingsThemeFooter)
+                .font(AppFont.weak())
+                .foregroundStyle(AppColor.textMuted)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     private func reviewCard(
@@ -768,6 +821,7 @@ private struct SettingsNavigationRow: View {
 #Preview {
     SettingsView()
         .environment(ReviewSettingsStore.shared)
+        .environment(AppAccentThemeStore.shared)
         .environment(CloudAIQuotaStore.shared)
         .modelContainer(for: FlashCard.self, inMemory: true)
 }

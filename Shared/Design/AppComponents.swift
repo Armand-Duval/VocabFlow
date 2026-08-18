@@ -1,12 +1,78 @@
 import SwiftUI
+import Observation
 #if canImport(UIKit)
 import UIKit
 #endif
 
+enum AppAccentTheme: String, CaseIterable, Identifiable {
+    case inkTeal
+    case inkIndigo
+    case inkViolet
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .inkTeal: L10n.settingsThemeInkTeal
+        case .inkIndigo: L10n.settingsThemeInkIndigo
+        case .inkViolet: L10n.settingsThemeInkViolet
+        }
+    }
+
+    /// Light-mode brand swatch (黛青 `#1A5A68` / 靛蓝 `#243A6E` / 墨紫 `#3E3554`).
+    var swatch: Color { accentLight }
+
+    var accentLight: Color {
+        switch self {
+        case .inkTeal:
+            Color(red: 0.102, green: 0.353, blue: 0.408)
+        case .inkIndigo:
+            Color(red: 0.141, green: 0.227, blue: 0.431)
+        case .inkViolet:
+            Color(red: 0.243, green: 0.208, blue: 0.329)
+        }
+    }
+
+    var accentDark: Color {
+        switch self {
+        case .inkTeal:
+            Color(red: 0.310, green: 0.620, blue: 0.680)
+        case .inkIndigo:
+            Color(red: 0.557, green: 0.627, blue: 0.769)
+        case .inkViolet:
+            Color(red: 0.659, green: 0.608, blue: 0.769)
+        }
+    }
+}
+
+@Observable
+final class AppAccentThemeStore {
+    static let shared = AppAccentThemeStore()
+    static let didChangeNotification = Notification.Name("com.knowell.accentThemeDidChange")
+    private static let key = "appearance.accentTheme.v1"
+
+    var theme: AppAccentTheme
+
+    private init() {
+        let raw = (UserDefaults(suiteName: ShareImportStore.appGroupID) ?? .standard)
+            .string(forKey: Self.key)
+        theme = AppAccentTheme(rawValue: raw ?? "") ?? .inkTeal
+    }
+
+    func setTheme(_ theme: AppAccentTheme) {
+        guard self.theme != theme else { return }
+        self.theme = theme
+        (UserDefaults(suiteName: ShareImportStore.appGroupID) ?? .standard)
+            .set(theme.rawValue, forKey: Self.key)
+        AppTabBarChrome.apply()
+        NotificationCenter.default.post(name: Self.didChangeNotification, object: nil)
+    }
+}
+
 enum AppColor {
-    // Ink & 黛青 — warm paper + ink teal A (#1A5A68), calm study journal
-    private static let accentLight = Color(red: 0.102, green: 0.353, blue: 0.408)
-    private static let accentDark = Color(red: 0.310, green: 0.620, blue: 0.680)
+    // Ink paper + chosen accent. Default 黛青 `#1A5A68`; also 靛蓝 `#243A6E`, 墨紫 `#3E3554`.
+    private static var accentLight: Color { AppAccentThemeStore.shared.theme.accentLight }
+    private static var accentDark: Color { AppAccentThemeStore.shared.theme.accentDark }
 
     static var accent: Color { Color.adaptive(light: accentLight, dark: accentDark) }
     static var accentStrong: Color { Color.adaptive(light: accentLight, dark: accentDark) }
@@ -533,7 +599,7 @@ extension View {
     }
 
     func appTint() -> some View {
-        tint(AppColor.accent)
+        modifier(AppTintModifier())
     }
 
     func appNavTitle(_ title: String, style: AppNavTitleStyle = .primary) -> some View {
@@ -601,6 +667,22 @@ private struct AppInputSurfaceModifier: ViewModifier {
 enum AppTabBarChrome {
     static func apply() {
         #if canImport(UIKit)
+        let snapshot = makeSnapshot()
+        UITabBar.appearance().standardAppearance = snapshot.appearance
+        UITabBar.appearance().scrollEdgeAppearance = snapshot.appearance
+        UITabBar.appearance().tintColor = snapshot.accent
+        UITabBar.appearance().unselectedItemTintColor = snapshot.muted
+        #endif
+    }
+
+    #if canImport(UIKit)
+    struct Snapshot {
+        let appearance: UITabBarAppearance
+        let accent: UIColor
+        let muted: UIColor
+    }
+
+    static func makeSnapshot() -> Snapshot {
         let paper = UIColor(AppColor.pageBackground)
         let accent = UIColor(AppColor.accent)
         let muted = UIColor(AppColor.textTertiary)
@@ -621,24 +703,31 @@ enum AppTabBarChrome {
             .foregroundColor: accent,
             .font: UIFont.systemFont(ofSize: 10, weight: .bold)
         ]
-        // Slightly stronger selected affordance without a custom tab bar.
         item.selected.badgeBackgroundColor = accent
         appearance.stackedLayoutAppearance = item
         appearance.inlineLayoutAppearance = item
         appearance.compactInlineLayoutAppearance = item
-
-        UITabBar.appearance().standardAppearance = appearance
-        UITabBar.appearance().scrollEdgeAppearance = appearance
-        UITabBar.appearance().tintColor = accent
-        UITabBar.appearance().unselectedItemTintColor = muted
-        #endif
+        return Snapshot(appearance: appearance, accent: accent, muted: muted)
     }
+    #endif
 }
 
 enum AppNavTitleStyle {
     case primary
     case hidden
     case secondary
+}
+
+private struct AppTintModifier: ViewModifier {
+    private var store: AppAccentThemeStore { AppAccentThemeStore.shared }
+
+    func body(content: Content) -> some View {
+        content
+            .tint(AppColor.accent)
+            .onChange(of: store.theme) { _, _ in
+                AppTabBarChrome.apply()
+            }
+    }
 }
 
 private struct AppNavTitleModifier: ViewModifier {
@@ -794,7 +883,8 @@ struct AppTabIcon: View {
 
     var body: some View {
         Image(systemName: systemName)
-            .symbolRenderingMode(.hierarchical)
+            .symbolRenderingMode(.monochrome)
+            .foregroundStyle(isSelected ? AppColor.accent : AppColor.textTertiary)
             .fontWeight(isSelected ? .semibold : AppIcon.weight)
             .animation(.easeInOut(duration: 0.18), value: isSelected)
     }
