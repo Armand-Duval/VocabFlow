@@ -8,6 +8,8 @@ struct LiveTextScanDraft: Identifiable {
     let image: UIImage
     let analysis: ImageAnalysis
     let successBanner: String
+    /// Vision highlighter mask, started in parallel with Live Text analysis.
+    let highlightDetection: Task<OCRResult, Error>
 }
 
 struct LiveTextScanResult {
@@ -36,6 +38,7 @@ enum LiveTextImageAnalyzer {
 struct LiveTextScanSheet: View {
     let image: UIImage
     let analysis: ImageAnalysis
+    let highlightDetection: Task<OCRResult, Error>
     var onComplete: (LiveTextScanResult) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -44,11 +47,19 @@ struct LiveTextScanSheet: View {
     @State private var words: [String] = []
     @State private var feedback: String?
     @State private var highlightsVisible = true
+    @State private var isDetectingHighlights = true
+    @State private var didApplyHighlights = false
     private let pageText: String
 
-    init(image: UIImage, analysis: ImageAnalysis, onComplete: @escaping (LiveTextScanResult) -> Void) {
+    init(
+        image: UIImage,
+        analysis: ImageAnalysis,
+        highlightDetection: Task<OCRResult, Error>,
+        onComplete: @escaping (LiveTextScanResult) -> Void
+    ) {
         self.image = image
         self.analysis = analysis
+        self.highlightDetection = highlightDetection
         self.onComplete = onComplete
         let transcript = ImageOCRService.sanitizeOCRText(analysis.transcript)
         pageText = transcript
@@ -109,6 +120,9 @@ struct LiveTextScanSheet: View {
                         .fontWeight(.semibold)
                 }
             }
+            .task {
+                await applyHighlighterWordsIfNeeded()
+            }
         }
     }
 
@@ -126,11 +140,26 @@ struct LiveTextScanSheet: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
 
+            if isDetectingHighlights, words.isEmpty {
+                HStack(spacing: 8) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text(L10n.liveTextDetectingHighlights)
+                        .font(AppFont.helper())
+                        .foregroundStyle(AppColor.textMuted)
+                }
+            }
+
             if !words.isEmpty {
-                Text(words.joined(separator: " · "))
-                    .font(AppFont.helper())
-                    .foregroundStyle(AppColor.accent)
-                    .lineLimit(2)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(Array(words.enumerated()), id: \.offset) { index, word in
+                            LiveTextWordChip(word: word) {
+                                words.remove(at: index)
+                            }
+                        }
+                    }
+                }
             }
 
             if let feedback {
@@ -183,13 +212,44 @@ struct LiveTextScanSheet: View {
     }
 
     private func finish() {
-        let source = resolvedSourceText()
-        guard !source.isEmpty else {
-            feedback = L10n.ocrEmpty
+        Task { @MainActor in
+            await applyHighlighterWordsIfNeeded()
+            let source = resolvedSourceText()
+            guard !source.isEmpty else {
+                feedback = L10n.ocrEmpty
+                return
+            }
+            onComplete(LiveTextScanResult(sentence: source, words: words))
+            dismiss()
+        }
+    }
+
+    /// Seed highlighter vocabulary without blocking Live Text tap-to-select.
+    @MainActor
+    private func applyHighlighterWordsIfNeeded() async {
+        guard !didApplyHighlights else { return }
+        let result: OCRResult
+        do {
+            result = try await highlightDetection.value
+        } catch {
+            didApplyHighlights = true
+            isDetectingHighlights = false
             return
         }
-        onComplete(LiveTextScanResult(sentence: source, words: words))
-        dismiss()
+        didApplyHighlights = true
+        isDetectingHighlights = false
+        guard result.importKind == .highlight else { return }
+
+        var added = 0
+        let refined = HighlightPhraseMerger.refine(result.preferredImportWords, against: pageText)
+        for word in refined {
+            if case .added = VocabularyWords.append(word, to: &words) {
+                added += 1
+            }
+        }
+        if added > 0 {
+            feedback = L10n.liveTextHighlightsDetected(added)
+        }
     }
 
     /// Keep every selected word with its own sentence, not just the first hit.
@@ -334,6 +394,34 @@ final class LiveTextZoomView: UIView, UIScrollViewDelegate, ImageAnalysisInterac
         let insetX = max((bounds.width - scrollView.contentSize.width) / 2, 0)
         let insetY = max((bounds.height - scrollView.contentSize.height) / 2, 0)
         scrollView.contentInset = UIEdgeInsets(top: insetY, left: insetX, bottom: insetY, right: insetX)
+    }
+}
+
+private struct LiveTextWordChip: View {
+    let word: String
+    let onRemove: () -> Void
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Text(word)
+                .font(AppFont.helper())
+                .foregroundStyle(AppColor.accent)
+                .lineLimit(1)
+
+            Button(action: onRemove) {
+                Image(systemName: "xmark")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(AppColor.textMuted)
+                    .frame(width: 16, height: 16)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text(L10n.cancel))
+        }
+        .padding(.leading, AppSpacing.sm)
+        .padding(.trailing, 6)
+        .padding(.vertical, 5)
+        .background(AppColor.accentBackground(0.12), in: Capsule())
     }
 }
 #endif

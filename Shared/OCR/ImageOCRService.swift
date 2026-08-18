@@ -50,7 +50,11 @@ enum ImageOCRService {
             log("3) highlight mask = nil → no highlighted words")
         }
 
-        let highlighted = extractHighlightedWords(from: vision.tokens, mask: mask)
+        let highlighted = extractHighlightedWords(
+            from: vision.tokens,
+            mask: mask,
+            fullText: vision.fullText
+        )
         let units = OCRContextExtractor.importUnits(
             fullText: vision.fullText,
             highlightedWords: highlighted
@@ -417,7 +421,8 @@ enum ImageOCRService {
 
     private static func extractHighlightedWords(
         from tokens: [OCRToken],
-        mask: HighlightMaskDetector.Mask?
+        mask: HighlightMaskDetector.Mask?,
+        fullText: String
     ) -> [String] {
         guard let mask else { return [] }
         // Require enough highlight ink overall; otherwise treat as no markers.
@@ -471,13 +476,18 @@ enum ImageOCRService {
         \(coverageRows.isEmpty ? "   (none)" : coverageRows.joined(separator: "\n"))
         """)
 
-        let unique = HighlightPhraseMerger.merge(tokens: mergerTokens, hitThreshold: threshold)
-        if unique.isEmpty {
+        let unique = HighlightPhraseMerger.merge(
+            tokens: mergerTokens,
+            hitThreshold: threshold,
+            pageText: fullText
+        )
+        let refined = HighlightPhraseMerger.refine(unique, against: fullText)
+        if refined.isEmpty {
             log("4b) no merged highlight phrases")
         } else {
-            log("4c) merged phrases: \(unique)")
+            log("4c) merged phrases: \(unique) → refined: \(refined)")
         }
-        return unique
+        return refined
     }
 
     private static func configure(

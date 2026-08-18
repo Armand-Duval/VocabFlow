@@ -25,7 +25,16 @@ enum HighlightMaskDetector {
         /// Note: glyph centers often land on black ink, so callers should NOT require
         /// the geometric center to be on the highlight mask.
         func highlightCoverage(ofNormalizedBox box: CGRect) -> Double {
-            let samples = samplePoints(in: box)
+            // Highlighter ink often sits a little below the glyph box.
+            let padY = max(box.height * 0.22, 0.004)
+            let padX = box.width * 0.04
+            let expanded = CGRect(
+                x: box.minX - padX,
+                y: box.minY - padY,
+                width: box.width + padX * 2,
+                height: box.height + padY * 2
+            )
+            let samples = samplePoints(in: expanded)
             guard !samples.isEmpty else { return 0 }
             let hits = samples.reduce(0) { partial, point in
                 partial + (isOn(x: point.x, y: point.y) ? 1 : 0)
@@ -34,9 +43,8 @@ enum HighlightMaskDetector {
         }
 
         private func samplePoints(in box: CGRect) -> [(x: Int, y: Int)] {
-            // Prefer mid-band of the glyph box (highlight sits behind text strokes).
-            let xs = [0.30, 0.50, 0.70].map { box.minX + box.width * $0 }
-            let ys = [0.40, 0.50, 0.60].map { box.minY + box.height * $0 }
+            let xs = [0.18, 0.38, 0.50, 0.62, 0.82].map { box.minX + box.width * $0 }
+            let ys = [0.22, 0.38, 0.50, 0.62, 0.78].map { box.minY + box.height * $0 }
             var points: [(Int, Int)] = []
             for nx in xs {
                 for ny in ys {
@@ -115,11 +123,12 @@ enum HighlightMaskDetector {
     /// Slightly looser than the zero-hit pass so real marker pixels fill glyph boxes (~0.44+).
     private static func looksLikeHighlighter(r: Double, g: Double, b: Double) -> Bool {
         let hsv = rgbToHSV(r: r, g: g, b: b)
-        guard hsv.s >= 0.18, hsv.v >= 0.35, hsv.v <= 0.97 else { return false }
+        guard hsv.s >= 0.14, hsv.v >= 0.32, hsv.v <= 0.98 else { return false }
 
         let h = hsv.h
         let yellowChroma = ((r + g) * 0.5) - b
-        let yellow = h >= 36 && h <= 74 && hsv.s >= 0.22 && yellowChroma >= 0.06
+        // Pale book-marker yellow sits a bit below the mid-page strokes.
+        let yellow = h >= 36 && h <= 74 && hsv.s >= 0.16 && yellowChroma >= 0.045
         // Skip teal/cyan — App accent + tab chrome false-positive as highlighter on screenshots.
         let green = h >= 72 && h <= 150 && hsv.s >= 0.22
         let pink = (h >= 300 || h <= 20) && hsv.s >= 0.22

@@ -282,6 +282,10 @@ enum L10n {
     static var liveTextAddWord: String { tr("liveText.addWord") }
     static var liveTextUseAsSource: String { tr("liveText.useAsSource") }
     static var liveTextSourceUpdated: String { tr("liveText.sourceUpdated") }
+    static var liveTextDetectingHighlights: String { tr("liveText.detectingHighlights") }
+    static func liveTextHighlightsDetected(_ count: Int) -> String {
+        tf("liveText.highlightsDetected", count)
+    }
     static func liveTextImported(_ count: Int) -> String { tf("liveText.imported", count) }
 
     // MARK: - Card types

@@ -175,7 +175,26 @@ enum OCRChromeFilter {
 
         let escaped = NSRegularExpression.escapedPattern(for: trimmed)
         let pattern = "\\b\(escaped)\\b"
-        return fullText.range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil
+        if fullText.range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil {
+            return true
+        }
+        // Book wrap: "dis-\npensed" / "dis- pensed" / "dis pensed" should accept "dispensed".
+        let unwrapped = fullText.replacingOccurrences(
+            of: #"([A-Za-z])-\s+"#,
+            with: "$1",
+            options: .regularExpression
+        )
+        if unwrapped.range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil {
+            return true
+        }
+        let compact = trimmed.replacingOccurrences(
+            of: #"[\s\-‐‑–]+"#,
+            with: "",
+            options: .regularExpression
+        )
+        guard compact.count >= 4, compact != trimmed else { return false }
+        let compactPattern = "\\b\(NSRegularExpression.escapedPattern(for: compact))\\b"
+        return unwrapped.range(of: compactPattern, options: [.regularExpression, .caseInsensitive]) != nil
     }
 
     /// Overlay control vs body text. Geometry / typography only — screenshots

@@ -6880,13 +6880,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tap a highlighted word, or swipe to select a sentence."
+            "value": "Highlighter words are added automatically. Tap to add more, or swipe to select a sentence."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "点高亮的词，或在图上划选句子。"
+            "value": "荧光笔上的词会自动加入。可点选补充，或划选句子。"
           }
         }
       }
@@ -6904,6 +6904,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "显示可点选的文字"
+          }
+        }
+      }
+    },
+    "liveText.detectingHighlights": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finding highlighted words…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在识别荧光笔生词…"
+          }
+        }
+      }
+    },
+    "liveText.highlightsDetected": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added %lld highlighted word(s). Tap to add more, or tap × to remove."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已自动加入 %lld 个荧光笔生词，可点选补充或点 × 删除。"
           }
         }
       }

@@ -142,7 +142,11 @@ struct CreateCardsView: View {
                     .ignoresSafeArea()
                 }
                 .fullScreenCover(item: $liveTextDraft) { draft in
-                    LiveTextScanSheet(image: draft.image, analysis: draft.analysis) { result in
+                    LiveTextScanSheet(
+                        image: draft.image,
+                        analysis: draft.analysis,
+                        highlightDetection: draft.highlightDetection
+                    ) { result in
                         applyLiveTextResult(result, image: draft.image, banner: draft.successBanner)
                     }
                 }
@@ -685,6 +689,7 @@ struct CreateCardsView: View {
     @MainActor
     private func importCapturedImage(_ image: UIImage, successBanner: String) async {
         isPreparingCapture = true
+        let highlightTask = Task { try await ImageOCRService.recognize(in: image) }
         var openedLiveText = false
         if LiveTextImageAnalyzer.isSupported {
             do {
@@ -694,7 +699,8 @@ struct CreateCardsView: View {
                     liveTextDraft = LiveTextScanDraft(
                         image: image,
                         analysis: analysis,
-                        successBanner: successBanner
+                        successBanner: successBanner,
+                        highlightDetection: highlightTask
                     )
                     openedLiveText = true
                 }
@@ -707,7 +713,12 @@ struct CreateCardsView: View {
 
         isRunningOCR = true
         defer { isRunningOCR = false }
-        await recognizeImage(image, successBanner: successBanner)
+        do {
+            let result = try await highlightTask.value
+            applyOCRResult(result, image: image, successBanner: successBanner)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     @MainActor
@@ -736,48 +747,43 @@ struct CreateCardsView: View {
     }
 
     @MainActor
-    private func recognizeImage(_ image: UIImage, successBanner: String) async {
-        do {
-            let result = try await ImageOCRService.recognize(in: image)
-            let importSentence = result.preferredImportSentence
-            guard !importSentence.isEmpty else {
-                errorMessage = L10n.ocrEmpty
-                return
-            }
+    private func applyOCRResult(_ result: OCRResult, image: UIImage, successBanner: String) {
+        let importSentence = result.preferredImportSentence
+        guard !importSentence.isEmpty else {
+            errorMessage = L10n.ocrEmpty
+            return
+        }
 
-            // Highlight hits → word + containing sentence only (not the whole page).
-            sentence = importSentence
-            sourceMode = .pick
-            sourceHint = OCRContextExtractor.sourceHint(from: result.fullText)
-            sourceImagePath = CardSourceImageStore.saveJPEG(image)
-            if let hint = sourceHint?.trimmingCharacters(in: .whitespacesAndNewlines), !hint.isEmpty {
-                appreciationSource = hint
-            }
-            if result.hasHighlightContext {
-                words = []
-            }
+        // Highlight hits → word + containing sentence only (not the whole page).
+        sentence = importSentence
+        sourceMode = .pick
+        sourceHint = OCRContextExtractor.sourceHint(from: result.fullText)
+        sourceImagePath = CardSourceImageStore.saveJPEG(image)
+        if let hint = sourceHint?.trimmingCharacters(in: .whitespacesAndNewlines), !hint.isEmpty {
+            appreciationSource = hint
+        }
+        if result.hasHighlightContext {
+            words = []
+        }
 
-            var addedHighlights = 0
-            for word in result.preferredImportWords {
-                if case .added = appendCreateWord(word) {
-                    addedHighlights += 1
-                }
+        var addedHighlights = 0
+        for word in result.preferredImportWords {
+            if case .added = appendCreateWord(word) {
+                addedHighlights += 1
             }
+        }
 
-            if result.importKind == .vocabPage {
-                showToast(L10n.ocrVocabPage(result.preferredImportWords.count))
-            } else if result.hasHighlightContext {
-                showToast(L10n.ocrHighlightContext(
-                    addedHighlights,
-                    result.importUnits.count
-                ))
-            } else if addedHighlights > 0 {
-                showToast(L10n.ocrHighlightDetected(addedHighlights))
-            } else {
-                showToast(successBanner)
-            }
-        } catch {
-            errorMessage = error.localizedDescription
+        if result.importKind == .vocabPage {
+            showToast(L10n.ocrVocabPage(result.preferredImportWords.count))
+        } else if result.hasHighlightContext {
+            showToast(L10n.ocrHighlightContext(
+                addedHighlights,
+                result.importUnits.count
+            ))
+        } else if addedHighlights > 0 {
+            showToast(L10n.ocrHighlightDetected(addedHighlights))
+        } else {
+            showToast(successBanner)
         }
     }
 
