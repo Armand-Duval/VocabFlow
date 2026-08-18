@@ -100,6 +100,25 @@ class ExtensionImportViewController: UIViewController {
         AppLog.info("handoff start items=\(inputItems.count) attachments=\(attachmentCount)", category: "Share")
 
         Task {
+            // Photos Live Text shares both the selected text and a screenshot.
+            // Prefer the text so the host app does not OCR the image.
+            let providers = inputItems.flatMap { $0.attachments ?? [] }
+            for provider in providers {
+                if let text = await ShareTextExtractor.loadText(from: provider), !text.isEmpty {
+                    AppLog.info("handoff live-text chars=\(text.count)", category: "Share")
+                    await MainActor.run {
+                        presentEditor(
+                            sentence: text,
+                            highlightedWords: [],
+                            sourceHint: nil,
+                            sourceImagePath: nil,
+                            preferSharedSentence: false
+                        )
+                    }
+                    return
+                }
+            }
+
             if ShareTextExtractor.hasImageAttachment(in: inputItems) {
                 if let relativePath = await ShareTextExtractor.ingestFirstImage(from: inputItems) {
                     AppLog.info("handoff inbox file=\(relativePath)", category: "Share")

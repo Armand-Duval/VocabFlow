@@ -25,6 +25,7 @@ struct CreateCardsView: View {
     @State private var appreciationSource = ""
     @State private var showPhotoLibrary = false
     @State private var showCamera = false
+    @State private var liveTextDraft: LiveTextScanDraft?
     @State private var isManualEditing = false
     @State private var sourceHint: String?
     @State private var sourceImagePath: String?
@@ -131,6 +132,11 @@ struct CreateCardsView: View {
                         Task { await importCapturedImage(image, successBanner: L10n.importFromCameraSuccess) }
                     }
                     .ignoresSafeArea()
+                }
+                .fullScreenCover(item: $liveTextDraft) { draft in
+                    LiveTextScanSheet(image: draft.image, analysis: draft.analysis) { result in
+                        applyLiveTextResult(result, image: draft.image, banner: draft.successBanner)
+                    }
                 }
                 .onChange(of: trimmedSentence.isEmpty) { _, isEmpty in
                     if isEmpty { sourceMode = .edit }
@@ -529,7 +535,51 @@ struct CreateCardsView: View {
     private func importCapturedImage(_ image: UIImage, successBanner: String) async {
         isRecognizingPhoto = true
         defer { isRecognizingPhoto = false }
+
+        if LiveTextImageAnalyzer.isSupported {
+            do {
+                let analysis = try await LiveTextImageAnalyzer.analyze(image)
+                let transcript = ImageOCRService.sanitizeOCRText(analysis.transcript)
+                if analysis.hasResults(for: .text), !transcript.isEmpty {
+                    liveTextDraft = LiveTextScanDraft(
+                        image: image,
+                        analysis: analysis,
+                        successBanner: successBanner
+                    )
+                    return
+                }
+            } catch {
+                // Unsupported, empty, or analyzer error → existing Vision OCR.
+            }
+        }
+
         await recognizeImage(image, successBanner: successBanner)
+    }
+
+    @MainActor
+    private func applyLiveTextResult(_ result: LiveTextScanResult, image: UIImage, banner: String) {
+        sentence = result.sentence
+        sourceHint = OCRContextExtractor.sourceHint(from: result.sentence)
+        sourceImagePath = CardSourceImageStore.saveJPEG(image)
+        if let hint = sourceHint?.trimmingCharacters(in: .whitespacesAndNewlines), !hint.isEmpty {
+            appreciationSource = hint
+        }
+
+        words = []
+        var added = 0
+        for word in result.words {
+            if case .added = appendCreateWord(word) {
+                added += 1
+            }
+        }
+
+        if added > 0 {
+            showToast(L10n.liveTextImported(added))
+            sourceMode = .pick
+        } else {
+            showToast(banner)
+            sourceMode = .edit
+        }
     }
 
     @MainActor
@@ -646,6 +696,15 @@ struct CreateCardsView: View {
 
     private func applyShareImportIfNeeded() {
         guard let payload = shareImport.pendingPayload else { return }
+
+        let hasSentence = !payload.sentence.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        if !hasSentence, let imagePath = payload.sourceImagePath,
+           let image = CardSourceImageStore.loadUIImage(relativePath: imagePath) {
+            shareImport.acknowledgeImport()
+            Task { await importCapturedImage(image, successBanner: L10n.importFromPhotoSuccess) }
+            return
+        }
+
         sentence = payload.sentence
         if let word = payload.selectedWord {
             words = VocabularyWords.parse(from: word)
@@ -699,7 +758,7 @@ struct CreateCardsView: View {
                 isRecognizingPhoto = false
                 ShareImportStore.removeInboxFile(relativePath)
             }
-            await recognizeImage(image, successBanner: L10n.importShareSentence)
+            await importCapturedImage(image, successBanner: L10n.importShareSentence)
         }
     }
 

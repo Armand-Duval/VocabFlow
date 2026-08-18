@@ -274,6 +274,12 @@ enum L10n {
     static func ocrVocabPage(_ count: Int) -> String {
         tf("import.ocr.vocabPage", count)
     }
+    static var liveTextTitle: String { tr("liveText.title") }
+    static var liveTextHint: String { tr("liveText.hint") }
+    static var liveTextAddWord: String { tr("liveText.addWord") }
+    static var liveTextUseAsSource: String { tr("liveText.useAsSource") }
+    static var liveTextSourceUpdated: String { tr("liveText.sourceUpdated") }
+    static func liveTextImported(_ count: Int) -> String { tf("liveText.imported", count) }
 
     // MARK: - Card types
 
