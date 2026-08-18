@@ -6880,13 +6880,30 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Select a word or sentence on the page."
+            "value": "Tap a highlighted word, or swipe to select a sentence."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "在图上划选单词或句子。"
+            "value": "点高亮的词，或在图上划选句子。"
+          }
+        }
+      }
+    },
+    "liveText.toggleHighlights": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show selectable text"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "显示可点选的文字"
           }
         }
       }

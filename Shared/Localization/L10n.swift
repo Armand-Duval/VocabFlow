@@ -277,6 +277,7 @@ enum L10n {
     }
     static var liveTextTitle: String { tr("liveText.title") }
     static var liveTextHint: String { tr("liveText.hint") }
+    static var liveTextToggleHighlights: String { tr("liveText.toggleHighlights") }
     static var liveTextAddWord: String { tr("liveText.addWord") }
     static var liveTextUseAsSource: String { tr("liveText.useAsSource") }
     static var liveTextSourceUpdated: String { tr("liveText.sourceUpdated") }

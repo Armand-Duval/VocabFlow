@@ -43,12 +43,15 @@ struct LiveTextScanSheet: View {
     @State private var sentence: String
     @State private var words: [String] = []
     @State private var feedback: String?
+    @State private var highlightsVisible = true
+    private let pageText: String
 
     init(image: UIImage, analysis: ImageAnalysis, onComplete: @escaping (LiveTextScanResult) -> Void) {
         self.image = image
         self.analysis = analysis
         self.onComplete = onComplete
         let transcript = ImageOCRService.sanitizeOCRText(analysis.transcript)
+        pageText = transcript
         _sentence = State(initialValue: transcript)
     }
 
@@ -59,11 +62,37 @@ struct LiveTextScanSheet: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                LiveTextImageCanvas(
-                    image: image,
-                    analysis: analysis,
-                    selectedText: $selectedText
-                )
+                ZStack(alignment: .bottomTrailing) {
+                    LiveTextImageCanvas(
+                        image: image,
+                        analysis: analysis,
+                        selectedText: $selectedText,
+                        highlightsVisible: highlightsVisible
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                    Button {
+                        highlightsVisible.toggle()
+                    } label: {
+                        Image(systemName: "text.viewfinder")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(highlightsVisible ? Color.white : AppColor.textPrimary)
+                            .frame(width: 36, height: 36)
+                            .background(
+                                highlightsVisible ? AppColor.accentStrong : AppColor.surface,
+                                in: RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            )
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .strokeBorder(AppColor.border, lineWidth: 1)
+                            }
+                            .appSoftShadow()
+                    }
+                    .buttonStyle(SoftPressButtonStyle())
+                    .padding(12)
+                    .accessibilityLabel(L10n.liveTextToggleHighlights)
+                    .accessibilityAddTraits(highlightsVisible ? .isSelected : [])
+                }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
                 controls
@@ -138,9 +167,6 @@ struct LiveTextScanSheet: View {
         guard !word.isEmpty else { return }
         switch VocabularyWords.append(word, to: &words) {
         case .added:
-            if sentence.count > 220, let around = OCRContextExtractor.sentenceContaining(word, in: sentence) {
-                sentence = around
-            }
             feedback = L10n.wordAdded(word)
         case .duplicate:
             feedback = L10n.wordDuplicate(word)
@@ -157,13 +183,30 @@ struct LiveTextScanSheet: View {
     }
 
     private func finish() {
-        let text = sentence.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else {
+        let source = resolvedSourceText()
+        guard !source.isEmpty else {
             feedback = L10n.ocrEmpty
             return
         }
-        onComplete(LiveTextScanResult(sentence: text, words: words))
+        onComplete(LiveTextScanResult(sentence: source, words: words))
         dismiss()
+    }
+
+    /// Keep every selected word with its own sentence, not just the first hit.
+    private func resolvedSourceText() -> String {
+        let page = pageText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let fallback = sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !words.isEmpty, !page.isEmpty else {
+            return fallback.isEmpty ? page : fallback
+        }
+
+        let units = OCRContextExtractor.importUnits(fullText: page, highlightedWords: words)
+        let joined = units
+            .map(\.sentence)
+            .joined(separator: "\n\n")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if !joined.isEmpty { return joined }
+        return fallback.isEmpty ? page : fallback
     }
 }
 
@@ -171,16 +214,18 @@ private struct LiveTextImageCanvas: UIViewRepresentable {
     let image: UIImage
     let analysis: ImageAnalysis
     @Binding var selectedText: String
+    var highlightsVisible: Bool
 
     func makeUIView(context: Context) -> LiveTextZoomView {
         let view = LiveTextZoomView()
         view.onSelectionChange = { selectedText = $0 }
-        view.configure(image: image, analysis: analysis)
+        view.configure(image: image, analysis: analysis, highlightsVisible: highlightsVisible)
         return view
     }
 
     func updateUIView(_ uiView: LiveTextZoomView, context: Context) {
         uiView.onSelectionChange = { selectedText = $0 }
+        uiView.setHighlightsVisible(highlightsVisible)
     }
 }
 
@@ -191,9 +236,12 @@ final class LiveTextZoomView: UIView, UIScrollViewDelegate, ImageAnalysisInterac
     private let imageView = UIImageView()
     private let interaction = ImageAnalysisInteraction()
     private var hasFittedZoom = false
+    private var highlightsVisible = true
+    private var hasRevealedHighlights = false
 
     override init(frame: CGRect) {
         super.init(frame: frame)
+        clipsToBounds = true
         scrollView.delegate = self
         scrollView.minimumZoomScale = 1
         scrollView.maximumZoomScale = 5
@@ -203,7 +251,6 @@ final class LiveTextZoomView: UIView, UIScrollViewDelegate, ImageAnalysisInterac
         imageView.isUserInteractionEnabled = true
         imageView.addInteraction(interaction)
         interaction.delegate = self
-        interaction.preferredInteractionTypes = .textSelection
         interaction.allowLongPressForDataDetectorsInTextMode = false
         interaction.isSupplementaryInterfaceHidden = true
         addSubview(scrollView)
@@ -214,13 +261,22 @@ final class LiveTextZoomView: UIView, UIScrollViewDelegate, ImageAnalysisInterac
         fatalError("init(coder:) has not been implemented")
     }
 
-    func configure(image: UIImage, analysis: ImageAnalysis) {
+    func configure(image: UIImage, analysis: ImageAnalysis, highlightsVisible: Bool) {
+        self.highlightsVisible = highlightsVisible
         imageView.image = image
         imageView.frame = CGRect(origin: .zero, size: image.size)
         scrollView.contentSize = image.size
         interaction.analysis = analysis
+        interaction.preferredInteractionTypes = .automaticTextOnly
         hasFittedZoom = false
+        hasRevealedHighlights = false
         setNeedsLayout()
+    }
+
+    func setHighlightsVisible(_ visible: Bool) {
+        highlightsVisible = visible
+        guard hasRevealedHighlights else { return }
+        applyHighlights()
     }
 
     override func layoutSubviews() {
@@ -232,6 +288,7 @@ final class LiveTextZoomView: UIView, UIScrollViewDelegate, ImageAnalysisInterac
         scrollView.zoomScale = scale
         hasFittedZoom = true
         centerImage()
+        playScanReveal()
     }
 
     func viewForZooming(in scrollView: UIScrollView) -> UIView? { imageView }
@@ -242,6 +299,34 @@ final class LiveTextZoomView: UIView, UIScrollViewDelegate, ImageAnalysisInterac
 
     func textSelectionDidChange(_ interaction: ImageAnalysisInteraction) {
         onSelectionChange?(interaction.selectedText)
+    }
+
+    private func playScanReveal() {
+        guard !hasRevealedHighlights else { return }
+        interaction.selectableItemsHighlighted = false
+
+        let line = UIView()
+        line.isUserInteractionEnabled = false
+        line.backgroundColor = UIColor(AppColor.accent).withAlphaComponent(0.38)
+        line.frame = CGRect(x: 0, y: -2, width: bounds.width, height: 2)
+        addSubview(line)
+
+        UIView.animate(withDuration: 0.55, delay: 0.06, options: .curveEaseInOut, animations: {
+            line.frame.origin.y = self.bounds.height
+        }, completion: { _ in
+            line.removeFromSuperview()
+            self.hasRevealedHighlights = true
+            self.applyHighlights()
+        })
+    }
+
+    private func applyHighlights() {
+        interaction.selectableItemsHighlighted = highlightsVisible
+        // Assigning analysis can clear this flag; restore on the next run loop.
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.interaction.selectableItemsHighlighted = self.highlightsVisible
+        }
     }
 
     private func centerImage() {

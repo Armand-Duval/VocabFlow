@@ -772,7 +772,7 @@ struct CreateCardsView: View {
 
     @MainActor
     private func appendCreateWord(_ word: String) -> VocabularyWordAddResult {
-        let trimmed = word.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = VocabularyWords.normalized(word)
         guard !trimmed.isEmpty else { return .empty }
         if wordExistsInSelectedDeck(trimmed) {
             return .existsInDeck(trimmed)
