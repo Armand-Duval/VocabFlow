@@ -3,6 +3,7 @@ import os
 #if canImport(UIKit)
 import UIKit
 import Vision
+import VisionKit
 #endif
 
 enum ImageOCRService {
@@ -14,6 +15,25 @@ enum ImageOCRService {
     /// Backward-compatible: full text only.
     static func recognizeText(in image: UIImage) async throws -> String {
         try await recognize(in: image).fullText
+    }
+
+    /// Try Live Text first (iOS 16+), fallback to Vision OCR.
+    /// Live Text is faster and more accurate but doesn't support highlighter detection.
+    static func recognizeWithLiveTextFallback(in image: UIImage) async throws -> OCRResult {
+        #if canImport(UIKit)
+        if #available(iOS 16.0, *) {
+            if let liveTextResult = try? await recognizeLiveText(in: image) {
+                log("""
+                ——— Live Text success ———
+                fullText preview: \(liveTextResult.fullText.prefix(160).replacingOccurrences(of: "\n", with: "↵"))
+                ——— Live Text end ———
+                """)
+                return liveTextResult
+            }
+            log("Live Text failed or unavailable, falling back to Vision OCR")
+        }
+        #endif
+        return try await recognize(in: image)
     }
 
     /// Vision OCR + OpenCV-style highlighter mask → candidate vocabulary words.
@@ -274,6 +294,35 @@ enum ImageOCRService {
                 options: .regularExpression
             )
             .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Live Text recognition using VisionKit ImageAnalyzer (iOS 16+).
+    /// Faster and more accurate than Vision OCR, but no highlighter detection.
+    @available(iOS 16.0, *)
+    private static func recognizeLiveText(in image: UIImage) async throws -> OCRResult? {
+        guard let cgImage = image.normalizedCGImageForOCR() else {
+            return nil
+        }
+
+        let analyzer = ImageAnalyzer()
+        let configuration = ImageAnalyzer.Configuration([.text])
+
+        let analysis = try await analyzer.analyze(cgImage, configuration: configuration)
+        guard analysis.hasResults(for: .text) else {
+            return nil
+        }
+
+        let transcript = analysis.transcript
+        guard !transcript.isEmpty else {
+            return nil
+        }
+
+        return OCRResult(
+            fullText: transcript,
+            highlightedWords: [],
+            importUnits: [],
+            sourceImagePath: nil
+        )
     }
     #endif
 }

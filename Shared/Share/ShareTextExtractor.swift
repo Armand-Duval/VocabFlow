@@ -207,6 +207,17 @@ enum ShareTextExtractor {
         await loadOCRFromImages(from: extensionItems)?.fullText
     }
 
+    /// Save shared image to App Group storage without performing OCR.
+    /// OCR will be performed later in the main app.
+    static func saveSharedImage(from extensionItems: [NSExtensionItem]) async -> String? {
+        let providers = extensionItems.flatMap { $0.attachments ?? [] }
+        for provider in providers {
+            guard let image = await loadUIImage(from: provider) else { continue }
+            return CardSourceImageStore.saveJPEG(image)
+        }
+        return nil
+    }
+
     static func loadOCRFromImages(from extensionItems: [NSExtensionItem]) async -> OCRResult? {
         let providers = extensionItems.flatMap { $0.attachments ?? [] }
         for provider in providers {

@@ -44,8 +44,9 @@ class ExtensionImportViewController: UIViewController {
                 }
             }
             
-            if let ocr = await ShareTextExtractor.loadOCRFromImages(from: inputItems) {
-                presentOCREditor(ocr)
+            if let imagePath = await ShareTextExtractor.saveSharedImage(from: inputItems) {
+                ShareImportStore.save(sentence: "", selectedWord: nil, sourceHint: nil, sourceImagePath: imagePath)
+                completeExtension()
             } else {
                 showRecoverableError(L10n.extensionNoText)
             }
