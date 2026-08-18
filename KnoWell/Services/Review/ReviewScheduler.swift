@@ -199,7 +199,7 @@ enum ReviewScheduler {
 
         if grade == 1 {
             snapshot.fsrsState = .learning
-            snapshot.learningStep = 1
+            snapshot.learningStep = 0
             snapshot.intervalDays = 0
             snapshot.nextReviewDate = addMinutes(learningStepsMinutes[0], to: now)
         } else if grade == 2 {
@@ -228,12 +228,13 @@ enum ReviewScheduler {
         snapshot.difficulty = nextDifficulty(d: snapshot.difficulty, grade: grade)
         snapshot.stability = nextShortTermStability(s: snapshot.stability, grade: grade)
 
+        let steps = shortTermSteps(for: snapshot.fsrsState)
+        let currentStep = min(max(snapshot.learningStep, 0), steps.count - 1)
+
         if grade == 1 {
-            snapshot.lapses += 1
-            snapshot.fsrsState = .relearning
             snapshot.learningStep = 0
             snapshot.intervalDays = 0
-            snapshot.nextReviewDate = addMinutes(relearningMinutes, to: now)
+            snapshot.nextReviewDate = addMinutes(steps[0], to: now)
             return
         }
 
@@ -242,17 +243,20 @@ enum ReviewScheduler {
             return
         }
 
-        // Hard / Good: advance short-term steps, then graduate.
-        if snapshot.learningStep < learningStepsMinutes.count {
-            let index = min(max(snapshot.learningStep, 0), learningStepsMinutes.count - 1)
-            snapshot.fsrsState = snapshot.fsrsState == .relearning ? .relearning : .learning
-            snapshot.learningStep += 1
+        // Hard / Good must never be shorter than Again.
+        let nextStep = currentStep + 1
+        if nextStep < steps.count {
+            snapshot.learningStep = nextStep
             snapshot.intervalDays = 0
-            snapshot.nextReviewDate = addMinutes(learningStepsMinutes[index], to: now)
+            snapshot.nextReviewDate = addMinutes(steps[nextStep], to: now)
             return
         }
 
         graduateToReview(snapshot: &snapshot, now: now, retention: retention)
+    }
+
+    private static func shortTermSteps(for state: FSRSCardState) -> [Int] {
+        state == .relearning ? [relearningMinutes] : learningStepsMinutes
     }
 
     private static func scheduleReview(
