@@ -19,7 +19,8 @@ struct CreateCardsView: View {
     @State private var selectionClearNonce = 0
     @State private var wordFeedbackMessage: String?
     @State private var wordFeedbackIsError = false
-    @State private var isRecognizingPhoto = false
+    @State private var isPreparingCapture = false
+    @State private var isRunningOCR = false
     @State private var isGeneratingAppreciation = false
     @State private var generationMode: CardGenerationMode = CardGenerationPreferences.mode
     @State private var appreciationSource = ""
@@ -30,8 +31,16 @@ struct CreateCardsView: View {
     @State private var sourceHint: String?
     @State private var sourceImagePath: String?
     @State private var isSourceFocused = false
-    /// Edit pasted/OCR text vs pick phrases — one surface, not two stacked boxes.
     @State private var sourceMode: SourceWorkspaceMode = .edit
+    /// Empty create page only shows scan / album / paste until there is content.
+
+    private var trimmedSentence: String {
+        sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var showsCreateWorkspace: Bool {
+        !trimmedSentence.isEmpty || !words.isEmpty
+    }
 
     private enum SourceWorkspaceMode: String, CaseIterable, Identifiable {
         case edit
@@ -45,10 +54,6 @@ struct CreateCardsView: View {
             case .pick: return L10n.createSourceModePick
             }
         }
-    }
-
-    private var trimmedSentence: String {
-        sentence.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private var willGenerateAppreciation: Bool {
@@ -77,10 +82,12 @@ struct CreateCardsView: View {
                     }
                 }
                 .safeAreaInset(edge: .bottom, spacing: 0) {
-                    generateFooter
+                    if showsCreateWorkspace {
+                        generateFooter
+                    }
                 }
                 .loadingOverlay(
-                    isPresented: isRecognizingPhoto || isGeneratingAppreciation,
+                    isPresented: isRunningOCR || isGeneratingAppreciation,
                     message: isGeneratingAppreciation ? L10n.createAppreciationGenerating : L10n.recognizingPhoto
                 )
                 .navigationDestination(isPresented: $showPreview) {
@@ -138,60 +145,41 @@ struct CreateCardsView: View {
                         applyLiveTextResult(result, image: draft.image, banner: draft.successBanner)
                     }
                 }
-                .onChange(of: trimmedSentence.isEmpty) { _, isEmpty in
-                    if isEmpty { sourceMode = .edit }
+                .onChange(of: isSourceFocused) { _, focused in
+                    if !focused, trimmedSentence.isEmpty, words.isEmpty {
+                        isManualEditing = false
+                        selectedText = ""
+                        sourceMode = .edit
+                    }
                 }
         }
     }
 
     private var scrollContent: some View {
+        Group {
+            if showsCreateWorkspace {
+                workspaceScroll
+            } else {
+                emptyCapturePage
+            }
+        }
+    }
+
+    private var workspaceScroll: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
-                if hasPendingDrafts, let pendingDrafts = shareImport.pendingDrafts {
-                    PendingCardsBannerView(
-                        title: L10n.createPendingImportTitle,
-                        subtitle: L10n.createPendingDraftsSubtitle(pendingDrafts.count),
-                        systemImage: "sparkles.rectangle.stack.fill",
-                        actionTitle: L10n.createPendingAction,
-                        action: ingestShareDraftsIfNeeded
-                    )
-                } else if !showPreview, generationQueue.pendingTriageCardCount > 0 {
-                    PendingCardsBannerView(
-                        title: L10n.createPendingImportTitle,
-                        subtitle: L10n.createPendingDraftsSubtitle(generationQueue.pendingTriageCardCount),
-                        systemImage: "checklist",
-                        actionTitle: L10n.createPendingAction,
-                        action: {
-                            deferredPreview = false
-                            selectedDeckID = generationQueue.readyPreview?.deckID ?? selectedDeckID
-                            showPreview = true
-                        }
-                    )
-                }
+                pendingBanners
 
                 captureToolbar
 
-                if trimmedSentence.isEmpty {
-                    sourceEditSurface(minHeight: 72, showPlaceholder: true, placeholder: L10n.createPastePlaceholder)
-                } else {
-                    sourceWorkspace
+                sourceWorkspace
 
-                    if sourceMode == .edit, !selectedText.isEmpty {
-                        SelectionActionBar(selectedText: selectedText, action: appendSelectionToWords)
-                    }
+                if sourceMode == .edit, !selectedText.isEmpty {
+                    SelectionActionBar(selectedText: selectedText, action: appendSelectionToWords)
                 }
 
                 if willGenerateAppreciation {
                     optionalSourceField
-                }
-
-                if isRecognizingPhoto {
-                    HStack(spacing: AppSpacing.xs) {
-                        ProgressView()
-                        Text(L10n.recognizingPhoto)
-                            .font(AppFont.helper())
-                            .foregroundStyle(AppColor.textMuted)
-                    }
                 }
 
                 CreateDeckPickerCard(selectedDeckID: $selectedDeckID)
@@ -207,6 +195,116 @@ struct CreateCardsView: View {
             .padding(.bottom, AppSpacing.md)
         }
         .appVerticalBounce()
+    }
+
+    @ViewBuilder
+    private var pendingBanners: some View {
+        if hasPendingDrafts, let pendingDrafts = shareImport.pendingDrafts {
+            PendingCardsBannerView(
+                title: L10n.createPendingImportTitle,
+                subtitle: L10n.createPendingDraftsSubtitle(pendingDrafts.count),
+                systemImage: "sparkles.rectangle.stack.fill",
+                actionTitle: L10n.createPendingAction,
+                action: ingestShareDraftsIfNeeded
+            )
+        } else if !showPreview, generationQueue.pendingTriageCardCount > 0 {
+            PendingCardsBannerView(
+                title: L10n.createPendingImportTitle,
+                subtitle: L10n.createPendingDraftsSubtitle(generationQueue.pendingTriageCardCount),
+                systemImage: "checklist",
+                actionTitle: L10n.createPendingAction,
+                action: {
+                    deferredPreview = false
+                    selectedDeckID = generationQueue.readyPreview?.deckID ?? selectedDeckID
+                    showPreview = true
+                }
+            )
+        }
+    }
+
+    private var emptyCapturePage: some View {
+        VStack(spacing: 0) {
+            pendingBanners
+                .padding(.horizontal, AppSpacing.md)
+                .padding(.top, AppSpacing.sm)
+
+            Spacer(minLength: 24)
+
+            HStack(spacing: AppSpacing.sm) {
+                emptyCaptureTile(
+                    title: L10n.createScanShort,
+                    systemImage: "camera.viewfinder",
+                    accessibilityLabel: L10n.createScanExcerpt,
+                    filledIcon: true,
+                    disabled: isPreparingCapture || isRunningOCR
+                ) {
+                    openScanCapture()
+                }
+
+                emptyCaptureTile(
+                    title: L10n.createPhotoShort,
+                    systemImage: "photo.on.rectangle",
+                    accessibilityLabel: L10n.createQuickPhoto,
+                    filledIcon: false,
+                    disabled: isPreparingCapture || isRunningOCR
+                ) {
+                    showPhotoLibrary = true
+                }
+
+                emptyCaptureTile(
+                    title: L10n.createPasteShort,
+                    systemImage: "doc.on.clipboard",
+                    accessibilityLabel: L10n.createQuickPaste,
+                    filledIcon: false,
+                    disabled: false
+                ) {
+                    pasteFromClipboard()
+                }
+            }
+            .padding(.horizontal, AppSpacing.lg)
+            .opacity((isPreparingCapture || isRunningOCR) ? 0.72 : 1)
+
+            Spacer(minLength: 40)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func emptyCaptureTile(
+        title: String,
+        systemImage: String,
+        accessibilityLabel: String,
+        filledIcon: Bool,
+        disabled: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            VStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(filledIcon ? AppColor.accentStrong : AppColor.accent.opacity(0.12))
+                        .frame(width: 56, height: 56)
+                    Image(systemName: systemImage)
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundStyle(filledIcon ? Color.white : AppColor.accent)
+                }
+
+                Text(title)
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .foregroundStyle(AppColor.textPrimary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 22)
+            .background(AppColor.surface, in: RoundedRectangle(cornerRadius: AppRadius.sheet, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: AppRadius.sheet, style: .continuous)
+                    .strokeBorder(AppColor.border, lineWidth: 1)
+            }
+            .appSoftShadow()
+        }
+        .buttonStyle(SoftPressButtonStyle())
+        .disabled(disabled)
+        .opacity(disabled ? 0.55 : 1)
+        .accessibilityLabel(accessibilityLabel)
     }
 
     private var optionalSourceField: some View {
@@ -230,7 +328,7 @@ struct CreateCardsView: View {
                 systemImage: "camera.viewfinder",
                 accessibilityLabel: L10n.createScanExcerpt,
                 emphasized: true,
-                disabled: isRecognizingPhoto
+                disabled: isPreparingCapture || isRunningOCR
             ) {
                 openScanCapture()
             }
@@ -240,7 +338,7 @@ struct CreateCardsView: View {
                 systemImage: "photo.on.rectangle",
                 accessibilityLabel: L10n.createQuickPhoto,
                 emphasized: false,
-                disabled: isRecognizingPhoto
+                disabled: isPreparingCapture || isRunningOCR
             ) {
                 showPhotoLibrary = true
             }
@@ -257,7 +355,7 @@ struct CreateCardsView: View {
 
             Spacer(minLength: 0)
         }
-        .opacity(isRecognizingPhoto ? 0.72 : 1)
+        .opacity((isPreparingCapture || isRunningOCR) ? 0.72 : 1)
     }
 
     private func captureToolButton(
@@ -327,7 +425,11 @@ struct CreateCardsView: View {
 
             switch sourceMode {
             case .edit:
-                sourceEditSurface(minHeight: 88, showPlaceholder: false, placeholder: L10n.createPastePlaceholder)
+                sourceEditSurface(
+                    minHeight: 88,
+                    showPlaceholder: trimmedSentence.isEmpty,
+                    placeholder: L10n.createPastePlaceholder
+                )
             case .pick:
                 PhraseTokenPicker(
                     sentence: trimmedSentence,
@@ -381,10 +483,28 @@ struct CreateCardsView: View {
         if let text = UIPasteboard.general.string?.trimmingCharacters(in: .whitespacesAndNewlines),
            !text.isEmpty {
             sentence = text
+            isManualEditing = true
             sourceMode = .pick
             showToast(L10n.createQuickPaste)
+        } else {
+            showToast(L10n.createPasteEmpty)
         }
         #endif
+    }
+
+    private func resetCreateWorkspace() {
+        sentence = ""
+        words = []
+        selectedText = ""
+        selectionClearNonce += 1
+        isManualEditing = false
+        isSourceFocused = false
+        sourceMode = .edit
+        sourceHint = nil
+        sourceImagePath = nil
+        appreciationSource = ""
+        wordFeedbackMessage = nil
+        wordFeedbackIsError = false
     }
 
     private var wordsCard: some View {
@@ -533,9 +653,8 @@ struct CreateCardsView: View {
 
     @MainActor
     private func importCapturedImage(_ image: UIImage, successBanner: String) async {
-        isRecognizingPhoto = true
-        defer { isRecognizingPhoto = false }
-
+        isPreparingCapture = true
+        var openedLiveText = false
         if LiveTextImageAnalyzer.isSupported {
             do {
                 let analysis = try await LiveTextImageAnalyzer.analyze(image)
@@ -546,13 +665,17 @@ struct CreateCardsView: View {
                         analysis: analysis,
                         successBanner: successBanner
                     )
-                    return
+                    openedLiveText = true
                 }
             } catch {
                 // Unsupported, empty, or analyzer error → existing Vision OCR.
             }
         }
+        isPreparingCapture = false
+        guard !openedLiveText else { return }
 
+        isRunningOCR = true
+        defer { isRunningOCR = false }
         await recognizeImage(image, successBanner: successBanner)
     }
 
@@ -575,11 +698,10 @@ struct CreateCardsView: View {
 
         if added > 0 {
             showToast(L10n.liveTextImported(added))
-            sourceMode = .pick
         } else {
             showToast(banner)
-            sourceMode = .edit
         }
+        sourceMode = .pick
     }
 
     @MainActor
@@ -594,6 +716,7 @@ struct CreateCardsView: View {
 
             // Highlight hits → word + containing sentence only (not the whole page).
             sentence = importSentence
+            sourceMode = .pick
             sourceHint = OCRContextExtractor.sourceHint(from: result.fullText)
             sourceImagePath = CardSourceImageStore.saveJPEG(image)
             if let hint = sourceHint?.trimmingCharacters(in: .whitespacesAndNewlines), !hint.isEmpty {
@@ -612,19 +735,15 @@ struct CreateCardsView: View {
 
             if result.importKind == .vocabPage {
                 showToast(L10n.ocrVocabPage(result.preferredImportWords.count))
-                sourceMode = .pick
             } else if result.hasHighlightContext {
                 showToast(L10n.ocrHighlightContext(
                     addedHighlights,
                     result.importUnits.count
                 ))
-                sourceMode = .pick
             } else if addedHighlights > 0 {
                 showToast(L10n.ocrHighlightDetected(addedHighlights))
-                sourceMode = .pick
             } else {
                 showToast(successBanner)
-                sourceMode = .edit
             }
         } catch {
             errorMessage = error.localizedDescription
@@ -706,6 +825,7 @@ struct CreateCardsView: View {
         }
 
         sentence = payload.sentence
+        sourceMode = .pick
         if let word = payload.selectedWord {
             words = VocabularyWords.parse(from: word)
         } else {
@@ -720,8 +840,6 @@ struct CreateCardsView: View {
         if !payload.bannerMessage.isEmpty {
             showToast(payload.bannerMessage)
         }
-        // Shared text / OCR → same pick surface as in-app create.
-        sourceMode = words.isEmpty ? .edit : .pick
         shareImport.acknowledgeImport()
     }
 
@@ -735,7 +853,7 @@ struct CreateCardsView: View {
             guard !text.isEmpty else { return }
             sentence = text
             words = []
-            sourceMode = .edit
+            sourceMode = .pick
             showToast(L10n.importShareSentence)
         case .image:
             guard let relativePath = inbox.relativePath,
@@ -753,9 +871,7 @@ struct CreateCardsView: View {
                 "inbox OCR image \(Int(image.size.width))x\(Int(image.size.height))",
                 category: "Share"
             )
-            isRecognizingPhoto = true
             defer {
-                isRecognizingPhoto = false
                 ShareImportStore.removeInboxFile(relativePath)
             }
             await importCapturedImage(image, successBanner: L10n.importShareSentence)
@@ -794,7 +910,7 @@ struct CreateCardsView: View {
                 sourceHint: sourceHint,
                 sourceImagePath: sourceImagePath
             )
-            words = []
+            resetCreateWorkspace()
             showToast(L10n.createQueuedToast)
         } catch {
             errorMessage = error.localizedDescription
@@ -836,6 +952,7 @@ struct CreateCardsView: View {
             }
             selectedDeckID = deck.id
             generationQueue.enqueueTriage(drafts: [draft], deckID: deck.id)
+            resetCreateWorkspace()
             showPreview = true
         } catch {
             errorMessage = error.localizedDescription

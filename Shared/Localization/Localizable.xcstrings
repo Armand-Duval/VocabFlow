@@ -2070,6 +2070,23 @@
         }
       }
     },
+    "create.paste.empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clipboard is empty"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "剪贴板是空的"
+          }
+        }
+      }
+    },
     "create.pastePlaceholder": {
       "localizations": {
         "en": {

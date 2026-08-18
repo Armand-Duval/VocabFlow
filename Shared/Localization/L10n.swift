@@ -78,6 +78,7 @@ enum L10n {
     static var createScanShort: String { tr("create.scan.short") }
     static var createPhotoShort: String { tr("create.photo.short") }
     static var createPasteShort: String { tr("create.paste.short") }
+    static var createPasteEmpty: String { tr("create.paste.empty") }
     static var createScanOpenCamera: String { tr("create.scan.openCamera") }
     static var createScanRitualTitle: String { tr("create.scan.ritualTitle") }
     static var createScanRitualSubtitle: String { tr("create.scan.ritualSubtitle") }
