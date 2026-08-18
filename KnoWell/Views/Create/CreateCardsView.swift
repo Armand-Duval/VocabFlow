@@ -73,11 +73,12 @@ struct CreateCardsView: View {
         NavigationStack {
             scrollContent
                 .appPageBackground()
-                .navigationBarTitleDisplayMode(.inline)
+                .appNavTitle(L10n.createTitle, style: .hidden)
+                .toolbar(showsGenerationQueueBanner ? .automatic : .hidden, for: .navigationBar)
                 .dismissKeyboardOnScroll()
                 .keyboardDoneButton()
                 .safeAreaInset(edge: .top, spacing: 0) {
-                    if generationQueue.hasActiveJobs || !generationQueue.jobs.isEmpty {
+                    if showsGenerationQueueBanner {
                         generationQueueBanner
                     }
                 }
@@ -230,36 +231,43 @@ struct CreateCardsView: View {
 
             Spacer(minLength: 24)
 
-            HStack(spacing: AppSpacing.sm) {
-                emptyCaptureTile(
-                    title: L10n.createScanShort,
-                    systemImage: "camera.viewfinder",
-                    accessibilityLabel: L10n.createScanExcerpt,
-                    filledIcon: true,
-                    disabled: isPreparingCapture || isRunningOCR
-                ) {
-                    openScanCapture()
+            VStack(spacing: AppSpacing.sm) {
+                HStack(spacing: AppSpacing.sm) {
+                    emptyCaptureTile(
+                        title: L10n.createScanShort,
+                        systemImage: "camera.viewfinder",
+                        accessibilityLabel: L10n.createScanExcerpt,
+                        filledIcon: true,
+                        disabled: isPreparingCapture || isRunningOCR
+                    ) {
+                        openScanCapture()
+                    }
+
+                    emptyCaptureTile(
+                        title: L10n.createPhotoShort,
+                        systemImage: "photo.on.rectangle",
+                        accessibilityLabel: L10n.createQuickPhoto,
+                        filledIcon: false,
+                        disabled: isPreparingCapture || isRunningOCR
+                    ) {
+                        showPhotoLibrary = true
+                    }
+
+                    emptyCaptureTile(
+                        title: L10n.createPasteShort,
+                        systemImage: "doc.on.clipboard",
+                        accessibilityLabel: L10n.createQuickPaste,
+                        filledIcon: false,
+                        disabled: false
+                    ) {
+                        pasteFromClipboard()
+                    }
                 }
 
-                emptyCaptureTile(
-                    title: L10n.createPhotoShort,
-                    systemImage: "photo.on.rectangle",
-                    accessibilityLabel: L10n.createQuickPhoto,
-                    filledIcon: false,
-                    disabled: isPreparingCapture || isRunningOCR
-                ) {
-                    showPhotoLibrary = true
-                }
-
-                emptyCaptureTile(
-                    title: L10n.createPasteShort,
-                    systemImage: "doc.on.clipboard",
-                    accessibilityLabel: L10n.createQuickPaste,
-                    filledIcon: false,
-                    disabled: false
-                ) {
-                    pasteFromClipboard()
-                }
+                Text(L10n.createEmptyHint)
+                    .font(AppFont.captionSecondary())
+                    .foregroundStyle(AppColor.textMuted)
+                    .multilineTextAlignment(.center)
             }
             .padding(.horizontal, AppSpacing.lg)
             .opacity((isPreparingCapture || isRunningOCR) ? 0.72 : 1)
@@ -278,7 +286,7 @@ struct CreateCardsView: View {
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            VStack(spacing: 14) {
+            VStack(spacing: AppSpacing.sm) {
                 ZStack {
                     Circle()
                         .fill(filledIcon ? AppColor.accentStrong : AppColor.accent.opacity(0.12))
@@ -527,6 +535,16 @@ struct CreateCardsView: View {
         .appInputSurface(isFocused: false)
     }
 
+    private var queueAttentionCount: Int {
+        generationQueue.remainingWorkCount
+    }
+
+    private var showsGenerationQueueBanner: Bool {
+        generationQueue.hasActiveJobs
+            || !generationQueue.jobs.isEmpty
+            || generationQueue.pendingTriageCardCount > 0
+    }
+
     private var generationQueueBanner: some View {
         Button {
             showGenerationQueue = true
@@ -544,6 +562,14 @@ struct CreateCardsView: View {
                     .font(AppFont.helper())
                     .foregroundStyle(AppColor.textPrimary)
                     .lineLimit(1)
+                if queueAttentionCount > 0 {
+                    Text(queueAttentionCount > 99 ? "99+" : "\(queueAttentionCount)")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(Color.white)
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 1)
+                        .background(AppColor.danger, in: Capsule())
+                }
                 Spacer(minLength: 0)
                 Text(L10n.createQueueViewAction)
                     .font(AppFont.helper().weight(.semibold))
@@ -554,6 +580,11 @@ struct CreateCardsView: View {
             .background(AppColor.surface)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(
+            queueAttentionCount > 0
+                ? "\(L10n.createQueueTitle) \(queueAttentionCount)"
+                : L10n.createQueueTitle
+        )
     }
 
     private var isCloudQuotaExhausted: Bool {

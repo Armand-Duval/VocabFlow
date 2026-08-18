@@ -13040,6 +13040,23 @@
           }
         }
       }
+    },
+    "create.empty.hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import from a photo or the clipboard, then AI makes review cards."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从照片或剪贴板导入，AI 生成记忆卡片。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

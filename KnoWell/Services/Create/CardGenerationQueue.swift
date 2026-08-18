@@ -133,6 +133,23 @@ final class CardGenerationQueue: ObservableObject {
         !activeJobs.isEmpty
     }
 
+    /// Remaining work for the create banner: unfinished words/batches, failed jobs, and cards waiting to confirm.
+    var remainingWorkCount: Int {
+        var remaining = 0
+        for job in activeJobs {
+            if !job.words.isEmpty {
+                remaining += max(0, job.words.count - job.completedWordCount)
+            } else if job.totalBatches > 0 {
+                remaining += max(0, job.totalBatches - job.completedBatches)
+            } else {
+                remaining += 1
+            }
+        }
+        remaining += jobs.filter { $0.status == .failed }.count
+        remaining += pendingTriageCardCount
+        return remaining
+    }
+
     var hasActiveMigrationJob: Bool {
         jobs.contains { $0.kind == .migrate && $0.isActive }
     }
