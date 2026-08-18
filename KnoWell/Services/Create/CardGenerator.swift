@@ -1,6 +1,6 @@
 import Foundation
 
-enum KimiCardGeneratorError: LocalizedError {
+enum CardGeneratorError: LocalizedError {
     case missingAPIKey
     case invalidResponse
     case apiError(String)
@@ -31,10 +31,10 @@ enum KimiCardGeneratorError: LocalizedError {
     }
 }
 
-enum KimiCardGenerator {
+enum CardGenerator {
     /// Keep each model reply small enough to finish within timeout and avoid truncated JSON.
     private static let maxWordsPerRequest = 3
-    /// Cap parallel Moonshot calls — enough speedup without tripping rate limits.
+    /// Cap parallel upstream calls — enough speedup without tripping rate limits.
     private static let maxConcurrentRequests = 3
     private static let requestTimeout: TimeInterval = 90
     private static let maxOutputTokens = 6_000
@@ -60,7 +60,7 @@ enum KimiCardGenerator {
         if let deckID = skipExistingInDeckID {
             prepared = SharedDedupeIndex.filterNewUnits(units, deckID: deckID)
             guard !prepared.units.isEmpty else {
-                throw KimiCardGeneratorError.allDuplicates
+                throw CardGeneratorError.allDuplicates
             }
         } else {
             prepared = (units, 0)
@@ -83,7 +83,6 @@ enum KimiCardGenerator {
         words: [String],
         sourceHint: String? = nil,
         deckName: String? = nil,
-        mode: CardGenerationMode? = nil,
         requiredCardType: CardType? = nil,
         skipExistingInDeckID: UUID? = nil,
         onProgress: (@MainActor (Int, Int) -> Void)? = nil,
@@ -91,7 +90,7 @@ enum KimiCardGenerator {
         onBatchFinished: (@MainActor (_ sentence: String, _ words: [String], _ drafts: [GeneratedCardDraft], _ error: Error?) -> Void)? = nil
     ) async throws -> [GeneratedCardDraft] {
         guard APISettings.canUseAI else {
-            throw KimiCardGeneratorError.missingAPIKey
+            throw CardGeneratorError.missingAPIKey
         }
 
         let prepared = try prepareGeneration(
@@ -103,7 +102,6 @@ enum KimiCardGenerator {
             units: prepared.units,
             sourceHint: sourceHint,
             deckName: deckName,
-            mode: mode,
             requiredCardType: requiredCardType,
             onProgress: onProgress,
             onBatchStarted: onBatchStarted,
@@ -115,14 +113,13 @@ enum KimiCardGenerator {
         units: [OCRImportUnit],
         sourceHint: String? = nil,
         deckName: String? = nil,
-        mode: CardGenerationMode? = nil,
         requiredCardType: CardType? = nil,
         onProgress: (@MainActor (Int, Int) -> Void)? = nil,
         onBatchStarted: (@MainActor (_ sentence: String, _ words: [String]) -> Void)? = nil,
         onBatchFinished: (@MainActor (_ sentence: String, _ words: [String], _ drafts: [GeneratedCardDraft], _ error: Error?) -> Void)? = nil
     ) async throws -> [GeneratedCardDraft] {
         guard APISettings.canUseAI else {
-            throw KimiCardGeneratorError.missingAPIKey
+            throw CardGeneratorError.missingAPIKey
         }
         guard !units.isEmpty else { return [] }
 
@@ -146,7 +143,6 @@ enum KimiCardGenerator {
             jobs,
             sourceHint: hint,
             deckName: deck,
-            mode: mode ?? CardGenerationPreferences.mode,
             requiredCardType: requiredCardType,
             onProgress: onProgress,
             onBatchStarted: onBatchStarted,
@@ -157,14 +153,13 @@ enum KimiCardGenerator {
             return collected.drafts
         }
         throw collected.lastError
-            ?? KimiCardGeneratorError.parseError(L10n.generateFormatErrorDetail)
+            ?? CardGeneratorError.parseError(L10n.generateFormatErrorDetail)
     }
 
     private static func runJobsInParallel(
         _ jobs: [GenerationJob],
         sourceHint: String?,
         deckName: String?,
-        mode: CardGenerationMode,
         requiredCardType: CardType?,
         onProgress: (@MainActor (Int, Int) -> Void)?,
         onBatchStarted: (@MainActor (_ sentence: String, _ words: [String]) -> Void)?,
@@ -172,7 +167,7 @@ enum KimiCardGenerator {
     ) async -> (drafts: [GeneratedCardDraft], lastError: Error?) {
         let total = jobs.count
         var allDrafts: [GeneratedCardDraft] = []
-        let draftsPerWord = requiredCardType == nil && mode == .full ? 2 : 1
+        let draftsPerWord = requiredCardType == nil ? 2 : 1
         allDrafts.reserveCapacity(total * maxWordsPerRequest * draftsPerWord)
         var lastError: Error?
         var completed = 0
@@ -196,7 +191,6 @@ enum KimiCardGenerator {
                                 words: job.words,
                                 sourceHint: sourceHint,
                                 deckName: deckName,
-                                mode: mode,
                                 requiredCardType: requiredCardType,
                                 revisionHint: nil
                             )
@@ -286,12 +280,12 @@ enum KimiCardGenerator {
         deckName: String? = nil
     ) async throws -> GeneratedCardDraft {
         guard APISettings.canUseAI else {
-            throw KimiCardGeneratorError.missingAPIKey
+            throw CardGeneratorError.missingAPIKey
         }
         let word = draft.word.trimmingCharacters(in: .whitespacesAndNewlines)
         let sentence = draft.sentence.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !word.isEmpty, !sentence.isEmpty else {
-            throw KimiCardGeneratorError.parseError(L10n.generateFormatErrorDetail)
+            throw CardGeneratorError.parseError(L10n.generateFormatErrorDetail)
         }
 
         let drafts = try await generateForSingleContext(
@@ -299,7 +293,6 @@ enum KimiCardGenerator {
             words: [word],
             sourceHint: draft.sourceAttribution,
             deckName: usefulDeckName(deckName),
-            mode: .compact,
             requiredCardType: draft.cardType,
             revisionHint: reason.promptInstruction
         )
@@ -309,7 +302,7 @@ enum KimiCardGenerator {
         }) ?? drafts.first(where: {
             $0.word.caseInsensitiveCompare(word) == .orderedSame
         }) else {
-            throw KimiCardGeneratorError.parseError(L10n.generateFormatErrorDetail)
+            throw CardGeneratorError.parseError(L10n.generateFormatErrorDetail)
         }
         next.sourceImagePath = draft.sourceImagePath
         next.isSelected = true
@@ -322,7 +315,6 @@ enum KimiCardGenerator {
         words: [String],
         sourceHint: String?,
         deckName: String?,
-        mode: CardGenerationMode,
         requiredCardType: CardType?,
         revisionHint: String?
     ) async throws -> [GeneratedCardDraft] {
@@ -332,14 +324,12 @@ enum KimiCardGenerator {
                 words: words,
                 sourceHint: sourceHint,
                 deckName: deckName,
-                mode: mode,
                 requiredCardType: requiredCardType,
                 revisionHint: revisionHint
             )
             return try parseCards(
                 from: content,
                 sentence: sentence,
-                mode: mode,
                 requiredCardType: requiredCardType
             )
         }
@@ -363,12 +353,12 @@ enum KimiCardGenerator {
                 try? await Task.sleep(for: .milliseconds(400 * attempt))
             }
         }
-        throw lastError ?? KimiCardGeneratorError.invalidResponse
+        throw lastError ?? CardGeneratorError.invalidResponse
     }
 
     private static func shouldRetry(_ error: Error) -> Bool {
-        if let kimi = error as? KimiCardGeneratorError {
-            switch kimi {
+        if let generatorError = error as? CardGeneratorError {
+            switch generatorError {
             case .timedOut, .parseError, .invalidResponse:
                 return true
             case .apiError(let message):
@@ -393,14 +383,14 @@ enum KimiCardGenerator {
     }
 
     private static func mapTransportError(_ error: Error) -> Error {
-        if let kimi = error as? KimiCardGeneratorError {
-            return kimi
+        if let generatorError = error as? CardGeneratorError {
+            return generatorError
         }
         if let url = error as? URLError, url.code == .timedOut {
-            return KimiCardGeneratorError.timedOut
+            return CardGeneratorError.timedOut
         }
         if error is DecodingError {
-            return KimiCardGeneratorError.parseError(L10n.generateFormatErrorDetail)
+            return CardGeneratorError.parseError(L10n.generateFormatErrorDetail)
         }
         return error
     }
@@ -410,12 +400,11 @@ enum KimiCardGenerator {
         words: [String],
         sourceHint: String?,
         deckName: String?,
-        mode: CardGenerationMode,
         requiredCardType: CardType?,
         revisionHint: String? = nil
     ) async throws -> String {
         guard let url = URL(string: APISettings.chatCompletionsURL) else {
-            throw KimiCardGeneratorError.invalidResponse
+            throw CardGeneratorError.invalidResponse
         }
 
         var request = URLRequest(url: url)
@@ -429,30 +418,16 @@ enum KimiCardGenerator {
 
         let wordsList = words.joined(separator: ", ")
         let cardCountRule: String
-        let primaryFieldHint: String
         if let requiredCardType {
             cardCountRule = """
             1. 每个生词只生成 1 张 type 为 \(requiredCardType.rawValue) 的卡（\(requiredCardType.displayName)）；禁止生成其它 type
             """
-            primaryFieldHint = ""
         } else {
-            switch mode {
-            case .compact:
-                cardCountRule = """
-                1. 每个生词只生成 1 张卡；智能选择 type（cloze 或 definition）：
-                   - 默认优先 cloze（语境回忆、主动提取）
-                   - 以下情况选 definition：固定搭配/短语需整体记忆、抽象概念首次接触、挖空后无法辨识、原句极短
-                """
-                primaryFieldHint = ""
-            case .full:
-                cardCountRule = """
-                1. 每个生词生成 2 张卡：一张 cloze，一张 definition；同一生词两张卡的 usage_note / etymology / synonyms / antonyms / paraphrases 应一致
-                   - 用 primary: true 标记 AI 更推荐的一张（通常 cloze）；另一张 primary: false
-                """
-                primaryFieldHint = """
-                  "primary": true,
-                """
-            }
+            cardCountRule = """
+            1. 每个生词只生成 1 张卡；智能选择 type（cloze 或 definition）：
+               - 默认优先 cloze（语境回忆、主动提取）
+               - 以下情况选 definition：固定搭配/短语需整体记忆、抽象概念首次接触、挖空后无法辨识、原句极短
+            """
         }
 
         let systemPrompt = """
@@ -465,7 +440,7 @@ enum KimiCardGenerator {
             {
               "word": "生词",
               "phonetic": "音标（英文必须给 IPA，用 /.../ 包裹；其它语言给读法；实在没有才空字符串）",
-        \(primaryFieldHint)              "type": "cloze 或 definition",
+              "type": "cloze 或 definition",
               "front": "卡片正面",
               "back": "词性 + 本句核心中文释义（尽量 1 句，最多 2 句）",
               "context_note": "整句中文翻译（目标词短译必须用【】标出）",
@@ -529,14 +504,14 @@ enum KimiCardGenerator {
         let (data, response) = try await URLSession.shared.data(for: request)
 
         guard let http = response as? HTTPURLResponse else {
-            throw KimiCardGeneratorError.invalidResponse
+            throw CardGeneratorError.invalidResponse
         }
         CloudAIQuota.ingest(http: http, data: data)
 
         if http.statusCode != 200 {
             let raw = extractErrorMessage(from: data) ?? "HTTP \(http.statusCode)"
             let message = CloudAIQuota.mappedMessage(statusCode: http.statusCode, raw: raw) ?? raw
-            throw KimiCardGeneratorError.apiError(message)
+            throw CardGeneratorError.apiError(message)
         }
 
         guard
@@ -546,13 +521,13 @@ enum KimiCardGenerator {
             let message = first["message"] as? [String: Any],
             let content = message["content"] as? String
         else {
-            throw KimiCardGeneratorError.invalidResponse
+            throw CardGeneratorError.invalidResponse
         }
 
         // Truncated completions often yield broken JSON → surface as format error / retry.
         if let finish = first["finish_reason"] as? String,
            finish == "length" {
-            throw KimiCardGeneratorError.parseError(L10n.generateFormatErrorDetail)
+            throw CardGeneratorError.parseError(L10n.generateFormatErrorDetail)
         }
 
         return content
@@ -561,7 +536,7 @@ enum KimiCardGenerator {
     static func testConnection(apiKey: String, model: String) async throws {
         if APISettings.usesCloudProxy {
             guard let url = URL(string: KnoWellCloud.healthURL) else {
-                throw KimiCardGeneratorError.invalidResponse
+                throw CardGeneratorError.invalidResponse
             }
             var request = URLRequest(url: url)
             request.httpMethod = "GET"
@@ -569,7 +544,7 @@ enum KimiCardGenerator {
             let (data, response) = try await URLSession.shared.data(for: request)
             guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
                 let message = extractErrorMessage(from: data) ?? "HTTP \((response as? HTTPURLResponse)?.statusCode ?? 0)"
-                throw KimiCardGeneratorError.apiError(message)
+                throw CardGeneratorError.apiError(message)
             }
             _ = model
             return
@@ -577,11 +552,11 @@ enum KimiCardGenerator {
 
         let trimmedKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedKey.isEmpty else {
-            throw KimiCardGeneratorError.missingAPIKey
+            throw CardGeneratorError.missingAPIKey
         }
 
         guard let url = URL(string: APISettings.modelsURL) else {
-            throw KimiCardGeneratorError.invalidResponse
+            throw CardGeneratorError.invalidResponse
         }
 
         var request = URLRequest(url: url)
@@ -592,12 +567,12 @@ enum KimiCardGenerator {
 
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse else {
-            throw KimiCardGeneratorError.invalidResponse
+            throw CardGeneratorError.invalidResponse
         }
 
         if http.statusCode != 200 {
             let message = extractErrorMessage(from: data) ?? "HTTP \(http.statusCode)"
-            throw KimiCardGeneratorError.apiError(message)
+            throw CardGeneratorError.apiError(message)
         }
 
         _ = model
@@ -606,19 +581,18 @@ enum KimiCardGenerator {
     private static func parseCards(
         from content: String,
         sentence: String,
-        mode: CardGenerationMode,
         requiredCardType: CardType?
     ) throws -> [GeneratedCardDraft] {
         let jsonString = extractJSON(from: content)
         guard let data = jsonString.data(using: .utf8) else {
-            throw KimiCardGeneratorError.parseError(L10n.generateFormatErrorDetail)
+            throw CardGeneratorError.parseError(L10n.generateFormatErrorDetail)
         }
 
-        let response: KimiCardsResponse
+        let response: CardGeneratorResponse
         do {
-            response = try JSONDecoder().decode(KimiCardsResponse.self, from: data)
+            response = try JSONDecoder().decode(CardGeneratorResponse.self, from: data)
         } catch {
-            throw KimiCardGeneratorError.parseError(L10n.generateFormatErrorDetail)
+            throw CardGeneratorError.parseError(L10n.generateFormatErrorDetail)
         }
         let source = response.source?
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -655,8 +629,8 @@ enum KimiCardGenerator {
                 antonyms: CardContentFormatter.joinRelatedWords(item.antonyms?.values ?? []),
                 paraphrases: CardContentFormatter.encodeParaphrases(item.decodedParaphrases),
                 sourceAttribution: source,
-                isSelected: selectionForItem(item, mode: mode, requiredCardType: requiredCardType),
-                isRecommended: recommendationForItem(item, mode: mode, requiredCardType: requiredCardType)
+                isSelected: true,
+                isRecommended: true
             )
         }
 
@@ -666,7 +640,7 @@ enum KimiCardGenerator {
         }
 
         guard !filtered.isEmpty else {
-            throw KimiCardGeneratorError.parseError(L10n.generateFormatErrorDetail)
+            throw CardGeneratorError.parseError(L10n.generateFormatErrorDetail)
         }
 
         // Cloze/definition pair: copy phonetic if one sibling omitted it.
@@ -683,54 +657,11 @@ enum KimiCardGenerator {
             }
         }
 
-        switch mode {
-        case .compact:
-            if requiredCardType == nil {
-                filtered = CardContentFormatter.expandOptionalSiblings(filtered)
-            }
-        case .full:
-            break
+        if requiredCardType == nil {
+            filtered = CardContentFormatter.expandOptionalSiblings(filtered)
         }
 
         return filtered
-    }
-
-    private static func selectionForItem(
-        _ item: KimiCardItem,
-        mode: CardGenerationMode,
-        requiredCardType: CardType?
-    ) -> Bool {
-        if requiredCardType != nil {
-            return true
-        }
-        switch mode {
-        case .compact:
-            return true
-        case .full:
-            if let primary = item.primary {
-                return primary
-            }
-            return true
-        }
-    }
-
-    private static func recommendationForItem(
-        _ item: KimiCardItem,
-        mode: CardGenerationMode,
-        requiredCardType: CardType?
-    ) -> Bool {
-        if requiredCardType != nil {
-            return true
-        }
-        switch mode {
-        case .compact:
-            return true
-        case .full:
-            if let primary = item.primary {
-                return primary
-            }
-            return item.type.lowercased() == CardType.cloze.rawValue
-        }
     }
 
     private static func normalizedPhonetic(_ raw: String?) -> String? {
@@ -774,15 +705,14 @@ enum KimiCardGenerator {
     }
 }
 
-private struct KimiCardsResponse: Decodable {
+private struct CardGeneratorResponse: Decodable {
     let source: String?
-    let cards: [KimiCardItem]
+    let cards: [CardGeneratorItem]
 }
 
-private struct KimiCardItem: Decodable {
+private struct CardGeneratorItem: Decodable {
     let word: String
     let phonetic: String?
-    let primary: Bool?
     let type: String
     let front: String
     let back: String
@@ -792,10 +722,10 @@ private struct KimiCardItem: Decodable {
     let etymology: String?
     let synonyms: FlexibleStringList?
     let antonyms: FlexibleStringList?
-    let paraphrases: [KimiParaphraseItem]?
+    let paraphrases: [CardGeneratorParaphrase]?
 
     enum CodingKeys: String, CodingKey {
-        case word, phonetic, primary, type, front, back, highlight, etymology
+        case word, phonetic, type, front, back, highlight, etymology
         case synonyms, antonyms, paraphrases
         case contextNote = "context_note"
         case usageNote = "usage_note"
@@ -819,7 +749,7 @@ private struct KimiCardItem: Decodable {
     }
 }
 
-private struct KimiParaphraseItem: Decodable {
+private struct CardGeneratorParaphrase: Decodable {
     let scene: String?
     let en: String?
     let sentence: String?

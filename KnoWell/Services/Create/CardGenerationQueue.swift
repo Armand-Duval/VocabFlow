@@ -178,7 +178,7 @@ final class CardGenerationQueue: ObservableObject {
         sourceHint: String?,
         sourceImagePath: String? = nil
     ) throws -> UUID {
-        let prepared = try KimiCardGenerator.prepareGeneration(
+        let prepared = try CardGenerator.prepareGeneration(
             sentence: sentence,
             words: words,
             skipExistingInDeckID: deckID
@@ -396,7 +396,7 @@ final class CardGenerationQueue: ObservableObject {
 
     private func runCreate(_ job: Job) async {
         do {
-            let drafts = try await KimiCardGenerator.generate(
+            let drafts = try await CardGenerator.generate(
                 units: job.units,
                 sourceHint: job.sourceHint,
                 deckName: job.deckName
@@ -439,12 +439,11 @@ final class CardGenerationQueue: ObservableObject {
             updateProgress(jobID: job.id, completed: index, total: batches.count)
 
             do {
-                let drafts = try await KimiCardGenerator.generate(
+                let drafts = try await CardGenerator.generate(
                     sentence: batch.sentence,
                     words: batch.words,
                     sourceHint: batch.sourceHint,
-                    deckName: batch.deckName,
-                    mode: .full
+                    deckName: batch.deckName
                 )
                 let stats = CardContentMigrationService.applyMigrationBatch(
                     drafts: drafts,

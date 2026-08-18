@@ -42,7 +42,7 @@ struct CardContentMigrationPlan: Equatable, Sendable {
     let scanned: Int
 }
 
-/// Upgrades existing cards by re-running the **same** `KimiCardGenerator` rules used for new cards,
+/// Upgrades existing cards by re-running the **same** `CardGenerator` rules used for new cards,
 /// then merging content fields via `CardContentSync`. SRS / deck / id are preserved.
 ///
 /// When card format gains new fields: update generator + `GeneratedCardDraft` + `FlashCard` +
@@ -167,12 +167,11 @@ enum CardContentMigrationService {
 
             for wordBatch in words.chunked(into: wordsPerGenerateCall) {
                 do {
-                    let drafts = try await KimiCardGenerator.generate(
+                    let drafts = try await CardGenerator.generate(
                         sentence: group[0].sentence,
                         words: wordBatch,
                         sourceHint: sourceHint,
-                        deckName: deckName,
-                        mode: .full
+                        deckName: deckName
                     )
                     let applied = applyDrafts(drafts, to: group)
                     report.contentRefreshed += applied.refreshed

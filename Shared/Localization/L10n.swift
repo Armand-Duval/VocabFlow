@@ -38,10 +38,6 @@ enum L10n {
     static var createGenerateNeedBoth: String { tr("create.generate.needBoth") }
     static var createGenerateHintEmpty: String { tr("create.generate.hintEmpty") }
     static var createGenerateNoWordsHint: String { tr("create.generate.noWordsHint") }
-    static var createCardModeCompact: String { tr("create.cardMode.compact") }
-    static var createCardModeFull: String { tr("create.cardMode.full") }
-    static var createCardModeCompactDetail: String { tr("create.cardMode.compactDetail") }
-    static var createCardModeFullDetail: String { tr("create.cardMode.fullDetail") }
     static var createWorkspaceVocabulary: String { tr("create.workspace.vocabulary") }
     static var createWorkspaceAppreciation: String { tr("create.workspace.appreciation") }
     static var createAppreciationDetail: String { tr("create.appreciation.detail") }

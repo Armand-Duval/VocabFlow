@@ -1510,74 +1510,6 @@
         }
       }
     },
-    "create.cardMode.compact": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Smart"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "精简"
-          }
-        }
-      }
-    },
-    "create.cardMode.compactDetail": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "AI picks one card type per word; you can add the alternate type in preview."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "AI 为每个生词智能选一种主卡；预览里可勾选另一种。"
-          }
-        }
-      }
-    },
-    "create.cardMode.full": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Full"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "完整"
-          }
-        }
-      }
-    },
-    "create.cardMode.fullDetail": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Generates cloze + definition; AI marks the recommended one."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "每个生词生成挖空 + 释义；AI 标记更推荐的一张。"
-          }
-        }
-      }
-    },
     "create.cardRecommended.badge": {
       "extractionState": "manual",
       "localizations": {
@@ -6346,13 +6278,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kimi returned an invalid response."
+            "value": "AI returned an invalid response."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kimi 返回了无效响应。"
+            "value": "AI 返回了无效响应。"
           }
         }
       }
@@ -6363,13 +6295,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add a Kimi API key in Settings, or configure the built-in default key."
+            "value": "Add an API key in Settings, or use the built-in cloud AI."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "请先在「设置」中填写 Kimi API Key，或配置内置默认 Key。"
+            "value": "请先在「设置」中填写 API Key，或使用内置云端 AI。"
           }
         }
       }
@@ -6397,13 +6329,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kimi API key is not configured"
+            "value": "AI is not configured"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "未配置 Kimi API Key"
+            "value": "未配置 AI"
           }
         }
       }

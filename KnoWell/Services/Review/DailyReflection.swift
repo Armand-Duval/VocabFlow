@@ -570,7 +570,7 @@ enum DailyReflectionService {
         retryBoost: Bool = false
     ) async throws -> DailyReflection {
         guard let url = URL(string: APISettings.chatCompletionsURL) else {
-            throw KimiCardGeneratorError.invalidResponse
+            throw CardGeneratorError.invalidResponse
         }
 
         var request = URLRequest(url: url)
@@ -728,15 +728,15 @@ enum DailyReflectionService {
 
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse else {
-            throw KimiCardGeneratorError.invalidResponse
+            throw CardGeneratorError.invalidResponse
         }
         CloudAIQuota.ingest(http: http, data: data)
         guard http.statusCode == 200 else {
             let raw = String(data: data, encoding: .utf8) ?? "HTTP \(http.statusCode)"
             if let message = CloudAIQuota.mappedMessage(statusCode: http.statusCode, raw: raw) {
-                throw KimiCardGeneratorError.apiError(message)
+                throw CardGeneratorError.apiError(message)
             }
-            throw KimiCardGeneratorError.invalidResponse
+            throw CardGeneratorError.invalidResponse
         }
         guard
             let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -745,7 +745,7 @@ enum DailyReflectionService {
             let message = first["message"] as? [String: Any],
             let content = message["content"] as? String
         else {
-            throw KimiCardGeneratorError.invalidResponse
+            throw CardGeneratorError.invalidResponse
         }
 
         return try parseAIReflection(from: content)
@@ -754,22 +754,22 @@ enum DailyReflectionService {
     private static func parseAIReflection(from content: String) throws -> DailyReflection {
         let trimmed = extractJSONObject(from: content)
         guard let data = trimmed.data(using: .utf8) else {
-            throw KimiCardGeneratorError.parseError("empty")
+            throw CardGeneratorError.parseError("empty")
         }
         let decoded = try JSONDecoder().decode(AIReflectionDTO.self, from: data)
         let rawSentence = decoded.sentence.trimmingCharacters(in: .whitespacesAndNewlines)
         let rawTranslation = decoded.translation?.trimmingCharacters(in: .whitespacesAndNewlines)
         if LiteraryTextFormatting.containsInvalidMarkers(rawSentence) {
-            throw KimiCardGeneratorError.parseError("invalid-formatting")
+            throw CardGeneratorError.parseError("invalid-formatting")
         }
         if let rawTranslation, !rawTranslation.isEmpty,
            LiteraryTextFormatting.containsInvalidMarkers(rawTranslation) {
-            throw KimiCardGeneratorError.parseError("invalid-formatting")
+            throw CardGeneratorError.parseError("invalid-formatting")
         }
 
         var sentence = LiteraryTextFormatting.display(rawSentence)
         guard !sentence.isEmpty, sentence.count <= 240 else {
-            throw KimiCardGeneratorError.parseError("bad sentence")
+            throw CardGeneratorError.parseError("bad sentence")
         }
         var translation = rawTranslation
         if let rawTranslation, !rawTranslation.isEmpty {
@@ -805,7 +805,7 @@ enum DailyReflectionService {
             isAI: true
         )
         guard isWellFormed(reflection) else {
-            throw KimiCardGeneratorError.parseError("empty-original")
+            throw CardGeneratorError.parseError("empty-original")
         }
         return reflection
     }

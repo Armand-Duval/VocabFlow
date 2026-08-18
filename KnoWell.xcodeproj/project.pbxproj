@@ -20,7 +20,7 @@
 		PRIVACY0010000000000000003 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = PRIVACY0010000000000000010 /* PrivacyInfo.xcprivacy */; };
 		PRIVACY0010000000000000004 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = PRIVACY0010000000000000010 /* PrivacyInfo.xcprivacy */; };
 		AA0000010000000000000034 /* APISettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000035 /* APISettings.swift */; };
-		AA0000010000000000000036 /* KimiCardGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000037 /* KimiCardGenerator.swift */; };
+		AA0000010000000000000036 /* CardGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000037 /* CardGenerator.swift */; };
 		AA0000010000000000000038 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000045 /* SettingsView.swift */; };
 		AA0000010000000000000046 /* DefaultAPIKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000047 /* DefaultAPIKey.swift */; };
 		AA0000010000000000000048 /* KeyboardDismiss.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000049 /* KeyboardDismiss.swift */; };
@@ -50,7 +50,7 @@
 		CC0000010000000000000001 /* ClipboardImportCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000010000000000000010 /* ClipboardImportCoordinator.swift */; };
 		CC0000010000000000000002 /* CardDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000010000000000000011 /* CardDraft.swift */; };
 		CC0000010000000000000003 /* CardDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000010000000000000011 /* CardDraft.swift */; };
-		CC0000010000000000000004 /* KimiCardGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000037 /* KimiCardGenerator.swift */; };
+		CC0000010000000000000004 /* CardGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000037 /* CardGenerator.swift */; };
 		CC0000010000000000000005 /* APISettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000035 /* APISettings.swift */; };
 		CC0000010000000000000006 /* DefaultAPIKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000047 /* DefaultAPIKey.swift */; };
 		CC0000010000000000000007 /* ShareCardGenerationRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000010000000000000012 /* ShareCardGenerationRunner.swift */; };
@@ -66,7 +66,7 @@
 		DD0000010000000000000005 /* KnoWellAction.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DD0000010000000000000010 /* KnoWellAction.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		DD0000010000000000000006 /* ImportCardsFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000010000000000000018 /* ImportCardsFormView.swift */; };
 		DD0000010000000000000007 /* CardDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000010000000000000011 /* CardDraft.swift */; };
-		DD0000010000000000000008 /* KimiCardGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000037 /* KimiCardGenerator.swift */; };
+		DD0000010000000000000008 /* CardGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000037 /* CardGenerator.swift */; };
 		DD0000010000000000000009 /* APISettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000035 /* APISettings.swift */; };
 		DD000001000000000000000A /* DefaultAPIKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000047 /* DefaultAPIKey.swift */; };
 		DD000001000000000000000B /* ShareCardGenerationRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000010000000000000012 /* ShareCardGenerationRunner.swift */; };
@@ -250,7 +250,7 @@
 		AA0000010000000000000018 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		AA0000010000000000000019 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AA0000010000000000000035 /* APISettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APISettings.swift; sourceTree = "<group>"; };
-		AA0000010000000000000037 /* KimiCardGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KimiCardGenerator.swift; sourceTree = "<group>"; };
+		AA0000010000000000000037 /* CardGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardGenerator.swift; sourceTree = "<group>"; };
 		AA0000010000000000000045 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		AA0000010000000000000047 /* DefaultAPIKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultAPIKey.swift; sourceTree = "<group>"; };
 		AA0000010000000000000049 /* KeyboardDismiss.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardDismiss.swift; sourceTree = "<group>"; };
@@ -639,7 +639,7 @@
 		SVCGRP0000000000000000004 /* Create */ = {
 			isa = PBXGroup;
 			children = (
-				AA0000010000000000000037 /* KimiCardGenerator.swift */,
+				AA0000010000000000000037 /* CardGenerator.swift */,
 				QUEUE00100000000000000010 /* CardGenerationQueue.swift */,
 				CC0000010000000000000013 /* FlashCardSaver.swift */,
 				DEDUP00100000000000000010 /* FlashCardDeduper.swift */,
@@ -895,7 +895,7 @@
 				AA0000010000000000000028 /* LibraryView.swift in Sources */,
 				AA0000010000000000000034 /* APISettings.swift in Sources */,
 				AIPROV0010000000000000001 /* AIProvider.swift in Sources */,
-				AA0000010000000000000036 /* KimiCardGenerator.swift in Sources */,
+				AA0000010000000000000036 /* CardGenerator.swift in Sources */,
 				QUEUE00100000000000000001 /* CardGenerationQueue.swift in Sources */,
 				AA0000010000000000000038 /* SettingsView.swift in Sources */,
 				AA0000010000000000000046 /* DefaultAPIKey.swift in Sources */,
@@ -1006,7 +1006,7 @@
 				OCRHL0010000000000000014 /* HighlightPhraseMerger.swift in Sources */,
 				OCRVOC0010000000000000002 /* OCRVocabPageExtractor.swift in Sources */,
 				CC0000010000000000000003 /* CardDraft.swift in Sources */,
-				CC0000010000000000000004 /* KimiCardGenerator.swift in Sources */,
+				CC0000010000000000000004 /* CardGenerator.swift in Sources */,
 				CC0000010000000000000005 /* APISettings.swift in Sources */,
 				AIPROV0010000000000000002 /* AIProvider.swift in Sources */,
 				CC0000010000000000000006 /* DefaultAPIKey.swift in Sources */,
@@ -1051,7 +1051,7 @@
 				OCRHL0010000000000000015 /* HighlightPhraseMerger.swift in Sources */,
 				OCRVOC0010000000000000003 /* OCRVocabPageExtractor.swift in Sources */,
 				DD0000010000000000000007 /* CardDraft.swift in Sources */,
-				DD0000010000000000000008 /* KimiCardGenerator.swift in Sources */,
+				DD0000010000000000000008 /* CardGenerator.swift in Sources */,
 				DD0000010000000000000009 /* APISettings.swift in Sources */,
 				AIPROV0010000000000000003 /* AIProvider.swift in Sources */,
 				DD000001000000000000000A /* DefaultAPIKey.swift in Sources */,

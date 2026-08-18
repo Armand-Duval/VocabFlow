@@ -22,7 +22,6 @@ struct CreateCardsView: View {
     @State private var isPreparingCapture = false
     @State private var isRunningOCR = false
     @State private var isGeneratingAppreciation = false
-    @State private var generationMode: CardGenerationMode = CardGenerationPreferences.mode
     @State private var appreciationSource = ""
     @State private var showPhotoLibrary = false
     @State private var showCamera = false
@@ -626,33 +625,13 @@ struct CreateCardsView: View {
                 }
             }
 
-            if canGenerate {
-                if willGenerateAppreciation {
-                    Text(L10n.createGenerateNoWordsHint)
-                        .font(AppFont.weak())
-                        .foregroundStyle(AppColor.textMuted)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, AppSpacing.md)
-                } else {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Picker("", selection: $generationMode) {
-                            ForEach(CardGenerationMode.allCases) { mode in
-                                Text(mode.title).tag(mode)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .onChange(of: generationMode) { _, mode in
-                            CardGenerationPreferences.mode = mode
-                        }
-
-                        Text(generationMode.detail)
-                            .font(AppFont.weak())
-                            .foregroundStyle(AppColor.textMuted)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
+            if canGenerate, willGenerateAppreciation {
+                Text(L10n.createGenerateNoWordsHint)
+                    .font(AppFont.weak())
+                    .foregroundStyle(AppColor.textMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, AppSpacing.md)
-                }
             }
 
             Button {
@@ -821,7 +800,7 @@ struct CreateCardsView: View {
     private func wordExistsInSelectedDeck(_ word: String) -> Bool {
         guard !trimmedSentence.isEmpty else { return false }
         let deck = DeckService.resolvedDeck(id: selectedDeckID, in: modelContext)
-        let units = KimiCardGenerator.makeGenerationUnits(sentence: trimmedSentence, words: [word])
+        let units = CardGenerator.makeGenerationUnits(sentence: trimmedSentence, words: [word])
         if units.isEmpty {
             return FlashCardDeduper.contains(
                 word: word,

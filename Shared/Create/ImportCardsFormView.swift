@@ -328,7 +328,7 @@ struct ImportCardsFormView: View {
     }
 
     private func wordExistsInSelectedDeck(_ word: String) -> Bool {
-        let units = KimiCardGenerator.makeGenerationUnits(sentence: trimmedSentence, words: [word])
+        let units = CardGenerator.makeGenerationUnits(sentence: trimmedSentence, words: [word])
         if units.isEmpty {
             return SharedDedupeIndex.contains(
                 deckID: selectedDeckID,
@@ -370,7 +370,7 @@ struct ImportCardsFormView: View {
     }
 
     private func submitGeneration() {
-        guard APISettings.canUseKimi else {
+        guard APISettings.canUseAI else {
             errorMessage = L10n.extensionMissingKey
             return
         }

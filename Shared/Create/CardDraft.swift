@@ -38,7 +38,7 @@ struct GeneratedCardDraft: Identifiable, Equatable {
     /// App Group relative path to the source screenshot / photo, if any.
     var sourceImagePath: String? = nil
     var isSelected: Bool = true
-    /// AI-recommended primary card for this word (shown in compact mode).
+    /// AI-recommended primary card for this word.
     var isRecommended: Bool = false
 
     var studyContent: CardStudyContent {
@@ -129,44 +129,6 @@ enum CardReplaceReason: String, CaseIterable, Identifiable {
             "上一张卡太难、信息太满。请更短、更贴近本句，降低难度。"
         case .tooEasy:
             "上一张卡太浅，几乎不用想。请抓住本句里更值得记的一点，让正面需要真正回忆。"
-        }
-    }
-}
-
-enum CardGenerationMode: String, CaseIterable, Identifiable {
-    case compact
-    case full
-
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .compact: L10n.createCardModeCompact
-        case .full: L10n.createCardModeFull
-        }
-    }
-
-    var detail: String {
-        switch self {
-        case .compact: L10n.createCardModeCompactDetail
-        case .full: L10n.createCardModeFullDetail
-        }
-    }
-}
-
-enum CardGenerationPreferences {
-    private static let modeKey = "cardGeneration.mode.v1"
-
-    static var mode: CardGenerationMode {
-        get {
-            guard let raw = UserDefaults.standard.string(forKey: modeKey),
-                  let value = CardGenerationMode(rawValue: raw) else {
-                return .compact
-            }
-            return value
-        }
-        set {
-            UserDefaults.standard.set(newValue.rawValue, forKey: modeKey)
         }
     }
 }
@@ -610,7 +572,9 @@ enum CardContentFormatter {
         return trimmedSentence
     }
 
-    /// Derive the alternate card type from a primary draft (compact mode optional sibling).
+    /// Derive the other exam type from the AI primary.
+    /// Shares meaning, usage, and extras; only the front is reformatted.
+    /// Selected by default, but not marked as the recommended card.
     static func siblingDraft(from primary: GeneratedCardDraft) -> GeneratedCardDraft {
         let siblingType: CardType = primary.cardType == .cloze ? .definition : .cloze
         let siblingFront: String
@@ -639,12 +603,12 @@ enum CardContentFormatter {
             paraphrases: primary.paraphrases,
             sourceAttribution: primary.sourceAttribution,
             sourceImagePath: primary.sourceImagePath,
-            isSelected: false,
+            isSelected: true,
             isRecommended: false
         )
     }
 
-    /// Append unselected sibling cards so preview can opt in without another AI call.
+    /// Append the sibling exam type so preview can save both without another AI call.
     static func expandOptionalSiblings(_ drafts: [GeneratedCardDraft]) -> [GeneratedCardDraft] {
         var result: [GeneratedCardDraft] = []
         var existing = Set<String>()

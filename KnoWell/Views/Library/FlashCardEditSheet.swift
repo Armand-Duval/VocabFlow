@@ -424,7 +424,7 @@ struct FlashCardEditSheet: View {
                 return
             }
 
-            let drafts = try await KimiCardGenerator.generate(
+            let drafts = try await CardGenerator.generate(
                 sentence: sentence,
                 words: [word],
                 sourceHint: {

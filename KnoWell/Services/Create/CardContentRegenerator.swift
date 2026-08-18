@@ -37,7 +37,7 @@ enum CardDraftRegenerator {
             next.isRecommended = true
             return next
         }
-        return try await KimiCardGenerator.regenerate(
+        return try await CardGenerator.regenerate(
             draft: draft,
             reason: reason,
             deckName: deckName
@@ -69,7 +69,7 @@ enum CardContentRegenerator {
             return
         }
 
-        let drafts = try await KimiCardGenerator.generate(
+        let drafts = try await CardGenerator.generate(
             sentence: sentence,
             words: [word],
             sourceHint: card.sourceAttribution,

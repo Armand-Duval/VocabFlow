@@ -502,7 +502,7 @@ struct SettingsView: View {
         }
 
         do {
-            try await KimiCardGenerator.testConnection(
+            try await CardGenerator.testConnection(
                 apiKey: testKey,
                 model: APISettings.effectiveModel
             )

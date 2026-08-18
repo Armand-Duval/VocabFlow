@@ -15,7 +15,7 @@ enum ShareCardGenerationRunner {
         SharedDeckStore.lastSelectedDeckID = targetDeckID
         SharedDeckStore.pendingTargetDeckID = targetDeckID
 
-        let prepared = try KimiCardGenerator.prepareGeneration(
+        let prepared = try CardGenerator.prepareGeneration(
             sentence: sentence,
             words: words,
             skipExistingInDeckID: targetDeckID

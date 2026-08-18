@@ -151,8 +151,6 @@ enum APISettings {
         return provider
     }
 
-    static var canUseKimi: Bool { canUseAI }
-
     static var canUseAI: Bool {
         if usesCloudProxy { return true }
         return !effectiveAPIKey.isEmpty && !baseURL.isEmpty && !effectiveModel.isEmpty
@@ -254,7 +252,7 @@ enum CloudAIQuota {
     }
 
     @MainActor
-    static func insufficientError(needed: Int) -> KimiCardGeneratorError? {
+    static func insufficientError(needed: Int) -> CardGeneratorError? {
         guard APISettings.usesCloudProxy else { return nil }
         guard let snapshot = CloudAIQuotaStore.shared.snapshot else { return nil }
         let units = max(needed, 1)
