@@ -710,7 +710,7 @@ struct CreateCardsView: View {
         if result.useImageAsSource {
             sentence = result.words.joined(separator: ", ")
         } else {
-            sentence = result.sentence
+            sentence = OCRContextExtractor.sourceTextForDisplay(result.sentence)
         }
         let ocrPage = result.pageText.isEmpty ? result.sentence : result.pageText
         sourceHint = OCRContextExtractor.disambiguationHint(from: ocrPage, words: result.words)
@@ -745,7 +745,7 @@ struct CreateCardsView: View {
         }
 
         // Highlight hits → word + containing sentence only (not the whole page).
-        sentence = importSentence
+        sentence = OCRContextExtractor.sourceTextForDisplay(importSentence)
         sourceMode = .pick
         sourceHint = OCRContextExtractor.sourceHint(from: result.fullText)
         sourceImagePath = CardSourceImageStore.saveJPEG(image)

@@ -279,10 +279,11 @@ enum L10n {
     static var liveTextHint: String { tr("liveText.hint") }
     static var liveTextToggleHighlights: String { tr("liveText.toggleHighlights") }
     static var liveTextAddWord: String { tr("liveText.addWord") }
-    static var liveTextUseSentence: String { tr("liveText.useSentence") }
+    static var liveTextUseSelection: String { tr("liveText.useSelection") }
     static var liveTextUseImage: String { tr("liveText.useImage") }
     static var liveTextOptionalLabel: String { tr("liveText.optional.label") }
-    static var liveTextOptionalNote: String { tr("liveText.optional.note") }
+    static var liveTextSourceHelpTitle: String { tr("liveText.sourceHelp.title") }
+    static var liveTextSourceHelp: String { tr("liveText.sourceHelp") }
     static var liveTextSourceUpdated: String { tr("liveText.sourceUpdated") }
     static var liveTextImageSelected: String { tr("liveText.imageSelected") }
     static var liveTextDetectingHighlights: String { tr("liveText.detectingHighlights") }

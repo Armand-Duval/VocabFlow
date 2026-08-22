@@ -7961,13 +7961,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Highlighter words are added automatically. Tap to add more."
+            "value" : "Highlighter words are added automatically."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "荧光笔上的词会自动加入。可点选补充。"
+            "value" : "荧光笔词自动加入"
           }
         }
       }
@@ -7977,13 +7977,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Using the screenshot as the source"
+            "value" : "Using the picture as the memory cue."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "将使用这张截图作为原文"
+            "value" : "将用图片作为记忆载体"
           }
         }
       }
@@ -8009,29 +8009,62 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Optional"
+            "value" : "Source · optional"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "可选"
+            "value" : "原文 · 可选"
           }
         }
       }
     },
     "liveText.optional.note" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pick the full sentence for your words, or use the whole image as the source."
+            "value" : "Use selection as source: your selection. Use image as memory cue: the picture."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "选生词所在的整句，或用整张图当原文。"
+            "value" : "用框选作原文：框选内容。用图片作为记忆载体：这张图。"
+          }
+        }
+      }
+    },
+    "liveText.sourceHelp" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skip both: auto-detect full sentences from the page.\n\n· Use selection as source: split full sentences only from what you framed.\n· Use this image: use the picture as the memory cue."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "都不点：从整页自动识别整句。\n\n· 用框选作原文：只在框选范围内拆出整句。\n· 用这张图：用图片作为记忆载体。"
+          }
+        }
+      }
+    },
+    "liveText.sourceHelp.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About source text"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "原文说明"
           }
         }
       }
@@ -8041,13 +8074,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Using the selection as the source sentence"
+            "value" : "Using your selection as the source"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已将选中文字用作原文"
+            "value" : "将使用框选内容作为原文"
           }
         }
       }
@@ -8118,7 +8151,24 @@
         }
       }
     },
+    "liveText.useSelection" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use selection as source"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用框选作原文"
+          }
+        }
+      }
+    },
     "liveText.useSentence" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

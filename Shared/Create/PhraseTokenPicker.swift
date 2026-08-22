@@ -21,6 +21,29 @@ enum PhraseTokenizer {
         return result
     }
 
+    /// Group word chips by newline so multi-sentence imports stay visually split.
+    static func paragraphs(from tokens: [PhraseToken], in sentence: String) -> [[PhraseToken]] {
+        guard !tokens.isEmpty else { return [] }
+        var paragraphs: [[PhraseToken]] = []
+        var current: [PhraseToken] = []
+        for (index, token) in tokens.enumerated() {
+            if index > 0 {
+                let gap = tokens[index - 1].range.upperBound..<token.range.lowerBound
+                if sentence[gap].contains(where: \.isNewline) {
+                    if !current.isEmpty {
+                        paragraphs.append(current)
+                        current = []
+                    }
+                }
+            }
+            current.append(token)
+        }
+        if !current.isEmpty {
+            paragraphs.append(current)
+        }
+        return paragraphs
+    }
+
     static func phrase(in sentence: String, tokens: [PhraseToken], tokenRange: Range<Int>) -> String {
         guard !tokens.isEmpty,
               tokenRange.lowerBound >= 0,
@@ -176,18 +199,26 @@ struct PhraseTokenPicker: View {
         }
     }
 
+    private var tokenParagraphs: [[PhraseToken]] {
+        PhraseTokenizer.paragraphs(from: tokens, in: sentence)
+    }
+
     private var tokenFlow: some View {
-        PhraseTokenFlowLayout(spacing: 6, lineSpacing: 8) {
-            ForEach(tokens) { token in
-                tokenChip(token)
-                    .background(
-                        GeometryReader { geo in
-                            Color.clear.preference(
-                                key: TokenFramePreferenceKey.self,
-                                value: [token.id: geo.frame(in: .global)]
+        VStack(alignment: .leading, spacing: 12) {
+            ForEach(Array(tokenParagraphs.enumerated()), id: \.offset) { _, paragraph in
+                PhraseTokenFlowLayout(spacing: 6, lineSpacing: 8) {
+                    ForEach(paragraph) { token in
+                        tokenChip(token)
+                            .background(
+                                GeometryReader { geo in
+                                    Color.clear.preference(
+                                        key: TokenFramePreferenceKey.self,
+                                        value: [token.id: geo.frame(in: .global)]
+                                    )
+                                }
                             )
-                        }
-                    )
+                    }
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

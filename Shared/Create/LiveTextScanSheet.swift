@@ -52,6 +52,9 @@ struct LiveTextScanSheet: View {
     @State private var isDetectingHighlights = true
     @State private var didApplyHighlights = false
     @State private var sourcePreference: SourcePreference = .automatic
+    @State private var showSourceHelp = false
+    @State private var highlightUnits: [OCRImportUnit] = []
+    @State private var highlightPageText = ""
     private let pageText: String
 
     private enum SourcePreference: Equatable {
@@ -70,7 +73,7 @@ struct LiveTextScanSheet: View {
         self.analysis = analysis
         self.highlightDetection = highlightDetection
         self.onComplete = onComplete
-        let transcript = ImageOCRService.sanitizeOCRText(analysis.transcript)
+        let transcript = ImageOCRService.sanitizeOCRText(analysis.transcript, preserveParagraphs: true)
         pageText = transcript
     }
 
@@ -78,8 +81,11 @@ struct LiveTextScanSheet: View {
         selectedText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    private var selectionLooksLikeSentence: Bool {
-        OCRContextExtractor.isLikelyFullSentence(trimmedSelection)
+    private var hasWords: Bool { !words.isEmpty }
+
+    /// User framed text on the image to override the default auto-assembled source.
+    private var canUseFramedSentence: Bool {
+        !trimmedSelection.isEmpty && hasWords
     }
 
     var body: some View {
@@ -135,14 +141,21 @@ struct LiveTextScanSheet: View {
             .task {
                 await applyHighlighterWordsIfNeeded()
             }
+            .onChange(of: trimmedSelection) { _, _ in
+                guard case .sentence = sourcePreference else { return }
+                sourcePreference = .automatic
+                manualSentence = nil
+            }
         }
     }
 
     private var controls: some View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            Text(L10n.liveTextHint)
-                .font(AppFont.helper())
-                .foregroundStyle(AppColor.textMuted)
+            if words.isEmpty {
+                Text(L10n.liveTextHint)
+                    .font(AppFont.helper())
+                    .foregroundStyle(AppColor.textMuted)
+            }
 
             if !trimmedSelection.isEmpty {
                 Text(trimmedSelection)
@@ -185,19 +198,30 @@ struct LiveTextScanSheet: View {
                 .disabled(trimmedSelection.isEmpty)
 
             VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                Text(L10n.liveTextOptionalLabel)
-                    .font(AppFont.caption().weight(.semibold))
-                    .foregroundStyle(AppColor.textMuted)
-
-                Text(L10n.liveTextOptionalNote)
-                    .font(AppFont.helper())
-                    .foregroundStyle(AppColor.textMuted)
+                HStack(spacing: 6) {
+                    Text(L10n.liveTextOptionalLabel)
+                        .font(AppFont.caption().weight(.semibold))
+                        .foregroundStyle(AppColor.textMuted)
+                    Spacer(minLength: 0)
+                    Button {
+                        showSourceHelp = true
+                    } label: {
+                        Image(systemName: "questionmark.circle")
+                            .font(.body)
+                            .foregroundStyle(AppColor.textMuted)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(L10n.liveTextSourceHelpTitle)
+                    .popover(isPresented: $showSourceHelp) {
+                        liveTextSourceHelpContent
+                    }
+                }
 
                 HStack(spacing: AppSpacing.sm) {
                     optionalSourceButton(
-                        title: L10n.liveTextUseSentence,
+                        title: L10n.liveTextUseSelection,
                         isSelected: isSentenceSelected,
-                        isEnabled: selectionLooksLikeSentence || manualSentence != nil,
+                        isEnabled: canUseFramedSentence,
                         action: toggleSentencePreference
                     )
 
@@ -226,6 +250,16 @@ struct LiveTextScanSheet: View {
     private var isSentenceSelected: Bool {
         if case .sentence = sourcePreference { return true }
         return false
+    }
+
+    private var liveTextSourceHelpContent: some View {
+        Text(L10n.liveTextSourceHelp)
+            .font(AppFont.helper())
+            .foregroundStyle(AppColor.textSecondary)
+            .multilineTextAlignment(.leading)
+            .frame(maxWidth: 280, alignment: .leading)
+            .padding(AppSpacing.md)
+            .presentationCompactAdaptation(.popover)
     }
 
     @ViewBuilder
@@ -281,9 +315,9 @@ struct LiveTextScanSheet: View {
             feedback = nil
             return
         }
-        let text = trimmedSelection
-        guard selectionLooksLikeSentence else { return }
-        manualSentence = ImageOCRService.sanitizeOCRText(text)
+        guard let text = sentenceFromUserSelection()?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !text.isEmpty else { return }
+        manualSentence = text
         sourcePreference = .sentence(text)
         feedback = L10n.liveTextSourceUpdated
     }
@@ -322,7 +356,7 @@ struct LiveTextScanSheet: View {
                 pageText: pageText
             )
         case .sentence(let text):
-            let sanitized = ImageOCRService.sanitizeOCRText(text)
+            let sanitized = ImageOCRService.sanitizeOCRText(text, preserveParagraphs: true)
             return LiveTextScanResult(
                 sentence: sanitized,
                 words: words,
@@ -338,7 +372,7 @@ struct LiveTextScanSheet: View {
                     pageText: pageText
                 )
             }
-            if let assembled = autoAssembledSentence(), OCRContextExtractor.isLikelyFullSentence(assembled) {
+            if let assembled = autoAssembledSentence() {
                 return LiveTextScanResult(
                     sentence: assembled,
                     words: words,
@@ -347,7 +381,7 @@ struct LiveTextScanSheet: View {
                 )
             }
             return LiveTextScanResult(
-                sentence: autoAssembledSentence() ?? "",
+                sentence: "",
                 words: words,
                 useImageAsSource: true,
                 pageText: pageText
@@ -356,14 +390,48 @@ struct LiveTextScanSheet: View {
     }
 
     private func autoAssembledSentence() -> String? {
-        let page = pageText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !words.isEmpty, !page.isEmpty else { return nil }
-        let units = OCRContextExtractor.importUnits(fullText: page, highlightedWords: words)
-        let joined = units
-            .map(\.sentence)
-            .joined(separator: "\n\n")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        return joined.isEmpty ? nil : joined
+        var best = highlightUnits
+        let sources = [highlightPageText, pageText]
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        for source in sources {
+            let units = OCRContextExtractor.importUnits(fullText: source, highlightedWords: words)
+            if units.count > best.count {
+                best = units
+            }
+        }
+        return OCRContextExtractor.joinedImportSentences(best)
+    }
+
+    /// Map the user's image selection to source text.
+    /// Precise single-sentence highlights use the selection verbatim; a rough multi-sentence
+    /// range keeps only the sentences that contain vocabulary words inside that range.
+    private func sentenceFromUserSelection() -> String? {
+        let selection = trimmedSelection
+        guard !selection.isEmpty else { return nil }
+        let sanitized = ImageOCRService.sanitizeOCRText(selection, preserveParagraphs: true)
+        guard !words.isEmpty else { return sanitized }
+
+        let units = OCRContextExtractor.importUnits(fullText: sanitized, highlightedWords: words)
+        guard !units.isEmpty else { return sanitized }
+
+        if units.count > 1 {
+            return units
+                .map(\.sentence)
+                .joined(separator: "\n\n")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        let extracted = units[0].sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !extracted.isEmpty else { return sanitized }
+
+        // Loose circle around one sentence — prefer the tighter OCR sentence boundary.
+        if extracted.count < sanitized.count,
+           sanitized.range(of: extracted, options: [.caseInsensitive, .diacriticInsensitive]) != nil {
+            return extracted
+        }
+
+        return sanitized
     }
 
     @MainActor
@@ -379,6 +447,8 @@ struct LiveTextScanSheet: View {
         }
         didApplyHighlights = true
         isDetectingHighlights = false
+        highlightUnits = result.importUnits
+        highlightPageText = result.fullText
         guard result.importKind == .highlight else { return }
 
         var added = 0

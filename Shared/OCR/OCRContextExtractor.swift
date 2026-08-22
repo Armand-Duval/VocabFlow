@@ -96,21 +96,26 @@ enum OCRContextExtractor {
         return lines[lower...upper].joined(separator: "\n")
     }
 
-    /// Soft-join wrapped lines, then map each word to its containing sentence.
+    /// Map each word to its sentence. Split on terminators and line breaks first
+    /// so unpunctuated screenshot lines do not collapse into one blob.
     static func importUnits(fullText: String, highlightedWords: [String]) -> [OCRImportUnit] {
         let words = highlightedWords
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
         guard !words.isEmpty else { return [] }
 
-        let normalized = softJoinLines(fullText)
+        let normalized = readingTextPreservingSentences(fullText)
         guard !normalized.isEmpty else { return [] }
 
+        let pieces = splitSentences(normalized)
         var sentenceOrder: [String] = []
         var wordsBySentence: [String: [String]] = [:]
 
         for word in words {
-            let sentences = sentencesContainingHighlight(word, in: normalized)
+            let fromPieces = pieces.filter { rangeOfWord(word, in: $0) != nil }
+            let sentences = fromPieces.isEmpty
+                ? sentencesContainingHighlight(word, in: normalized)
+                : fromPieces
             guard !sentences.isEmpty else { continue }
             for sentence in sentences {
                 if wordsBySentence[sentence] == nil {
@@ -129,6 +134,52 @@ enum OCRContextExtractor {
             guard let list = wordsBySentence[sentence], !list.isEmpty else { return nil }
             return OCRImportUnit(sentence: sentence, words: list)
         }
+    }
+
+    static func joinedImportSentences(_ units: [OCRImportUnit]) -> String? {
+        let blocks = units.flatMap { splitSentences($0.sentence) }
+        let joined = blocks.joined(separator: "\n\n")
+        return joined.isEmpty ? nil : joined
+    }
+
+    /// Visible paragraph breaks between sentences in the source editor.
+    static func sourceTextForDisplay(_ text: String) -> String {
+        let blocks = splitSentences(text)
+        guard blocks.count > 1 else {
+            return text.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        return blocks.joined(separator: "\n\n")
+    }
+
+    /// Split on `.!?。！？…` and newlines. Preserves order.
+    static func splitSentences(_ text: String) -> [String] {
+        let normalized = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalized.isEmpty else { return [] }
+
+        var sentences: [String] = []
+        var start = normalized.startIndex
+        var index = start
+        while index < normalized.endIndex {
+            if isSentenceTerminator(at: index, in: normalized) {
+                var end = normalized.index(after: index)
+                while end < normalized.endIndex, isTrailingCloser(normalized[end]) {
+                    end = normalized.index(after: end)
+                }
+                let piece = String(normalized[start..<end])
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                if !piece.isEmpty { sentences.append(piece) }
+                start = end
+                while start < normalized.endIndex, normalized[start].isWhitespace {
+                    start = normalized.index(after: start)
+                }
+                index = start
+                continue
+            }
+            index = normalized.index(after: index)
+        }
+        let tail = String(normalized[start...]).trimmingCharacters(in: .whitespacesAndNewlines)
+        if !tail.isEmpty { sentences.append(tail) }
+        return sentences
     }
 
     /// Locate every sentence that contains this highlight (phrase, or significant tokens if phrase OCR-mismatched).
@@ -152,6 +203,43 @@ enum OCRContextExtractor {
             found.append(sentence)
         }
         return found
+    }
+
+    /// Keep line breaks except obvious wraps, so unpunctuated dialogue stays one sentence per line.
+    static func readingTextPreservingSentences(_ text: String) -> String {
+        let lines = text
+            .replacingOccurrences(of: "\r\n", with: "\n")
+            .replacingOccurrences(of: "\r", with: "\n")
+            .components(separatedBy: .newlines)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        guard !lines.isEmpty else { return "" }
+
+        var parts: [String] = []
+        var buffer = lines[0]
+        for line in lines.dropFirst() {
+            if let joined = joinHyphenatedWrap(buffer: buffer, nextLine: line) {
+                buffer = joined
+            } else if isLatinLineWrap(buffer: buffer, nextLine: line) {
+                buffer += " " + line
+            } else {
+                parts.append(buffer)
+                buffer = line
+            }
+        }
+        parts.append(buffer)
+        return parts.joined(separator: "\n")
+    }
+
+    private static func isLatinLineWrap(buffer: String, nextLine: String) -> Bool {
+        guard let first = nextLine.first, first.isASCII, first.isLetter, first.isLowercase else {
+            return false
+        }
+        guard !endsWithSentenceTerminator(buffer) else { return false }
+        return buffer.last?.isLetter == true
+            || buffer.last == ","
+            || buffer.last == ";"
+            || buffer.last == ":"
     }
 
     /// Join OCR line wraps into reading order without treating every newline as a sentence end.
@@ -253,6 +341,7 @@ enum OCRContextExtractor {
     /// `.` / `。` etc., but not the dots inside an ellipsis (`...` / `…`).
     private static func isSentenceTerminator(at index: String.Index, in text: String) -> Bool {
         let ch = text[index]
+        if ch.isNewline { return true }
         let terminators: Set<Character> = [".", "!", "?", "。", "！", "？", "…"]
         guard terminators.contains(ch) else { return false }
         if ch == "." {

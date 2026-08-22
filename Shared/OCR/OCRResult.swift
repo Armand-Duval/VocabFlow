@@ -38,9 +38,8 @@ struct OCRResult: Equatable, Sendable {
         if importUnits.isEmpty {
             return fullText.trimmingCharacters(in: .whitespacesAndNewlines)
         }
-        return importUnits
-            .map(\.sentence)
-            .joined(separator: "\n\n")
+        return OCRContextExtractor.joinedImportSentences(importUnits)
+            ?? fullText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     var preferredImportWords: [String] {

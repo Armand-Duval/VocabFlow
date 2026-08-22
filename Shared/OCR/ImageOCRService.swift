@@ -55,10 +55,12 @@ enum ImageOCRService {
             mask: mask,
             fullText: vision.fullText
         )
-        let units = OCRContextExtractor.importUnits(
+        let lineUnits = importUnitsFromTokenLines(tokens: vision.tokens, highlightedWords: highlighted)
+        let textUnits = OCRContextExtractor.importUnits(
             fullText: vision.fullText,
             highlightedWords: highlighted
         )
+        let units = lineUnits.count > textUnits.count ? lineUnits : textUnits
         let raw = OCRResult(
             fullText: vision.fullText,
             highlightedWords: highlighted,
@@ -206,7 +208,7 @@ enum ImageOCRService {
             allTokens.append(contentsOf: tokens(from: hit, lineIndex: lineIndex, fullSize: fullSize))
         }
         return VisionPayload(
-            fullText: sanitizeOCRText(lines.joined(separator: "\n")),
+            fullText: sanitizeOCRText(lines.joined(separator: "\n"), preserveParagraphs: true),
             tokens: allTokens
         )
     }
@@ -490,6 +492,49 @@ enum ImageOCRService {
         return refined
     }
 
+    /// One unit per Vision line that contains a highlighted word.
+    private static func importUnitsFromTokenLines(
+        tokens: [OCRToken],
+        highlightedWords: [String]
+    ) -> [OCRImportUnit] {
+        let words = highlightedWords
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        guard !words.isEmpty, !tokens.isEmpty else { return [] }
+
+        var lineOrder: [Int] = []
+        var wordsByLine: [Int: [String]] = [:]
+        var textByLine: [Int: String] = [:]
+
+        for word in words {
+            let token = tokens.first {
+                $0.text.caseInsensitiveCompare(word) == .orderedSame
+            } ?? tokens.first {
+                $0.lineText.range(of: word, options: [.caseInsensitive, .diacriticInsensitive]) != nil
+            }
+            guard let token else { continue }
+            if wordsByLine[token.lineIndex] == nil {
+                lineOrder.append(token.lineIndex)
+                textByLine[token.lineIndex] = token.lineText
+            }
+            var list = wordsByLine[token.lineIndex] ?? []
+            if !list.contains(where: { $0.caseInsensitiveCompare(word) == .orderedSame }) {
+                list.append(word)
+                wordsByLine[token.lineIndex] = list
+            }
+        }
+
+        return lineOrder.flatMap { index -> [OCRImportUnit] in
+            guard let lineWords = wordsByLine[index],
+                  let line = textByLine[index]?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !lineWords.isEmpty,
+                  !line.isEmpty
+            else { return [] }
+            let inner = OCRContextExtractor.importUnits(fullText: line, highlightedWords: lineWords)
+            return inner.isEmpty ? [OCRImportUnit(sentence: line, words: lineWords)] : inner
+        }
+    }
+
     private static func configure(
         _ request: VNRecognizeTextRequest,
         languages: [String],
@@ -516,7 +561,7 @@ enum ImageOCRService {
 
     /// Vision often reads wrap hyphens / gutter gaps as em dashes:
     /// `algebra — ist` → `algebraist`, `告 — 诫` → `告诫`, `uses — humor` → `uses humor`.
-    static func sanitizeOCRText(_ text: String) -> String {
+    static func sanitizeOCRText(_ text: String, preserveParagraphs: Bool = false) -> String {
         let lines = text
             .replacingOccurrences(of: "\r\n", with: "\n")
             .replacingOccurrences(of: "\r", with: "\n")
@@ -533,6 +578,14 @@ enum ImageOCRService {
                 continue
             }
             cleaned.append(line)
+        }
+
+        if preserveParagraphs {
+            return joinPreservingParagraphs(cleaned)
+                .components(separatedBy: "\n")
+                .map { repairOCRDashes($0, stripEdges: true) }
+                .filter { !$0.isEmpty }
+                .joined(separator: "\n")
         }
 
         return repairOCRDashes(unwrapOCRLines(cleaned), stripEdges: true)
@@ -651,6 +704,31 @@ enum ImageOCRService {
             current = joinWrappedOCRLine(current, line)
         }
         return current.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Keep screenshot / dialogue line breaks. Only merge obvious book wraps.
+    private static func joinPreservingParagraphs(_ lines: [String]) -> String {
+        guard !lines.isEmpty else { return "" }
+        var parts: [String] = []
+        var buffer = lines[0]
+        for line in lines.dropFirst() {
+            if isObviousLineWrap(buffer, line) {
+                buffer = joinWrappedOCRLine(buffer, line)
+            } else {
+                parts.append(buffer)
+                buffer = line
+            }
+        }
+        parts.append(buffer)
+        return parts.joined(separator: "\n")
+    }
+
+    private static func isObviousLineWrap(_ left: String, _ right: String) -> Bool {
+        if left.last.map(isOCRDash) == true { return true }
+        if let first = right.first, first.isLetter, first.isLowercase, first.isASCII {
+            return true
+        }
+        return false
     }
 
     private static func joinWrappedOCRLine(_ left: String, _ right: String) -> String {
