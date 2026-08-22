@@ -127,8 +127,10 @@ struct FlashCardEditFields: Equatable {
 
 struct FlashCardEditorForm: View {
     @Binding var fields: FlashCardEditFields
+    @Binding var sourceImagePath: String?
     let decks: [Deck]
-    var cardSourceImagePath: String? = nil
+    @State private var showPhotoLibrary = false
+    @State private var showCamera = false
 
     var body: some View {
         Form {
@@ -164,14 +166,7 @@ struct FlashCardEditorForm: View {
 
                 labeledField(L10n.cardSourceLabel, text: $fields.sourceAttribution, prompt: L10n.cardSourceLabel)
 
-                if let path = cardSourceImagePath {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(L10n.cardSourceImageLabel)
-                            .font(AppFont.caption())
-                            .foregroundStyle(.secondary)
-                        CardSourceImageThumbnail(relativePath: path, maxHeight: 160)
-                    }
-                }
+                sourceImageEditor
             } header: {
                 Text(L10n.libraryEditBasics)
             }
@@ -282,6 +277,45 @@ struct FlashCardEditorForm: View {
             }
         }
         .dismissKeyboardOnScroll()
+        .sheet(isPresented: $showPhotoLibrary) {
+            PhotoLibraryPicker { image in
+                sourceImagePath = CardSourceImageStore.saveJPEG(image)
+            }
+            .ignoresSafeArea()
+        }
+        .sheet(isPresented: $showCamera) {
+            CameraImagePicker { image in
+                sourceImagePath = CardSourceImageStore.saveJPEG(image)
+            }
+            .ignoresSafeArea()
+        }
+    }
+
+    @ViewBuilder
+    private var sourceImageEditor: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(L10n.cardSourceImageLabel)
+                .font(AppFont.caption())
+                .foregroundStyle(.secondary)
+
+            if let path = sourceImagePath {
+                CardSourceImageThumbnail(relativePath: path, maxHeight: 160)
+                HStack(spacing: AppSpacing.sm) {
+                    Button(L10n.cardSourceImageReplace) {
+                        showPhotoLibrary = true
+                    }
+                    Button(L10n.cardSourceImageRemove, role: .destructive) {
+                        sourceImagePath = nil
+                    }
+                }
+                .font(AppFont.helper())
+            } else {
+                Button(L10n.cardSourceImageAdd) {
+                    showPhotoLibrary = true
+                }
+                .font(AppFont.helper())
+            }
+        }
     }
 
     private func labeledField(
@@ -318,6 +352,7 @@ struct FlashCardEditSheet: View {
     private var decks: [Deck]
 
     @State private var fields = FlashCardEditFields()
+    @State private var sourceImagePath: String?
     @State private var isRegenerating = false
     @State private var showRegenerateConfirm = false
     @State private var didLoad = false
@@ -326,8 +361,8 @@ struct FlashCardEditSheet: View {
         NavigationStack {
             FlashCardEditorForm(
                 fields: $fields,
-                decks: decks,
-                cardSourceImagePath: card.sourceImagePath
+                sourceImagePath: $sourceImagePath,
+                decks: decks
             )
                 .navigationTitle(editNavigationTitle)
                 .navigationBarTitleDisplayMode(.inline)
@@ -364,6 +399,7 @@ struct FlashCardEditSheet: View {
                     didLoad = true
                     let defaultDeckID = DeckService.fetchOrCreateDefault(in: modelContext).id
                     fields = .load(from: card, defaultDeckID: defaultDeckID)
+                    sourceImagePath = card.sourceImagePath
                 }
         }
     }
@@ -379,6 +415,8 @@ struct FlashCardEditSheet: View {
     private func save() {
         let sourceDeck = card.deck
         fields.apply(to: card, in: modelContext)
+        let trimmedPath = sourceImagePath?.trimmingCharacters(in: .whitespacesAndNewlines)
+        card.sourceImagePath = trimmedPath?.isEmpty == false ? trimmedPath : nil
         if sourceDeck?.id != card.deck?.id {
             DeckCardCountService.adjust(deck: sourceDeck, by: -1, in: modelContext, save: false)
             DeckCardCountService.adjust(deck: card.deck, by: 1, in: modelContext, save: false)

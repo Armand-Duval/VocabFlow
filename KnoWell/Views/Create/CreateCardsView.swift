@@ -29,6 +29,7 @@ struct CreateCardsView: View {
     @State private var isManualEditing = false
     @State private var sourceHint: String?
     @State private var sourceImagePath: String?
+    @State private var imageOnlySource = false
     @State private var isSourceFocused = false
     @State private var sourceMode: SourceWorkspaceMode = .edit
     /// Empty create page only shows scan / album / paste until there is content.
@@ -90,10 +91,12 @@ struct CreateCardsView: View {
                     isPresented: isRunningOCR || isGeneratingAppreciation,
                     message: isGeneratingAppreciation ? L10n.createAppreciationGenerating : L10n.recognizingPhoto
                 )
-                .navigationDestination(isPresented: $showPreview) {
-                    CardPreviewView(selectedDeckID: $selectedDeckID) {
-                        deferredPreview = generationQueue.pendingTriageCardCount > 0
-                        showPreview = false
+                .fullScreenCover(isPresented: $showPreview) {
+                    NavigationStack {
+                        CardPreviewView(selectedDeckID: $selectedDeckID) {
+                            deferredPreview = generationQueue.pendingTriageCardCount > 0
+                            showPreview = false
+                        }
                     }
                 }
                 .sheet(isPresented: $showGenerationQueue) {
@@ -513,6 +516,7 @@ struct CreateCardsView: View {
         sourceMode = .edit
         sourceHint = nil
         sourceImagePath = nil
+        imageOnlySource = false
         appreciationSource = ""
         wordFeedbackMessage = nil
         wordFeedbackIsError = false
@@ -702,8 +706,15 @@ struct CreateCardsView: View {
 
     @MainActor
     private func applyLiveTextResult(_ result: LiveTextScanResult, image: UIImage, banner: String) {
-        sentence = result.sentence
-        sourceHint = OCRContextExtractor.sourceHint(from: result.sentence)
+        imageOnlySource = result.useImageAsSource
+        if result.useImageAsSource {
+            sentence = result.words.joined(separator: ", ")
+        } else {
+            sentence = result.sentence
+        }
+        let ocrPage = result.pageText.isEmpty ? result.sentence : result.pageText
+        sourceHint = OCRContextExtractor.disambiguationHint(from: ocrPage, words: result.words)
+            ?? OCRContextExtractor.sourceHint(from: ocrPage)
         sourceImagePath = CardSourceImageStore.saveJPEG(image)
         if let hint = sourceHint?.trimmingCharacters(in: .whitespacesAndNewlines), !hint.isEmpty {
             appreciationSource = hint
@@ -924,7 +935,8 @@ struct CreateCardsView: View {
                 deckID: deck.id,
                 deckName: deck.name,
                 sourceHint: sourceHint,
-                sourceImagePath: sourceImagePath
+                sourceImagePath: sourceImagePath,
+                imageOnlySource: imageOnlySource
             )
             resetCreateWorkspace()
             showToast(L10n.createQueuedToast)

@@ -26,6 +26,76 @@ enum OCRContextExtractor {
         return joined.isEmpty ? nil : joined
     }
 
+    /// Rough guess: long enough prose with punctuation or several words (not UI chrome).
+    static func isLikelyFullSentence(_ text: String) -> Bool {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count >= 16 else { return false }
+        let terminators = CharacterSet(charactersIn: ".!?。！？;；")
+        if trimmed.unicodeScalars.contains(where: { terminators.contains($0) }) {
+            return true
+        }
+        let wordCount = trimmed
+            .split(whereSeparator: { $0.isWhitespace })
+            .filter { !$0.isEmpty }
+            .count
+        return wordCount >= 5
+    }
+
+    /// OCR near highlighted words for AI disambiguation (not stored as card source text).
+    static func disambiguationHint(from fullText: String, words: [String], maxTotal: Int = 1000, nearbyBudget: Int = 200) -> String? {
+        let normalized = softJoinLines(fullText)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalized.isEmpty else { return nil }
+
+        let targets = words
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        guard !targets.isEmpty else { return nil }
+
+        var nearbyParts: [String] = []
+        var seenNearby = Set<String>()
+        for word in targets {
+            guard let snippet = nearbySnippet(for: word, in: normalized) else { continue }
+            let key = snippet.lowercased()
+            guard seenNearby.insert(key).inserted else { continue }
+            nearbyParts.append(snippet)
+        }
+
+        var hint = nearbyParts.joined(separator: "\n")
+        if hint.count < nearbyBudget {
+            let remainder = normalized
+            if !remainder.isEmpty, !hint.contains(remainder) {
+                hint = hint.isEmpty ? remainder : hint + "\n" + remainder
+            }
+        }
+        hint = String(hint.prefix(maxTotal)).trimmingCharacters(in: .whitespacesAndNewlines)
+        return hint.isEmpty ? nil : hint
+    }
+
+    private static func nearbySnippet(for word: String, in text: String) -> String? {
+        guard let match = rangeOfWord(word, in: text) else { return nil }
+        let lines = text
+            .components(separatedBy: .newlines)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        guard !lines.isEmpty else {
+            return windowAround(match, in: text, radius: 120)
+        }
+
+        var targetIndex: Int?
+        for (index, line) in lines.enumerated() where rangeOfWord(word, in: line) != nil {
+            targetIndex = index
+            break
+        }
+        guard let targetIndex else {
+            return windowAround(match, in: text, radius: 120)
+        }
+
+        let lower = max(0, targetIndex - 1)
+        let upper = min(lines.count - 1, targetIndex + 1)
+        return lines[lower...upper].joined(separator: "\n")
+    }
+
     /// Soft-join wrapped lines, then map each word to its containing sentence.
     static func importUnits(fullText: String, highlightedWords: [String]) -> [OCRImportUnit] {
         let words = highlightedWords

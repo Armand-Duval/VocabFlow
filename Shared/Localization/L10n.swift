@@ -227,6 +227,9 @@ enum L10n {
     static var cardSourceLabel: String { tr("card.source") }
     static var cardSourceImageLabel: String { tr("card.sourceImage") }
     static var cardSourceImageExpandHint: String { tr("card.sourceImage.expandHint") }
+    static var cardSourceImageAdd: String { tr("card.sourceImage.add") }
+    static var cardSourceImageReplace: String { tr("card.sourceImage.replace") }
+    static var cardSourceImageRemove: String { tr("card.sourceImage.remove") }
     static var cardUsageNoteLabel: String { tr("card.usageNote") }
     static var cardUsageNotePlaceholder: String { tr("card.usageNote.placeholder") }
     static var cardEtymologyLabel: String { tr("card.etymology") }
@@ -276,8 +279,12 @@ enum L10n {
     static var liveTextHint: String { tr("liveText.hint") }
     static var liveTextToggleHighlights: String { tr("liveText.toggleHighlights") }
     static var liveTextAddWord: String { tr("liveText.addWord") }
-    static var liveTextUseAsSource: String { tr("liveText.useAsSource") }
+    static var liveTextUseSentence: String { tr("liveText.useSentence") }
+    static var liveTextUseImage: String { tr("liveText.useImage") }
+    static var liveTextOptionalLabel: String { tr("liveText.optional.label") }
+    static var liveTextOptionalNote: String { tr("liveText.optional.note") }
     static var liveTextSourceUpdated: String { tr("liveText.sourceUpdated") }
+    static var liveTextImageSelected: String { tr("liveText.imageSelected") }
     static var liveTextDetectingHighlights: String { tr("liveText.detectingHighlights") }
     static func liveTextHighlightsDetected(_ count: Int) -> String {
         tf("liveText.highlightsDetected", count)

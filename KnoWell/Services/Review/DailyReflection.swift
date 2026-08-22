@@ -426,32 +426,9 @@ enum DailyReflectionService {
         var refreshAttempt = 1
         var excludedSentences: [String] = []
         var excludedSources: [String] = []
-        var dailyAngle: String?
     }
 
     private static let recentDedupDays = 45
-
-    /// Rotate the reading lens each day so the same 3 keywords don't collapse onto one famous line.
-    private static let dailyAngles: [String] = [
-        "开篇：选作品开头最能立住气质的一句",
-        "口吻：选一句能听出说话人性格的台词或旁白",
-        "景物：贴合今日物候的写景，不要把节气名写进原文",
-        "关系：人与人之间的一句（相遇、离别、对峙）",
-        "记忆：关于时间、过去或逝去的一句",
-        "决意：正在做或将要做的一句",
-        "机锋：克制的反讽或冷幽默，不要段子",
-        "收束：章节或作品近结尾、有余味的一句",
-        "意象：用一个具体物象撑起的一句，物象须像这个时节",
-        "独白：不喊口号的自我省察",
-        "闲笔：对话或叙述里看似最轻、实有分量的一句",
-        "旅途：在路上、异乡或逆旅中的一句"
-    ]
-
-    private static func dailyAngle(for day: Date, refreshAttempt: Int) -> String {
-        let dayOfYear = Calendar.current.ordinality(of: .day, in: .year, for: day) ?? 1
-        let index = abs(dayOfYear + max(0, refreshAttempt - 1) * 3) % dailyAngles.count
-        return dailyAngles[index]
-    }
 
     private static func recentExclusion(for day: Date, extraSentences: [String] = []) -> (sentences: [String], sources: [String]) {
         let calendar = Calendar.current
@@ -532,9 +509,6 @@ enum DailyReflectionService {
         let recent = recentExclusion(for: day, extraSentences: options.excludedSentences)
         options.excludedSentences = recent.sentences
         options.excludedSources = recent.sources
-        if options.dailyAngle == nil {
-            options.dailyAngle = dailyAngle(for: day, refreshAttempt: options.refreshAttempt)
-        }
 
         let fallback = curated(for: day, variantOffset: options.isManualRefresh ? options.refreshAttempt : 0)
 
@@ -631,8 +605,7 @@ enum DailyReflectionService {
         - 外文原文：source 用外文（如 William Wordsworth, The World Is Too Much With Us），source_zh 用中文
         - 中文原文：source 用中文（如《论语·为政》），source_zh 留空
 
-        选句优先级：今日节气与物候 > 文学质地 > 浪漫/哲理/智慧。
-        季节是主约束，不是点缀：选一句读起来就像写于这个时节的原文。不要往原文里硬塞「春夏秋冬」或节气名；也禁止选与当前时令明显相反的名句（盛夏不选踏雪，深冬不选荷花盛开）。
+        选句优先级：今日节气与物候优先。季节是主约束，不是点缀：选一句读起来就像写于这个时节的原文。不要往原文里硬塞「春夏秋冬」或节气名；也禁止选与当前时令明显相反的名句（盛夏不选踏雪，深冬不选荷花盛开）。
 
         其他规则：
         1. sentence 必须是可核对的原文，不超过约 120 字符
@@ -640,30 +613,27 @@ enum DailyReflectionService {
         3. 外文原文：translation 必须是完整中文翻译，缺翻译视为无效
         4. source / source_zh 无把握则空字符串，禁止编造
         5. 不要鸡汤口号、不要催学习、不要广告
-        6. 连续多日必须换作品（或同一作家的另一部作品），并换切入角度；禁止连续使用同一原文
-        7. 用户关键词是气质/口味，不是必须写进句子的字；禁止为了贴关键词而选最烂熟的那一句
+        6. 连续多日必须换作品（或同一作家的另一部作品）；禁止连续使用同一原文
+        7. 用户关键词只限制从哪类作品或语言里选，不能压过时令，也不能把关键词塞进句子
         8. 禁止复述近期已展示原文；宁可选较冷门、仍可核对的一句，也不要再拿各语言里被引到滥的那几句
         """
 
         let preferenceHint: String
         if let snippet = DailyReflectionPreferences.promptSnippet {
             preferenceHint = """
-            用户口味关键词：\(snippet)。这是选书/选作者的气质，不是造句素材。
-            - 从符合这一气质的作家或作品里选一句可核对的原文，sentence 必须是作品本来的语言
-            - 外文原文必须同时给出完整中文 translation，两行都要有，缺一不可
-            - 外文必须同时给出外文 source 与中文 source_zh（中文出处跟在翻译后面），缺中文出处视为无效
-            - 现代汉语原文：translation 留空，不要再造一句同义中文
-            - 禁止把关键词塞进句子，禁止每天都用同一部代表作里最著名的那一句
-            - 今天必须换一部与近期不同的作品；同一作家可以，但要换篇
+            用户口味关键词：\(snippet)。这是选书/选作者的范围，不是造句素材。
+            - 只从符合这一语言或文体气质的作品里选一句可核对的原文
+            - 今日节气与物候仍优先于关键词；禁止把关键词塞进 sentence
+            - 外文原文必须同时给出完整中文 translation
+            - 今天必须换一部与近期不同的作品
             """
         } else {
             preferenceHint = """
-            用户未设置口味关键词。按今日节气物候选句，仍须换作品、换角度。
+            用户未设置口味关键词。只按今日节气物候选句，仍须换作品。
             原文在前；外文必须另给中文翻译。
             """
         }
 
-        let angle = options.dailyAngle ?? dailyAngle(for: day, refreshAttempt: options.refreshAttempt)
         let excludedSentences = options.excludedSentences
         let excludedSources = options.excludedSources
         let exclusionBlock: String = {
@@ -690,14 +660,12 @@ enum DailyReflectionService {
         if options.isManualRefresh {
             refreshHint = """
             这是用户第 \(options.refreshAttempt) 次刷新今日一句：必须换一句与下方列表完全不同的经典名句。
-            禁止重复同一原文（不要只改 translation/source）；必须换作品，并换切入角度。
-            今天切入角度：\(angle)
+            禁止重复同一原文（不要只改 translation/source）；必须换作品。
             \(exclusionBlock)
             """
         } else {
             refreshHint = """
             这是今日首次生成。必须与近期已展示原文完全不同，并换一部作品。
-            今天切入角度：\(angle)
             \(exclusionBlock)
             """
         }
@@ -717,7 +685,7 @@ enum DailyReflectionService {
         请给出今日一句。要求：
         - sentence 是作品原文（本来是什么语言就用什么语言）
         - 外文原文必须另给完整中文 translation；现代汉语原文 translation 留空
-        - 先贴合今日节气/物候，再按切入角度选句；换一部与近期不同的作品
+        - 先贴合今日节气/物候选句；换一部与近期不同的作品
         - 默认单行输出；只有短诗且分行是原文形式时才用真实换行，散文/戏剧台词不要拆行
         - 外文必须同时给出外文 source 与中文 source_zh
         - occasion 可用极短节气或物候（如「处暑将至」），不要写成天气预报

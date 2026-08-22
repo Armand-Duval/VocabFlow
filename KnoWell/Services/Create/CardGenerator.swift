@@ -53,9 +53,14 @@ enum CardGenerator {
     static func prepareGeneration(
         sentence: String,
         words: [String],
-        skipExistingInDeckID: UUID? = nil
+        skipExistingInDeckID: UUID? = nil,
+        imageOnlySource: Bool = false
     ) throws -> (units: [OCRImportUnit], skippedCount: Int, batchCount: Int) {
-        let units = generationUnits(sentence: sentence, words: words)
+        let units = generationUnits(
+            sentence: sentence,
+            words: words,
+            imageOnlySource: imageOnlySource
+        )
         let prepared: (units: [OCRImportUnit], skippedCount: Int)
         if let deckID = skipExistingInDeckID {
             prepared = SharedDedupeIndex.filterNewUnits(units, deckID: deckID)
@@ -85,6 +90,7 @@ enum CardGenerator {
         deckName: String? = nil,
         requiredCardType: CardType? = nil,
         skipExistingInDeckID: UUID? = nil,
+        imageOnlySource: Bool = false,
         onProgress: (@MainActor (Int, Int) -> Void)? = nil,
         onBatchStarted: (@MainActor (_ sentence: String, _ words: [String]) -> Void)? = nil,
         onBatchFinished: (@MainActor (_ sentence: String, _ words: [String], _ drafts: [GeneratedCardDraft], _ error: Error?) -> Void)? = nil
@@ -96,13 +102,15 @@ enum CardGenerator {
         let prepared = try prepareGeneration(
             sentence: sentence,
             words: words,
-            skipExistingInDeckID: skipExistingInDeckID
+            skipExistingInDeckID: skipExistingInDeckID,
+            imageOnlySource: imageOnlySource
         )
         return try await generate(
             units: prepared.units,
             sourceHint: sourceHint,
             deckName: deckName,
             requiredCardType: requiredCardType,
+            imageOnlySource: imageOnlySource,
             onProgress: onProgress,
             onBatchStarted: onBatchStarted,
             onBatchFinished: onBatchFinished
@@ -114,6 +122,7 @@ enum CardGenerator {
         sourceHint: String? = nil,
         deckName: String? = nil,
         requiredCardType: CardType? = nil,
+        imageOnlySource: Bool = false,
         onProgress: (@MainActor (Int, Int) -> Void)? = nil,
         onBatchStarted: (@MainActor (_ sentence: String, _ words: [String]) -> Void)? = nil,
         onBatchFinished: (@MainActor (_ sentence: String, _ words: [String], _ drafts: [GeneratedCardDraft], _ error: Error?) -> Void)? = nil
@@ -144,6 +153,7 @@ enum CardGenerator {
             sourceHint: hint,
             deckName: deck,
             requiredCardType: requiredCardType,
+            imageOnlySource: imageOnlySource,
             onProgress: onProgress,
             onBatchStarted: onBatchStarted,
             onBatchFinished: onBatchFinished
@@ -161,6 +171,7 @@ enum CardGenerator {
         sourceHint: String?,
         deckName: String?,
         requiredCardType: CardType?,
+        imageOnlySource: Bool,
         onProgress: (@MainActor (Int, Int) -> Void)?,
         onBatchStarted: (@MainActor (_ sentence: String, _ words: [String]) -> Void)?,
         onBatchFinished: (@MainActor (_ sentence: String, _ words: [String], _ drafts: [GeneratedCardDraft], _ error: Error?) -> Void)?
@@ -192,7 +203,8 @@ enum CardGenerator {
                                 sourceHint: sourceHint,
                                 deckName: deckName,
                                 requiredCardType: requiredCardType,
-                                revisionHint: nil
+                                revisionHint: nil,
+                                imageOnlySource: imageOnlySource
                             )
                             return (job, .success(drafts))
                         } catch {
@@ -246,13 +258,22 @@ enum CardGenerator {
     }
 
     /// Split multi-sentence imports so each word is generated with only its own sentence.
-    private static func generationUnits(sentence: String, words: [String]) -> [OCRImportUnit] {
+    private static func generationUnits(
+        sentence: String,
+        words: [String],
+        imageOnlySource: Bool = false
+    ) -> [OCRImportUnit] {
         let trimmedSentence = sentence.trimmingCharacters(in: .whitespacesAndNewlines)
         let uniqueWords = words
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
             .uniqued()
-        guard !trimmedSentence.isEmpty, !uniqueWords.isEmpty else { return [] }
+        guard !uniqueWords.isEmpty else { return [] }
+
+        if imageOnlySource {
+            return uniqueWords.map { OCRImportUnit(sentence: $0, words: [$0]) }
+        }
+        guard !trimmedSentence.isEmpty else { return [] }
 
         let extracted = OCRContextExtractor.importUnits(
             fullText: trimmedSentence,
@@ -316,7 +337,8 @@ enum CardGenerator {
         sourceHint: String?,
         deckName: String?,
         requiredCardType: CardType?,
-        revisionHint: String?
+        revisionHint: String?,
+        imageOnlySource: Bool = false
     ) async throws -> [GeneratedCardDraft] {
         try await withRetry(attempts: 2) {
             let content = try await requestCards(
@@ -325,7 +347,8 @@ enum CardGenerator {
                 sourceHint: sourceHint,
                 deckName: deckName,
                 requiredCardType: requiredCardType,
-                revisionHint: revisionHint
+                revisionHint: revisionHint,
+                imageOnlySource: imageOnlySource
             )
             return try parseCards(
                 from: content,
@@ -401,7 +424,8 @@ enum CardGenerator {
         sourceHint: String?,
         deckName: String?,
         requiredCardType: CardType?,
-        revisionHint: String? = nil
+        revisionHint: String? = nil,
+        imageOnlySource: Bool = false
     ) async throws -> String {
         guard let url = URL(string: APISettings.chatCompletionsURL) else {
             throw CardGeneratorError.invalidResponse
@@ -482,7 +506,14 @@ enum CardGenerator {
             userPrompt += "\n词库名称（可能是书名、专题或学习范围；请作为释义语境与出处线索）：\(deckName)"
         }
         if let sourceHint, !sourceHint.isEmpty {
-            userPrompt += "\n页面提示（可能含书名/标题/作者，供判断出处）：\(sourceHint)"
+            if imageOnlySource {
+                userPrompt += "\n判义线索（界面文字，供理解词义，不是卡片原文）：\(sourceHint)"
+            } else {
+                userPrompt += "\n页面提示（可能含书名/标题/作者，供判断出处）：\(sourceHint)"
+            }
+        }
+        if imageOnlySource {
+            userPrompt += "\n这是游戏/界面截图，没有完整句子。请为每个生词生成 definition 类型：front 只写生词本身，不要编造例句。"
         }
         if let revisionHint, !revisionHint.isEmpty {
             userPrompt += "\n重做要求：\(revisionHint)\n请给出与上一版明显不同的 front/back/usage_note，不要只改几个字。"

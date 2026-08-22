@@ -442,8 +442,9 @@ struct LibraryView: View {
                 withTransaction(transaction) {
                     filterDeckID = deckID
                 }
-                // Shared current deck: nil = all decks (Review / badge use the same value).
-                DeckSettings.lastSelectedDeckID = deckID
+                if let deckID {
+                    DeckSettings.lastSelectedDeckID = deckID
+                }
             }
         )
     }

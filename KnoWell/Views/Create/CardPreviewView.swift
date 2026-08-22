@@ -56,7 +56,6 @@ struct CardPreviewView: View {
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .navigationBar)
-        .toolbar(.hidden, for: .tabBar)
         .safeAreaInset(edge: .top, spacing: 0) {
             if phase == .triage {
                 triageHeader

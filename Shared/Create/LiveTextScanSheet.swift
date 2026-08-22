@@ -15,6 +15,8 @@ struct LiveTextScanDraft: Identifiable {
 struct LiveTextScanResult {
     var sentence: String
     var words: [String]
+    var useImageAsSource = false
+    var pageText: String = ""
 }
 
 enum LiveTextImageAnalyzer {
@@ -43,13 +45,20 @@ struct LiveTextScanSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var selectedText = ""
-    @State private var sentence: String
+    @State private var manualSentence: String?
     @State private var words: [String] = []
     @State private var feedback: String?
     @State private var highlightsVisible = true
     @State private var isDetectingHighlights = true
     @State private var didApplyHighlights = false
+    @State private var sourcePreference: SourcePreference = .automatic
     private let pageText: String
+
+    private enum SourcePreference: Equatable {
+        case automatic
+        case sentence(String)
+        case image
+    }
 
     init(
         image: UIImage,
@@ -63,11 +72,14 @@ struct LiveTextScanSheet: View {
         self.onComplete = onComplete
         let transcript = ImageOCRService.sanitizeOCRText(analysis.transcript)
         pageText = transcript
-        _sentence = State(initialValue: transcript)
     }
 
     private var trimmedSelection: String {
         selectedText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var selectionLooksLikeSentence: Bool {
+        OCRContextExtractor.isLikelyFullSentence(trimmedSelection)
     }
 
     var body: some View {
@@ -168,14 +180,34 @@ struct LiveTextScanSheet: View {
                     .foregroundStyle(AppColor.textSecondary)
             }
 
-            HStack(spacing: AppSpacing.sm) {
-                Button(L10n.liveTextAddWord, action: addSelectionAsWord)
-                    .buttonStyle(PrimaryButtonStyle(soft: true))
-                    .disabled(trimmedSelection.isEmpty)
+            Button(L10n.liveTextAddWord, action: addSelectionAsWord)
+                .buttonStyle(PrimaryButtonStyle(soft: true))
+                .disabled(trimmedSelection.isEmpty)
 
-                Button(L10n.liveTextUseAsSource, action: useSelectionAsSource)
-                    .buttonStyle(PrimaryButtonStyle(soft: true))
-                    .disabled(trimmedSelection.isEmpty)
+            VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                Text(L10n.liveTextOptionalLabel)
+                    .font(AppFont.caption().weight(.semibold))
+                    .foregroundStyle(AppColor.textMuted)
+
+                Text(L10n.liveTextOptionalNote)
+                    .font(AppFont.helper())
+                    .foregroundStyle(AppColor.textMuted)
+
+                HStack(spacing: AppSpacing.sm) {
+                    optionalSourceButton(
+                        title: L10n.liveTextUseSentence,
+                        isSelected: isSentenceSelected,
+                        isEnabled: selectionLooksLikeSentence || manualSentence != nil,
+                        action: toggleSentencePreference
+                    )
+
+                    optionalSourceButton(
+                        title: L10n.liveTextUseImage,
+                        isSelected: sourcePreference == .image,
+                        isEnabled: true,
+                        action: toggleImagePreference
+                    )
+                }
             }
         }
         .padding(.horizontal, AppSpacing.md)
@@ -191,6 +223,44 @@ struct LiveTextScanSheet: View {
         }
     }
 
+    private var isSentenceSelected: Bool {
+        if case .sentence = sourcePreference { return true }
+        return false
+    }
+
+    @ViewBuilder
+    private func optionalSourceButton(
+        title: String,
+        isSelected: Bool,
+        isEnabled: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button {
+            action()
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.caption.weight(.semibold))
+                Text(title)
+                    .font(AppFont.helper().weight(.medium))
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, AppSpacing.sm)
+            .padding(.vertical, 10)
+            .foregroundStyle(isEnabled ? AppColor.textSecondary : AppColor.textMuted)
+            .background(AppColor.surface, in: RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
+                    .strokeBorder(isSelected ? AppColor.accent.opacity(0.55) : AppColor.border, lineWidth: 1)
+            }
+        }
+        .buttonStyle(.plain)
+        .disabled(!isEnabled)
+        .opacity(isEnabled ? 1 : 0.55)
+    }
+
     private func addSelectionAsWord() {
         let word = trimmedSelection
         guard !word.isEmpty else { return }
@@ -204,27 +274,98 @@ struct LiveTextScanSheet: View {
         }
     }
 
-    private func useSelectionAsSource() {
+    private func toggleSentencePreference() {
+        if case .sentence = sourcePreference {
+            sourcePreference = .automatic
+            manualSentence = nil
+            feedback = nil
+            return
+        }
         let text = trimmedSelection
-        guard !text.isEmpty else { return }
-        sentence = ImageOCRService.sanitizeOCRText(text)
+        guard selectionLooksLikeSentence else { return }
+        manualSentence = ImageOCRService.sanitizeOCRText(text)
+        sourcePreference = .sentence(text)
         feedback = L10n.liveTextSourceUpdated
+    }
+
+    private func toggleImagePreference() {
+        if sourcePreference == .image {
+            sourcePreference = .automatic
+            feedback = nil
+            return
+        }
+        sourcePreference = .image
+        manualSentence = nil
+        feedback = L10n.liveTextImageSelected
     }
 
     private func finish() {
         Task { @MainActor in
             await applyHighlighterWordsIfNeeded()
-            let source = resolvedSourceText()
-            guard !source.isEmpty else {
+            let resolved = resolveCompletion()
+            guard resolved.useImageAsSource || !resolved.sentence.isEmpty else {
                 feedback = L10n.ocrEmpty
                 return
             }
-            onComplete(LiveTextScanResult(sentence: source, words: words))
+            onComplete(resolved)
             dismiss()
         }
     }
 
-    /// Seed highlighter vocabulary without blocking Live Text tap-to-select.
+    private func resolveCompletion() -> LiveTextScanResult {
+        switch sourcePreference {
+        case .image:
+            return LiveTextScanResult(
+                sentence: autoAssembledSentence() ?? "",
+                words: words,
+                useImageAsSource: true,
+                pageText: pageText
+            )
+        case .sentence(let text):
+            let sanitized = ImageOCRService.sanitizeOCRText(text)
+            return LiveTextScanResult(
+                sentence: sanitized,
+                words: words,
+                useImageAsSource: false,
+                pageText: pageText
+            )
+        case .automatic:
+            if let manualSentence {
+                return LiveTextScanResult(
+                    sentence: manualSentence,
+                    words: words,
+                    useImageAsSource: false,
+                    pageText: pageText
+                )
+            }
+            if let assembled = autoAssembledSentence(), OCRContextExtractor.isLikelyFullSentence(assembled) {
+                return LiveTextScanResult(
+                    sentence: assembled,
+                    words: words,
+                    useImageAsSource: false,
+                    pageText: pageText
+                )
+            }
+            return LiveTextScanResult(
+                sentence: autoAssembledSentence() ?? "",
+                words: words,
+                useImageAsSource: true,
+                pageText: pageText
+            )
+        }
+    }
+
+    private func autoAssembledSentence() -> String? {
+        let page = pageText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !words.isEmpty, !page.isEmpty else { return nil }
+        let units = OCRContextExtractor.importUnits(fullText: page, highlightedWords: words)
+        let joined = units
+            .map(\.sentence)
+            .joined(separator: "\n\n")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return joined.isEmpty ? nil : joined
+    }
+
     @MainActor
     private func applyHighlighterWordsIfNeeded() async {
         guard !didApplyHighlights else { return }
@@ -250,23 +391,6 @@ struct LiveTextScanSheet: View {
         if added > 0 {
             feedback = L10n.liveTextHighlightsDetected(added)
         }
-    }
-
-    /// Keep every selected word with its own sentence, not just the first hit.
-    private func resolvedSourceText() -> String {
-        let page = pageText.trimmingCharacters(in: .whitespacesAndNewlines)
-        let fallback = sentence.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !words.isEmpty, !page.isEmpty else {
-            return fallback.isEmpty ? page : fallback
-        }
-
-        let units = OCRContextExtractor.importUnits(fullText: page, highlightedWords: words)
-        let joined = units
-            .map(\.sentence)
-            .joined(separator: "\n\n")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        if !joined.isEmpty { return joined }
-        return fallback.isEmpty ? page : fallback
     }
 }
 
@@ -382,7 +506,6 @@ final class LiveTextZoomView: UIView, UIScrollViewDelegate, ImageAnalysisInterac
 
     private func applyHighlights() {
         interaction.selectableItemsHighlighted = highlightsVisible
-        // Assigning analysis can clear this flag; restore on the next run loop.
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             self.interaction.selectableItemsHighlighted = self.highlightsVisible

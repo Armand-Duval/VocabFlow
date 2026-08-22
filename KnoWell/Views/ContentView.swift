@@ -80,6 +80,7 @@ struct ContentView: View {
         }
         .toolbarBackground(AppColor.pageBackground, for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)
+        .toolbar(.visible, for: .tabBar)
         .appTint()
         .appToast()
         .onReceive(NotificationCenter.default.publisher(for: .shareImportReceived)) { _ in

@@ -60,6 +60,7 @@ final class CardGenerationQueue: ObservableObject {
         let deckName: String?
         let sourceHint: String?
         let sourceImagePath: String?
+        let imageOnlySource: Bool
         let sentencePreview: String
         let units: [OCRImportUnit]
         var status: JobStatus
@@ -176,12 +177,14 @@ final class CardGenerationQueue: ObservableObject {
         deckID: UUID,
         deckName: String?,
         sourceHint: String?,
-        sourceImagePath: String? = nil
+        sourceImagePath: String? = nil,
+        imageOnlySource: Bool = false
     ) throws -> UUID {
         let prepared = try CardGenerator.prepareGeneration(
             sentence: sentence,
             words: words,
-            skipExistingInDeckID: deckID
+            skipExistingInDeckID: deckID,
+            imageOnlySource: imageOnlySource
         )
 
         var wordItems: [WordItem] = []
@@ -209,6 +212,7 @@ final class CardGenerationQueue: ObservableObject {
                 let path = sourceImagePath?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
                 return path.isEmpty ? nil : path
             }(),
+            imageOnlySource: imageOnlySource,
             sentencePreview: String(preview),
             units: prepared.units,
             status: .queued,
@@ -256,6 +260,7 @@ final class CardGenerationQueue: ObservableObject {
             deckName: nil,
             sourceHint: nil,
             sourceImagePath: nil,
+            imageOnlySource: false,
             sentencePreview: L10n.settingsMigrateCards,
             units: [],
             status: .queued,
@@ -399,7 +404,9 @@ final class CardGenerationQueue: ObservableObject {
             let drafts = try await CardGenerator.generate(
                 units: job.units,
                 sourceHint: job.sourceHint,
-                deckName: job.deckName
+                deckName: job.deckName,
+                requiredCardType: job.imageOnlySource ? .definition : nil,
+                imageOnlySource: job.imageOnlySource
             ) { [weak self] completed, total in
                 self?.updateProgress(jobID: job.id, completed: completed, total: total)
             } onBatchStarted: { [weak self] sentence, words in
