@@ -26,7 +26,7 @@
 
 1. 打开 App 的「设置」
 2. 默认服务商为 **DeepSeek**（也可改选 Moonshot / Kimi、OpenAI 等）
-3. 填入对应 API Key；留空则使用内置默认 Key（优先 DeepSeek；上架构建请勿依赖内置 Key）
+3. 填入对应 API Key；留空则使用官方免费代理（`api.knowellcards.com`）
 4. 选择模型后保存，回到「制卡」即可使用
 
 ## 运行

@@ -55,15 +55,7 @@ enum APISettings {
     }
 
     /// Effective model ID (picker selection or custom model override).
-    /// Default-key fallback uses a model that matches the effective provider.
     static var effectiveModel: String {
-        if isUsingDefaultKey {
-            let fallbackProvider = effectiveProvider
-            if fallbackProvider.suggestedModels.contains(kimiModel) {
-                return kimiModel
-            }
-            return fallbackProvider.defaultModel
-        }
         let custom = customModelID
         if !custom.isEmpty { return custom }
         return kimiModel
@@ -92,28 +84,6 @@ enum APISettings {
         !kimiAPIKey.isEmpty
     }
 
-    /// Bundled default key for a provider (empty if unsupported / not configured).
-    static func defaultAPIKey(for provider: AIProvider) -> String {
-        switch provider {
-        case .moonshot:
-            DefaultAPIKey.kimi.trimmingCharacters(in: .whitespacesAndNewlines)
-        case .deepseek:
-            DefaultAPIKey.deepseek.trimmingCharacters(in: .whitespacesAndNewlines)
-        default:
-            ""
-        }
-    }
-
-    /// Any bundled default key exists (DeepSeek and/or Moonshot).
-    static var hasDefaultAPIKey: Bool {
-        !defaultAPIKey(for: .deepseek).isEmpty || !defaultAPIKey(for: .moonshot).isEmpty
-    }
-
-    /// Empty user key → official proxy, else a bundled default key.
-    static var isUsingDefaultKey: Bool {
-        !hasUserAPIKey && !usesCloudProxy && !defaultAPIKey(for: effectiveProvider).isEmpty
-    }
-
     /// No personal key → talk to KnoWell's proxy (upstream key stays on the server).
     static var usesCloudProxy: Bool {
         !hasUserAPIKey && KnoWellCloud.isEnabled
@@ -129,26 +99,15 @@ enum APISettings {
         return id
     }
 
-    /// Prefer user key; otherwise the cloud token, then bundled DeepSeek / Moonshot.
+    /// Prefer user key; otherwise the cloud token.
     static var effectiveAPIKey: String {
         if hasUserAPIKey { return kimiAPIKey }
         if usesCloudProxy { return KnoWellCloud.appToken }
-        let forProvider = defaultAPIKey(for: provider)
-        if !forProvider.isEmpty { return forProvider }
-        if !defaultAPIKey(for: .deepseek).isEmpty { return defaultAPIKey(for: .deepseek) }
-        return defaultAPIKey(for: .moonshot)
+        return ""
     }
 
-    /// Requests use the selected provider when the user supplied a key, or when that
-    /// provider has a bundled default. Cloud proxy keeps the user's picker but
-    /// sends traffic to KnoWellCloud.
     static var effectiveProvider: AIProvider {
-        if hasUserAPIKey { return provider }
-        if usesCloudProxy { return provider }
-        if !defaultAPIKey(for: provider).isEmpty { return provider }
-        if !defaultAPIKey(for: .deepseek).isEmpty { return .deepseek }
-        if !defaultAPIKey(for: .moonshot).isEmpty { return .moonshot }
-        return provider
+        provider
     }
 
     static var canUseAI: Bool {
@@ -159,7 +118,6 @@ enum APISettings {
     static var keySourceDescription: String {
         if hasUserAPIKey { return L10n.keySourceUser }
         if usesCloudProxy { return L10n.keySourceCloud }
-        if isUsingDefaultKey { return L10n.keySourceDefault }
         return L10n.keySourceMissing
     }
 

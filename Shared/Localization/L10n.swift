@@ -604,7 +604,6 @@ enum L10n {
     static var statusMissingKey: String { tr("settings.status.missing") }
     static var keySourceUser: String { tr("settings.key.user") }
     static var keySourceCloud: String { tr("settings.key.cloud") }
-    static var keySourceDefault: String { tr("settings.key.default") }
     static var keySourceMissing: String { tr("settings.key.missing") }
 
     static var importShareSection: String { tr("settings.import.share.section") }

@@ -453,20 +453,6 @@ struct SettingsView: View {
         let trimmed = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmed.isEmpty { return L10n.keySourceUser }
         if KnoWellCloud.isEnabled { return L10n.keySourceCloud }
-        if selectedProvider == .deepseek,
-           !DefaultAPIKey.deepseek.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return L10n.keySourceDefault
-        }
-        if selectedProvider == .moonshot,
-           !DefaultAPIKey.kimi.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return L10n.keySourceDefault
-        }
-        if !DefaultAPIKey.deepseek.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return L10n.keySourceDefault
-        }
-        if !DefaultAPIKey.kimi.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return L10n.keySourceDefault
-        }
         return L10n.keySourceMissing
     }
 
@@ -474,8 +460,6 @@ struct SettingsView: View {
         let trimmedKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmedKey.isEmpty {
             return KnoWellCloud.isEnabled
-                || !DefaultAPIKey.deepseek.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                || !DefaultAPIKey.kimi.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
         if selectedProvider == .custom {
             return !customBaseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
