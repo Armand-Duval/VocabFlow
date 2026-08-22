@@ -35,10 +35,18 @@ class ExtensionImportViewController: UIViewController {
         Task { @MainActor in
             await Task.yield()
 
-            if let text = await ShareTextExtractor.loadText(from: inputItems) {
-                presentEditor(sentence: text, highlightedWords: [], sourceHint: nil, sourceImagePath: nil, preferSharedSentence: false)
-            } else if let ocr = await ShareTextExtractor.loadOCRFromImages(from: inputItems) {
-                presentOCREditor(ocr)
+            let providers = inputItems.flatMap { $0.attachments ?? [] }
+            
+            for provider in providers {
+                if let text = await ShareTextExtractor.loadText(from: provider), !text.isEmpty {
+                    presentEditor(sentence: text, highlightedWords: [], sourceHint: nil, sourceImagePath: nil, preferSharedSentence: false)
+                    return
+                }
+            }
+            
+            if let imagePath = await ShareTextExtractor.saveSharedImage(from: inputItems) {
+                ShareImportStore.save(sentence: "", selectedWord: nil, sourceHint: nil, sourceImagePath: imagePath)
+                completeExtension()
             } else {
                 showRecoverableError(L10n.extensionNoText)
             }

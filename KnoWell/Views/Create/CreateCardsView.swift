@@ -527,7 +527,7 @@ struct CreateCardsView: View {
     @MainActor
     private func recognizeImage(_ image: UIImage, successBanner: String) async {
         do {
-            let result = try await ImageOCRService.recognize(in: image)
+            let result = try await ImageOCRService.recognizeWithLiveTextFallback(in: image)
             let importSentence = result.preferredImportSentence
             guard !importSentence.isEmpty else {
                 errorMessage = L10n.ocrEmpty
@@ -635,6 +635,17 @@ struct CreateCardsView: View {
 
     private func applyShareImportIfNeeded() {
         guard let payload = shareImport.pendingPayload else { return }
+        
+        let hasSentence = !payload.sentence.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        
+        if !hasSentence, let imagePath = payload.sourceImagePath {
+            Task { @MainActor in
+                await processSharedImage(imagePath: imagePath)
+            }
+            shareImport.acknowledgeImport()
+            return
+        }
+        
         sentence = payload.sentence
         if let word = payload.selectedWord {
             words = VocabularyWords.parse(from: word)
@@ -650,9 +661,21 @@ struct CreateCardsView: View {
         if !payload.bannerMessage.isEmpty {
             showToast(payload.bannerMessage)
         }
-        // Shared text / OCR → same pick surface as in-app create.
         sourceMode = words.isEmpty ? .edit : .pick
         shareImport.acknowledgeImport()
+    }
+    
+    @MainActor
+    private func processSharedImage(imagePath: String) async {
+        guard let image = CardSourceImageStore.loadUIImage(relativePath: imagePath) else {
+            errorMessage = L10n.ocrEmpty
+            return
+        }
+        
+        isRecognizingPhoto = true
+        defer { isRecognizingPhoto = false }
+        
+        await recognizeImage(image, successBanner: L10n.importFromPhotoSuccess)
     }
 
     private func performGeneration() {

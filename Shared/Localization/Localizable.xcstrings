@@ -2835,13 +2835,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Drag to select text, then add it as vocabulary. Safari supports Share; for Apple Books and similar apps, copy text and open KnoWell."
+            "value" : "Drag to select text, then add it as vocabulary. Scan or pick a photo here; share page images from Photos to import. Multi-sentence excerpts are separated by blank lines."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "拖选文字后点「加入生词」，或长按选区菜单选择。Safari 可分享导入；Apple Books、番茄小说等请复制文字后打开 App，会自动填入。"
+            "value" : "拖选文字后点「加入生词」，或长按选区菜单选择。可扫描/选图识别，也可从照片 App 分享书页导入。多句摘录之间会以空行分隔。"
           }
         }
       }
@@ -6240,13 +6240,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Imported %d word(s) from %d sentence(s)"
+            "value" : "Imported %d word(s) from %d sentence(s); segments are separated by blank lines"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已导入 %d 个高亮词（%d 句）"
+            "value" : "已导入 %d 个高亮词（%d 句），段与段之间已空行分隔"
           }
         }
       }
@@ -7719,13 +7719,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Photo and share-image OCR runs on device with Apple Vision. Images are not uploaded for recognition."
+            "value" : "Photos and shared images are recognized on device. KnoWell tries Live Text first, then Apple Vision OCR if needed. Images are not uploaded for recognition."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "相册与分享图片的文字识别在设备本地通过 Apple Vision 完成，图片不会上传识别。"
+            "value" : "相册与分享图片的文字识别均在设备本地完成：优先 Live Text，不支持时自动使用 Apple Vision OCR。图片不会上传识别。"
           }
         }
       }
@@ -10166,13 +10166,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Share extension: share text from Safari or Books to KnoWell. Clipboard import works when you open the app after copying."
+            "value" : "Share extension: share text from Safari or Books to pick words in the extension; share a page photo from Photos and KnoWell opens in the app for Live Text (OCR fallback). Copy text first, then open the app for clipboard import."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "分享扩展：从 Safari、图书等分享文本到 KnoWell。复制后打开 App 也会提示剪贴板导入。"
+            "value" : "分享扩展：Safari、图书等分享文本可在扩展里选词制卡；照片 App 分享书页图片会回到主应用识别（优先 Live Text，不支持时自动 OCR）。复制文字后打开 App 也会提示剪贴板导入。"
           }
         }
       }
