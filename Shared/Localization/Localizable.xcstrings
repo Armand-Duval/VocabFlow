@@ -866,6 +866,22 @@
         }
       }
     },
+    "card.sourceImage.add" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add source image"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加原图"
+          }
+        }
+      }
+    },
     "card.sourceImage.expandHint" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -883,22 +899,36 @@
         }
       }
     },
-    "card.sourceImage.add" : {
+    "card.sourceImage.remove" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add source image" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "添加原图" } }
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除"
+          }
+        }
       }
     },
     "card.sourceImage.replace" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Replace" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "更换" } }
-      }
-    },
-    "card.sourceImage.remove" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "移除" } }
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replace"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更换"
+          }
+        }
       }
     },
     "card.suspend" : {
@@ -7942,6 +7972,22 @@
         }
       }
     },
+    "liveText.imageSelected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Using the screenshot as the source"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将使用这张截图作为原文"
+          }
+        }
+      }
+    },
     "liveText.imported" : {
       "localizations" : {
         "en" : {
@@ -7954,6 +8000,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已从页面加入 %lld 个生词"
+          }
+        }
+      }
+    },
+    "liveText.optional.label" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optional"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可选"
+          }
+        }
+      }
+    },
+    "liveText.optional.note" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick the full sentence for your words, or use the whole image as the source."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选生词所在的整句，或用整张图当原文。"
           }
         }
       }
@@ -8008,6 +8086,7 @@
       }
     },
     "liveText.useAsSource" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -8019,22 +8098,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "用作原文"
-          }
-        }
-      }
-    },
-    "liveText.useSentence" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Use this sentence"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "用这句话"
           }
         }
       }
@@ -8055,50 +8118,18 @@
         }
       }
     },
-    "liveText.optional.label" : {
+    "liveText.useSentence" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Optional"
+            "value" : "Use this sentence"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "可选"
-          }
-        }
-      }
-    },
-    "liveText.optional.note" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pick the full sentence for your words, or use the whole image as the source."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "选生词所在的整句，或用整张图当原文。"
-          }
-        }
-      }
-    },
-    "liveText.imageSelected" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Using the screenshot as the source"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "将使用这张截图作为原文"
+            "value" : "用这句话"
           }
         }
       }
