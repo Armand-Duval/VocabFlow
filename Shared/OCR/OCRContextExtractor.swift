@@ -86,6 +86,15 @@ enum OCRContextExtractor {
 
     /// Join OCR line wraps into reading order without treating every newline as a sentence end.
     static func softJoinLines(_ text: String) -> String {
+        joinParagraphs(text, separator: " ")
+    }
+
+    /// Create UI text: same paragraph logic as `softJoinLines`, but blank lines between blocks.
+    static func displayText(from text: String) -> String {
+        joinParagraphs(text, separator: "\n\n")
+    }
+
+    private static func joinParagraphs(_ text: String, separator: String) -> String {
         let lines = text
             .components(separatedBy: .newlines)
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -109,10 +118,15 @@ enum OCRContextExtractor {
         parts.append(buffer)
 
         return parts
-            .joined(separator: " ")
-            .replacingOccurrences(of: #"\s{2,}"#, with: " ", options: .regularExpression)
+            .map { normalizeInlineSpaces($0) }
+            .joined(separator: separator)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private static func normalizeInlineSpaces(_ text: String) -> String {
+        text
+            .replacingOccurrences(of: #"[^\S\n]{2,}"#, with: " ", options: .regularExpression)
             .replacingOccurrences(
-                // Book OCR wrap left mid-line: "pret- ty" → "pretty"
                 of: #"([A-Za-z])-\s+([a-z])"#,
                 with: "$1$2",
                 options: .regularExpression
