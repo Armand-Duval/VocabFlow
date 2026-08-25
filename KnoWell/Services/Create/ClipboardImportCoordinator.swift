@@ -30,7 +30,7 @@ final class ClipboardImportCoordinator {
             return
         }
 
-        let parsed = ImportTextAnalyzer.parse(text)
+        let parsed = Preprocess.parsePaste(text)
         shareImport.importPayload(
             ShareImportPayload(
                 sentence: parsed.sentence,

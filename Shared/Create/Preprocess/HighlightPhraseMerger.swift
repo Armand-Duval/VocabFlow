@@ -5,15 +5,15 @@ import Foundation
 /// Book highlighters often break a single idiom across lines and leave short
 /// glue words (`a` / `of`) under-inked. We keep one span whenever hard hits are
 /// connected by only glue / weak-ink tokens (including wraps).
-enum HighlightPhraseMerger {
-    struct Token: Equatable {
-        let text: String
-        let lineIndex: Int
-        let coverage: Double
-        let minX: Double
-        let maxX: Double
+public enum HighlightPhraseMerger {
+    public struct Token: Equatable, Sendable {
+        public let text: String
+        public let lineIndex: Int
+        public let coverage: Double
+        public let minX: Double
+        public let maxX: Double
 
-        init(
+        public init(
             text: String,
             lineIndex: Int,
             coverage: Double,
@@ -28,9 +28,9 @@ enum HighlightPhraseMerger {
         }
     }
 
-    static let hitThreshold = 0.40
+    public static let hitThreshold = 0.40
     /// Soft ink — enough to sit inside a highlighter stroke.
-    static let weakThreshold = 0.12
+    public static let weakThreshold = 0.12
 
     private static let glueWords: Set<String> = [
         "a", "an", "the", "of", "to", "in", "on", "at", "for", "and", "or", "but",
@@ -40,7 +40,7 @@ enum HighlightPhraseMerger {
         "it", "its", "his", "her", "their", "our", "my", "your",
     ]
 
-    static func merge(
+    public static func merge(
         tokens: [Token],
         hitThreshold: Double = hitThreshold,
         pageText: String = ""
@@ -283,7 +283,7 @@ enum HighlightPhraseMerger {
     }
 
     /// Map OCR shards onto real page words (`dis pensed` → `dispensed`).
-    static func refine(_ phrases: [String], against pageText: String) -> [String] {
+    public static func refine(_ phrases: [String], against pageText: String) -> [String] {
         let unwrapped = unwrappedPage(pageText)
         let stitched = stitchWrapPhrases(phrases, in: unwrapped)
         var seen = Set<String>()

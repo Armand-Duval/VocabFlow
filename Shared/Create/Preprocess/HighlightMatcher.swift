@@ -3,16 +3,16 @@ import Foundation
 import UIKit
 #endif
 
-enum HighlightMatchStyle {
+public enum HighlightMatchStyle {
     /// Prefer whole-phrase / token boundaries — study cards (avoids marking every “a”).
     case wordBounded
     /// Raw substring — search results.
     case substring
 }
 
-enum HighlightMatcher {
+public enum HighlightMatcher {
     /// Ranges in `text` that should be highlighted for `terms` (longer first).
-    static func ranges(
+    public static func ranges(
         of terms: [String],
         in text: String,
         style: HighlightMatchStyle
@@ -42,7 +42,7 @@ enum HighlightMatcher {
     }
 
     #if canImport(UIKit)
-    static func attributedString(
+    public static func attributedString(
         text: String,
         terms: [String],
         style: HighlightMatchStyle,

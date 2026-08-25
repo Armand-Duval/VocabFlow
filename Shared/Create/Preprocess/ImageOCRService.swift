@@ -1,4 +1,5 @@
 import Foundation
+
 import os
 #if canImport(UIKit)
 import UIKit
@@ -56,42 +57,36 @@ enum ImageOCRService {
             fullText: vision.fullText
         )
         let lineUnits = importUnitsFromTokenLines(tokens: vision.tokens, highlightedWords: highlighted)
-        let textUnits = OCRContextExtractor.importUnits(
+        let units = Preprocess.fromImage(
             fullText: vision.fullText,
-            highlightedWords: highlighted
+            words: highlighted,
+            preferredUnits: lineUnits,
+            leftColumnWords: leftColumnHeadwords(from: vision.tokens)
         )
-        let units = lineUnits.count > textUnits.count ? lineUnits : textUnits
-        let raw = OCRResult(
+        let kind: OCRImportKind
+        if units.isEmpty {
+            kind = .none
+        } else if highlighted.isEmpty {
+            kind = .vocabPage
+        } else {
+            kind = .highlight
+        }
+        let wrapped = OCRResult(
             fullText: vision.fullText,
-            highlightedWords: highlighted,
+            highlightedWords: units.flatMap(\.words),
             importUnits: units,
-            sourceImagePath: nil,
-            importKind: units.isEmpty ? .none : .highlight
+            importKind: kind
         )
-        var result = raw.sanitizedForImport()
-        if result.importUnits.isEmpty {
-            let leftColumn = leftColumnHeadwords(from: vision.tokens)
-            if let page = OCRVocabPageExtractor.extract(
-                fullText: result.fullText,
-                leftColumnWords: leftColumn
-            ) {
-                result = OCRResult(
-                    fullText: result.fullText,
-                    highlightedWords: page.words,
-                    importUnits: page.units,
-                    sourceImagePath: nil,
-                    importKind: .vocabPage
-                )
-                log("6b) vocab page headwords=\(page.words) leftColumn=\(leftColumn)")
-            }
+        if wrapped.importKind == .vocabPage {
+            log("6b) vocab page headwords=\(wrapped.highlightedWords)")
         }
         log("""
-        5) highlightedWords=\(highlighted) → sanitized=\(result.highlightedWords)
-        6) importUnits=\(units.map { "[\($0.words.joined(separator: ", "))] \($0.sentence.prefix(72))" })
-           sanitizedUnits=\(result.importUnits.count) kind=\(String(describing: result.importKind)) preferHighlight=\(result.hasHighlightContext)
+        5) highlightedWords=\(highlighted) → sanitized=\(wrapped.highlightedWords)
+        6) importUnits=\(wrapped.importUnits.map { "[\($0.words.joined(separator: ", "))] \($0.sentence.prefix(72))" })
+           sanitizedUnits=\(wrapped.importUnits.count) kind=\(String(describing: wrapped.importKind)) preferHighlight=\(wrapped.hasHighlightContext)
         ——— OCR end ———
         """)
-        return result
+        return wrapped
         #else
         _ = image
         return .empty
@@ -444,7 +439,7 @@ enum ImageOCRService {
             let overlay = OCRChromeFilter.looksLikeOverlayControl(
                 token: token.text,
                 lineText: token.lineText,
-                boxArea: boxArea
+                boxArea: Double(boxArea)
             )
             // Overlay glow must not seed the highlighter merger (logging-only skip leaked hits).
             let coverage = overlay ? 0 : mask.highlightCoverage(ofNormalizedBox: token.boundingBox)
@@ -530,7 +525,7 @@ enum ImageOCRService {
                   !lineWords.isEmpty,
                   !line.isEmpty
             else { return [] }
-            let inner = OCRContextExtractor.importUnits(fullText: line, highlightedWords: lineWords)
+            let inner = Preprocess.units(in: line, words: lineWords)
             return inner.isEmpty ? [OCRImportUnit(sentence: line, words: lineWords)] : inner
         }
     }

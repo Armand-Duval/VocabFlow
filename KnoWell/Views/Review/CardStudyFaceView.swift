@@ -1,4 +1,5 @@
 import SwiftUI
+
 #if canImport(UIKit)
 import UIKit
 #endif
@@ -309,7 +310,10 @@ struct CardStudyFaceView: View {
     @ViewBuilder
     private func appreciationAnswer(scrollProxy: ScrollViewProxy?) -> some View {
         let theme = CardContentFormatter.senseText(content.back)
-        let showTheme = !CardContentFormatter.isPlaceholderAppreciationTheme(theme)
+        let showTheme = !CardContentFormatter.isPlaceholderAppreciationTheme(
+            theme,
+            localizedTypeName: L10n.cardTypeAppreciation
+        )
         let translation = CardContentFormatter.sentenceTranslation(content.contextNote)
         let appreciation = content.usageNote?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let source = content.sourceAttribution?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
@@ -382,7 +386,7 @@ struct CardStudyFaceView: View {
                             .foregroundStyle(AppColor.textPrimary)
                     }
                 } else if translation == nil || translation?.isEmpty == true {
-                    Text(content.displayBack)
+                    Text(content.localizedDisplayBack)
                         .font(AppFont.body())
                         .foregroundStyle(AppColor.textPrimary)
                 }

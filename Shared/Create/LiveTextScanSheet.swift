@@ -1,4 +1,5 @@
 import SwiftUI
+
 #if canImport(UIKit)
 import UIKit
 import VisionKit
@@ -372,6 +373,14 @@ struct LiveTextScanSheet: View {
                     pageText: pageText
                 )
             }
+            if words.isEmpty, let quoteText = quoteSentenceForCompletion() {
+                return LiveTextScanResult(
+                    sentence: quoteText,
+                    words: [],
+                    useImageAsSource: false,
+                    pageText: pageText
+                )
+            }
             if let assembled = autoAssembledSentence() {
                 return LiveTextScanResult(
                     sentence: assembled,
@@ -395,12 +404,20 @@ struct LiveTextScanSheet: View {
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
         for source in sources {
-            let units = OCRContextExtractor.importUnits(fullText: source, highlightedWords: words)
+            let units = Preprocess.units(in: source, words: words)
             if units.count > best.count {
                 best = units
             }
         }
-        return OCRContextExtractor.joinedImportSentences(best)
+        return Preprocess.joinedSentences(best)
+    }
+
+    private func quoteSentenceForCompletion() -> String? {
+        let selection = trimmedSelection
+        guard !selection.isEmpty else { return nil }
+        let sanitized = ImageOCRService.sanitizeOCRText(selection, preserveParagraphs: true)
+        let trimmed = sanitized.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 
     /// Map the user's image selection to source text.
@@ -412,7 +429,7 @@ struct LiveTextScanSheet: View {
         let sanitized = ImageOCRService.sanitizeOCRText(selection, preserveParagraphs: true)
         guard !words.isEmpty else { return sanitized }
 
-        let units = OCRContextExtractor.importUnits(fullText: sanitized, highlightedWords: words)
+        let units = Preprocess.units(in: sanitized, words: words)
         guard !units.isEmpty else { return sanitized }
 
         if units.count > 1 {

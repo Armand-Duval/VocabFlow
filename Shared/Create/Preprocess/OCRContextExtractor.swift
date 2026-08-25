@@ -1,9 +1,9 @@
 import Foundation
 
 /// Build import units of (sentence + words) from full-page OCR + highlight hits.
-enum OCRContextExtractor {
+public enum OCRContextExtractor {
     /// Short page-header hint for AI source attribution (titles / bylines).
-    static func sourceHint(from fullText: String) -> String? {
+    public static func sourceHint(from fullText: String) -> String? {
         let lines = fullText
             .components(separatedBy: .newlines)
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -27,7 +27,7 @@ enum OCRContextExtractor {
     }
 
     /// Rough guess: long enough prose with punctuation or several words (not UI chrome).
-    static func isLikelyFullSentence(_ text: String) -> Bool {
+    public static func isLikelyFullSentence(_ text: String) -> Bool {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed.count >= 16 else { return false }
         let terminators = CharacterSet(charactersIn: ".!?。！？;；")
@@ -42,7 +42,7 @@ enum OCRContextExtractor {
     }
 
     /// OCR near highlighted words for AI disambiguation (not stored as card source text).
-    static func disambiguationHint(from fullText: String, words: [String], maxTotal: Int = 1000, nearbyBudget: Int = 200) -> String? {
+    public static func disambiguationHint(from fullText: String, words: [String], maxTotal: Int = 1000, nearbyBudget: Int = 200) -> String? {
         let normalized = softJoinLines(fullText)
             .trimmingCharacters(in: .whitespacesAndNewlines)
         guard !normalized.isEmpty else { return nil }
@@ -98,7 +98,7 @@ enum OCRContextExtractor {
 
     /// Map each word to its sentence. Split on terminators and line breaks first
     /// so unpunctuated screenshot lines do not collapse into one blob.
-    static func importUnits(fullText: String, highlightedWords: [String]) -> [OCRImportUnit] {
+    public static func importUnits(fullText: String, highlightedWords: [String]) -> [OCRImportUnit] {
         let words = highlightedWords
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
@@ -136,14 +136,14 @@ enum OCRContextExtractor {
         }
     }
 
-    static func joinedImportSentences(_ units: [OCRImportUnit]) -> String? {
+    public static func joinedImportSentences(_ units: [OCRImportUnit]) -> String? {
         let blocks = units.flatMap { splitSentences($0.sentence) }
         let joined = blocks.joined(separator: "\n\n")
         return joined.isEmpty ? nil : joined
     }
 
     /// Visible paragraph breaks between sentences in the source editor.
-    static func sourceTextForDisplay(_ text: String) -> String {
+    public static func sourceTextForDisplay(_ text: String) -> String {
         let blocks = splitSentences(text)
         guard blocks.count > 1 else {
             return text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -152,7 +152,7 @@ enum OCRContextExtractor {
     }
 
     /// Split on `.!?。！？…` and newlines. Preserves order.
-    static func splitSentences(_ text: String) -> [String] {
+    public static func splitSentences(_ text: String, splitOnNewlines: Bool = true) -> [String] {
         let normalized = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !normalized.isEmpty else { return [] }
 
@@ -160,7 +160,7 @@ enum OCRContextExtractor {
         var start = normalized.startIndex
         var index = start
         while index < normalized.endIndex {
-            if isSentenceTerminator(at: index, in: normalized) {
+            if isSentenceTerminator(at: index, in: normalized, splitOnNewlines: splitOnNewlines) {
                 var end = normalized.index(after: index)
                 while end < normalized.endIndex, isTrailingCloser(normalized[end]) {
                     end = normalized.index(after: end)
@@ -180,6 +180,21 @@ enum OCRContextExtractor {
         let tail = String(normalized[start...]).trimmingCharacters(in: .whitespacesAndNewlines)
         if !tail.isEmpty { sentences.append(tail) }
         return sentences
+    }
+
+    /// Appreciation quotes: sentence terminators and blank paragraphs. Single newlines stay (poetry).
+    public static func splitQuotes(_ text: String) -> [String] {
+        let normalized = text
+            .replacingOccurrences(of: "\r\n", with: "\n")
+            .replacingOccurrences(of: "\r", with: "\n")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalized.isEmpty else { return [] }
+
+        let paragraphs = normalized
+            .components(separatedBy: "\n\n")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        return paragraphs.flatMap { splitSentences($0, splitOnNewlines: false) }
     }
 
     /// Locate every sentence that contains this highlight (phrase, or significant tokens if phrase OCR-mismatched).
@@ -206,7 +221,7 @@ enum OCRContextExtractor {
     }
 
     /// Keep line breaks except obvious wraps, so unpunctuated dialogue stays one sentence per line.
-    static func readingTextPreservingSentences(_ text: String) -> String {
+    public static func readingTextPreservingSentences(_ text: String) -> String {
         let lines = text
             .replacingOccurrences(of: "\r\n", with: "\n")
             .replacingOccurrences(of: "\r", with: "\n")
@@ -243,7 +258,7 @@ enum OCRContextExtractor {
     }
 
     /// Join OCR line wraps into reading order without treating every newline as a sentence end.
-    static func softJoinLines(_ text: String) -> String {
+    public static func softJoinLines(_ text: String) -> String {
         let lines = text
             .components(separatedBy: .newlines)
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -295,7 +310,7 @@ enum OCRContextExtractor {
         return nil
     }
 
-    static func sentenceContaining(_ word: String, in text: String) -> String? {
+    public static func sentenceContaining(_ word: String, in text: String) -> String? {
         guard let match = rangeOfWord(word, in: text) else { return nil }
 
         var start = match.lowerBound
@@ -339,9 +354,13 @@ enum OCRContextExtractor {
     }
 
     /// `.` / `。` etc., but not the dots inside an ellipsis (`...` / `…`).
-    private static func isSentenceTerminator(at index: String.Index, in text: String) -> Bool {
+    private static func isSentenceTerminator(
+        at index: String.Index,
+        in text: String,
+        splitOnNewlines: Bool = true
+    ) -> Bool {
         let ch = text[index]
-        if ch.isNewline { return true }
+        if ch.isNewline { return splitOnNewlines }
         let terminators: Set<Character> = [".", "!", "?", "。", "！", "？", "…"]
         guard terminators.contains(ch) else { return false }
         if ch == "." {
@@ -425,5 +444,45 @@ enum OCRContextExtractor {
         let start = text.index(text.startIndex, offsetBy: startOffset)
         let end = text.index(text.startIndex, offsetBy: endOffset)
         return String(text[start..<end]).trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Split multi-sentence imports so each word is generated with only its own sentence.
+    public static func generationUnits(
+        sentence: String,
+        words: [String],
+        imageOnlySource: Bool = false
+    ) -> [OCRImportUnit] {
+        let trimmedSentence = sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+        var seen = Set<String>()
+        let uniqueWords = words.compactMap { raw -> String? in
+            let word = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !word.isEmpty else { return nil }
+            let key = word.lowercased()
+            guard seen.insert(key).inserted else { return nil }
+            return word
+        }
+        guard !uniqueWords.isEmpty else { return [] }
+
+        if imageOnlySource {
+            return uniqueWords.map { OCRImportUnit(sentence: $0, words: [$0]) }
+        }
+        guard !trimmedSentence.isEmpty else { return [] }
+
+        let extracted = importUnits(
+            fullText: trimmedSentence,
+            highlightedWords: uniqueWords
+        )
+        if extracted.isEmpty {
+            return [OCRImportUnit(sentence: trimmedSentence, words: uniqueWords)]
+        }
+
+        let covered = Set(extracted.flatMap(\.words).map { $0.lowercased() })
+        let missing = uniqueWords.filter { !covered.contains($0.lowercased()) }
+        guard !missing.isEmpty else { return extracted }
+
+        var units = extracted
+        let targetIndex = units.indices.min(by: { units[$0].sentence.count < units[$1].sentence.count }) ?? 0
+        units[targetIndex].words.append(contentsOf: missing)
+        return units
     }
 }

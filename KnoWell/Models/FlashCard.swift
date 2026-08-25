@@ -62,7 +62,7 @@ final class FlashCard {
 
     /// 复习时显示的背面：合并 back 与 contextNote（兼容旧数据）
     var displayBack: String {
-        studyContent.displayBack
+        studyContent.localizedDisplayBack
     }
 
     var studyContent: CardStudyContent {

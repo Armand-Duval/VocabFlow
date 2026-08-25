@@ -4,24 +4,17 @@ import Foundation
 /// Save-time dedupe in the main app remains the source of truth.
 enum SharedDedupeIndex {
     private static let fileName = "card-dedupe-index.json"
-    private static let separator = "\u{1f}"
 
     static func normalizedWord(_ value: String) -> String {
-        value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        DedupeKey.normalizedWord(value)
     }
 
     static func normalizedSentence(_ value: String) -> String {
-        value
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
-            .lowercased()
+        DedupeKey.normalizedSentence(value)
     }
 
     static func key(deckID: UUID, word: String, sentence: String) -> String? {
-        let wordKey = normalizedWord(word)
-        let sentenceKey = normalizedSentence(sentence)
-        guard !wordKey.isEmpty, !sentenceKey.isEmpty else { return nil }
-        return [deckID.uuidString, wordKey, sentenceKey].joined(separator: separator)
+        DedupeKey.key(deckID: deckID, word: word, sentence: sentence)
     }
 
     static func contains(deckID: UUID, word: String, sentence: String) -> Bool {

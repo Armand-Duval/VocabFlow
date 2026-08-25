@@ -4,11 +4,15 @@ import Foundation
 /// headwords into import units so Create can pre-select them.
 ///
 /// Highlighter hits still win: this only runs when the page has no usable marks.
-enum OCRVocabPageExtractor {
-    struct Page: Equatable, Sendable {
-        var units: [OCRImportUnit]
+public enum OCRVocabPageExtractor {
+    public struct Page: Equatable, Sendable {
+        public var units: [OCRImportUnit]
 
-        var words: [String] {
+        public init(units: [OCRImportUnit]) {
+            self.units = units
+        }
+
+        public var words: [String] {
             var seen = Set<String>()
             var ordered: [String] = []
             for word in units.flatMap(\.words) {
@@ -43,7 +47,7 @@ enum OCRVocabPageExtractor {
 
     private static let posToken = #"(?:n|v|vt|vi|adj|adv|prep|conj|pron|art|num|aux|det|modal|phr|phr\.v|a|ad|int|abbr)[.\．]"#
 
-    static func extract(fullText: String, leftColumnWords: [String] = []) -> Page? {
+    public static func extract(fullText: String, leftColumnWords: [String] = []) -> Page? {
         let lines = fullText
             .components(separatedBy: .newlines)
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -67,7 +71,7 @@ enum OCRVocabPageExtractor {
     }
 
     /// First Latin token on a short left-aligned line — typical dictionary headword column.
-    static func looksLikeHeadword(_ raw: String) -> Bool {
+    public static func looksLikeHeadword(_ raw: String) -> Bool {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let lemma = normalizeLemma(trimmed) else { return false }
         return isPlausibleLemma(lemma)

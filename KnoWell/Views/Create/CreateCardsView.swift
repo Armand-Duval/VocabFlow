@@ -599,7 +599,9 @@ struct CreateCardsView: View {
     }
 
     private var cloudQuotaNeeded: Int {
-        willGenerateAppreciation ? 1 : max(words.count, 1)
+        willGenerateAppreciation
+            ? max(Preprocess.quotes(from: trimmedSentence).count, 1)
+            : max(words.count, 1)
     }
 
     private var isCloudQuotaInsufficient: Bool {
@@ -710,11 +712,11 @@ struct CreateCardsView: View {
         if result.useImageAsSource {
             sentence = result.words.joined(separator: ", ")
         } else {
-            sentence = OCRContextExtractor.sourceTextForDisplay(result.sentence)
+            sentence = Preprocess.displaySource(result.sentence)
         }
         let ocrPage = result.pageText.isEmpty ? result.sentence : result.pageText
-        sourceHint = OCRContextExtractor.disambiguationHint(from: ocrPage, words: result.words)
-            ?? OCRContextExtractor.sourceHint(from: ocrPage)
+        sourceHint = Preprocess.disambiguationHint(from: ocrPage, words: result.words)
+            ?? Preprocess.sourceHint(from: ocrPage)
         sourceImagePath = CardSourceImageStore.saveJPEG(image)
         if let hint = sourceHint?.trimmingCharacters(in: .whitespacesAndNewlines), !hint.isEmpty {
             appreciationSource = hint
@@ -744,14 +746,14 @@ struct CreateCardsView: View {
             return
         }
 
-        // Highlight hits → word + containing sentence only (not the whole page).
-        sentence = OCRContextExtractor.sourceTextForDisplay(importSentence)
+        sentence = Preprocess.displaySource(importSentence)
         sourceMode = .pick
-        sourceHint = OCRContextExtractor.sourceHint(from: result.fullText)
+        sourceHint = Preprocess.sourceHint(from: result.fullText)
         sourceImagePath = CardSourceImageStore.saveJPEG(image)
         if let hint = sourceHint?.trimmingCharacters(in: .whitespacesAndNewlines), !hint.isEmpty {
             appreciationSource = hint
         }
+        // Highlight hits → word + containing sentence only (not the whole page).
         if result.hasHighlightContext {
             words = []
         }
@@ -958,18 +960,18 @@ struct CreateCardsView: View {
             ? (ocrSource.isEmpty ? nil : ocrSource)
             : manualSource
 
-        let reflection = DailyReflection(
-            sentence: trimmedSentence,
-            translation: nil,
-            source: resolvedSource,
-            occasion: nil,
-            isAI: true
-        )
-
         do {
-            var draft = try await LiteraryAppreciationGenerator.generate(from: reflection, allowFallback: false)
+            let quotes = Preprocess.quotes(from: trimmedSentence)
+            guard !quotes.isEmpty else { return }
+            var drafts = try await LiteraryAppreciationGenerator.generate(
+                quotes: quotes,
+                source: resolvedSource,
+                allowFallback: false
+            )
             if let path = sourceImagePath?.trimmingCharacters(in: .whitespacesAndNewlines), !path.isEmpty {
-                draft.sourceImagePath = path
+                for index in drafts.indices {
+                    drafts[index].sourceImagePath = path
+                }
             }
 
             let deck: Deck
@@ -979,7 +981,7 @@ struct CreateCardsView: View {
                 deck = DeckService.fetchOrCreateDailyReflectionDeck(in: modelContext)
             }
             selectedDeckID = deck.id
-            generationQueue.enqueueTriage(drafts: [draft], deckID: deck.id)
+            generationQueue.enqueueTriage(drafts: drafts, deckID: deck.id)
             resetCreateWorkspace()
             showPreview = true
         } catch {

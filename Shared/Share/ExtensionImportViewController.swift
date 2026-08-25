@@ -168,7 +168,7 @@ class ExtensionImportViewController: UIViewController {
         sourceImagePath: String?,
         preferSharedSentence: Bool
     ) {
-        let parsed = ImportTextAnalyzer.parse(raw)
+        let parsed = Preprocess.parsePaste(raw)
         var words = preferSharedSentence ? [] : parsed.prefilledWords
         for word in highlightedWords {
             _ = VocabularyWords.append(word, to: &words)

@@ -1,4 +1,5 @@
 import Foundation
+
 import UserNotifications
 
 struct ShareImportPayload: Equatable {

@@ -351,7 +351,6 @@ private struct ReviewHomeView: View {
         .accessibilityLabel(dueCount > 0 ? L10n.reviewHomeStart : L10n.reviewHomeStartDone)
     }
 
-
     private var emptyCTA: some View {
         Button {
             AppTab.request(.create)

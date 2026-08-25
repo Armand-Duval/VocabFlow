@@ -7,6 +7,73 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FLWAPP0003000000000000 /* Preprocess.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0002000000000000 /* Preprocess.swift */; };
+		FLWSHR0004000000000000 /* Preprocess.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0002000000000000 /* Preprocess.swift */; };
+		FLWACT0005000000000000 /* Preprocess.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0002000000000000 /* Preprocess.swift */; };
+		FLWAPP0007000000000000 /* OCRResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0006000000000000 /* OCRResult.swift */; };
+		FLWSHR0008000000000000 /* OCRResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0006000000000000 /* OCRResult.swift */; };
+		FLWACT0009000000000000 /* OCRResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0006000000000000 /* OCRResult.swift */; };
+		FLWAPP0011000000000000 /* HighlightMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0010000000000000 /* HighlightMatcher.swift */; };
+		FLWSHR0012000000000000 /* HighlightMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0010000000000000 /* HighlightMatcher.swift */; };
+		FLWACT0013000000000000 /* HighlightMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0010000000000000 /* HighlightMatcher.swift */; };
+		FLWAPP0015000000000000 /* LiteraryTextFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0014000000000000 /* LiteraryTextFormatting.swift */; };
+		FLWSHR0016000000000000 /* LiteraryTextFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0014000000000000 /* LiteraryTextFormatting.swift */; };
+		FLWACT0017000000000000 /* LiteraryTextFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0014000000000000 /* LiteraryTextFormatting.swift */; };
+		FLWAPP0019000000000000 /* HighlightPhraseMerger.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0018000000000000 /* HighlightPhraseMerger.swift */; };
+		FLWSHR0020000000000000 /* HighlightPhraseMerger.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0018000000000000 /* HighlightPhraseMerger.swift */; };
+		FLWACT0021000000000000 /* HighlightPhraseMerger.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0018000000000000 /* HighlightPhraseMerger.swift */; };
+		FLWAPP0023000000000000 /* ImportTextAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0022000000000000 /* ImportTextAnalyzer.swift */; };
+		FLWSHR0024000000000000 /* ImportTextAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0022000000000000 /* ImportTextAnalyzer.swift */; };
+		FLWACT0025000000000000 /* ImportTextAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0022000000000000 /* ImportTextAnalyzer.swift */; };
+		FLWAPP0027000000000000 /* OCRContextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0026000000000000 /* OCRContextExtractor.swift */; };
+		FLWSHR0028000000000000 /* OCRContextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0026000000000000 /* OCRContextExtractor.swift */; };
+		FLWACT0029000000000000 /* OCRContextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0026000000000000 /* OCRContextExtractor.swift */; };
+		FLWAPP0031000000000000 /* OCRChromeFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0030000000000000 /* OCRChromeFilter.swift */; };
+		FLWSHR0032000000000000 /* OCRChromeFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0030000000000000 /* OCRChromeFilter.swift */; };
+		FLWACT0033000000000000 /* OCRChromeFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0030000000000000 /* OCRChromeFilter.swift */; };
+		FLWAPP0035000000000000 /* OCRVocabPageExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0034000000000000 /* OCRVocabPageExtractor.swift */; };
+		FLWSHR0036000000000000 /* OCRVocabPageExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0034000000000000 /* OCRVocabPageExtractor.swift */; };
+		FLWACT0037000000000000 /* OCRVocabPageExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0034000000000000 /* OCRVocabPageExtractor.swift */; };
+		FLWAPP0039000000000000 /* DedupeKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0038000000000000 /* DedupeKey.swift */; };
+		FLWSHR0040000000000000 /* DedupeKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0038000000000000 /* DedupeKey.swift */; };
+		FLWACT0041000000000000 /* DedupeKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0038000000000000 /* DedupeKey.swift */; };
+		FLWAPP0043000000000000 /* OCRImportUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0042000000000000 /* OCRImportUnit.swift */; };
+		FLWSHR0044000000000000 /* OCRImportUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0042000000000000 /* OCRImportUnit.swift */; };
+		FLWACT0045000000000000 /* OCRImportUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0042000000000000 /* OCRImportUnit.swift */; };
+		FLWAPP0047000000000000 /* VocabularyWords.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0046000000000000 /* VocabularyWords.swift */; };
+		FLWSHR0048000000000000 /* VocabularyWords.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0046000000000000 /* VocabularyWords.swift */; };
+		FLWACT0049000000000000 /* VocabularyWords.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0046000000000000 /* VocabularyWords.swift */; };
+		FLWAPP0052000000000000 /* Generate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0051000000000000 /* Generate.swift */; };
+		FLWSHR0053000000000000 /* Generate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0051000000000000 /* Generate.swift */; };
+		FLWACT0054000000000000 /* Generate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0051000000000000 /* Generate.swift */; };
+		FLWAPP0056000000000000 /* CardGenerationPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0055000000000000 /* CardGenerationPrompt.swift */; };
+		FLWSHR0057000000000000 /* CardGenerationPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0055000000000000 /* CardGenerationPrompt.swift */; };
+		FLWACT0058000000000000 /* CardGenerationPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0055000000000000 /* CardGenerationPrompt.swift */; };
+		FLWAPP0060000000000000 /* CardGenerationParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0059000000000000 /* CardGenerationParser.swift */; };
+		FLWSHR0061000000000000 /* CardGenerationParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0059000000000000 /* CardGenerationParser.swift */; };
+		FLWACT0062000000000000 /* CardGenerationParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0059000000000000 /* CardGenerationParser.swift */; };
+		FLWAPP0064000000000000 /* AppreciationPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0063000000000000 /* AppreciationPrompt.swift */; };
+		FLWSHR0065000000000000 /* AppreciationPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0063000000000000 /* AppreciationPrompt.swift */; };
+		FLWACT0066000000000000 /* AppreciationPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0063000000000000 /* AppreciationPrompt.swift */; };
+		FLWAPP0068000000000000 /* AIJSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0067000000000000 /* AIJSON.swift */; };
+		FLWSHR0069000000000000 /* AIJSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0067000000000000 /* AIJSON.swift */; };
+		FLWACT0070000000000000 /* AIJSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0067000000000000 /* AIJSON.swift */; };
+		FLWAPP0073000000000000 /* CardContentFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0072000000000000 /* CardContentFormatter.swift */; };
+		FLWSHR0074000000000000 /* CardContentFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0072000000000000 /* CardContentFormatter.swift */; };
+		FLWACT0075000000000000 /* CardContentFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0072000000000000 /* CardContentFormatter.swift */; };
+		FLWAPP0077000000000000 /* CardStudyContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0076000000000000 /* CardStudyContent.swift */; };
+		FLWSHR0078000000000000 /* CardStudyContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0076000000000000 /* CardStudyContent.swift */; };
+		FLWACT0079000000000000 /* CardStudyContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0076000000000000 /* CardStudyContent.swift */; };
+		FLWAPP0081000000000000 /* CardParaphrase.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0080000000000000 /* CardParaphrase.swift */; };
+		FLWSHR0082000000000000 /* CardParaphrase.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0080000000000000 /* CardParaphrase.swift */; };
+		FLWACT0083000000000000 /* CardParaphrase.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0080000000000000 /* CardParaphrase.swift */; };
+		FLWAPP0085000000000000 /* CardType.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0084000000000000 /* CardType.swift */; };
+		FLWSHR0086000000000000 /* CardType.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0084000000000000 /* CardType.swift */; };
+		FLWACT0087000000000000 /* CardType.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0084000000000000 /* CardType.swift */; };
+		FLWAPP0089000000000000 /* FSRS.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0088000000000000 /* FSRS.swift */; };
+		FLWAPP0091000000000000 /* DailyReflectionPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0090000000000000 /* DailyReflectionPrompt.swift */; };
+		FLWAPP0093000000000000 /* BackupFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0092000000000000 /* BackupFile.swift */; };
+		FLWAPP0095000000000000 /* DeckPackFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0094000000000000 /* DeckPackFile.swift */; };
 		AA0000010000000000000020 /* KnoWellApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000010 /* KnoWellApp.swift */; };
 		AA0000010000000000000021 /* FlashCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000011 /* FlashCard.swift */; };
 		AA0000010000000000000023 /* ReviewScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000013 /* ReviewScheduler.swift */; };
@@ -88,18 +155,12 @@
 		HH0000010000000000000001 /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = HH0000010000000000000010 /* L10n.swift */; };
 		HH0000010000000000000002 /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = HH0000010000000000000010 /* L10n.swift */; };
 		HH0000010000000000000003 /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = HH0000010000000000000010 /* L10n.swift */; };
-		HH0000010000000000000004 /* ImportTextAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = HH0000010000000000000011 /* ImportTextAnalyzer.swift */; };
-		HH0000010000000000000005 /* ImportTextAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = HH0000010000000000000011 /* ImportTextAnalyzer.swift */; };
-		HH0000010000000000000006 /* ImportTextAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = HH0000010000000000000011 /* ImportTextAnalyzer.swift */; };
 		HH0000010000000000000007 /* CreateCardsUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = HH0000010000000000000012 /* CreateCardsUI.swift */; };
 		HH0000010000000000000008 /* CreateCardsUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = HH0000010000000000000012 /* CreateCardsUI.swift */; };
 		HH0000010000000000000009 /* CreateCardsUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = HH0000010000000000000012 /* CreateCardsUI.swift */; };
 		HH000001000000000000000A /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = HH0000010000000000000013 /* Localizable.xcstrings */; };
 		HH000001000000000000000B /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = HH0000010000000000000013 /* Localizable.xcstrings */; };
 		HH000001000000000000000C /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = HH0000010000000000000013 /* Localizable.xcstrings */; };
-		HLMTCH001000000000000001 /* HighlightMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = HLMTCH001000000000000010 /* HighlightMatcher.swift */; };
-		HLMTCH001000000000000002 /* HighlightMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = HLMTCH001000000000000010 /* HighlightMatcher.swift */; };
-		HLMTCH001000000000000003 /* HighlightMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = HLMTCH001000000000000010 /* HighlightMatcher.swift */; };
 		IMGSRC001000000000000001 /* CardSourceImageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = IMGSRC001000000000000010 /* CardSourceImageStore.swift */; };
 		IMGSRC001000000000000002 /* CardSourceImageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = IMGSRC001000000000000010 /* CardSourceImageStore.swift */; };
 		IMGSRC001000000000000003 /* CardSourceImageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = IMGSRC001000000000000010 /* CardSourceImageStore.swift */; };
@@ -125,21 +186,9 @@
 		NN0000010000000000000001 /* ImageOCRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = NN0000010000000000000010 /* ImageOCRService.swift */; };
 		NN0000010000000000000002 /* ImageOCRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = NN0000010000000000000010 /* ImageOCRService.swift */; };
 		NN0000010000000000000003 /* ImageOCRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = NN0000010000000000000010 /* ImageOCRService.swift */; };
-		OCRHL0010000000000000001 /* OCRResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRHL0010000000000000010 /* OCRResult.swift */; };
-		OCRHL0010000000000000002 /* OCRResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRHL0010000000000000010 /* OCRResult.swift */; };
-		OCRHL0010000000000000003 /* OCRResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRHL0010000000000000010 /* OCRResult.swift */; };
 		OCRHL0010000000000000004 /* HighlightMaskDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRHL0010000000000000011 /* HighlightMaskDetector.swift */; };
 		OCRHL0010000000000000005 /* HighlightMaskDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRHL0010000000000000011 /* HighlightMaskDetector.swift */; };
 		OCRHL0010000000000000006 /* HighlightMaskDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRHL0010000000000000011 /* HighlightMaskDetector.swift */; };
-		OCRHL0010000000000000007 /* OCRContextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRHL0010000000000000012 /* OCRContextExtractor.swift */; };
-		OCRHL0010000000000000008 /* OCRContextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRHL0010000000000000012 /* OCRContextExtractor.swift */; };
-		OCRHL0010000000000000009 /* OCRContextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRHL0010000000000000012 /* OCRContextExtractor.swift */; };
-		OCRHL0010000000000000013 /* HighlightPhraseMerger.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRHL0010000000000000020 /* HighlightPhraseMerger.swift */; };
-		OCRHL0010000000000000014 /* HighlightPhraseMerger.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRHL0010000000000000020 /* HighlightPhraseMerger.swift */; };
-		OCRHL0010000000000000015 /* HighlightPhraseMerger.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRHL0010000000000000020 /* HighlightPhraseMerger.swift */; };
-		OCRVOC0010000000000000001 /* OCRVocabPageExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRVOC0010000000000000010 /* OCRVocabPageExtractor.swift */; };
-		OCRVOC0010000000000000002 /* OCRVocabPageExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRVOC0010000000000000010 /* OCRVocabPageExtractor.swift */; };
-		OCRVOC0010000000000000003 /* OCRVocabPageExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = OCRVOC0010000000000000010 /* OCRVocabPageExtractor.swift */; };
 		ORIGPK0010000000000000001 /* OriginalPackArchive.swift in Sources */ = {isa = PBXBuildFile; fileRef = ORIGPK0010000000000000010 /* OriginalPackArchive.swift */; };
 		PHRASE001000000000000001 /* PhraseTokenPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = PHRASE001000000000000010 /* PhraseTokenPicker.swift */; };
 		PHRASE001000000000000002 /* PhraseTokenPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = PHRASE001000000000000010 /* PhraseTokenPicker.swift */; };
@@ -299,10 +348,8 @@
 		FF0000010000000000000010 /* SelectableTextEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectableTextEditor.swift; sourceTree = "<group>"; };
 		GG0000010000000000000010 /* VocabularyWordsEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VocabularyWordsEditor.swift; sourceTree = "<group>"; };
 		HH0000010000000000000010 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
-		HH0000010000000000000011 /* ImportTextAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportTextAnalyzer.swift; sourceTree = "<group>"; };
 		HH0000010000000000000012 /* CreateCardsUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateCardsUI.swift; sourceTree = "<group>"; };
 		HH0000010000000000000013 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
-		HLMTCH001000000000000010 /* HighlightMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightMatcher.swift; sourceTree = "<group>"; };
 		IMGSRC001000000000000010 /* CardSourceImageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardSourceImageStore.swift; sourceTree = "<group>"; };
 		IMGSRC001000000000000011 /* CardSourceImageThumbnail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardSourceImageThumbnail.swift; sourceTree = "<group>"; };
 		IPL00100000000000000001 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
@@ -319,11 +366,7 @@
 		MM0000010000000000000010 /* SpeechService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechService.swift; sourceTree = "<group>"; };
 		MM0000010000000000000011 /* SpeakButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeakButton.swift; sourceTree = "<group>"; };
 		NN0000010000000000000010 /* ImageOCRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageOCRService.swift; sourceTree = "<group>"; };
-		OCRHL0010000000000000010 /* OCRResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRResult.swift; sourceTree = "<group>"; };
 		OCRHL0010000000000000011 /* HighlightMaskDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightMaskDetector.swift; sourceTree = "<group>"; };
-		OCRHL0010000000000000012 /* OCRContextExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRContextExtractor.swift; sourceTree = "<group>"; };
-		OCRHL0010000000000000020 /* HighlightPhraseMerger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightPhraseMerger.swift; sourceTree = "<group>"; };
-		OCRVOC0010000000000000010 /* OCRVocabPageExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRVocabPageExtractor.swift; sourceTree = "<group>"; };
 		ORIGPK0010000000000000010 /* OriginalPackArchive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OriginalPackArchive.swift; sourceTree = "<group>"; };
 		PHRASE001000000000000010 /* PhraseTokenPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhraseTokenPicker.swift; sourceTree = "<group>"; };
 		PP0000010000000000000010 /* FlashCardDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashCardDetailView.swift; sourceTree = "<group>"; };
@@ -366,6 +409,31 @@
 		WW0000010000000000000016 /* AppNavigation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNavigation.swift; sourceTree = "<group>"; };
 		XX0000010000000000000010 /* LibraryCardStatusChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryCardStatusChip.swift; sourceTree = "<group>"; };
 		ZZ0000010000000000000010 /* AppModelContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModelContainer.swift; sourceTree = "<group>"; };
+		FLWREF0002000000000000 /* Preprocess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Preprocess.swift; sourceTree = "<group>"; };
+		FLWREF0006000000000000 /* OCRResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRResult.swift; sourceTree = "<group>"; };
+		FLWREF0010000000000000 /* HighlightMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightMatcher.swift; sourceTree = "<group>"; };
+		FLWREF0014000000000000 /* LiteraryTextFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiteraryTextFormatting.swift; sourceTree = "<group>"; };
+		FLWREF0018000000000000 /* HighlightPhraseMerger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightPhraseMerger.swift; sourceTree = "<group>"; };
+		FLWREF0022000000000000 /* ImportTextAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportTextAnalyzer.swift; sourceTree = "<group>"; };
+		FLWREF0026000000000000 /* OCRContextExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRContextExtractor.swift; sourceTree = "<group>"; };
+		FLWREF0030000000000000 /* OCRChromeFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRChromeFilter.swift; sourceTree = "<group>"; };
+		FLWREF0034000000000000 /* OCRVocabPageExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRVocabPageExtractor.swift; sourceTree = "<group>"; };
+		FLWREF0038000000000000 /* DedupeKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DedupeKey.swift; sourceTree = "<group>"; };
+		FLWREF0042000000000000 /* OCRImportUnit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRImportUnit.swift; sourceTree = "<group>"; };
+		FLWREF0046000000000000 /* VocabularyWords.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VocabularyWords.swift; sourceTree = "<group>"; };
+		FLWREF0051000000000000 /* Generate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Generate.swift; sourceTree = "<group>"; };
+		FLWREF0055000000000000 /* CardGenerationPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardGenerationPrompt.swift; sourceTree = "<group>"; };
+		FLWREF0059000000000000 /* CardGenerationParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardGenerationParser.swift; sourceTree = "<group>"; };
+		FLWREF0063000000000000 /* AppreciationPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppreciationPrompt.swift; sourceTree = "<group>"; };
+		FLWREF0067000000000000 /* AIJSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIJSON.swift; sourceTree = "<group>"; };
+		FLWREF0072000000000000 /* CardContentFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardContentFormatter.swift; sourceTree = "<group>"; };
+		FLWREF0076000000000000 /* CardStudyContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardStudyContent.swift; sourceTree = "<group>"; };
+		FLWREF0080000000000000 /* CardParaphrase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardParaphrase.swift; sourceTree = "<group>"; };
+		FLWREF0084000000000000 /* CardType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardType.swift; sourceTree = "<group>"; };
+		FLWREF0088000000000000 /* FSRS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FSRS.swift; sourceTree = "<group>"; };
+		FLWREF0090000000000000 /* DailyReflectionPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyReflectionPrompt.swift; sourceTree = "<group>"; };
+		FLWREF0092000000000000 /* BackupFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupFile.swift; sourceTree = "<group>"; };
+		FLWREF0094000000000000 /* DeckPackFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckPackFile.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -437,6 +505,8 @@
 				AUTH0010000000000000000011 /* AccountProfile.swift */,
 				QQ0000010000000000000011 /* DeckPack.swift */,
 				AA0000010000000000000051 /* FlashCardBackup.swift */,
+				FLWREF0094000000000000 /* DeckPackFile.swift */,
+				FLWREF0092000000000000 /* BackupFile.swift */,
 				AA0000010000000000000053 /* BackupDocument.swift */,
 				PP0000010000000000000014 /* ApkgDocument.swift */,
 			);
@@ -485,7 +555,6 @@
 				SHRDGRP000000000000000001 /* Design */,
 				SHRDGRP000000000000000002 /* Localization */,
 				PRIVACY0010000000000000010 /* PrivacyInfo.xcprivacy */,
-				SHRDGRP000000000000000003 /* OCR */,
 				SHRDGRP000000000000000004 /* Create */,
 				SHRDGRP000000000000000005 /* Share */,
 				SHRDGRP000000000000000006 /* Deck */,
@@ -508,7 +577,6 @@
 			isa = PBXGroup;
 			children = (
 				WW0000010000000000000015 /* AppComponents.swift */,
-				HLMTCH001000000000000010 /* HighlightMatcher.swift */,
 				SHEET00100000000000000010 /* AppActionSheet.swift */,
 				WW0000010000000000000016 /* AppNavigation.swift */,
 				WW0000010000000000000011 /* StatusChip.swift */,
@@ -526,22 +594,12 @@
 			path = Localization;
 			sourceTree = "<group>";
 		};
-		SHRDGRP000000000000000003 /* OCR */ = {
-			isa = PBXGroup;
-			children = (
-				NN0000010000000000000010 /* ImageOCRService.swift */,
-				OCRHL0010000000000000010 /* OCRResult.swift */,
-				OCRHL0010000000000000011 /* HighlightMaskDetector.swift */,
-				OCRHL0010000000000000012 /* OCRContextExtractor.swift */,
-				OCRHL0010000000000000020 /* HighlightPhraseMerger.swift */,
-				OCRVOC0010000000000000010 /* OCRVocabPageExtractor.swift */,
-			);
-			path = OCR;
-			sourceTree = "<group>";
-		};
 		SHRDGRP000000000000000004 /* Create */ = {
 			isa = PBXGroup;
 			children = (
+				FLWGRP0001000000000000 /* Preprocess */,
+				FLWGRP0050000000000000 /* Generate */,
+				FLWGRP0071000000000000 /* CardContent */,
 				CC0000010000000000000011 /* CardDraft.swift */,
 				HH0000010000000000000012 /* CreateCardsUI.swift */,
 				IMGSRC001000000000000010 /* CardSourceImageStore.swift */,
@@ -552,7 +610,6 @@
 				LIVETX0010000000000000010 /* LiveTextScanSheet.swift */,
 				SELSTDY001000000000000010 /* SelectableStudyText.swift */,
 				PHRASE001000000000000010 /* PhraseTokenPicker.swift */,
-				HH0000010000000000000011 /* ImportTextAnalyzer.swift */,
 				BB0000010000000000000018 /* ImportCardsFormView.swift */,
 				JJ0000010000000000000010 /* ScrollKeyboardDismiss.swift */,
 			);
@@ -604,6 +661,8 @@
 				ACTVTY00100000000000000001 /* StudyActivityStore.swift */,
 				CAPTUR00100000000000000001 /* CaptureStatsStore.swift */,
 				DAILY00100000000000000010 /* DailyReflection.swift */,
+				FLWREF0090000000000000 /* DailyReflectionPrompt.swift */,
+				FLWREF0088000000000000 /* FSRS.swift */,
 				DAILY00100000000000000012 /* DailyReflectionPreferences.swift */,
 				MM0000010000000000000010 /* SpeechService.swift */,
 			);
@@ -721,6 +780,50 @@
 			path = Common;
 			sourceTree = "<group>";
 		};
+		FLWGRP0001000000000000 /* Preprocess */ = {
+			isa = PBXGroup;
+			children = (
+				FLWREF0002000000000000 /* Preprocess.swift */,
+				NN0000010000000000000010 /* ImageOCRService.swift */,
+				OCRHL0010000000000000011 /* HighlightMaskDetector.swift */,
+				FLWREF0006000000000000 /* OCRResult.swift */,
+				FLWREF0010000000000000 /* HighlightMatcher.swift */,
+				FLWREF0014000000000000 /* LiteraryTextFormatting.swift */,
+				FLWREF0018000000000000 /* HighlightPhraseMerger.swift */,
+				FLWREF0022000000000000 /* ImportTextAnalyzer.swift */,
+				FLWREF0026000000000000 /* OCRContextExtractor.swift */,
+				FLWREF0030000000000000 /* OCRChromeFilter.swift */,
+				FLWREF0034000000000000 /* OCRVocabPageExtractor.swift */,
+				FLWREF0038000000000000 /* DedupeKey.swift */,
+				FLWREF0042000000000000 /* OCRImportUnit.swift */,
+				FLWREF0046000000000000 /* VocabularyWords.swift */,
+			);
+			path = Preprocess;
+			sourceTree = "<group>";
+		};
+		FLWGRP0050000000000000 /* Generate */ = {
+			isa = PBXGroup;
+			children = (
+				FLWREF0051000000000000 /* Generate.swift */,
+				FLWREF0055000000000000 /* CardGenerationPrompt.swift */,
+				FLWREF0059000000000000 /* CardGenerationParser.swift */,
+				FLWREF0063000000000000 /* AppreciationPrompt.swift */,
+				FLWREF0067000000000000 /* AIJSON.swift */,
+			);
+			path = Generate;
+			sourceTree = "<group>";
+		};
+		FLWGRP0071000000000000 /* CardContent */ = {
+			isa = PBXGroup;
+			children = (
+				FLWREF0072000000000000 /* CardContentFormatter.swift */,
+				FLWREF0076000000000000 /* CardStudyContent.swift */,
+				FLWREF0080000000000000 /* CardParaphrase.swift */,
+				FLWREF0084000000000000 /* CardType.swift */,
+			);
+			path = CardContent;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -740,6 +843,8 @@
 				DD0000010000000000000031 /* PBXTargetDependency */,
 			);
 			name = KnoWell;
+			packageProductDependencies = (
+			);
 			productName = KnoWell;
 			productReference = AA0000010000000000000005 /* KnoWell.app */;
 			productType = "com.apple.product-type.application";
@@ -757,6 +862,8 @@
 			dependencies = (
 			);
 			name = KnoWellShare;
+			packageProductDependencies = (
+			);
 			productName = KnoWellShare;
 			productReference = BB0000010000000000000010 /* KnoWellShare.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -774,6 +881,8 @@
 			dependencies = (
 			);
 			name = KnoWellAction;
+			packageProductDependencies = (
+			);
 			productName = KnoWellAction;
 			productReference = DD0000010000000000000010 /* KnoWellAction.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -809,6 +918,8 @@
 				"zh-Hans",
 			);
 			mainGroup = AA0000010000000000000002;
+			packageReferences = (
+			);
 			productRefGroup = AA0000010000000000000004 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -860,6 +971,31 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA0000010000000000000020 /* KnoWellApp.swift in Sources */,
+				FLWAPP0003000000000000 /* Preprocess.swift in Sources */,
+				FLWAPP0007000000000000 /* OCRResult.swift in Sources */,
+				FLWAPP0011000000000000 /* HighlightMatcher.swift in Sources */,
+				FLWAPP0015000000000000 /* LiteraryTextFormatting.swift in Sources */,
+				FLWAPP0019000000000000 /* HighlightPhraseMerger.swift in Sources */,
+				FLWAPP0023000000000000 /* ImportTextAnalyzer.swift in Sources */,
+				FLWAPP0027000000000000 /* OCRContextExtractor.swift in Sources */,
+				FLWAPP0031000000000000 /* OCRChromeFilter.swift in Sources */,
+				FLWAPP0035000000000000 /* OCRVocabPageExtractor.swift in Sources */,
+				FLWAPP0039000000000000 /* DedupeKey.swift in Sources */,
+				FLWAPP0043000000000000 /* OCRImportUnit.swift in Sources */,
+				FLWAPP0047000000000000 /* VocabularyWords.swift in Sources */,
+				FLWAPP0052000000000000 /* Generate.swift in Sources */,
+				FLWAPP0056000000000000 /* CardGenerationPrompt.swift in Sources */,
+				FLWAPP0060000000000000 /* CardGenerationParser.swift in Sources */,
+				FLWAPP0064000000000000 /* AppreciationPrompt.swift in Sources */,
+				FLWAPP0068000000000000 /* AIJSON.swift in Sources */,
+				FLWAPP0073000000000000 /* CardContentFormatter.swift in Sources */,
+				FLWAPP0077000000000000 /* CardStudyContent.swift in Sources */,
+				FLWAPP0081000000000000 /* CardParaphrase.swift in Sources */,
+				FLWAPP0085000000000000 /* CardType.swift in Sources */,
+				FLWAPP0089000000000000 /* FSRS.swift in Sources */,
+				FLWAPP0091000000000000 /* DailyReflectionPrompt.swift in Sources */,
+				FLWAPP0093000000000000 /* BackupFile.swift in Sources */,
+				FLWAPP0095000000000000 /* DeckPackFile.swift in Sources */,
 				AA0000010000000000000021 /* FlashCard.swift in Sources */,
 				AA0000010000000000000023 /* ReviewScheduler.swift in Sources */,
 				STREAK00100000000000000002 /* StudyStreakStore.swift in Sources */,
@@ -877,11 +1013,7 @@
 				MM0000010000000000000001 /* SpeechService.swift in Sources */,
 				MM0000010000000000000002 /* SpeakButton.swift in Sources */,
 				NN0000010000000000000001 /* ImageOCRService.swift in Sources */,
-				OCRHL0010000000000000001 /* OCRResult.swift in Sources */,
 				OCRHL0010000000000000004 /* HighlightMaskDetector.swift in Sources */,
-				OCRHL0010000000000000007 /* OCRContextExtractor.swift in Sources */,
-				OCRHL0010000000000000013 /* HighlightPhraseMerger.swift in Sources */,
-				OCRVOC0010000000000000001 /* OCRVocabPageExtractor.swift in Sources */,
 				AA0000010000000000000024 /* ContentView.swift in Sources */,
 				AA0000010000000000000025 /* CreateCardsView.swift in Sources */,
 				QUEUE00100000000000000002 /* CardGenerationQueueView.swift in Sources */,
@@ -898,7 +1030,6 @@
 				JJ0000010000000000000001 /* ScrollKeyboardDismiss.swift in Sources */,
 				GG0000010000000000000001 /* VocabularyWordsEditor.swift in Sources */,
 				HH0000010000000000000001 /* L10n.swift in Sources */,
-				HH0000010000000000000004 /* ImportTextAnalyzer.swift in Sources */,
 				HH0000010000000000000007 /* CreateCardsUI.swift in Sources */,
 				IMGSRC001000000000000001 /* CardSourceImageStore.swift in Sources */,
 				IMGSRC001000000000000004 /* CardSourceImageThumbnail.swift in Sources */,
@@ -907,7 +1038,6 @@
 				SELSTDY001000000000000001 /* SelectableStudyText.swift in Sources */,
 				PHRASE001000000000000001 /* PhraseTokenPicker.swift in Sources */,
 				WW0000010000000000000001 /* AppComponents.swift in Sources */,
-				HLMTCH001000000000000001 /* HighlightMatcher.swift in Sources */,
 				SHEET00100000000000000001 /* AppActionSheet.swift in Sources */,
 				WW0000010000000000000010 /* AppNavigation.swift in Sources */,
 				WW0000010000000000000002 /* StatusChip.swift in Sources */,
@@ -974,6 +1104,27 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FLWSHR0004000000000000 /* Preprocess.swift in Sources */,
+				FLWSHR0008000000000000 /* OCRResult.swift in Sources */,
+				FLWSHR0012000000000000 /* HighlightMatcher.swift in Sources */,
+				FLWSHR0016000000000000 /* LiteraryTextFormatting.swift in Sources */,
+				FLWSHR0020000000000000 /* HighlightPhraseMerger.swift in Sources */,
+				FLWSHR0024000000000000 /* ImportTextAnalyzer.swift in Sources */,
+				FLWSHR0028000000000000 /* OCRContextExtractor.swift in Sources */,
+				FLWSHR0032000000000000 /* OCRChromeFilter.swift in Sources */,
+				FLWSHR0036000000000000 /* OCRVocabPageExtractor.swift in Sources */,
+				FLWSHR0040000000000000 /* DedupeKey.swift in Sources */,
+				FLWSHR0044000000000000 /* OCRImportUnit.swift in Sources */,
+				FLWSHR0048000000000000 /* VocabularyWords.swift in Sources */,
+				FLWSHR0053000000000000 /* Generate.swift in Sources */,
+				FLWSHR0057000000000000 /* CardGenerationPrompt.swift in Sources */,
+				FLWSHR0061000000000000 /* CardGenerationParser.swift in Sources */,
+				FLWSHR0065000000000000 /* AppreciationPrompt.swift in Sources */,
+				FLWSHR0069000000000000 /* AIJSON.swift in Sources */,
+				FLWSHR0074000000000000 /* CardContentFormatter.swift in Sources */,
+				FLWSHR0078000000000000 /* CardStudyContent.swift in Sources */,
+				FLWSHR0082000000000000 /* CardParaphrase.swift in Sources */,
+				FLWSHR0086000000000000 /* CardType.swift in Sources */,
 				BB0000010000000000000003 /* ShareViewController.swift in Sources */,
 				BB0000010000000000000004 /* ShareImportStore.swift in Sources */,
 				BB0000010000000000000007 /* ImportCardsFormView.swift in Sources */,
@@ -981,7 +1132,6 @@
 				JJ0000010000000000000002 /* ScrollKeyboardDismiss.swift in Sources */,
 				GG0000010000000000000002 /* VocabularyWordsEditor.swift in Sources */,
 				HH0000010000000000000002 /* L10n.swift in Sources */,
-				HH0000010000000000000005 /* ImportTextAnalyzer.swift in Sources */,
 				HH0000010000000000000008 /* CreateCardsUI.swift in Sources */,
 				IMGSRC001000000000000002 /* CardSourceImageStore.swift in Sources */,
 				IMGSRC001000000000000005 /* CardSourceImageThumbnail.swift in Sources */,
@@ -989,16 +1139,11 @@
 				LIVETX0010000000000000002 /* LiveTextScanSheet.swift in Sources */,
 				PHRASE001000000000000002 /* PhraseTokenPicker.swift in Sources */,
 				WW0000010000000000000004 /* AppComponents.swift in Sources */,
-				HLMTCH001000000000000002 /* HighlightMatcher.swift in Sources */,
 				SHEET00100000000000000002 /* AppActionSheet.swift in Sources */,
 				WW0000010000000000000005 /* StatusChip.swift in Sources */,
 				WW0000010000000000000006 /* ToastCenter.swift in Sources */,
 				NN0000010000000000000002 /* ImageOCRService.swift in Sources */,
-				OCRHL0010000000000000002 /* OCRResult.swift in Sources */,
 				OCRHL0010000000000000005 /* HighlightMaskDetector.swift in Sources */,
-				OCRHL0010000000000000008 /* OCRContextExtractor.swift in Sources */,
-				OCRHL0010000000000000014 /* HighlightPhraseMerger.swift in Sources */,
-				OCRVOC0010000000000000002 /* OCRVocabPageExtractor.swift in Sources */,
 				CC0000010000000000000003 /* CardDraft.swift in Sources */,
 				CC0000010000000000000004 /* CardGenerator.swift in Sources */,
 				CC0000010000000000000005 /* APISettings.swift in Sources */,
@@ -1018,6 +1163,27 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FLWACT0005000000000000 /* Preprocess.swift in Sources */,
+				FLWACT0009000000000000 /* OCRResult.swift in Sources */,
+				FLWACT0013000000000000 /* HighlightMatcher.swift in Sources */,
+				FLWACT0017000000000000 /* LiteraryTextFormatting.swift in Sources */,
+				FLWACT0021000000000000 /* HighlightPhraseMerger.swift in Sources */,
+				FLWACT0025000000000000 /* ImportTextAnalyzer.swift in Sources */,
+				FLWACT0029000000000000 /* OCRContextExtractor.swift in Sources */,
+				FLWACT0033000000000000 /* OCRChromeFilter.swift in Sources */,
+				FLWACT0037000000000000 /* OCRVocabPageExtractor.swift in Sources */,
+				FLWACT0041000000000000 /* DedupeKey.swift in Sources */,
+				FLWACT0045000000000000 /* OCRImportUnit.swift in Sources */,
+				FLWACT0049000000000000 /* VocabularyWords.swift in Sources */,
+				FLWACT0054000000000000 /* Generate.swift in Sources */,
+				FLWACT0058000000000000 /* CardGenerationPrompt.swift in Sources */,
+				FLWACT0062000000000000 /* CardGenerationParser.swift in Sources */,
+				FLWACT0066000000000000 /* AppreciationPrompt.swift in Sources */,
+				FLWACT0070000000000000 /* AIJSON.swift in Sources */,
+				FLWACT0075000000000000 /* CardContentFormatter.swift in Sources */,
+				FLWACT0079000000000000 /* CardStudyContent.swift in Sources */,
+				FLWACT0083000000000000 /* CardParaphrase.swift in Sources */,
+				FLWACT0087000000000000 /* CardType.swift in Sources */,
 				DD0000010000000000000003 /* ActionViewController.swift in Sources */,
 				DD0000010000000000000004 /* ShareImportStore.swift in Sources */,
 				DD0000010000000000000006 /* ImportCardsFormView.swift in Sources */,
@@ -1025,7 +1191,6 @@
 				JJ0000010000000000000003 /* ScrollKeyboardDismiss.swift in Sources */,
 				GG0000010000000000000003 /* VocabularyWordsEditor.swift in Sources */,
 				HH0000010000000000000003 /* L10n.swift in Sources */,
-				HH0000010000000000000006 /* ImportTextAnalyzer.swift in Sources */,
 				HH0000010000000000000009 /* CreateCardsUI.swift in Sources */,
 				IMGSRC001000000000000003 /* CardSourceImageStore.swift in Sources */,
 				IMGSRC001000000000000006 /* CardSourceImageThumbnail.swift in Sources */,
@@ -1033,16 +1198,11 @@
 				LIVETX0010000000000000003 /* LiveTextScanSheet.swift in Sources */,
 				PHRASE001000000000000003 /* PhraseTokenPicker.swift in Sources */,
 				WW0000010000000000000007 /* AppComponents.swift in Sources */,
-				HLMTCH001000000000000003 /* HighlightMatcher.swift in Sources */,
 				SHEET00100000000000000003 /* AppActionSheet.swift in Sources */,
 				WW0000010000000000000008 /* StatusChip.swift in Sources */,
 				WW0000010000000000000009 /* ToastCenter.swift in Sources */,
 				NN0000010000000000000003 /* ImageOCRService.swift in Sources */,
-				OCRHL0010000000000000003 /* OCRResult.swift in Sources */,
 				OCRHL0010000000000000006 /* HighlightMaskDetector.swift in Sources */,
-				OCRHL0010000000000000009 /* OCRContextExtractor.swift in Sources */,
-				OCRHL0010000000000000015 /* HighlightPhraseMerger.swift in Sources */,
-				OCRVOC0010000000000000003 /* OCRVocabPageExtractor.swift in Sources */,
 				DD0000010000000000000007 /* CardDraft.swift in Sources */,
 				DD0000010000000000000008 /* CardGenerator.swift in Sources */,
 				DD0000010000000000000009 /* APISettings.swift in Sources */,
@@ -1352,6 +1512,7 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
 	};
 	rootObject = AA0000010000000000000001 /* Project object */;
 }
