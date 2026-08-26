@@ -237,7 +237,12 @@ struct CardStudyFaceView: View {
     private var speakButton: some View {
         Button {
             let text = content.cardType == .appreciation ? content.sentence : content.word
-            SpeechService.speak(text)
+            var contextParts = [content.sentence]
+            if let source = content.sourceAttribution?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !source.isEmpty {
+                contextParts.append(source)
+            }
+            SpeechService.speak(text, context: contextParts.joined(separator: "\n"))
         } label: {
             Image(systemName: "speaker.wave.2.fill")
                 .font(.system(size: 20, weight: .semibold))

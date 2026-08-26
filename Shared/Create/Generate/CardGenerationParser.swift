@@ -77,6 +77,12 @@ public enum CardGenerationParser {
             value = String(value[value.index(after: colon)...])
                 .trimmingCharacters(in: .whitespacesAndNewlines)
         }
+        if value.contains("/") || value.contains("[") {
+            // LLMs often mark stress with ASCII / curly quotes instead of ˈ.
+            value = value
+                .replacingOccurrences(of: "\u{2019}", with: "ˈ")
+                .replacingOccurrences(of: "'", with: "ˈ")
+        }
         return value.nilIfEmpty
     }
 }

@@ -24,7 +24,7 @@ public enum CardGenerationPrompt {
           "cards": [
             {
               "word": "生词",
-              "phonetic": "音标（英文必须给 IPA，用 /.../ 包裹；其它语言给读法；实在没有才空字符串）",
+              "phonetic": "按原文语言的音标/注音（见 user 消息；实在没有才空字符串）",
               "type": "cloze 或 definition",
               "front": "卡片正面",
               "back": "词性 + 本句核心中文释义（尽量 1 句，最多 2 句）",
@@ -52,7 +52,7 @@ public enum CardGenerationPrompt {
         9. etymology：一行词根/词缀拆解即可；无把握空字符串，禁止编造
         10. context_note（硬性）：必须是完整一句中文翻译。目标词对应译法必须用全角【】标出，且只标一处；【】内通常 1–6 个汉字的短译，禁止标整句或整段结果状语。正确例：政府试图【缓解】其影响。/ 他【离开时】带着苦笑。错误例：未使用【】、用 []/**/「」、或【离开时不仅好笑还更聪明】这种过长标注
         11. highlight（硬性）：填写与【】内相同的短译纯文本（不要带括号）；必须是 context_note 去掉【】后仍能原样找到的子串
-        12. phonetic：每个 card 都必须填写；拉丁字母词用 IPA（例 /ˈtren.tʃənt/），日语用假名/罗马音，其它语言给常用注音；禁止把音标写进 back/front
+        12. phonetic：每个 card 都必须填写，且必须匹配 user 消息标明的原文语言（该语言 IPA 或常用注音）；禁止用另一种语言的读法去标这个词；禁止把音标写进 back/front
         13. 原文是什么语言，front 中的句子就保持什么语言，不要擅自翻译原句
         14. source：若能从原文、页面提示、词库名称或公认名句较有把握地判断出处（书名、篇章名、作者），填写简洁标注，如「Poor Charlie's Almanack · Charles T. Munger」；无把握必须返回空字符串，禁止编造
         15. 若提供了词库名称：把它当作主题/书名/学习范围线索，优先按该语境理解生词与【】译法；词库名 alone 不足以确定出处时不要编造 source
@@ -72,6 +72,11 @@ public enum CardGenerationPrompt {
         原文：\(sentence)
         生词：\(words.joined(separator: ", "))
         """
+        let language = SourceLanguage.guess(
+            fromSourceText: sentence,
+            extra: imageOnlySource ? nil : sourceHint
+        )
+        prompt += "\n原文语言：\(language.promptName)。phonetic 必须按此语言：\(language.phoneticRule)"
         if let deckName, !deckName.isEmpty {
             prompt += "\n词库名称（可能是书名、专题或学习范围；请作为释义语境与出处线索）：\(deckName)"
         }

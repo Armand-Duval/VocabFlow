@@ -58,6 +58,9 @@
 		FLWAPP0068000000000000 /* AIJSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0067000000000000 /* AIJSON.swift */; };
 		FLWSHR0069000000000000 /* AIJSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0067000000000000 /* AIJSON.swift */; };
 		FLWACT0070000000000000 /* AIJSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0067000000000000 /* AIJSON.swift */; };
+		FLWAPP0101000000000000 /* SourceLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0100000000000000 /* SourceLanguage.swift */; };
+		FLWSHR0102000000000000 /* SourceLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0100000000000000 /* SourceLanguage.swift */; };
+		FLWACT0103000000000000 /* SourceLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0100000000000000 /* SourceLanguage.swift */; };
 		FLWAPP0073000000000000 /* CardContentFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0072000000000000 /* CardContentFormatter.swift */; };
 		FLWSHR0074000000000000 /* CardContentFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0072000000000000 /* CardContentFormatter.swift */; };
 		FLWACT0075000000000000 /* CardContentFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLWREF0072000000000000 /* CardContentFormatter.swift */; };
@@ -426,6 +429,7 @@
 		FLWREF0059000000000000 /* CardGenerationParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardGenerationParser.swift; sourceTree = "<group>"; };
 		FLWREF0063000000000000 /* AppreciationPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppreciationPrompt.swift; sourceTree = "<group>"; };
 		FLWREF0067000000000000 /* AIJSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIJSON.swift; sourceTree = "<group>"; };
+		FLWREF0100000000000000 /* SourceLanguage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceLanguage.swift; sourceTree = "<group>"; };
 		FLWREF0072000000000000 /* CardContentFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardContentFormatter.swift; sourceTree = "<group>"; };
 		FLWREF0076000000000000 /* CardStudyContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardStudyContent.swift; sourceTree = "<group>"; };
 		FLWREF0080000000000000 /* CardParaphrase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardParaphrase.swift; sourceTree = "<group>"; };
@@ -809,6 +813,7 @@
 				FLWREF0059000000000000 /* CardGenerationParser.swift */,
 				FLWREF0063000000000000 /* AppreciationPrompt.swift */,
 				FLWREF0067000000000000 /* AIJSON.swift */,
+				FLWREF0100000000000000 /* SourceLanguage.swift */,
 			);
 			path = Generate;
 			sourceTree = "<group>";
@@ -988,6 +993,7 @@
 				FLWAPP0060000000000000 /* CardGenerationParser.swift in Sources */,
 				FLWAPP0064000000000000 /* AppreciationPrompt.swift in Sources */,
 				FLWAPP0068000000000000 /* AIJSON.swift in Sources */,
+				FLWAPP0101000000000000 /* SourceLanguage.swift in Sources */,
 				FLWAPP0073000000000000 /* CardContentFormatter.swift in Sources */,
 				FLWAPP0077000000000000 /* CardStudyContent.swift in Sources */,
 				FLWAPP0081000000000000 /* CardParaphrase.swift in Sources */,
@@ -1121,6 +1127,7 @@
 				FLWSHR0061000000000000 /* CardGenerationParser.swift in Sources */,
 				FLWSHR0065000000000000 /* AppreciationPrompt.swift in Sources */,
 				FLWSHR0069000000000000 /* AIJSON.swift in Sources */,
+				FLWSHR0102000000000000 /* SourceLanguage.swift in Sources */,
 				FLWSHR0074000000000000 /* CardContentFormatter.swift in Sources */,
 				FLWSHR0078000000000000 /* CardStudyContent.swift in Sources */,
 				FLWSHR0082000000000000 /* CardParaphrase.swift in Sources */,
@@ -1180,6 +1187,7 @@
 				FLWACT0062000000000000 /* CardGenerationParser.swift in Sources */,
 				FLWACT0066000000000000 /* AppreciationPrompt.swift in Sources */,
 				FLWACT0070000000000000 /* AIJSON.swift in Sources */,
+				FLWACT0103000000000000 /* SourceLanguage.swift in Sources */,
 				FLWACT0075000000000000 /* CardContentFormatter.swift in Sources */,
 				FLWACT0079000000000000 /* CardStudyContent.swift in Sources */,
 				FLWACT0083000000000000 /* CardParaphrase.swift in Sources */,
