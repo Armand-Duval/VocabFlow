@@ -127,43 +127,46 @@ struct FlashCardEditFields: Equatable {
 
 struct FlashCardEditorForm: View {
     @Binding var fields: FlashCardEditFields
+    @Binding var sourceImagePath: String?
     let decks: [Deck]
-    var cardSourceImagePath: String? = nil
+    @State private var showPhotoLibrary = false
+    @State private var showCamera = false
 
     var body: some View {
         Form {
             Section {
-                labeledPicker(L10n.deckTarget) {
-                    Picker(L10n.deckTarget, selection: $fields.deckID) {
-                        ForEach(decks) { deck in
-                            Text(deck.name).tag(deck.id)
-                        }
+                AppSpinner(
+                    title: L10n.deckTarget,
+                    titlePlacement: .above,
+                    value: decks.first(where: { $0.id == fields.deckID })?.name ?? L10n.deckDefaultName,
+                    options: decks.map { AppSelectionOption(id: $0.id, title: $0.name) },
+                    selectedID: fields.deckID.uuidString
+                ) { raw in
+                    if let id = UUID(uuidString: raw) {
+                        fields.deckID = id
                     }
-                    .labelsHidden()
                 }
 
                 labeledField(L10n.wordLabel, text: $fields.word)
                 labeledField(L10n.phoneticLabel, text: $fields.phonetic, prompt: L10n.phoneticPlaceholder)
 
-                labeledPicker(L10n.typeLabel) {
-                    Picker(L10n.typeLabel, selection: $fields.cardType) {
-                        ForEach(CardType.allCases, id: \.self) { type in
-                            Text(type.displayName).tag(type)
-                        }
+                AppSpinner(
+                    title: L10n.typeLabel,
+                    titlePlacement: .above,
+                    value: fields.cardType.displayName,
+                    options: CardType.allCases.map {
+                        AppSelectionOption(id: $0.rawValue, title: $0.displayName)
+                    },
+                    selectedID: fields.cardType.rawValue
+                ) { raw in
+                    if let type = CardType(rawValue: raw) {
+                        fields.cardType = type
                     }
-                    .labelsHidden()
                 }
 
                 labeledField(L10n.cardSourceLabel, text: $fields.sourceAttribution, prompt: L10n.cardSourceLabel)
 
-                if let path = cardSourceImagePath {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(L10n.cardSourceImageLabel)
-                            .font(AppFont.caption())
-                            .foregroundStyle(.secondary)
-                        CardSourceImageThumbnail(relativePath: path, maxHeight: 160)
-                    }
-                }
+                sourceImageEditor
             } header: {
                 Text(L10n.libraryEditBasics)
             }
@@ -274,6 +277,45 @@ struct FlashCardEditorForm: View {
             }
         }
         .dismissKeyboardOnScroll()
+        .sheet(isPresented: $showPhotoLibrary) {
+            PhotoLibraryPicker { image in
+                sourceImagePath = CardSourceImageStore.saveJPEG(image)
+            }
+            .ignoresSafeArea()
+        }
+        .sheet(isPresented: $showCamera) {
+            CameraImagePicker { image in
+                sourceImagePath = CardSourceImageStore.saveJPEG(image)
+            }
+            .ignoresSafeArea()
+        }
+    }
+
+    @ViewBuilder
+    private var sourceImageEditor: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(L10n.cardSourceImageLabel)
+                .font(AppFont.caption())
+                .foregroundStyle(.secondary)
+
+            if let path = sourceImagePath {
+                CardSourceImageThumbnail(relativePath: path, maxHeight: 160)
+                HStack(spacing: AppSpacing.sm) {
+                    Button(L10n.cardSourceImageReplace) {
+                        showPhotoLibrary = true
+                    }
+                    Button(L10n.cardSourceImageRemove, role: .destructive) {
+                        sourceImagePath = nil
+                    }
+                }
+                .font(AppFont.helper())
+            } else {
+                Button(L10n.cardSourceImageAdd) {
+                    showPhotoLibrary = true
+                }
+                .font(AppFont.helper())
+            }
+        }
     }
 
     private func labeledField(
@@ -296,20 +338,6 @@ struct FlashCardEditorForm: View {
         }
         .padding(.vertical, 2)
     }
-
-    private func labeledPicker<Content: View>(
-        _ title: String,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title)
-                .font(AppFont.caption().weight(.medium))
-                .foregroundStyle(AppColor.textSecondary)
-            content()
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .padding(.vertical, 2)
-    }
 }
 
 /// Manual edit + optional AI regenerate (fills the form; user confirms with Done).
@@ -324,6 +352,7 @@ struct FlashCardEditSheet: View {
     private var decks: [Deck]
 
     @State private var fields = FlashCardEditFields()
+    @State private var sourceImagePath: String?
     @State private var isRegenerating = false
     @State private var showRegenerateConfirm = false
     @State private var didLoad = false
@@ -332,8 +361,8 @@ struct FlashCardEditSheet: View {
         NavigationStack {
             FlashCardEditorForm(
                 fields: $fields,
-                decks: decks,
-                cardSourceImagePath: card.sourceImagePath
+                sourceImagePath: $sourceImagePath,
+                decks: decks
             )
                 .navigationTitle(editNavigationTitle)
                 .navigationBarTitleDisplayMode(.inline)
@@ -370,6 +399,7 @@ struct FlashCardEditSheet: View {
                     didLoad = true
                     let defaultDeckID = DeckService.fetchOrCreateDefault(in: modelContext).id
                     fields = .load(from: card, defaultDeckID: defaultDeckID)
+                    sourceImagePath = card.sourceImagePath
                 }
         }
     }
@@ -383,7 +413,16 @@ struct FlashCardEditSheet: View {
     }
 
     private func save() {
+        let sourceDeck = card.deck
         fields.apply(to: card, in: modelContext)
+        let trimmedPath = sourceImagePath?.trimmingCharacters(in: .whitespacesAndNewlines)
+        card.sourceImagePath = trimmedPath?.isEmpty == false ? trimmedPath : nil
+        if sourceDeck?.id != card.deck?.id {
+            DeckCardCountService.adjust(deck: sourceDeck, by: -1, in: modelContext, save: false)
+            DeckCardCountService.adjust(deck: card.deck, by: 1, in: modelContext, save: false)
+            SharedDedupeSync.rebuild(in: modelContext)
+        }
+        try? modelContext.save()
         DeckCardCountService.notifyCatalogChanged()
         onSaved?()
         dismiss()
@@ -417,13 +456,13 @@ struct FlashCardEditSheet: View {
                     occasion: CardContentFormatter.senseText(fields.back),
                     isAI: true
                 )
-                let draft = try await LiteraryAppreciationGenerator.generate(from: reflection)
+                let draft = try await LiteraryAppreciationGenerator.generate(from: reflection, allowFallback: false)
                 fields.applyDraft(draft)
                 ToastCenter.shared.show(L10n.cardRegenerateDone)
                 return
             }
 
-            let drafts = try await KimiCardGenerator.generate(
+            let drafts = try await CardGenerator.generate(
                 sentence: sentence,
                 words: [word],
                 sourceHint: {

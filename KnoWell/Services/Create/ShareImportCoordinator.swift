@@ -17,6 +17,7 @@ enum ShareImportService {
 final class ShareImportCoordinator: ObservableObject {
     @Published private(set) var pendingPayload: ShareImportPayload?
     @Published private(set) var pendingDrafts: [GeneratedCardDraft]?
+    @Published private(set) var pendingInbox: ShareInboxPayload?
 
     func refreshFromSharedStorage() {
         if let payload = ShareImportStore.consumePendingImport() {
@@ -33,9 +34,13 @@ final class ShareImportCoordinator: ObservableObject {
 
     func refreshAll() {
         refreshPendingDrafts()
-        if pendingDrafts == nil {
-            refreshFromSharedStorage()
+        if pendingDrafts != nil { return }
+        if pendingInbox != nil { return }
+        if let inbox = ShareImportStore.consumeInbox() {
+            pendingInbox = inbox
+            return
         }
+        refreshFromSharedStorage()
     }
 
     func acknowledgeImport() {
@@ -46,11 +51,15 @@ final class ShareImportCoordinator: ObservableObject {
         pendingDrafts = nil
     }
 
+    func acknowledgeInbox() {
+        pendingInbox = nil
+    }
+
     func importPayload(_ payload: ShareImportPayload) {
         pendingPayload = payload
     }
 
     var hasPendingImport: Bool {
-        pendingPayload != nil || pendingDrafts != nil
+        pendingPayload != nil || pendingDrafts != nil || pendingInbox != nil
     }
 }

@@ -6,6 +6,18 @@ import SwiftData
 final class CardGenerationQueue: ObservableObject {
     static let shared = CardGenerationQueue()
 
+    private init() {
+        pendingTriages = ShareImportStore.loadTriageBatches().map {
+            ReadyPreview(
+                id: $0.id,
+                drafts: $0.drafts,
+                deckID: $0.deckID,
+                cursor: $0.cursor,
+                skippedDuplicates: 0
+            )
+        }
+    }
+
     enum JobKind: Equatable {
         case create
         case migrate
@@ -48,6 +60,7 @@ final class CardGenerationQueue: ObservableObject {
         let deckName: String?
         let sourceHint: String?
         let sourceImagePath: String?
+        let imageOnlySource: Bool
         let sentencePreview: String
         let units: [OCRImportUnit]
         var status: JobStatus
@@ -61,8 +74,17 @@ final class CardGenerationQueue: ObservableObject {
         var migrationReport: CardContentMigrationReport?
 
         var progressFraction: Double {
+            if !words.isEmpty {
+                return Double(completedWordCount) / Double(words.count)
+            }
             guard totalBatches > 0 else { return status == .succeeded ? 1 : 0 }
             return Double(completedBatches) / Double(totalBatches)
+        }
+
+        var completedWordCount: Int {
+            words.filter {
+                $0.status == .done || $0.status == .failed || $0.status == .skipped
+            }.count
         }
 
         var isActive: Bool {
@@ -74,15 +96,22 @@ final class CardGenerationQueue: ObservableObject {
         }
     }
 
-    struct ReadyPreview: Equatable {
-        let jobID: UUID
-        let drafts: [GeneratedCardDraft]
-        let deckID: UUID
-        let skippedDuplicates: Int
+    struct ReadyPreview: Equatable, Identifiable {
+        let id: UUID
+        var drafts: [GeneratedCardDraft]
+        var deckID: UUID
+        var cursor: Int
+        var skippedDuplicates: Int
     }
 
     @Published private(set) var jobs: [Job] = []
-    @Published var readyPreview: ReadyPreview?
+    @Published private(set) var pendingTriages: [ReadyPreview] = []
+
+    var readyPreview: ReadyPreview? { pendingTriages.first }
+
+    var pendingTriageCardCount: Int {
+        pendingTriages.reduce(0) { $0 + $1.drafts.count }
+    }
 
     private var isProcessing = false
     private var migrationContext: ModelContext?
@@ -105,6 +134,23 @@ final class CardGenerationQueue: ObservableObject {
         !activeJobs.isEmpty
     }
 
+    /// Remaining work for the create banner: unfinished words/batches, failed jobs, and cards waiting to confirm.
+    var remainingWorkCount: Int {
+        var remaining = 0
+        for job in activeJobs {
+            if !job.words.isEmpty {
+                remaining += max(0, job.words.count - job.completedWordCount)
+            } else if job.totalBatches > 0 {
+                remaining += max(0, job.totalBatches - job.completedBatches)
+            } else {
+                remaining += 1
+            }
+        }
+        remaining += jobs.filter { $0.status == .failed }.count
+        remaining += pendingTriageCardCount
+        return remaining
+    }
+
     var hasActiveMigrationJob: Bool {
         jobs.contains { $0.kind == .migrate && $0.isActive }
     }
@@ -113,6 +159,9 @@ final class CardGenerationQueue: ObservableObject {
         let active = activeJobs
         guard let first = active.first else { return "" }
         if active.count == 1 {
+            if first.status == .running, !first.words.isEmpty {
+                return L10n.generatingProgress(first.completedWordCount, first.words.count)
+            }
             if first.status == .running, first.totalBatches > 0 {
                 return L10n.generatingProgress(first.completedBatches, first.totalBatches)
             }
@@ -128,12 +177,14 @@ final class CardGenerationQueue: ObservableObject {
         deckID: UUID,
         deckName: String?,
         sourceHint: String?,
-        sourceImagePath: String? = nil
+        sourceImagePath: String? = nil,
+        imageOnlySource: Bool = false
     ) throws -> UUID {
-        let prepared = try KimiCardGenerator.prepareGeneration(
+        let prepared = try CardGenerator.prepareGeneration(
             sentence: sentence,
             words: words,
-            skipExistingInDeckID: deckID
+            skipExistingInDeckID: deckID,
+            imageOnlySource: imageOnlySource
         )
 
         var wordItems: [WordItem] = []
@@ -141,6 +192,10 @@ final class CardGenerationQueue: ObservableObject {
             for word in unit.words {
                 wordItems.append(WordItem(word: word, sentence: unit.sentence))
             }
+        }
+
+        if let error = CloudAIQuota.insufficientError(needed: wordItems.count) {
+            throw error
         }
 
         let preview = sentence
@@ -157,6 +212,7 @@ final class CardGenerationQueue: ObservableObject {
                 let path = sourceImagePath?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
                 return path.isEmpty ? nil : path
             }(),
+            imageOnlySource: imageOnlySource,
             sentencePreview: String(preview),
             units: prepared.units,
             status: .queued,
@@ -204,6 +260,7 @@ final class CardGenerationQueue: ObservableObject {
             deckName: nil,
             sourceHint: nil,
             sourceImagePath: nil,
+            imageOnlySource: false,
             sentencePreview: L10n.settingsMigrateCards,
             units: [],
             status: .queued,
@@ -221,8 +278,61 @@ final class CardGenerationQueue: ObservableObject {
         return job.id
     }
 
-    func dismissReadyPreview() {
-        readyPreview = nil
+    func enqueueTriage(
+        drafts: [GeneratedCardDraft],
+        deckID: UUID,
+        skippedDuplicates: Int = 0
+    ) {
+        let selected = drafts.filter(\.isSelected)
+        let items = selected.isEmpty ? drafts : selected
+        guard !items.isEmpty else { return }
+        pendingTriages.append(
+            ReadyPreview(
+                id: UUID(),
+                drafts: items,
+                deckID: deckID,
+                cursor: 0,
+                skippedDuplicates: skippedDuplicates
+            )
+        )
+        persistTriages()
+    }
+
+    func replaceCurrentTriage(
+        drafts: [GeneratedCardDraft],
+        deckID: UUID? = nil,
+        cursor: Int = 0
+    ) {
+        guard !pendingTriages.isEmpty else { return }
+        if drafts.isEmpty {
+            finishCurrentTriage()
+            return
+        }
+        pendingTriages[0].drafts = drafts
+        pendingTriages[0].cursor = min(max(cursor, 0), drafts.count - 1)
+        if let deckID {
+            pendingTriages[0].deckID = deckID
+        }
+        persistTriages()
+    }
+
+    func finishCurrentTriage() {
+        guard !pendingTriages.isEmpty else { return }
+        pendingTriages.removeFirst()
+        persistTriages()
+    }
+
+    private func persistTriages() {
+        ShareImportStore.saveTriageBatches(
+            pendingTriages.map {
+                ShareImportStore.PersistedTriageBatch(
+                    id: $0.id,
+                    deckID: $0.deckID,
+                    drafts: $0.drafts,
+                    cursor: $0.cursor
+                )
+            }
+        )
     }
 
     func removeFinished(_ id: UUID) {
@@ -238,34 +348,33 @@ final class CardGenerationQueue: ObservableObject {
     /// Pull Share / Action pending jobs into the in-app generation queue.
     func ingestPendingShareJobsIfNeeded() {
         ShareImportStore.resetStaleProcessingJob()
-        guard let job = ShareImportStore.claimPendingGenerationJob() else { return }
+        let pending = ShareImportStore.takeAllPendingGenerationJobs()
+        guard !pending.isEmpty else { return }
 
-        guard let deckID = SharedDeckStore.pendingTargetDeckID
+        let fallbackDeckID = SharedDeckStore.consumePendingTargetDeckID()
             ?? SharedDeckStore.lastSelectedDeckID
-            ?? SharedDeckStore.resolvedSelectedDeckID() else {
-            ShareImportStore.clearGenerationJob()
-            ToastCenter.shared.show(L10n.deckExtensionEmptyCatalogHint)
-            return
-        }
+            ?? SharedDeckStore.resolvedSelectedDeckID()
+        let catalog = SharedDeckStore.loadCatalog()
 
-        let deckName = SharedDeckStore.loadCatalog()
-            .first(where: { $0.id == deckID })?
-            .name
-
-        do {
-            _ = try enqueue(
-                sentence: job.sentence,
-                words: job.words,
-                deckID: deckID,
-                deckName: deckName,
-                sourceHint: job.sourceHint,
-                sourceImagePath: job.sourceImagePath
-            )
-            ShareImportStore.clearGenerationJob()
-        } catch {
-            ShareImportStore.clearGenerationJob()
-            ToastCenter.shared.show(error.localizedDescription)
-            ShareExtensionNotifier.scheduleNoticeNotification(body: error.localizedDescription)
+        for job in pending {
+            guard let deckID = job.deckID ?? fallbackDeckID else {
+                ToastCenter.shared.show(L10n.deckExtensionEmptyCatalogHint)
+                continue
+            }
+            let deckName = catalog.first(where: { $0.id == deckID })?.name
+            do {
+                _ = try enqueue(
+                    sentence: job.sentence,
+                    words: job.words,
+                    deckID: deckID,
+                    deckName: deckName,
+                    sourceHint: job.sourceHint,
+                    sourceImagePath: job.sourceImagePath
+                )
+            } catch {
+                ToastCenter.shared.show(error.localizedDescription)
+                ShareExtensionNotifier.scheduleNoticeNotification(body: error.localizedDescription)
+            }
         }
     }
 
@@ -292,12 +401,21 @@ final class CardGenerationQueue: ObservableObject {
 
     private func runCreate(_ job: Job) async {
         do {
-            let drafts = try await KimiCardGenerator.generate(
+            let drafts = try await CardGenerator.generate(
                 units: job.units,
                 sourceHint: job.sourceHint,
-                deckName: job.deckName
+                deckName: job.deckName,
+                requiredCardType: job.imageOnlySource ? .definition : nil,
+                imageOnlySource: job.imageOnlySource
             ) { [weak self] completed, total in
                 self?.updateProgress(jobID: job.id, completed: completed, total: total)
+            } onBatchStarted: { [weak self] sentence, words in
+                self?.markWords(
+                    jobID: job.id,
+                    sentence: sentence,
+                    words: words,
+                    status: .running
+                )
             } onBatchFinished: { [weak self] sentence, words, drafts, error in
                 self?.applyBatch(
                     jobID: job.id,
@@ -328,12 +446,11 @@ final class CardGenerationQueue: ObservableObject {
             updateProgress(jobID: job.id, completed: index, total: batches.count)
 
             do {
-                let drafts = try await KimiCardGenerator.generate(
+                let drafts = try await CardGenerator.generate(
                     sentence: batch.sentence,
                     words: batch.words,
                     sourceHint: batch.sourceHint,
-                    deckName: batch.deckName,
-                    mode: .full
+                    deckName: batch.deckName
                 )
                 let stats = CardContentMigrationService.applyMigrationBatch(
                     drafts: drafts,
@@ -376,10 +493,54 @@ final class CardGenerationQueue: ObservableObject {
         migrationContext = nil
     }
 
+    private func mutateJob(id: UUID, _ body: (inout Job) -> Void) {
+        guard let index = jobs.firstIndex(where: { $0.id == id }) else { return }
+        objectWillChange.send()
+        body(&jobs[index])
+    }
+
+    private func mutateMatchingWords(
+        jobID: UUID,
+        sentence: String,
+        words: [String],
+        _ body: (inout WordItem) -> Void
+    ) {
+        let sentenceKey = SharedDedupeIndex.normalizedSentence(sentence)
+        let wordKeys = Set(words.map(SharedDedupeIndex.normalizedWord))
+        mutateJob(id: jobID) { job in
+            for i in job.words.indices {
+                let item = job.words[i]
+                guard SharedDedupeIndex.normalizedSentence(item.sentence) == sentenceKey,
+                      wordKeys.contains(SharedDedupeIndex.normalizedWord(item.word)) else {
+                    continue
+                }
+                body(&job.words[i])
+            }
+        }
+    }
+
+    private func refreshCloudQuota() {
+        Task { await CloudAIQuotaStore.shared.refresh(force: true) }
+    }
+
     private func updateProgress(jobID: UUID, completed: Int, total: Int) {
-        guard let index = jobs.firstIndex(where: { $0.id == jobID }) else { return }
-        jobs[index].completedBatches = completed
-        jobs[index].totalBatches = max(total, jobs[index].totalBatches)
+        mutateJob(id: jobID) { job in
+            job.completedBatches = completed
+            job.totalBatches = max(total, job.totalBatches)
+        }
+    }
+
+    private func markWords(
+        jobID: UUID,
+        sentence: String,
+        words: [String],
+        status: WordStatus
+    ) {
+        mutateMatchingWords(jobID: jobID, sentence: sentence, words: words) { item in
+            if item.status == .pending || item.status == .running {
+                item.status = status
+            }
+        }
     }
 
     private func applyBatch(
@@ -389,26 +550,19 @@ final class CardGenerationQueue: ObservableObject {
         drafts: [GeneratedCardDraft],
         error: Error?
     ) {
-        guard let index = jobs.firstIndex(where: { $0.id == jobID }) else { return }
-        let sentenceKey = SharedDedupeIndex.normalizedSentence(sentence)
-        let wordKeys = Set(words.map(SharedDedupeIndex.normalizedWord))
         let draftWordKeys = Set(drafts.map { SharedDedupeIndex.normalizedWord($0.word) })
-
-        for i in jobs[index].words.indices {
-            let item = jobs[index].words[i]
-            guard SharedDedupeIndex.normalizedSentence(item.sentence) == sentenceKey,
-                  wordKeys.contains(SharedDedupeIndex.normalizedWord(item.word)) else {
-                continue
-            }
+        mutateMatchingWords(jobID: jobID, sentence: sentence, words: words) { item in
             if error != nil {
-                jobs[index].words[i].status = .failed
+                item.status = .failed
             } else if draftWordKeys.contains(SharedDedupeIndex.normalizedWord(item.word)) {
-                jobs[index].words[i].status = .done
+                item.status = .done
             } else {
-                jobs[index].words[i].status = .failed
+                item.status = .failed
             }
         }
-        jobs[index].drafts.append(contentsOf: drafts)
+        mutateJob(id: jobID) { job in
+            job.drafts.append(contentsOf: drafts)
+        }
     }
 
     private func applyMigrationBatch(
@@ -453,6 +607,7 @@ final class CardGenerationQueue: ObservableObject {
                 jobs[index].words[i].status = .failed
             }
             ToastCenter.shared.show(L10n.generateEmptyError)
+            refreshCloudQuota()
             return
         }
 
@@ -475,8 +630,7 @@ final class CardGenerationQueue: ObservableObject {
         }
 
         let skipped = jobs[index].skippedDuplicates
-        readyPreview = ReadyPreview(
-            jobID: jobID,
+        enqueueTriage(
             drafts: stamped,
             deckID: jobs[index].deckID,
             skippedDuplicates: skipped
@@ -486,6 +640,7 @@ final class CardGenerationQueue: ObservableObject {
         } else {
             ToastCenter.shared.show(L10n.createGenerateSuccess(stamped.count))
         }
+        refreshCloudQuota()
     }
 
     private func finishMigrationSuccess(jobID: UUID, report: CardContentMigrationReport) {
@@ -512,6 +667,7 @@ final class CardGenerationQueue: ObservableObject {
         }
 
         ToastCenter.shared.show(report.summaryMessage)
+        refreshCloudQuota()
     }
 
     private func finishFailure(jobID: UUID, message: String) {
@@ -531,5 +687,6 @@ final class CardGenerationQueue: ObservableObject {
         }
         AppLog.error("Card generation failed: \(message)", category: "Create")
         ToastCenter.shared.show(message)
+        refreshCloudQuota()
     }
 }

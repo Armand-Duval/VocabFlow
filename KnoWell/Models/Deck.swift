@@ -34,8 +34,4 @@ final class Deck {
     }
 
     var cardCount: Int { cachedCardCount }
-
-    var dueCount: Int {
-        cards.filter { ReviewScheduler.isDue($0) }.count
-    }
 }

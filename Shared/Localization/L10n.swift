@@ -1,4 +1,5 @@
 import Foundation
+
 #if canImport(UIKit)
 import UIKit
 #endif
@@ -18,10 +19,18 @@ enum L10n {
     /// Locale-aware display brand: 致知 / KnoWell.
     static var brandName: String { tr("brand.name") }
     static var brandActionName: String { tr("brand.name.action") }
+
+    static var onboardingHeadline: String { tr("onboarding.headline") }
+    static var onboardingBody: String { tr("onboarding.body") }
+    static var onboardingPointCapture: String { tr("onboarding.point.capture") }
+    static var onboardingPointReview: String { tr("onboarding.point.review") }
+    static var onboardingPointRemember: String { tr("onboarding.point.remember") }
+    static var onboardingContinue: String { tr("onboarding.continue") }
+    static var onboardingBack: String { tr("onboarding.back") }
+
     static var homeStatDue: String { tr("home.stat.due") }
     static var homeStatNewQuota: String { tr("home.stat.newQuota") }
-    static var homeStatStreak: String { tr("home.stat.streak") }
-    static func homeStatStreakValue(_ days: Int) -> String { tf("home.stat.streakValue", days) }
+    static func homeStatTotalDays(_ days: Int) -> String { tf("home.stat.totalDays", days) }
     static var homeRecentDecks: String { tr("home.recentDecks") }
     static var createAIGenerate: String { tr("create.aiGenerate") }
     static var createPastePlaceholder: String { tr("create.pastePlaceholder") }
@@ -30,10 +39,6 @@ enum L10n {
     static var createGenerateNeedBoth: String { tr("create.generate.needBoth") }
     static var createGenerateHintEmpty: String { tr("create.generate.hintEmpty") }
     static var createGenerateNoWordsHint: String { tr("create.generate.noWordsHint") }
-    static var createCardModeCompact: String { tr("create.cardMode.compact") }
-    static var createCardModeFull: String { tr("create.cardMode.full") }
-    static var createCardModeCompactDetail: String { tr("create.cardMode.compactDetail") }
-    static var createCardModeFullDetail: String { tr("create.cardMode.fullDetail") }
     static var createWorkspaceVocabulary: String { tr("create.workspace.vocabulary") }
     static var createWorkspaceAppreciation: String { tr("create.workspace.appreciation") }
     static var createAppreciationDetail: String { tr("create.appreciation.detail") }
@@ -45,12 +50,33 @@ enum L10n {
     static var createCardRecommendedBadge: String { tr("create.cardRecommended.badge") }
     static var createPreviewSectionCards: String { tr("create.preview.sectionCards") }
     static var createPreviewFooterCompact: String { tr("create.preview.footerCompact") }
+    static var createPreviewKeep: String { tr("create.preview.keep") }
+    static var createPreviewDrop: String { tr("create.preview.drop") }
+    static var createPreviewLater: String { tr("create.preview.later") }
+    static var createPreviewReplace: String { tr("create.preview.replace") }
+    static var createPreviewReplaceTitle: String { tr("create.preview.replace.title") }
+    static var createPreviewReplaceWrongSense: String { tr("create.preview.replace.wrongSense") }
+    static var createPreviewReplaceTooHard: String { tr("create.preview.replace.tooHard") }
+    static var createPreviewReplaceTooEasy: String { tr("create.preview.replace.tooEasy") }
+    static func createPreviewProgress(_ current: Int, _ total: Int) -> String {
+        tf("create.preview.progress", current, total)
+    }
+    static var createPreviewReveal: String { tr("create.preview.reveal") }
+    static var createPreviewTapHint: String { tr("create.preview.tapHint") }
+    static var createPreviewReplacing: String { tr("create.preview.replacing") }
+    static var createPreviewDoneTitle: String { tr("create.preview.doneTitle") }
+    static var createPreviewDoneEmpty: String { tr("create.preview.doneEmpty") }
+    static func createPreviewReviewNow(_ count: Int) -> String { tf("create.preview.reviewNow", count) }
+    static var createPreviewDoneAction: String { tr("create.preview.doneAction") }
+    static func createPreviewMoreWaiting(_ count: Int) -> String { tf("create.preview.moreWaiting", count) }
     static var createAddWord: String { tr("create.addWord") }
     static var createManageDeck: String { tr("create.manageDeck") }
     static var createScanExcerpt: String { tr("create.scan.excerpt") }
     static var createScanShort: String { tr("create.scan.short") }
     static var createPhotoShort: String { tr("create.photo.short") }
     static var createPasteShort: String { tr("create.paste.short") }
+    static var createPasteEmpty: String { tr("create.paste.empty") }
+    static var createEmptyHint: String { tr("create.empty.hint") }
     static var createScanOpenCamera: String { tr("create.scan.openCamera") }
     static var createScanRitualTitle: String { tr("create.scan.ritualTitle") }
     static var createScanRitualSubtitle: String { tr("create.scan.ritualSubtitle") }
@@ -150,8 +176,17 @@ enum L10n {
 
     static var generateFailedTitle: String { tr("create.error.title") }
     static var generateEmptyError: String { tr("create.error.empty") }
+    static var generateEmptyAppreciationError: String { tr("create.error.emptyAppreciation") }
     static var generateTimeoutError: String { tr("create.error.timeout") }
     static var generateFormatErrorDetail: String { tr("create.error.formatDetail") }
+    static var aiDailyQuotaReached: String { tr("create.error.dailyQuota") }
+    static func cloudQuotaRemaining(_ remaining: Int, _ limit: Int) -> String {
+        tf("cloud.quota.remaining", remaining, limit)
+    }
+    static var cloudQuotaExhausted: String { tr("cloud.quota.exhausted") }
+    static func cloudQuotaInsufficient(_ needed: Int, _ remaining: Int) -> String {
+        tf("cloud.quota.insufficient", needed, remaining)
+    }
 
     // MARK: - Words editor
 
@@ -171,6 +206,8 @@ enum L10n {
     static var extensionMissingKey: String { tr("extension.error.missingKey") }
     static var extensionNoContent: String { tr("extension.error.noContent") }
     static var extensionNoText: String { tr("extension.error.noText") }
+    static var extensionOCRFailed: String { tr("extension.error.ocrFailed") }
+    static var extensionTimeout: String { tr("extension.error.timeout") }
     static var extensionOpeningCreate: String { tr("extension.openingCreate") }
 
     // MARK: - Preview
@@ -191,6 +228,9 @@ enum L10n {
     static var cardSourceLabel: String { tr("card.source") }
     static var cardSourceImageLabel: String { tr("card.sourceImage") }
     static var cardSourceImageExpandHint: String { tr("card.sourceImage.expandHint") }
+    static var cardSourceImageAdd: String { tr("card.sourceImage.add") }
+    static var cardSourceImageReplace: String { tr("card.sourceImage.replace") }
+    static var cardSourceImageRemove: String { tr("card.sourceImage.remove") }
     static var cardUsageNoteLabel: String { tr("card.usageNote") }
     static var cardUsageNotePlaceholder: String { tr("card.usageNote.placeholder") }
     static var cardEtymologyLabel: String { tr("card.etymology") }
@@ -233,6 +273,25 @@ enum L10n {
     static func ocrHighlightContext(_ wordCount: Int, _ sentenceCount: Int) -> String {
         tf("import.ocr.highlightContext", wordCount, sentenceCount)
     }
+    static func ocrVocabPage(_ count: Int) -> String {
+        tf("import.ocr.vocabPage", count)
+    }
+    static var liveTextTitle: String { tr("liveText.title") }
+    static var liveTextHint: String { tr("liveText.hint") }
+    static var liveTextToggleHighlights: String { tr("liveText.toggleHighlights") }
+    static var liveTextAddWord: String { tr("liveText.addWord") }
+    static var liveTextUseSelection: String { tr("liveText.useSelection") }
+    static var liveTextUseImage: String { tr("liveText.useImage") }
+    static var liveTextOptionalLabel: String { tr("liveText.optional.label") }
+    static var liveTextSourceHelpTitle: String { tr("liveText.sourceHelp.title") }
+    static var liveTextSourceHelp: String { tr("liveText.sourceHelp") }
+    static var liveTextSourceUpdated: String { tr("liveText.sourceUpdated") }
+    static var liveTextImageSelected: String { tr("liveText.imageSelected") }
+    static var liveTextDetectingHighlights: String { tr("liveText.detectingHighlights") }
+    static func liveTextHighlightsDetected(_ count: Int) -> String {
+        tf("liveText.highlightsDetected", count)
+    }
+    static func liveTextImported(_ count: Int) -> String { tf("liveText.imported", count) }
 
     // MARK: - Card types
 
@@ -256,12 +315,19 @@ enum L10n {
     static var tapToFlipBack: String { tr("review.tapFlipBack") }
     static var showAnswer: String { tr("review.showAnswer") }
     static var reviewScrollForAnswer: String { tr("review.scrollForAnswer") }
+    static var reviewSwipeCoachTitle: String { tr("review.swipeCoach.title") }
+    static var reviewSwipeCoachReveal: String { tr("review.swipeCoach.reveal") }
+    static var reviewSwipeCoachAgain: String { tr("review.swipeCoach.again") }
+    static var reviewSwipeCoachEasy: String { tr("review.swipeCoach.easy") }
+    static var reviewSwipeCoachGood: String { tr("review.swipeCoach.good") }
+    static var reviewSwipeCoachGotIt: String { tr("review.swipeCoach.gotIt") }
     static var reviewCollapseAnswer: String { tr("review.collapseAnswer") }
     static var reviewCollapseModules: String { tr("review.collapseModules") }
     static var reviewMeaningSection: String { tr("review.meaning") }
     static var reviewTranslationSection: String { tr("review.translation") }
     static var reviewAppreciationSection: String { tr("review.appreciation") }
     static var reviewAppreciationThemeSection: String { tr("review.appreciation.theme") }
+    static var reviewAppreciationEmpty: String { tr("review.appreciation.empty") }
     static var reviewAIInsightSection: String { tr("review.aiInsight") }
     static var reviewRelatedWordsSection: String { tr("review.relatedWords") }
     static var reviewParaphrasesSection: String { tr("review.paraphrases") }
@@ -287,6 +353,11 @@ enum L10n {
     static func reviewHomeStudiedToday(_ count: Int) -> String {
         tf("review.home.studiedToday", count)
     }
+    static var reviewHomeStatsTitle: String { tr("review.home.statsTitle") }
+    static var reviewHomeStatsNew: String { tr("review.home.statsNew") }
+    static var reviewHomeStatsReview: String { tr("review.home.statsReview") }
+    static var reviewHomeStatsCaptured: String { tr("review.home.statsCaptured") }
+    static var reviewHomeStatsTotal: String { tr("review.home.statsTotal") }
     static func reviewHomeWeekActivity(_ words: Int, _ sentences: Int) -> String {
         tf("review.home.weekActivity", words, sentences)
     }
@@ -325,6 +396,7 @@ enum L10n {
     static var ratingGood: String { tr("rating.good") }
     static var ratingEasy: String { tr("rating.easy") }
     static var ratingAppreciationAgain: String { tr("rating.appreciation.again") }
+    static var ratingAppreciationHard: String { tr("rating.appreciation.hard") }
     static var ratingAppreciationGood: String { tr("rating.appreciation.good") }
     static var ratingAppreciationEasy: String { tr("rating.appreciation.easy") }
     static func intervalMinutes(_ count: Int) -> String { tf("interval.minutes", count) }
@@ -371,6 +443,14 @@ enum L10n {
     static var libraryResetSRSMessage: String { tr("library.resetSRS.message") }
     static var libraryDeleteCard: String { tr("library.deleteCard") }
     static var libraryDeleteCardMessage: String { tr("library.deleteCard.message") }
+    static var librarySelect: String { tr("library.select") }
+    static var librarySelectDone: String { tr("library.select.done") }
+    static func librarySelectedCount(_ count: Int) -> String { tf("library.selectedCount", count) }
+    static var libraryMigrate: String { tr("library.migrate") }
+    static var libraryMigrateTitle: String { tr("library.migrate.title") }
+    static func libraryMigrateDone(_ count: Int, _ deckName: String) -> String {
+        tf("library.migrate.done", count, deckName)
+    }
     static var libraryReviewThisCard: String { tr("library.reviewThisCard") }
     static var libraryDetailContent: String { tr("library.detail.content") }
     static var libraryDetailSRS: String { tr("library.detail.srs") }
@@ -430,6 +510,11 @@ enum L10n {
     static var settingsReviewRevealStyleFlipFooter: String { tr("settings.review.revealStyle.flipFooter") }
     static var settingsReviewReminderEnabled: String { tr("settings.review.reminder.enabled") }
     static var settingsReviewReminderTime: String { tr("settings.review.reminder.time") }
+    static var settingsThemeTitle: String { tr("settings.theme.title") }
+    static var settingsThemeInkTeal: String { tr("settings.theme.inkTeal") }
+    static var settingsThemeInkIndigo: String { tr("settings.theme.inkIndigo") }
+    static var settingsThemeInkViolet: String { tr("settings.theme.inkViolet") }
+    static var settingsThemeFooter: String { tr("settings.theme.footer") }
     static func reviewReminderBody(_ count: Int) -> String { tf("review.reminder.body", count) }
 
     // MARK: - Settings
@@ -527,7 +612,7 @@ enum L10n {
     static var statusReady: String { tr("settings.status.ready") }
     static var statusMissingKey: String { tr("settings.status.missing") }
     static var keySourceUser: String { tr("settings.key.user") }
-    static var keySourceDefault: String { tr("settings.key.default") }
+    static var keySourceCloud: String { tr("settings.key.cloud") }
     static var keySourceMissing: String { tr("settings.key.missing") }
 
     static var importShareSection: String { tr("settings.import.share.section") }
@@ -546,6 +631,8 @@ enum L10n {
     static var settingsDailyAutoBackupEnabled: String { tr("settings.dailyAutoBackup.enabled") }
     static var settingsDailyAutoBackupFooter: String { tr("settings.dailyAutoBackup.footer") }
     static var settingsAppLogFooter: String { tr("settings.appLog.footer") }
+    static var settingsExportLogs: String { tr("settings.appLog.export") }
+    static var settingsExportLogsEmpty: String { tr("settings.appLog.exportEmpty") }
     static var libraryAutoBackupBanner: String { tr("library.autoBackup.banner") }
     static var libraryAutoBackupBannerOpenHint: String { tr("library.autoBackup.banner.openHint") }
     static var exportBackup: String { tr("settings.backup.export") }
@@ -571,6 +658,9 @@ enum L10n {
 
     static var privacyTitle: String { tr("privacy.title") }
     static var privacyIntro: String { tr("privacy.intro") }
+    static var privacyConsentTitle: String { tr("privacy.consent.title") }
+    static var privacyConsentBody: String { tr("privacy.consent.body") }
+    static var privacyAccept: String { tr("privacy.accept") }
     static var privacyDataCollectionTitle: String { tr("privacy.data.title") }
     static var privacyDataCollectionBody: String { tr("privacy.data.body") }
     static var privacyAITitle: String { tr("privacy.ai.title") }
@@ -702,6 +792,11 @@ enum L10n {
     static func deckClearResult(_ name: String, count: Int) -> String {
         tf("deck.clear.result", name, count)
     }
+    static var deckOriginalPackOpen: String { tr("deck.originalPack.open") }
+    static var deckOriginalPackEmpty: String { tr("deck.originalPack.empty") }
+    static func deckOriginalPackSaved(_ fileName: String, sha256: String) -> String {
+        tf("deck.originalPack.saved", fileName, sha256)
+    }
     static var deckImportComplete: String { tr("deck.import.complete") }
     static var deckImportFailed: String { tr("deck.import.failed") }
     static var deckImportInvalidJSON: String { tr("deck.import.invalidJSON") }
@@ -778,6 +873,9 @@ enum L10n {
         tf("deck.remote.license", license)
     }
     static var deckRemoteViewSource: String { tr("deck.remote.viewSource") }
+    static var deckSourceFormatAnki: String { tr("deck.sourceFormat.anki") }
+    static var deckSourceFormatJSON: String { tr("deck.sourceFormat.json") }
+    static var deckSourceFormatCSV: String { tr("deck.sourceFormat.csv") }
     static var deckRemoteNGSLName: String { tr("deck.remote.ngsl.name") }
     static var deckRemoteNGSLDetail: String { tr("deck.remote.ngsl.detail") }
     static var deckRemoteNAWLName: String { tr("deck.remote.nawl.name") }
@@ -835,6 +933,11 @@ enum L10n {
     static var notificationReadyGeneric: String { tr("notification.ready.generic") }
     static func notificationSaved(_ count: Int) -> String { tf("notification.saved", count) }
     static func notificationFailed(_ message: String) -> String { tf("notification.failed", message) }
+    static var notificationShareInbox: String { tr("notification.shareInbox") }
+    static var extensionHandedOff: String { tr("extension.handedOff") }
+    static var extensionHandedOffReason: String { tr("extension.handedOff.reason") }
+    static var extensionHandedOffHint: String { tr("extension.handedOff.hint") }
+    static var extensionOpenApp: String { tr("extension.openApp") }
 
     // MARK: - Errors
 

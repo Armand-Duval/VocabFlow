@@ -171,13 +171,7 @@ enum ApkgExportService {
         {"activeDecks":[\(activeDecksJSON)],"curDeck":\(primaryDeckID),"newSpread":0,"collapseTime":1200,"timeLim":0,"estTimes":true,"sortType":"noteFld","sortBackwards":false,"addToCur":true,"dayLearnFirst":false,"schedVer":2}
         """
         let models = basicModelJSON(primaryDeckID: primaryDeckID)
-        let decksJSON = deckGroups
-            .map {
-                """
-                {"\($0.ankiDeckID)":{"id":\($0.ankiDeckID),"mod":0,"name":"\(escapeSQL($0.deckName))","usn":0,"desc":"","dyn":0,"conf":1,"extConf":{},"collapsed":false}}
-                """
-            }
-            .joined()
+        let decksJSON = jsonString(decksObject(from: deckGroups))
         let dconf = """
         {"1":{"id":1,"mod":0,"name":"Default","usn":0,"maxTaken":60,"autoplay":true,"timer":0,"replayq":true,"new":{"bury":false,"delays":[1,10],"initialFactor":2500,"ints":[1,4,7],"order":1,"perDay":20},"rev":{"bury":false,"ease4":1.3,"fuzz":0.05,"ivlFct":1,"maxIvl":36500,"perDay":200,"hardFactor":1.2},"lapse":{"delays":[10],"leechAction":1,"leechFails":8,"minInt":1,"mult":0},"dyn":false}}
         """
@@ -206,11 +200,12 @@ enum ApkgExportService {
                 let csum = fieldChecksum(front)
                 let sfld = sortFieldHash(front)
                 let queue = card.isSuspended ? -1 : 0
+                let noteData = escapeSQL(knowellNoteJSON(for: card))
 
                 try exec(db, """
                 INSERT INTO notes VALUES(
                     \(noteID), '\(guid)', \(modelID), \(nowMs), 0, '\(escapeSQL(tags))',
-                    '\(escapeSQL(flds))', \(sfld), \(csum), 0, ''
+                    '\(escapeSQL(flds))', \(sfld), \(csum), 0, '\(noteData)'
                 );
                 """)
 
@@ -225,6 +220,46 @@ enum ApkgExportService {
                 cardDue += 1
             }
         }
+    }
+
+    private static func decksObject(from groups: [DeckExportGroup]) -> [String: Any] {
+        var decks: [String: Any] = [:]
+        for group in groups {
+            decks[String(group.ankiDeckID)] = [
+                "id": Int(group.ankiDeckID),
+                "mod": 0,
+                "name": group.deckName,
+                "usn": 0,
+                "desc": "",
+                "dyn": 0,
+                "conf": 1,
+                "extConf": [String: Any](),
+                "collapsed": false
+            ] as [String: Any]
+        }
+        return decks
+    }
+
+    private static func jsonString(_ object: Any) -> String {
+        guard JSONSerialization.isValidJSONObject(object),
+              let data = try? JSONSerialization.data(withJSONObject: object),
+              let text = String(data: data, encoding: .utf8) else {
+            return "{}"
+        }
+        return text
+    }
+
+    private static func knowellNoteJSON(for card: FlashCard) -> String {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        struct Wrapper: Encodable {
+            let knowell: FlashCardBackup
+        }
+        guard let data = try? encoder.encode(Wrapper(knowell: FlashCardBackup(from: card))),
+              let text = String(data: data, encoding: .utf8) else {
+            return "{}"
+        }
+        return text
     }
 
     private static func ankiFront(for card: FlashCard) -> String {

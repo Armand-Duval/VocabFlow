@@ -6,7 +6,7 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.knowell.app1</string>
+			<string>com.knowellcards.app</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>knowell</string>
@@ -27,6 +27,8 @@
 	<key>AUTH_BACKEND_URL</key>
 	<string></string>
 	<key>APPLE_SIGN_IN_ENABLED</key>
+	<false/>
+	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>UIFileSharingEnabled</key>
 	<true/>

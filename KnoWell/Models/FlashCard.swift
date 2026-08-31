@@ -34,6 +34,14 @@ final class FlashCard {
     var repetitions: Int
     var reviewCount: Int
     var learningStep: Int
+    /// FSRS stability (days); 0 means not yet migrated / new.
+    var stability: Double = 0
+    /// FSRS difficulty in 1...10.
+    var difficulty: Double = 0
+    /// `FSRSCardState` raw value.
+    var fsrsStateRaw: Int = 0
+    var lapses: Int = 0
+    var lastReviewDate: Date?
     var isSuspended: Bool = false
     var deck: Deck?
 
@@ -44,24 +52,37 @@ final class FlashCard {
 
     /// Phrase highlighted in the study sentence (manual override or study word).
     var displayHighlight: String {
-        let custom = highlightText?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        if !custom.isEmpty { return custom }
-        return word
+        studyContent.displayHighlight
     }
 
     /// 复习正面：释义卡用完整原句（兼容旧数据里 front 只有单词）
     var displayFront: String {
-        CardContentFormatter.displayFront(
-            front: front,
-            sentence: sentence,
-            word: word,
-            cardType: cardType
-        )
+        studyContent.displayFront
     }
 
     /// 复习时显示的背面：合并 back 与 contextNote（兼容旧数据）
     var displayBack: String {
-        CardContentFormatter.displayBack(back: back, contextNote: contextNote)
+        studyContent.localizedDisplayBack
+    }
+
+    var studyContent: CardStudyContent {
+        CardStudyContent(
+            word: word,
+            phonetic: phonetic,
+            sentence: sentence,
+            cardType: cardType,
+            front: front,
+            back: back,
+            contextNote: contextNote,
+            usageNote: usageNote,
+            etymology: etymology,
+            synonyms: synonyms,
+            antonyms: antonyms,
+            paraphrases: paraphrases,
+            sourceAttribution: sourceAttribution,
+            sourceImagePath: sourceImagePath,
+            highlightText: highlightText
+        )
     }
 
     init(
@@ -106,6 +127,11 @@ final class FlashCard {
         self.repetitions = 0
         self.reviewCount = 0
         self.learningStep = 0
+        self.stability = 0
+        self.difficulty = 0
+        self.fsrsStateRaw = FSRSCardState.new.rawValue
+        self.lapses = 0
+        self.lastReviewDate = nil
         self.isSuspended = false
     }
 }

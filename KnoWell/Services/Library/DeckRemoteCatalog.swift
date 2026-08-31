@@ -25,6 +25,11 @@ struct DeckRemotePack: Identifiable {
     var licenseLabel: String {
         L10n.deckRemoteLicense(license)
     }
+
+    /// What the download URL actually is — not the official spreadsheet / Anki deck.
+    var sourceFormatLabel: String {
+        L10n.deckSourceFormatJSON
+    }
 }
 
 enum DeckRemoteCatalog {

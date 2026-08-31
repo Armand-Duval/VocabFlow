@@ -1,14 +1,6 @@
 import Foundation
 
-enum ReviewRating: Int, CaseIterable {
-    case again = 0
-    case hard = 1
-    case good = 2
-    case easy = 3
-
-    /// Visible review choices — Hard is folded into Again (short relearn).
-    static var userChoices: [ReviewRating] { [.again, .good, .easy] }
-
+extension ReviewRating {
     private var vocabularyTitle: String {
         switch self {
         case .again: L10n.ratingAgain
@@ -24,7 +16,7 @@ enum ReviewRating: Int, CaseIterable {
         if cardType == .appreciation {
             switch self {
             case .again: return L10n.ratingAppreciationAgain
-            case .hard: return L10n.ratingHard
+            case .hard: return L10n.ratingAppreciationHard
             case .good: return L10n.ratingAppreciationGood
             case .easy: return L10n.ratingAppreciationEasy
             }
@@ -33,19 +25,20 @@ enum ReviewRating: Int, CaseIterable {
     }
 }
 
-struct ReviewSnapshot {
-    var repetitions: Int
-    var intervalDays: Double
-    var easeFactor: Double
-    var learningStep: Int
-    var nextReviewDate: Date
-
+extension ReviewSnapshot {
     init(from card: FlashCard) {
-        repetitions = card.repetitions
-        intervalDays = card.intervalDays
-        easeFactor = card.easeFactor
-        learningStep = card.learningStep
-        nextReviewDate = card.nextReviewDate
+        self.init(
+            repetitions: card.repetitions,
+            intervalDays: card.intervalDays,
+            easeFactor: card.easeFactor,
+            learningStep: card.learningStep,
+            nextReviewDate: card.nextReviewDate,
+            stability: card.stability,
+            difficulty: card.difficulty,
+            fsrsState: FSRSCardState(rawValue: card.fsrsStateRaw) ?? .new,
+            lapses: card.lapses,
+            lastReviewDate: card.lastReviewDate
+        )
     }
 
     func write(to card: FlashCard) {
@@ -54,23 +47,16 @@ struct ReviewSnapshot {
         card.easeFactor = easeFactor
         card.learningStep = learningStep
         card.nextReviewDate = nextReviewDate
+        card.stability = stability
+        card.difficulty = difficulty
+        card.fsrsStateRaw = fsrsState.rawValue
+        card.lapses = lapses
+        card.lastReviewDate = lastReviewDate
     }
 }
 
+/// App-facing FSRS wrapper: SwiftData cards, labels, and study side effects.
 enum ReviewScheduler {
-    private static let learningStepsMinutes = [1, 10]
-    private static let lapseHours = 10
-    private static let vocabularyGraduationIntervalDays: [ReviewRating: Double] = [
-        .hard: 1,
-        .good: 3,
-        .easy: 7,
-    ]
-    private static let appreciationGraduationIntervalDays: [ReviewRating: Double] = [
-        .hard: 3,
-        .good: 7,
-        .easy: 14,
-    ]
-
     static func isDue(_ card: FlashCard, now: Date = .now) -> Bool {
         !card.isSuspended && card.nextReviewDate <= now
     }
@@ -81,7 +67,7 @@ enum ReviewScheduler {
 
     static func preview(rating: ReviewRating, for card: FlashCard, now: Date = .now) -> ReviewSnapshot {
         var snapshot = ReviewSnapshot(from: card)
-        mutate(rating: rating, cardType: card.cardType, snapshot: &snapshot, now: now)
+        FSRSScheduler.apply(rating: rating, cardType: card.cardType, to: &snapshot, now: now)
         return snapshot
     }
 
@@ -91,8 +77,7 @@ enum ReviewScheduler {
     }
 
     static func isLearningDelay(_ snapshot: ReviewSnapshot, now: Date = .now) -> Bool {
-        snapshot.nextReviewDate > now
-            && snapshot.nextReviewDate.timeIntervalSince(now) < 24 * 60 * 60
+        FSRSScheduler.isLearningDelay(snapshot, now: now)
     }
 
     static func resetProgress(for card: FlashCard, now: Date = .now) {
@@ -102,96 +87,25 @@ enum ReviewScheduler {
         card.reviewCount = 0
         card.learningStep = 0
         card.nextReviewDate = now
+        card.stability = 0
+        card.difficulty = 0
+        card.fsrsStateRaw = FSRSCardState.new.rawValue
+        card.lapses = 0
+        card.lastReviewDate = nil
     }
 
     static func apply(rating: ReviewRating, to card: FlashCard, now: Date = .now) {
         let wasNewCard = card.isNewCard
         var snapshot = ReviewSnapshot(from: card)
-        mutate(rating: rating, cardType: card.cardType, snapshot: &snapshot, now: now)
+        FSRSScheduler.apply(rating: rating, cardType: card.cardType, to: &snapshot, now: now)
         snapshot.write(to: card)
         card.reviewCount += 1
         ReviewSettings.recordStudy(wasNewCard: wasNewCard, now: now)
         StudyActivityStore.record(word: card.word, sentence: card.sentence, now: now)
     }
 
-    private static func graduationIntervalDays(for cardType: CardType, rating: ReviewRating) -> Double {
-        let table = cardType == .appreciation
-            ? appreciationGraduationIntervalDays
-            : vocabularyGraduationIntervalDays
-        switch rating {
-        case .hard: return table[.hard] ?? 1
-        case .good: return table[.good] ?? 3
-        case .easy: return table[.easy] ?? 7
-        case .again: return 0
-        }
-    }
-
-    private static func mutate(
-        rating: ReviewRating,
-        cardType: CardType,
-        snapshot: inout ReviewSnapshot,
-        now: Date
-    ) {
-        switch rating {
-        case .again:
-            snapshot.easeFactor = max(1.3, snapshot.easeFactor - 0.2)
-            if snapshot.learningStep < learningStepsMinutes.count {
-                let minutes = learningStepsMinutes[snapshot.learningStep]
-                snapshot.learningStep += 1
-                snapshot.repetitions = 0
-                snapshot.intervalDays = 0
-                snapshot.nextReviewDate = addMinutes(minutes, to: now)
-            } else {
-                snapshot.learningStep = 0
-                snapshot.repetitions = 0
-                snapshot.intervalDays = 0
-                snapshot.nextReviewDate = addHours(lapseHours, to: now)
-            }
-
-        case .hard:
-            let graduating = isGraduating(snapshot)
-            snapshot.learningStep = 0
-            snapshot.repetitions += 1
-            snapshot.easeFactor = max(1.3, snapshot.easeFactor - 0.15)
-            if graduating {
-                snapshot.intervalDays = graduationIntervalDays(for: cardType, rating: .hard)
-            } else {
-                snapshot.intervalDays = max(1, snapshot.intervalDays * 1.2)
-            }
-            snapshot.nextReviewDate = addDays(snapshot.intervalDays, to: now)
-
-        case .good:
-            let graduating = isGraduating(snapshot)
-            snapshot.learningStep = 0
-            snapshot.repetitions += 1
-            if graduating {
-                snapshot.intervalDays = graduationIntervalDays(for: cardType, rating: .good)
-            } else {
-                snapshot.intervalDays = max(1, round(snapshot.intervalDays * snapshot.easeFactor))
-            }
-            snapshot.nextReviewDate = addDays(snapshot.intervalDays, to: now)
-
-        case .easy:
-            let graduating = isGraduating(snapshot)
-            snapshot.learningStep = 0
-            snapshot.repetitions += 1
-            snapshot.easeFactor += 0.15
-            if graduating {
-                snapshot.intervalDays = graduationIntervalDays(for: cardType, rating: .easy)
-            } else {
-                snapshot.intervalDays = max(4, round(snapshot.intervalDays * snapshot.easeFactor * 1.3))
-            }
-            snapshot.nextReviewDate = addDays(snapshot.intervalDays, to: now)
-        }
-    }
-
-    /// First successful rating leaving the learning queue (new card or reset progress).
-    private static func isGraduating(_ snapshot: ReviewSnapshot) -> Bool {
-        snapshot.repetitions == 0 && snapshot.intervalDays == 0
-    }
-
     static func formatInterval(from start: Date, to end: Date) -> String {
-        let seconds = max(60, end.timeIntervalSince(start))
+        let seconds = FSRSScheduler.interval(from: start, to: end)
         if seconds < 3600 {
             let minutes = Int(round(seconds / 60))
             return L10n.intervalMinutes(minutes)
@@ -202,17 +116,5 @@ enum ReviewScheduler {
         }
         let days = Int(round(seconds / 86_400))
         return L10n.intervalDays(days)
-    }
-
-    private static func addMinutes(_ minutes: Int, to date: Date) -> Date {
-        Calendar.current.date(byAdding: .minute, value: minutes, to: date) ?? date
-    }
-
-    private static func addHours(_ hours: Int, to date: Date) -> Date {
-        Calendar.current.date(byAdding: .hour, value: hours, to: date) ?? date
-    }
-
-    private static func addDays(_ days: Double, to date: Date) -> Date {
-        Calendar.current.date(byAdding: .minute, value: Int(days * 24 * 60), to: date) ?? date
     }
 }

@@ -1,6 +1,7 @@
 import Foundation
 #if canImport(UIKit)
 import UIKit
+import ImageIO
 #endif
 
 /// Persists card source images in the App Group container as JPEG files.
@@ -29,6 +30,44 @@ enum CardSourceImageStore {
     }
 
     #if canImport(UIKit)
+    /// Main-app OCR after a share-inbox handoff. Match the album picker: honor EXIF
+    /// orientation and keep enough pixels for a full book page.
+    private static let ocrMaxPixelDimension: CGFloat = 4096
+
+    static func imageForOCR(at url: URL, maxPixelDimension: CGFloat = ocrMaxPixelDimension) -> UIImage? {
+        if let data = try? Data(contentsOf: url), let image = UIImage(data: data) {
+            AppLog.info(
+                "inbox decode \(Int(image.size.width))x\(Int(image.size.height)) orientation=\(image.imageOrientation.rawValue) → OCR max \(Int(maxPixelDimension))",
+                category: "Share"
+            )
+            return downscaled(image, maxDimension: maxPixelDimension)
+        }
+
+        let sourceOptions: [CFString: Any] = [kCGImageSourceShouldCache: false]
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, sourceOptions as CFDictionary) else {
+            return nil
+        }
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceShouldCacheImmediately: true,
+            kCGImageSourceThumbnailMaxPixelSize: Int(maxPixelDimension)
+        ]
+        guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
+            return nil
+        }
+        AppLog.info(
+            "inbox ImageIO thumb \(cgImage.width)x\(cgImage.height)",
+            category: "Share"
+        )
+        return UIImage(cgImage: cgImage)
+    }
+
+    /// Shrink a photo so Share/Action OCR stays under the extension memory cap.
+    static func prepared(_ image: UIImage) -> UIImage {
+        downscaled(image, maxDimension: maxPixelDimension)
+    }
+
     /// Compress and write `image`; returns relative path on success.
     @discardableResult
     static func saveJPEG(_ image: UIImage) -> String? {

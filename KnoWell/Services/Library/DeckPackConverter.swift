@@ -25,15 +25,19 @@ enum DeckPackConverter {
         }
 
         let rows = try JSONDecoder().decode([NGSLRow].self, from: data)
-        let cards = rows.map { row in
-            DeckPackCard(
-                word: row.Word,
+        let cards = rows.compactMap { row -> DeckPackCard? in
+            let word = row.Word.trimmingCharacters(in: .whitespacesAndNewlines)
+            let definition = row.Definitions.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !word.isEmpty else { return nil }
+            return DeckPackCard(
+                word: word,
                 phonetic: nil,
-                sentence: row.Definitions,
+                sentence: "",
                 cardType: CardType.definition.rawValue,
-                front: row.Word,
-                back: "\(row.Word)\n\n\(row.Definitions)",
-                contextNote: "NGSL 1.2"
+                front: word,
+                back: definition,
+                contextNote: nil,
+                sourceAttribution: remote.name
             )
         }
 
@@ -52,19 +56,33 @@ enum DeckPackConverter {
             let pos: String?
             let definition_en: String
             let example_sentence: String
+            let synonyms: [String]?
+            let theme: String?
         }
 
         let rows = try JSONDecoder().decode([TOEFLRow].self, from: data)
-        let cards = rows.map { row in
+        let cards = rows.compactMap { row -> DeckPackCard? in
+            let word = row.word.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !word.isEmpty else { return nil }
             let posSuffix = row.pos.map { " (\($0))" } ?? ""
+            let definition = row.definition_en.trimmingCharacters(in: .whitespacesAndNewlines)
+            let example = row.example_sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+            let synonyms = row.synonyms?
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+                .joined(separator: ", ")
+            let theme = row.theme?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let source = [theme, remote.name].filter { !$0.isEmpty }.joined(separator: " · ")
             return DeckPackCard(
-                word: row.word,
+                word: word,
                 phonetic: nil,
-                sentence: row.example_sentence,
+                sentence: example,
                 cardType: CardType.definition.rawValue,
-                front: row.word,
-                back: "\(row.word)\(posSuffix)\n\n\(row.definition_en)",
-                contextNote: row.pos
+                front: example.isEmpty ? word : example,
+                back: definition.isEmpty ? "\(word)\(posSuffix)" : "\(word)\(posSuffix)\n\n\(definition)",
+                contextNote: nil,
+                synonyms: synonyms?.isEmpty == false ? synonyms : nil,
+                sourceAttribution: source.isEmpty ? nil : source
             )
         }
 
@@ -81,19 +99,22 @@ enum DeckPackConverter {
         let lemmaMap = try JSONDecoder().decode([String: [String]].self, from: data)
         let sortedWords = lemmaMap.keys.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
 
-        let cards = sortedWords.map { word in
-            let related = lemmaMap[word]?.filter { $0.caseInsensitiveCompare(word) != .orderedSame } ?? []
-            let relatedNote = related.isEmpty ? "" : "\nRelated: \(related.joined(separator: ", "))"
-            let definition = "Academic vocabulary (NAWL 1.2).\(relatedNote)"
-
+        let cards = sortedWords.compactMap { word -> DeckPackCard? in
+            let trimmed = word.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { return nil }
+            let related = lemmaMap[word]?
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty && $0.caseInsensitiveCompare(trimmed) != .orderedSame } ?? []
             return DeckPackCard(
-                word: word,
+                word: trimmed,
                 phonetic: nil,
-                sentence: definition,
+                sentence: "",
                 cardType: CardType.definition.rawValue,
-                front: word,
-                back: "\(word)\n\n\(definition)",
-                contextNote: "NAWL 1.2"
+                front: trimmed,
+                back: related.isEmpty ? trimmed : related.joined(separator: ", "),
+                contextNote: nil,
+                synonyms: related.isEmpty ? nil : related.joined(separator: ", "),
+                sourceAttribution: remote.name
             )
         }
 

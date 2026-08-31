@@ -1,12 +1,79 @@
 import SwiftUI
+import Observation
+
 #if canImport(UIKit)
 import UIKit
 #endif
 
+enum AppAccentTheme: String, CaseIterable, Identifiable {
+    case inkTeal
+    case inkIndigo
+    case inkViolet
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .inkTeal: L10n.settingsThemeInkTeal
+        case .inkIndigo: L10n.settingsThemeInkIndigo
+        case .inkViolet: L10n.settingsThemeInkViolet
+        }
+    }
+
+    /// Light-mode brand swatch (黛青 `#1A5A68` / 靛蓝 `#243A6E` / 墨紫 `#3E3554`).
+    var swatch: Color { accentLight }
+
+    var accentLight: Color {
+        switch self {
+        case .inkTeal:
+            Color(red: 0.102, green: 0.353, blue: 0.408)
+        case .inkIndigo:
+            Color(red: 0.141, green: 0.227, blue: 0.431)
+        case .inkViolet:
+            Color(red: 0.243, green: 0.208, blue: 0.329)
+        }
+    }
+
+    var accentDark: Color {
+        switch self {
+        case .inkTeal:
+            Color(red: 0.310, green: 0.620, blue: 0.680)
+        case .inkIndigo:
+            Color(red: 0.557, green: 0.627, blue: 0.769)
+        case .inkViolet:
+            Color(red: 0.659, green: 0.608, blue: 0.769)
+        }
+    }
+}
+
+@Observable
+final class AppAccentThemeStore {
+    static let shared = AppAccentThemeStore()
+    static let didChangeNotification = Notification.Name("com.knowell.accentThemeDidChange")
+    private static let key = "appearance.accentTheme.v1"
+
+    var theme: AppAccentTheme
+
+    private init() {
+        let raw = (UserDefaults(suiteName: ShareImportStore.appGroupID) ?? .standard)
+            .string(forKey: Self.key)
+        theme = AppAccentTheme(rawValue: raw ?? "") ?? .inkTeal
+    }
+
+    func setTheme(_ theme: AppAccentTheme) {
+        guard self.theme != theme else { return }
+        self.theme = theme
+        (UserDefaults(suiteName: ShareImportStore.appGroupID) ?? .standard)
+            .set(theme.rawValue, forKey: Self.key)
+        AppTabBarChrome.apply()
+        NotificationCenter.default.post(name: Self.didChangeNotification, object: nil)
+    }
+}
+
 enum AppColor {
-    // Ink & 黛青 — warm paper + ink teal A (#1A5A68), distinct from bright exam-app greens
-    private static let accentLight = Color(red: 0.102, green: 0.353, blue: 0.408)
-    private static let accentDark = Color(red: 0.290, green: 0.604, blue: 0.667)
+    // Ink paper + chosen accent. Default 黛青 `#1A5A68`; also 靛蓝 `#243A6E`, 墨紫 `#3E3554`.
+    private static var accentLight: Color { AppAccentThemeStore.shared.theme.accentLight }
+    private static var accentDark: Color { AppAccentThemeStore.shared.theme.accentDark }
 
     static var accent: Color { Color.adaptive(light: accentLight, dark: accentDark) }
     static var accentStrong: Color { Color.adaptive(light: accentLight, dark: accentDark) }
@@ -16,16 +83,16 @@ enum AppColor {
     static var danger: Color { Color(red: 0.769, green: 0.361, blue: 0.329) }
 
     static var pageBackground: Color {
-        // Near-white canvas — keep hierarchy via spacing, not stacked wash tones.
+        // Warm paper #F6F5F2 — atmosphere without stacked washes.
         Color.adaptive(
-            light: Color.white,
+            light: Color(red: 0.965, green: 0.961, blue: 0.949),
             dark: Color(red: 0.07, green: 0.08, blue: 0.09)
         )
     }
 
     static var surface: Color {
         Color.adaptive(
-            light: .white,
+            light: Color(red: 0.995, green: 0.994, blue: 0.990),
             dark: Color(red: 0.11, green: 0.12, blue: 0.14)
         )
     }
@@ -137,22 +204,22 @@ enum AppSpacing {
 
 enum AppRadius {
     static let chip: CGFloat = 999
-    static let card: CGFloat = 12
-    static let button: CGFloat = 8
-    static let input: CGFloat = 6
+    static let card: CGFloat = 16
+    static let button: CGFloat = 12
+    static let input: CGFloat = 10
     static let iconButton: CGFloat = 20
-    static let sheet: CGFloat = 16
+    static let sheet: CGFloat = 20
     static let tabPill: CGFloat = 10
 }
 
 enum AppShadow {
-    /// Single paper-lift recipe used by cards, inputs, chips, CTAs.
-    static let radius: CGFloat = 8
-    static let y: CGFloat = 2
+    /// Quiet paper lift — prefer spacing over stacked chrome.
+    static let radius: CGFloat = 14
+    static let y: CGFloat = 4
 
     static func color(for colorScheme: ColorScheme, emphasized: Bool = false) -> Color {
-        let base = colorScheme == .dark ? 0.32 : 0.045
-        return Color.black.opacity(emphasized ? base + 0.02 : base)
+        let base = colorScheme == .dark ? 0.28 : 0.035
+        return Color.black.opacity(emphasized ? base + 0.015 : base)
     }
 
     static func card(_ colorScheme: ColorScheme = .light) -> (color: Color, radius: CGFloat, y: CGFloat) {
@@ -169,24 +236,27 @@ enum AppShadow {
 }
 
 enum AppFont {
-    static func pageTitle() -> Font { .system(size: 22, weight: .semibold) }
-    static func sectionTitle() -> Font { .system(size: 17, weight: .semibold) }
-    static func studyWord() -> Font { .system(size: 28, weight: .semibold) }
+    static func pageTitle() -> Font { .system(size: 22, weight: .semibold, design: .rounded) }
+    static func sectionTitle() -> Font { .system(size: 17, weight: .semibold, design: .rounded) }
+    static func studyWord() -> Font { .system(size: 32, weight: .semibold, design: .rounded) }
+    /// Brand wordmark — serif presence without shouting.
+    static func brand() -> Font { .system(size: 28, weight: .semibold, design: .serif) }
+    static func brandCompact() -> Font { .system(size: 17, weight: .semibold, design: .serif) }
     /// Quiet literary line — New York / SF Serif when available.
     static func literaryQuote() -> Font {
-        .system(size: 18, weight: .regular, design: .serif)
+        .system(size: 20, weight: .regular, design: .serif)
     }
     static func body() -> Font { .system(size: 16, weight: .regular) }
     static func secondary() -> Font { .system(size: 14, weight: .regular) }
     static func caption() -> Font { .system(size: 13, weight: .regular) }
     static func captionSecondary() -> Font { .system(size: 12, weight: .regular) }
-    static func helper() -> Font { .system(size: 11, weight: .regular) }
-    static func weak() -> Font { .system(size: 10, weight: .light) }
+    static func helper() -> Font { .system(size: 11, weight: .medium) }
+    static func weak() -> Font { .system(size: 11, weight: .regular) }
     static func navTitle() -> Font { .system(size: 14, weight: .medium) }
-    static func statValue() -> Font { .system(size: 22, weight: .semibold) }
-    static func heroValue() -> Font { .system(size: 40, weight: .semibold) }
-    static func heroValueCompact() -> Font { .system(size: 28, weight: .semibold) }
-    static func statLabel() -> Font { .system(size: 12, weight: .regular) }
+    static func statValue() -> Font { .system(size: 20, weight: .semibold, design: .rounded) }
+    static func heroValue() -> Font { .system(size: 52, weight: .semibold, design: .rounded) }
+    static func heroValueCompact() -> Font { .system(size: 30, weight: .semibold, design: .rounded) }
+    static func statLabel() -> Font { .system(size: 11, weight: .medium) }
 }
 
 /// Renders literary text line-by-line so poem breaks stay intact and avoid mid-line wraps.
@@ -357,10 +427,13 @@ struct CompactIconAction: View {
 }
 
 struct BrandMark: View {
+    var compact: Bool = true
+
     var body: some View {
         Text(L10n.brandName)
-            .font(.system(size: 15, weight: .medium))
-            .foregroundStyle(AppColor.textSecondary)
+            .font(compact ? AppFont.brandCompact() : AppFont.brand())
+            .foregroundStyle(compact ? AppColor.textPrimary : AppColor.accent)
+            .tracking(compact ? 0.4 : 0.8)
             .lineLimit(1)
             .fixedSize(horizontal: true, vertical: false)
             .accessibilityLabel("\(L10n.brandNameZH) \(L10n.brandNameEN)")
@@ -503,12 +576,31 @@ extension View {
         padding(.horizontal, AppSpacing.md)
     }
 
+    /// Short pages (review home, empty create) still rubber-band on tall phones.
+    func appVerticalBounce() -> some View {
+        scrollBounceBehavior(.always, axes: .vertical)
+    }
+
     func appPageBackground() -> some View {
-        background(AppColor.pageBackground)
+        background {
+            ZStack {
+                AppColor.pageBackground
+                LinearGradient(
+                    colors: [
+                        AppColor.accent.opacity(0.07),
+                        AppColor.pageBackground.opacity(0.0),
+                        AppColor.pageBackground
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottom
+                )
+            }
+            .ignoresSafeArea()
+        }
     }
 
     func appTint() -> some View {
-        tint(AppColor.accent)
+        modifier(AppTintModifier())
     }
 
     func appNavTitle(_ title: String, style: AppNavTitleStyle = .primary) -> some View {
@@ -576,6 +668,22 @@ private struct AppInputSurfaceModifier: ViewModifier {
 enum AppTabBarChrome {
     static func apply() {
         #if canImport(UIKit)
+        let snapshot = makeSnapshot()
+        UITabBar.appearance().standardAppearance = snapshot.appearance
+        UITabBar.appearance().scrollEdgeAppearance = snapshot.appearance
+        UITabBar.appearance().tintColor = snapshot.accent
+        UITabBar.appearance().unselectedItemTintColor = snapshot.muted
+        #endif
+    }
+
+    #if canImport(UIKit)
+    struct Snapshot {
+        let appearance: UITabBarAppearance
+        let accent: UIColor
+        let muted: UIColor
+    }
+
+    static func makeSnapshot() -> Snapshot {
         let paper = UIColor(AppColor.pageBackground)
         let accent = UIColor(AppColor.accent)
         let muted = UIColor(AppColor.textTertiary)
@@ -596,24 +704,31 @@ enum AppTabBarChrome {
             .foregroundColor: accent,
             .font: UIFont.systemFont(ofSize: 10, weight: .bold)
         ]
-        // Slightly stronger selected affordance without a custom tab bar.
         item.selected.badgeBackgroundColor = accent
         appearance.stackedLayoutAppearance = item
         appearance.inlineLayoutAppearance = item
         appearance.compactInlineLayoutAppearance = item
-
-        UITabBar.appearance().standardAppearance = appearance
-        UITabBar.appearance().scrollEdgeAppearance = appearance
-        UITabBar.appearance().tintColor = accent
-        UITabBar.appearance().unselectedItemTintColor = muted
-        #endif
+        return Snapshot(appearance: appearance, accent: accent, muted: muted)
     }
+    #endif
 }
 
 enum AppNavTitleStyle {
     case primary
     case hidden
     case secondary
+}
+
+private struct AppTintModifier: ViewModifier {
+    private var store: AppAccentThemeStore { AppAccentThemeStore.shared }
+
+    func body(content: Content) -> some View {
+        content
+            .tint(AppColor.accent)
+            .onChange(of: store.theme) { _, _ in
+                AppTabBarChrome.apply()
+            }
+    }
 }
 
 private struct AppNavTitleModifier: ViewModifier {
@@ -769,7 +884,8 @@ struct AppTabIcon: View {
 
     var body: some View {
         Image(systemName: systemName)
-            .symbolRenderingMode(.hierarchical)
+            .symbolRenderingMode(.monochrome)
+            .foregroundStyle(isSelected ? AppColor.accent : AppColor.textTertiary)
             .fontWeight(isSelected ? .semibold : AppIcon.weight)
             .animation(.easeInOut(duration: 0.18), value: isSelected)
     }

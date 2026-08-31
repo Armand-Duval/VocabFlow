@@ -8,6 +8,8 @@ struct ContentView: View {
     @EnvironmentObject private var shareImport: ShareImportCoordinator
     @Environment(ReviewSettingsStore.self) private var reviewSettings
     @State private var selectedTab = 0
+    /// Mount a tab the first time it is selected. Do not swap siblings in later —
+    /// that rebuilds TabView and dismisses any half-sheet currently on screen.
     @State private var mountedTabs: Set<Int> = [0]
     @State private var sessionDueCount = ReviewStatusStore.dueCount
     @State private var dueCountRefreshToken = 0
@@ -78,9 +80,9 @@ struct ContentView: View {
         }
         .toolbarBackground(AppColor.pageBackground, for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)
+        .toolbar(.visible, for: .tabBar)
         .appTint()
         .appToast()
-        .animation(.easeInOut(duration: 0.18), value: selectedTab)
         .onReceive(NotificationCenter.default.publisher(for: .shareImportReceived)) { _ in
             shareImport.refreshAll()
             focusCreateTabForPendingShareWork()
@@ -103,7 +105,6 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .requestSettings)) { _ in
             selectedTab = AppTab.settings.rawValue
-            mountedTabs.insert(AppTab.settings.rawValue)
         }
         .onChange(of: shareImport.pendingPayload) { _, payload in
             if payload != nil {
@@ -132,7 +133,6 @@ struct ContentView: View {
             focusCreateTabForPendingShareWork()
             scheduleDueCountRefresh(delayMilliseconds: 800)
             BackupReminderService.reschedule()
-            prewarmIdleTabs()
         }
         .task(id: dueCountRefreshToken) {
             guard dueCountRefreshDelayMilliseconds > 0 else {
@@ -153,20 +153,12 @@ struct ContentView: View {
                 Color.clear
             }
         }
-        .opacity(selectedTab == tag ? 1 : 0)
-        .allowsHitTesting(selectedTab == tag)
-    }
-
-    private func prewarmIdleTabs() {
-        Task { @MainActor in
-            try? await Task.sleep(for: .seconds(2))
-            mountedTabs.formUnion([1, 2, 3])
-        }
     }
 
     private func focusCreateTabForPendingShareWork() {
         guard shareImport.hasPendingImport else { return }
         selectedTab = 2
+        mountedTabs.insert(2)
     }
 
     private func scheduleDueCountRefresh(delayMilliseconds: Int) {
@@ -177,7 +169,12 @@ struct ContentView: View {
     @MainActor
     private func refreshSessionDueCount() async {
         await Task.yield()
-        let descriptor = FetchDescriptor<FlashCard>()
+        let now = Date.now
+        let descriptor = FetchDescriptor<FlashCard>(
+            predicate: #Predicate<FlashCard> { card in
+                card.isSuspended == false && card.nextReviewDate <= now
+            }
+        )
         guard let cards = try? modelContext.fetch(descriptor) else { return }
 
         let scoped = ReviewQueueBuilder.cards(in: DeckSettings.lastSelectedDeckID, from: cards)
@@ -187,7 +184,9 @@ struct ContentView: View {
             dailyNewLimit: reviewSettings.dailyNewLimit,
             dailyReviewLimit: reviewSettings.dailyReviewLimit
         )
-        sessionDueCount = count
+        if sessionDueCount != count {
+            sessionDueCount = count
+        }
         ReviewReminderService.reschedule(dueCount: count)
         ReviewStatusStore.updateDueCount(count)
     }
@@ -197,5 +196,6 @@ struct ContentView: View {
     ContentView()
         .environmentObject(ShareImportCoordinator())
         .environment(ReviewSettingsStore.shared)
+        .environment(AppAccentThemeStore.shared)
         .modelContainer(for: [FlashCard.self, Deck.self], inMemory: true)
 }

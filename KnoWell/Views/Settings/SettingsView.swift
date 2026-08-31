@@ -1,10 +1,13 @@
 import SwiftUI
 import SwiftData
+import UIKit
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(ReviewSettingsStore.self) private var reviewSettings
+    @Environment(AppAccentThemeStore.self) private var accentTheme
+    @Environment(CloudAIQuotaStore.self) private var aiQuota
     @ObservedObject private var generationQueue = CardGenerationQueue.shared
 
     var isPresentedAsSheet: Bool = false
@@ -28,9 +31,6 @@ struct SettingsView: View {
 
     @State private var showResetAllConfirm = false
     @State private var showMigrateCardsConfirm = false
-    @State private var maintenanceAlertTitle = ""
-    @State private var maintenanceAlertMessage = ""
-    @State private var showMaintenanceAlert = false
 
     var body: some View {
         @Bindable var reviewSettings = reviewSettings
@@ -38,7 +38,10 @@ struct SettingsView: View {
         NavigationStack {
             settingsScrollContent(reviewSettings: reviewSettings)
                 .appPageBackground()
-                .appNavTitle(isPresentedAsSheet ? L10n.settingsTitle : L10n.tabSettings)
+                .appNavTitle(
+                    isPresentedAsSheet ? L10n.settingsTitle : L10n.tabSettings,
+                    style: isPresentedAsSheet ? .primary : .hidden
+                )
                 .toolbar {
                     if isPresentedAsSheet {
                         ToolbarItem(placement: .cancellationAction) {
@@ -73,11 +76,6 @@ struct SettingsView: View {
                         }
                     }
                 ))
-                .alert(maintenanceAlertTitle, isPresented: $showMaintenanceAlert) {
-                    Button(L10n.ok, role: .cancel) {}
-                } message: {
-                    Text(maintenanceAlertMessage)
-                }
                 .appConfirmSheet(
                     isPresented: $showResetAllConfirm,
                     title: L10n.settingsResetAllSRS,
@@ -104,6 +102,7 @@ struct SettingsView: View {
         @Bindable var reviewSettings = reviewSettings
         ScrollView {
             VStack(spacing: AppSpacing.section) {
+                themeCard
                 reviewCard(
                     dailyNewLimit: $reviewSettings.dailyNewLimit,
                     dailyReviewLimit: $reviewSettings.dailyReviewLimit
@@ -117,6 +116,58 @@ struct SettingsView: View {
             .padding(.horizontal, AppSpacing.md)
             .padding(.top, AppSpacing.sm)
             .padding(.bottom, AppSpacing.lg)
+        }
+        .appVerticalBounce()
+    }
+
+    private var themeCard: some View {
+        settingsSection(title: L10n.settingsThemeTitle) {
+            LazyVGrid(
+                columns: [
+                    GridItem(.flexible(), spacing: AppSpacing.sm),
+                    GridItem(.flexible(), spacing: AppSpacing.sm),
+                    GridItem(.flexible(), spacing: AppSpacing.sm)
+                ],
+                spacing: AppSpacing.sm
+            ) {
+                ForEach(AppAccentTheme.allCases) { theme in
+                    let selected = accentTheme.theme == theme
+                    Button {
+                        accentTheme.setTheme(theme)
+                    } label: {
+                        VStack(spacing: 6) {
+                            Circle()
+                                .fill(theme.swatch)
+                                .frame(width: 18, height: 18)
+                            Text(theme.title)
+                                .font(AppFont.caption())
+                                .fontWeight(selected ? .semibold : .regular)
+                                .foregroundStyle(selected ? AppColor.textPrimary : AppColor.textSecondary)
+                                .lineLimit(1)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(
+                            selected ? AppColor.accentBackground(0.16) : AppColor.surfaceMuted,
+                            in: RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
+                        )
+                        .overlay {
+                            RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
+                                .strokeBorder(
+                                    selected ? AppColor.accent.opacity(0.35) : Color.clear,
+                                    lineWidth: 1
+                                )
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(selected ? .isSelected : [])
+                }
+            }
+
+            Text(L10n.settingsThemeFooter)
+                .font(AppFont.weak())
+                .foregroundStyle(AppColor.textMuted)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -179,12 +230,18 @@ struct SettingsView: View {
 
     private var aiCard: some View {
         settingsSection(title: L10n.settingsAISectionCompact) {
-            Picker(L10n.aiProviderSection, selection: $selectedProvider) {
-                ForEach(AIProvider.allCases) { provider in
-                    Text(provider.displayName).tag(provider)
+            AppSpinner(
+                title: L10n.aiProviderSection,
+                value: selectedProvider.displayName,
+                options: AIProvider.allCases.map {
+                    AppSelectionOption(id: $0.rawValue, title: $0.displayName)
+                },
+                selectedID: selectedProvider.rawValue
+            ) { raw in
+                if let provider = AIProvider(rawValue: raw) {
+                    selectedProvider = provider
                 }
             }
-            .font(AppFont.secondary())
 
             if selectedProvider.supportsCustomBaseURL {
                 TextField(L10n.aiCustomBaseURLPlaceholder, text: $customBaseURL)
@@ -196,14 +253,21 @@ struct SettingsView: View {
             }
 
             if !selectedProvider.suggestedModels.isEmpty {
-                Picker(L10n.modelSection, selection: $selectedModel) {
-                    ForEach(selectedProvider.suggestedModels, id: \.self) { model in
-                        Text(model).tag(model)
-                    }
+                AppSpinner(
+                    title: L10n.modelSection,
+                    value: selectedModel,
+                    isEnabled: customModelID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                    options: selectedProvider.suggestedModels.map {
+                        AppSelectionOption(
+                            id: $0,
+                            title: $0,
+                            subtitle: APISettings.modelDescription(for: $0)
+                        )
+                    },
+                    selectedID: selectedModel
+                ) { model in
+                    selectedModel = model
                 }
-                .font(AppFont.secondary())
-                .disabled(!customModelID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                .opacity(customModelID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 1 : 0.45)
             }
 
             TextField(L10n.aiCustomModelPlaceholder, text: $customModelID)
@@ -243,6 +307,16 @@ struct SettingsView: View {
             Text(liveKeySourceDescription)
                 .font(AppFont.weak())
                 .foregroundStyle(canTestCurrentAI ? AppColor.textMuted : AppColor.warning)
+
+            if APISettings.usesCloudProxy, let snapshot = aiQuota.snapshot {
+                Text(
+                    snapshot.isExhausted
+                        ? L10n.cloudQuotaExhausted
+                        : L10n.cloudQuotaRemaining(snapshot.remaining, snapshot.limit)
+                )
+                .font(AppFont.weak())
+                .foregroundStyle(snapshot.isExhausted ? AppColor.warning : AppColor.textMuted)
+            }
 
             Button {
                 Task { await testAPIConnection() }
@@ -292,6 +366,16 @@ struct SettingsView: View {
             }
 
             Button {
+                exportAllLogsTapped()
+            } label: {
+                SettingsNavigationRow(
+                    title: L10n.settingsExportLogs,
+                    systemImage: "square.and.arrow.up"
+                )
+            }
+            .buttonStyle(.plain)
+
+            Button {
                 showMigrateCardsConfirm = true
             } label: {
                 SettingsNavigationRow(
@@ -335,6 +419,10 @@ struct SettingsView: View {
                     Text(L10n.settingsHelpApkg)
                     Text(L10n.settingsHelpShare)
                     Text(L10n.settingsAppLogFooter)
+                    Button(L10n.settingsExportLogs) {
+                        exportAllLogsTapped()
+                    }
+                    .foregroundStyle(AppColor.accent)
                 }
                 .font(AppFont.caption())
                 .foregroundStyle(.secondary)
@@ -364,34 +452,14 @@ struct SettingsView: View {
     private var liveKeySourceDescription: String {
         let trimmed = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmed.isEmpty { return L10n.keySourceUser }
-        if selectedProvider == .deepseek,
-           !DefaultAPIKey.deepseek.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return L10n.keySourceDefault
-        }
-        if selectedProvider == .moonshot,
-           !DefaultAPIKey.kimi.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return L10n.keySourceDefault
-        }
-        if !DefaultAPIKey.deepseek.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return L10n.keySourceDefault
-        }
-        if !DefaultAPIKey.kimi.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return L10n.keySourceDefault
-        }
+        if KnoWellCloud.isEnabled { return L10n.keySourceCloud }
         return L10n.keySourceMissing
     }
 
     private var canTestCurrentAI: Bool {
         let trimmedKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmedKey.isEmpty {
-            if selectedProvider == .deepseek {
-                return !DefaultAPIKey.deepseek.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            }
-            if selectedProvider == .moonshot {
-                return !DefaultAPIKey.kimi.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            }
-            return !DefaultAPIKey.deepseek.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                || !DefaultAPIKey.kimi.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            return KnoWellCloud.isEnabled
         }
         if selectedProvider == .custom {
             return !customBaseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -427,6 +495,19 @@ struct SettingsView: View {
         )
     }
 
+    private func exportAllLogsTapped() {
+        let urls = AppLog.exportAllLogs()
+        guard !urls.isEmpty else {
+            ToastCenter.shared.show(L10n.settingsExportLogsEmpty)
+            return
+        }
+        AppLog.info(
+            "Export all logs count=\(urls.count) files=\(urls.map(\.lastPathComponent).joined(separator: ","))",
+            category: "Settings"
+        )
+        ShareSheetPresenter.present(urls: urls)
+    }
+
     private func persistAPISettings(quiet: Bool) {
         APISettings.provider = selectedProvider
         APISettings.customBaseURL = customBaseURL
@@ -436,6 +517,7 @@ struct SettingsView: View {
         if !quiet {
             ToastCenter.shared.show(L10n.settingsSavedTitle)
         }
+        Task { await CloudAIQuotaStore.shared.refresh(force: true) }
     }
 
     @MainActor
@@ -457,7 +539,7 @@ struct SettingsView: View {
         }
 
         do {
-            try await KimiCardGenerator.testConnection(
+            try await CardGenerator.testConnection(
                 apiKey: testKey,
                 model: APISettings.effectiveModel
             )
@@ -516,9 +598,7 @@ struct SettingsView: View {
     }
 
     private func showMaintenanceResult(title: String, message: String) {
-        maintenanceAlertTitle = title
-        maintenanceAlertMessage = message
-        showMaintenanceAlert = true
+        ToastCenter.shared.show("\(title)：\(message)")
     }
 }
 
@@ -553,6 +633,7 @@ private struct SettingsLifecycleModifier: ViewModifier {
             }
             .task {
                 await onRefreshCards()
+                await CloudAIQuotaStore.shared.refresh()
             }
             .onReceive(NotificationCenter.default.publisher(for: .reviewQueueDidChange)) { _ in
                 Task { await onRefreshCards() }
@@ -667,6 +748,35 @@ private struct DailyLimitInputRow: View {
     }
 }
 
+private enum ShareSheetPresenter {
+    static func present(urls: [URL]) {
+        guard let presenter = topViewController(), !urls.isEmpty else { return }
+        let activity = UIActivityViewController(activityItems: urls, applicationActivities: nil)
+        if let popover = activity.popoverPresentationController {
+            popover.sourceView = presenter.view
+            popover.sourceRect = CGRect(
+                x: presenter.view.bounds.midX,
+                y: presenter.view.bounds.midY,
+                width: 1,
+                height: 1
+            )
+            popover.permittedArrowDirections = []
+        }
+        presenter.present(activity, animated: true)
+    }
+
+    private static func topViewController() -> UIViewController? {
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        let window = scenes.flatMap(\.windows).first(where: \.isKeyWindow)
+            ?? scenes.first?.windows.first
+        var top = window?.rootViewController
+        while let presented = top?.presentedViewController {
+            top = presented
+        }
+        return top
+    }
+}
+
 private struct SettingsNavigationRow: View {
     let title: String
     let systemImage: String
@@ -695,5 +805,7 @@ private struct SettingsNavigationRow: View {
 #Preview {
     SettingsView()
         .environment(ReviewSettingsStore.shared)
+        .environment(AppAccentThemeStore.shared)
+        .environment(CloudAIQuotaStore.shared)
         .modelContainer(for: FlashCard.self, inMemory: true)
 }

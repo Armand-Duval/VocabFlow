@@ -1,4 +1,5 @@
 import SwiftUI
+
 #if canImport(UIKit)
 import UIKit
 #endif
@@ -89,13 +90,11 @@ struct ImportCardsFormView: View {
                         Button(L10n.cancel, action: onCancel)
                     }
                 }
-                .alert(L10n.extensionSubmitFailedTitle, isPresented: Binding(
-                    get: { errorMessage != nil },
-                    set: { if !$0 { errorMessage = nil } }
-                )) {
-                    Button(L10n.ok, role: .cancel) {}
-                } message: {
-                    Text(errorMessage ?? "")
+                .appToast(bottomPadding: 120)
+                .onChange(of: errorMessage) { _, message in
+                    guard let message, !message.isEmpty else { return }
+                    ToastCenter.shared.show(message)
+                    errorMessage = nil
                 }
                 .onAppear { reloadDecks() }
                 .onChange(of: trimmedSentence.isEmpty) { _, isEmpty in
@@ -138,7 +137,7 @@ struct ImportCardsFormView: View {
             .padding(.top, AppSpacing.md)
             .padding(.bottom, AppSpacing.md)
         }
-        .scrollBounceBehavior(.basedOnSize)
+        .appVerticalBounce()
     }
 
     private var pasteToolbar: some View {
@@ -244,14 +243,17 @@ struct ImportCardsFormView: View {
                     .font(AppFont.secondary())
                     .foregroundStyle(.secondary)
             } else {
-                Picker(L10n.deckTarget, selection: $selectedDeckID) {
-                    ForEach(decks) { deck in
-                        Text(deck.name).tag(deck.id)
+                AppSpinner(
+                    title: L10n.deckTarget,
+                    titlePlacement: .hidden,
+                    value: decks.first(where: { $0.id == selectedDeckID })?.name ?? L10n.deckDefaultName,
+                    options: decks.map { AppSelectionOption(id: $0.id, title: $0.name) },
+                    selectedID: selectedDeckID.uuidString
+                ) { raw in
+                    if let id = UUID(uuidString: raw) {
+                        selectedDeckID = id
+                        SharedDeckStore.lastSelectedDeckID = id
                     }
-                }
-                .labelsHidden()
-                .onChange(of: selectedDeckID) { _, newValue in
-                    SharedDeckStore.lastSelectedDeckID = newValue
                 }
             }
         }
@@ -327,7 +329,7 @@ struct ImportCardsFormView: View {
     }
 
     private func wordExistsInSelectedDeck(_ word: String) -> Bool {
-        let units = KimiCardGenerator.makeGenerationUnits(sentence: trimmedSentence, words: [word])
+        let units = CardGenerator.makeGenerationUnits(sentence: trimmedSentence, words: [word])
         if units.isEmpty {
             return SharedDedupeIndex.contains(
                 deckID: selectedDeckID,
@@ -369,7 +371,7 @@ struct ImportCardsFormView: View {
     }
 
     private func submitGeneration() {
-        guard APISettings.canUseKimi else {
+        guard APISettings.canUseAI else {
             errorMessage = L10n.extensionMissingKey
             return
         }

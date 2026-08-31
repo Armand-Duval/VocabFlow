@@ -2,13 +2,8 @@ import SwiftUI
 import UIKit
 
 struct CreateCardsView: View {
-    private enum LongTextSuggestion {
-        case none
-        case keepSingleSentence
-        case splitIntoWords
-    }
-
     @Environment(\.modelContext) private var modelContext
+    @Environment(CloudAIQuotaStore.self) private var aiQuota
     @EnvironmentObject private var shareImport: ShareImportCoordinator
     @State private var sentence = ""
     @State private var words: [String] = []
@@ -16,27 +11,36 @@ struct CreateCardsView: View {
     @State private var selectedDeckID: UUID?
     @ObservedObject private var generationQueue = CardGenerationQueue.shared
     @State private var showPreview = false
+    /// User left confirmation with cards still waiting — don't force the sheet back open.
+    @State private var deferredPreview = false
     @State private var showGenerationQueue = false
     @State private var errorMessage: String?
     @State private var selectedText = ""
     @State private var selectionClearNonce = 0
     @State private var wordFeedbackMessage: String?
     @State private var wordFeedbackIsError = false
-    @State private var isRecognizingPhoto = false
+    @State private var isPreparingCapture = false
+    @State private var isRunningOCR = false
     @State private var isGeneratingAppreciation = false
-    @State private var generationMode: CardGenerationMode = CardGenerationPreferences.mode
     @State private var appreciationSource = ""
     @State private var showPhotoLibrary = false
     @State private var showCamera = false
-    @State private var showLongTextPrompt = false
-    @State private var pendingLongText = ""
-    @State private var longTextChoiceMade = false
+    @State private var liveTextDraft: LiveTextScanDraft?
     @State private var isManualEditing = false
     @State private var sourceHint: String?
     @State private var sourceImagePath: String?
+    @State private var imageOnlySource = false
     @State private var isSourceFocused = false
-    /// Edit pasted/OCR text vs pick phrases — one surface, not two stacked boxes.
     @State private var sourceMode: SourceWorkspaceMode = .edit
+    /// Empty create page only shows scan / album / paste until there is content.
+
+    private var trimmedSentence: String {
+        sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var showsCreateWorkspace: Bool {
+        !trimmedSentence.isEmpty || !words.isEmpty
+    }
 
     private enum SourceWorkspaceMode: String, CaseIterable, Identifiable {
         case edit
@@ -50,10 +54,6 @@ struct CreateCardsView: View {
             case .pick: return L10n.createSourceModePick
             }
         }
-    }
-
-    private var trimmedSentence: String {
-        sentence.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private var willGenerateAppreciation: Bool {
@@ -73,43 +73,61 @@ struct CreateCardsView: View {
         NavigationStack {
             scrollContent
                 .appPageBackground()
-                .navigationBarTitleDisplayMode(.inline)
+                .appNavTitle(L10n.createTitle, style: .hidden)
+                .toolbar(showsGenerationQueueBanner ? .automatic : .hidden, for: .navigationBar)
                 .dismissKeyboardOnScroll()
                 .keyboardDoneButton()
                 .safeAreaInset(edge: .top, spacing: 0) {
-                    if generationQueue.hasActiveJobs || !generationQueue.jobs.isEmpty {
+                    if showsGenerationQueueBanner {
                         generationQueueBanner
                     }
                 }
                 .safeAreaInset(edge: .bottom, spacing: 0) {
-                    generateFooter
+                    if showsCreateWorkspace {
+                        generateFooter
+                    }
                 }
                 .loadingOverlay(
-                    isPresented: isRecognizingPhoto || isGeneratingAppreciation,
+                    isPresented: isRunningOCR || isGeneratingAppreciation,
                     message: isGeneratingAppreciation ? L10n.createAppreciationGenerating : L10n.recognizingPhoto
                 )
-                .navigationDestination(isPresented: $showPreview) {
-                    CardPreviewView(drafts: drafts, selectedDeckID: $selectedDeckID) {
-                        showPreview = false
+                .fullScreenCover(isPresented: $showPreview) {
+                    NavigationStack {
+                        CardPreviewView(selectedDeckID: $selectedDeckID) {
+                            deferredPreview = generationQueue.pendingTriageCardCount > 0
+                            showPreview = false
+                        }
                     }
                 }
                 .sheet(isPresented: $showGenerationQueue) {
                     CardGenerationQueueView(queue: generationQueue)
                 }
-                .onChange(of: generationQueue.readyPreview) { _, preview in
-                    guard let preview else { return }
-                    selectedDeckID = preview.deckID
-                    drafts = preview.drafts
+                .onChange(of: generationQueue.pendingTriageCardCount) { oldCount, count in
+                    guard count > oldCount else { return }
+                    deferredPreview = false
+                    if let deckID = generationQueue.readyPreview?.deckID {
+                        selectedDeckID = deckID
+                    }
                     showPreview = true
-                    generationQueue.dismissReadyPreview()
+                }
+                .onChange(of: shareImport.pendingDrafts) { _, _ in
+                    ingestShareDraftsIfNeeded()
+                }
+                .onChange(of: shareImport.pendingInbox) { _, _ in
+                    Task { await applyShareInboxIfNeeded() }
+                }
+                .task {
+                    await aiQuota.refresh()
+                }
+                .onAppear {
+                    ingestShareDraftsIfNeeded()
+                    Task { await applyShareInboxIfNeeded() }
+                    guard !deferredPreview, generationQueue.readyPreview != nil else { return }
+                    selectedDeckID = generationQueue.readyPreview?.deckID ?? selectedDeckID
+                    showPreview = true
                 }
                 .modifier(CreateCardsAlertsModifier(errorMessage: $errorMessage))
                 .modifier(CreateCardsLifecycleModifier(
-                    sentence: $sentence,
-                    pendingLongText: $pendingLongText,
-                    showLongTextPrompt: $showLongTextPrompt,
-                    showPreview: $showPreview,
-                    drafts: $drafts,
                     shareImport: shareImport,
                     onAppearImport: applyShareImportIfNeeded
                 ))
@@ -125,73 +143,50 @@ struct CreateCardsView: View {
                     }
                     .ignoresSafeArea()
                 }
-                .appActionSheet(
-                    isPresented: $showLongTextPrompt,
-                    title: L10n.createLongTextTitle,
-                    message: L10n.createLongTextMessage,
-                    actions: [
-                        AppSheetAction(title: L10n.createLongTextKeepSentence, systemImage: "text.alignleft") {
-                            longTextChoiceMade = true
-                            applyLongTextSuggestion(.keepSingleSentence)
-                        },
-                        AppSheetAction(title: L10n.createLongTextSplitWords, systemImage: "list.bullet") {
-                            longTextChoiceMade = true
-                            applyLongTextSuggestion(.splitIntoWords)
-                        }
-                    ]
-                )
-                .onChange(of: showLongTextPrompt) { _, isPresented in
-                    if !isPresented {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                            if !longTextChoiceMade {
-                                pendingLongText = ""
-                            }
-                            longTextChoiceMade = false
-                        }
+                .fullScreenCover(item: $liveTextDraft) { draft in
+                    LiveTextScanSheet(
+                        image: draft.image,
+                        analysis: draft.analysis,
+                        highlightDetection: draft.highlightDetection
+                    ) { result in
+                        applyLiveTextResult(result, image: draft.image, banner: draft.successBanner)
                     }
                 }
-                .onChange(of: trimmedSentence.isEmpty) { _, isEmpty in
-                    if isEmpty { sourceMode = .edit }
+                .onChange(of: isSourceFocused) { _, focused in
+                    if !focused, trimmedSentence.isEmpty, words.isEmpty {
+                        isManualEditing = false
+                        selectedText = ""
+                        sourceMode = .edit
+                    }
                 }
         }
     }
 
     private var scrollContent: some View {
+        Group {
+            if showsCreateWorkspace {
+                workspaceScroll
+            } else {
+                emptyCapturePage
+            }
+        }
+    }
+
+    private var workspaceScroll: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                if hasPendingDrafts, let pendingDrafts = shareImport.pendingDrafts {
-                    PendingCardsBannerView(
-                        title: L10n.createPendingImportTitle,
-                        subtitle: L10n.createPendingDraftsSubtitle(pendingDrafts.count),
-                        systemImage: "sparkles.rectangle.stack.fill",
-                        actionTitle: L10n.createPendingAction,
-                        action: openShareDraftPreview
-                    )
-                }
+            VStack(alignment: .leading, spacing: AppSpacing.md) {
+                pendingBanners
 
                 captureToolbar
 
-                if trimmedSentence.isEmpty {
-                    sourceEditSurface(minHeight: 72, showPlaceholder: true, placeholder: L10n.createPastePlaceholder)
-                } else {
-                    sourceWorkspace
+                sourceWorkspace
 
-                    if sourceMode == .edit, !selectedText.isEmpty {
-                        SelectionActionBar(selectedText: selectedText, action: appendSelectionToWords)
-                    }
+                if sourceMode == .edit, !selectedText.isEmpty {
+                    SelectionActionBar(selectedText: selectedText, action: appendSelectionToWords)
                 }
 
                 if willGenerateAppreciation {
                     optionalSourceField
-                }
-
-                if isRecognizingPhoto {
-                    HStack(spacing: AppSpacing.xs) {
-                        ProgressView()
-                        Text(L10n.recognizingPhoto)
-                            .font(AppFont.helper())
-                            .foregroundStyle(AppColor.textMuted)
-                    }
                 }
 
                 CreateDeckPickerCard(selectedDeckID: $selectedDeckID)
@@ -203,10 +198,127 @@ struct CreateCardsView: View {
                 wordsCard
             }
             .padding(.horizontal, AppSpacing.md)
-            .padding(.top, AppSpacing.md)
+            .padding(.top, AppSpacing.sm)
             .padding(.bottom, AppSpacing.md)
         }
-        .scrollBounceBehavior(.basedOnSize)
+        .appVerticalBounce()
+    }
+
+    @ViewBuilder
+    private var pendingBanners: some View {
+        if hasPendingDrafts, let pendingDrafts = shareImport.pendingDrafts {
+            PendingCardsBannerView(
+                title: L10n.createPendingImportTitle,
+                subtitle: L10n.createPendingDraftsSubtitle(pendingDrafts.count),
+                systemImage: "sparkles.rectangle.stack.fill",
+                actionTitle: L10n.createPendingAction,
+                action: ingestShareDraftsIfNeeded
+            )
+        } else if !showPreview, generationQueue.pendingTriageCardCount > 0 {
+            PendingCardsBannerView(
+                title: L10n.createPendingImportTitle,
+                subtitle: L10n.createPendingDraftsSubtitle(generationQueue.pendingTriageCardCount),
+                systemImage: "checklist",
+                actionTitle: L10n.createPendingAction,
+                action: {
+                    deferredPreview = false
+                    selectedDeckID = generationQueue.readyPreview?.deckID ?? selectedDeckID
+                    showPreview = true
+                }
+            )
+        }
+    }
+
+    private var emptyCapturePage: some View {
+        VStack(spacing: 0) {
+            pendingBanners
+                .padding(.horizontal, AppSpacing.md)
+                .padding(.top, AppSpacing.sm)
+
+            Spacer(minLength: 24)
+
+            VStack(spacing: AppSpacing.sm) {
+                HStack(spacing: AppSpacing.sm) {
+                    emptyCaptureTile(
+                        title: L10n.createScanShort,
+                        systemImage: "camera.viewfinder",
+                        accessibilityLabel: L10n.createScanExcerpt,
+                        filledIcon: true,
+                        disabled: isPreparingCapture || isRunningOCR
+                    ) {
+                        openScanCapture()
+                    }
+
+                    emptyCaptureTile(
+                        title: L10n.createPhotoShort,
+                        systemImage: "photo.on.rectangle",
+                        accessibilityLabel: L10n.createQuickPhoto,
+                        filledIcon: false,
+                        disabled: isPreparingCapture || isRunningOCR
+                    ) {
+                        showPhotoLibrary = true
+                    }
+
+                    emptyCaptureTile(
+                        title: L10n.createPasteShort,
+                        systemImage: "doc.on.clipboard",
+                        accessibilityLabel: L10n.createQuickPaste,
+                        filledIcon: false,
+                        disabled: false
+                    ) {
+                        pasteFromClipboard()
+                    }
+                }
+
+                Text(L10n.createEmptyHint)
+                    .font(AppFont.captionSecondary())
+                    .foregroundStyle(AppColor.textMuted)
+                    .multilineTextAlignment(.center)
+            }
+            .padding(.horizontal, AppSpacing.lg)
+            .opacity((isPreparingCapture || isRunningOCR) ? 0.72 : 1)
+
+            Spacer(minLength: 40)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func emptyCaptureTile(
+        title: String,
+        systemImage: String,
+        accessibilityLabel: String,
+        filledIcon: Bool,
+        disabled: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            VStack(spacing: AppSpacing.sm) {
+                ZStack {
+                    Circle()
+                        .fill(filledIcon ? AppColor.accentStrong : AppColor.accent.opacity(0.12))
+                        .frame(width: 56, height: 56)
+                    Image(systemName: systemImage)
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundStyle(filledIcon ? Color.white : AppColor.accent)
+                }
+
+                Text(title)
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .foregroundStyle(AppColor.textPrimary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 22)
+            .background(AppColor.surface, in: RoundedRectangle(cornerRadius: AppRadius.sheet, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: AppRadius.sheet, style: .continuous)
+                    .strokeBorder(AppColor.border, lineWidth: 1)
+            }
+            .appSoftShadow()
+        }
+        .buttonStyle(SoftPressButtonStyle())
+        .disabled(disabled)
+        .opacity(disabled ? 0.55 : 1)
+        .accessibilityLabel(accessibilityLabel)
     }
 
     private var optionalSourceField: some View {
@@ -230,7 +342,7 @@ struct CreateCardsView: View {
                 systemImage: "camera.viewfinder",
                 accessibilityLabel: L10n.createScanExcerpt,
                 emphasized: true,
-                disabled: isRecognizingPhoto
+                disabled: isPreparingCapture || isRunningOCR
             ) {
                 openScanCapture()
             }
@@ -240,7 +352,7 @@ struct CreateCardsView: View {
                 systemImage: "photo.on.rectangle",
                 accessibilityLabel: L10n.createQuickPhoto,
                 emphasized: false,
-                disabled: isRecognizingPhoto
+                disabled: isPreparingCapture || isRunningOCR
             ) {
                 showPhotoLibrary = true
             }
@@ -257,7 +369,7 @@ struct CreateCardsView: View {
 
             Spacer(minLength: 0)
         }
-        .opacity(isRecognizingPhoto ? 0.72 : 1)
+        .opacity((isPreparingCapture || isRunningOCR) ? 0.72 : 1)
     }
 
     private func captureToolButton(
@@ -327,7 +439,11 @@ struct CreateCardsView: View {
 
             switch sourceMode {
             case .edit:
-                sourceEditSurface(minHeight: 88, showPlaceholder: false, placeholder: L10n.createPastePlaceholder)
+                sourceEditSurface(
+                    minHeight: 88,
+                    showPlaceholder: trimmedSentence.isEmpty,
+                    placeholder: L10n.createPastePlaceholder
+                )
             case .pick:
                 PhraseTokenPicker(
                     sentence: trimmedSentence,
@@ -381,10 +497,29 @@ struct CreateCardsView: View {
         if let text = UIPasteboard.general.string?.trimmingCharacters(in: .whitespacesAndNewlines),
            !text.isEmpty {
             sentence = text
+            isManualEditing = true
             sourceMode = .pick
             showToast(L10n.createQuickPaste)
+        } else {
+            showToast(L10n.createPasteEmpty)
         }
         #endif
+    }
+
+    private func resetCreateWorkspace() {
+        sentence = ""
+        words = []
+        selectedText = ""
+        selectionClearNonce += 1
+        isManualEditing = false
+        isSourceFocused = false
+        sourceMode = .edit
+        sourceHint = nil
+        sourceImagePath = nil
+        imageOnlySource = false
+        appreciationSource = ""
+        wordFeedbackMessage = nil
+        wordFeedbackIsError = false
     }
 
     private var wordsCard: some View {
@@ -407,6 +542,16 @@ struct CreateCardsView: View {
         .appInputSurface(isFocused: false)
     }
 
+    private var queueAttentionCount: Int {
+        generationQueue.remainingWorkCount
+    }
+
+    private var showsGenerationQueueBanner: Bool {
+        generationQueue.hasActiveJobs
+            || !generationQueue.jobs.isEmpty
+            || generationQueue.pendingTriageCardCount > 0
+    }
+
     private var generationQueueBanner: some View {
         Button {
             showGenerationQueue = true
@@ -424,6 +569,14 @@ struct CreateCardsView: View {
                     .font(AppFont.helper())
                     .foregroundStyle(AppColor.textPrimary)
                     .lineLimit(1)
+                if queueAttentionCount > 0 {
+                    Text(queueAttentionCount > 99 ? "99+" : "\(queueAttentionCount)")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(Color.white)
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 1)
+                        .background(AppColor.danger, in: Capsule())
+                }
                 Spacer(minLength: 0)
                 Text(L10n.createQueueViewAction)
                     .font(AppFont.helper().weight(.semibold))
@@ -434,45 +587,57 @@ struct CreateCardsView: View {
             .background(AppColor.surface)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(
+            queueAttentionCount > 0
+                ? "\(L10n.createQueueTitle) \(queueAttentionCount)"
+                : L10n.createQueueTitle
+        )
+    }
+
+    private var isCloudQuotaExhausted: Bool {
+        APISettings.usesCloudProxy && (aiQuota.snapshot?.isExhausted == true)
+    }
+
+    private var cloudQuotaNeeded: Int {
+        willGenerateAppreciation
+            ? max(Preprocess.quotes(from: trimmedSentence).count, 1)
+            : max(words.count, 1)
+    }
+
+    private var isCloudQuotaInsufficient: Bool {
+        guard APISettings.usesCloudProxy, let snapshot = aiQuota.snapshot else { return false }
+        return snapshot.blocks(needed: cloudQuotaNeeded)
     }
 
     private var generateFooter: some View {
         VStack(spacing: AppSpacing.xs) {
-            if !canGenerate {
-                Text(L10n.createGenerateHintEmpty)
-                    .font(AppFont.weak())
-                    .foregroundStyle(AppColor.textMuted)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, AppSpacing.md)
-            }
+            if APISettings.usesCloudProxy, let snapshot = aiQuota.snapshot {
+                Text(
+                    snapshot.isExhausted
+                        ? L10n.cloudQuotaExhausted
+                        : L10n.cloudQuotaRemaining(snapshot.remaining, snapshot.limit)
+                )
+                .font(AppFont.weak())
+                .foregroundStyle(snapshot.isExhausted ? AppColor.warning : AppColor.textMuted)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, AppSpacing.md)
 
-            if canGenerate {
-                if willGenerateAppreciation {
-                    Text(L10n.createGenerateNoWordsHint)
+                if isCloudQuotaInsufficient, !snapshot.isExhausted, canGenerate {
+                    Text(L10n.cloudQuotaInsufficient(cloudQuotaNeeded, snapshot.remaining))
                         .font(AppFont.weak())
-                        .foregroundStyle(AppColor.textMuted)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .foregroundStyle(AppColor.warning)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, AppSpacing.md)
-                } else {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Picker("", selection: $generationMode) {
-                            ForEach(CardGenerationMode.allCases) { mode in
-                                Text(mode.title).tag(mode)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .onChange(of: generationMode) { _, mode in
-                            CardGenerationPreferences.mode = mode
-                        }
-
-                        Text(generationMode.detail)
-                            .font(AppFont.weak())
-                            .foregroundStyle(AppColor.textMuted)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    .padding(.horizontal, AppSpacing.md)
                 }
+            }
+
+            if canGenerate, willGenerateAppreciation {
+                Text(L10n.createGenerateNoWordsHint)
+                    .font(AppFont.weak())
+                    .foregroundStyle(AppColor.textMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, AppSpacing.md)
             }
 
             Button {
@@ -481,92 +646,136 @@ struct CreateCardsView: View {
                 Text(L10n.createAIGenerate)
             }
             .buttonStyle(PrimaryButtonStyle(soft: true))
-            .disabled(!canGenerate || isGeneratingAppreciation)
+            .disabled(!canGenerate || isGeneratingAppreciation || isCloudQuotaExhausted || isCloudQuotaInsufficient)
             .padding(.horizontal, AppSpacing.md)
         }
         .padding(.top, AppSpacing.sm)
         .padding(.bottom, AppSpacing.sm)
-        .background(AppColor.pageBackground)
+        .background {
+            AppColor.pageBackground
+                .overlay(alignment: .top) {
+                    Rectangle()
+                        .fill(AppColor.borderSubtle)
+                        .frame(height: 1)
+                }
+                .ignoresSafeArea(edges: .bottom)
+        }
     }
 
-    private func openShareDraftPreview() {
+    private func ingestShareDraftsIfNeeded() {
         guard let pendingDrafts = shareImport.pendingDrafts, !pendingDrafts.isEmpty else { return }
-        drafts = pendingDrafts
-        if selectedDeckID == nil {
-            selectedDeckID = SharedDeckStore.resolvedSelectedDeckID()
-        }
+        let deck = DeckService.resolvedDeck(id: selectedDeckID, in: modelContext)
+        selectedDeckID = deck.id
+        generationQueue.enqueueTriage(drafts: pendingDrafts, deckID: deck.id)
         shareImport.acknowledgeDrafts()
         showPreview = true
     }
 
-    private func applyLongTextSuggestion(_ suggestion: LongTextSuggestion) {
-        defer { pendingLongText = "" }
-
-        switch suggestion {
-        case .none, .keepSingleSentence:
-            break
-        case .splitIntoWords:
-            let parsed = ImportTextAnalyzer.parse(sentence)
-            if !parsed.prefilledWords.isEmpty {
-                for word in parsed.prefilledWords {
-                    _ = appendCreateWord(word)
+    @MainActor
+    private func importCapturedImage(_ image: UIImage, successBanner: String) async {
+        isPreparingCapture = true
+        let highlightTask = Task { try await ImageOCRService.recognize(in: image) }
+        var openedLiveText = false
+        if LiveTextImageAnalyzer.isSupported {
+            do {
+                let analysis = try await LiveTextImageAnalyzer.analyze(image)
+                let transcript = ImageOCRService.sanitizeOCRText(analysis.transcript)
+                if analysis.hasResults(for: .text), !transcript.isEmpty {
+                    liveTextDraft = LiveTextScanDraft(
+                        image: image,
+                        analysis: analysis,
+                        successBanner: successBanner,
+                        highlightDetection: highlightTask
+                    )
+                    openedLiveText = true
                 }
-            } else {
-                showToast(L10n.createLongTextSplitFallback)
+            } catch {
+                // Unsupported, empty, or analyzer error → existing Vision OCR.
             }
+        }
+        isPreparingCapture = false
+        guard !openedLiveText else { return }
+
+        isRunningOCR = true
+        defer { isRunningOCR = false }
+        do {
+            let result = try await highlightTask.value
+            applyOCRResult(result, image: image, successBanner: successBanner)
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 
     @MainActor
-    private func importCapturedImage(_ image: UIImage, successBanner: String) async {
-        isRecognizingPhoto = true
-        defer { isRecognizingPhoto = false }
-        await recognizeImage(image, successBanner: successBanner)
+    private func applyLiveTextResult(_ result: LiveTextScanResult, image: UIImage, banner: String) {
+        imageOnlySource = result.useImageAsSource
+        if result.useImageAsSource {
+            sentence = result.words.joined(separator: ", ")
+        } else {
+            sentence = Preprocess.displaySource(result.sentence)
+        }
+        let ocrPage = result.pageText.isEmpty ? result.sentence : result.pageText
+        sourceHint = Preprocess.disambiguationHint(from: ocrPage, words: result.words)
+            ?? Preprocess.sourceHint(from: ocrPage)
+        sourceImagePath = CardSourceImageStore.saveJPEG(image)
+        if let hint = sourceHint?.trimmingCharacters(in: .whitespacesAndNewlines), !hint.isEmpty {
+            appreciationSource = hint
+        }
+
+        words = []
+        var added = 0
+        for word in result.words {
+            if case .added = appendCreateWord(word) {
+                added += 1
+            }
+        }
+
+        if added > 0 {
+            showToast(L10n.liveTextImported(added))
+        } else {
+            showToast(banner)
+        }
+        sourceMode = .pick
     }
 
     @MainActor
-    private func recognizeImage(_ image: UIImage, successBanner: String) async {
-        do {
-            let result = try await ImageOCRService.recognize(in: image)
-            let importSentence = result.preferredImportSentence
-            guard !importSentence.isEmpty else {
-                errorMessage = L10n.ocrEmpty
-                return
-            }
+    private func applyOCRResult(_ result: OCRResult, image: UIImage, successBanner: String) {
+        let importSentence = result.preferredImportSentence
+        guard !importSentence.isEmpty else {
+            errorMessage = L10n.ocrEmpty
+            return
+        }
 
-            // Highlight hits → word + containing sentence only (not the whole page).
-            sentence = importSentence
-            sourceHint = OCRContextExtractor.sourceHint(from: result.fullText)
-            sourceImagePath = CardSourceImageStore.saveJPEG(image)
-            if let hint = sourceHint?.trimmingCharacters(in: .whitespacesAndNewlines), !hint.isEmpty {
-                appreciationSource = hint
-            }
-            if result.hasHighlightContext {
-                words = []
-            }
+        sentence = Preprocess.displaySource(importSentence)
+        sourceMode = .pick
+        sourceHint = Preprocess.sourceHint(from: result.fullText)
+        sourceImagePath = CardSourceImageStore.saveJPEG(image)
+        if let hint = sourceHint?.trimmingCharacters(in: .whitespacesAndNewlines), !hint.isEmpty {
+            appreciationSource = hint
+        }
+        // Highlight hits → word + containing sentence only (not the whole page).
+        if result.hasHighlightContext {
+            words = []
+        }
 
-            var addedHighlights = 0
-            for word in result.preferredImportWords {
-                if case .added = appendCreateWord(word) {
-                    addedHighlights += 1
-                }
+        var addedHighlights = 0
+        for word in result.preferredImportWords {
+            if case .added = appendCreateWord(word) {
+                addedHighlights += 1
             }
+        }
 
-            if result.hasHighlightContext {
-                showToast(L10n.ocrHighlightContext(
-                    addedHighlights,
-                    result.importUnits.count
-                ))
-                sourceMode = .pick
-            } else if addedHighlights > 0 {
-                showToast(L10n.ocrHighlightDetected(addedHighlights))
-                sourceMode = .pick
-            } else {
-                showToast(successBanner)
-                sourceMode = .edit
-            }
-        } catch {
-            errorMessage = error.localizedDescription
+        if result.importKind == .vocabPage {
+            showToast(L10n.ocrVocabPage(result.preferredImportWords.count))
+        } else if result.hasHighlightContext {
+            showToast(L10n.ocrHighlightContext(
+                addedHighlights,
+                result.importUnits.count
+            ))
+        } else if addedHighlights > 0 {
+            showToast(L10n.ocrHighlightDetected(addedHighlights))
+        } else {
+            showToast(successBanner)
         }
     }
 
@@ -592,7 +801,7 @@ struct CreateCardsView: View {
 
     @MainActor
     private func appendCreateWord(_ word: String) -> VocabularyWordAddResult {
-        let trimmed = word.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = VocabularyWords.normalized(word)
         guard !trimmed.isEmpty else { return .empty }
         if wordExistsInSelectedDeck(trimmed) {
             return .existsInDeck(trimmed)
@@ -604,7 +813,7 @@ struct CreateCardsView: View {
     private func wordExistsInSelectedDeck(_ word: String) -> Bool {
         guard !trimmedSentence.isEmpty else { return false }
         let deck = DeckService.resolvedDeck(id: selectedDeckID, in: modelContext)
-        let units = KimiCardGenerator.makeGenerationUnits(sentence: trimmedSentence, words: [word])
+        let units = CardGenerator.makeGenerationUnits(sentence: trimmedSentence, words: [word])
         if units.isEmpty {
             return FlashCardDeduper.contains(
                 word: word,
@@ -635,7 +844,17 @@ struct CreateCardsView: View {
 
     private func applyShareImportIfNeeded() {
         guard let payload = shareImport.pendingPayload else { return }
+
+        let hasSentence = !payload.sentence.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        if !hasSentence, let imagePath = payload.sourceImagePath,
+           let image = CardSourceImageStore.loadUIImage(relativePath: imagePath) {
+            shareImport.acknowledgeImport()
+            Task { await importCapturedImage(image, successBanner: L10n.importFromPhotoSuccess) }
+            return
+        }
+
         sentence = payload.sentence
+        sourceMode = .pick
         if let word = payload.selectedWord {
             words = VocabularyWords.parse(from: word)
         } else {
@@ -650,9 +869,42 @@ struct CreateCardsView: View {
         if !payload.bannerMessage.isEmpty {
             showToast(payload.bannerMessage)
         }
-        // Shared text / OCR → same pick surface as in-app create.
-        sourceMode = words.isEmpty ? .edit : .pick
         shareImport.acknowledgeImport()
+    }
+
+    @MainActor
+    private func applyShareInboxIfNeeded() async {
+        guard let inbox = shareImport.pendingInbox else { return }
+        shareImport.acknowledgeInbox()
+        switch inbox.kind {
+        case .text:
+            let text = inbox.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            guard !text.isEmpty else { return }
+            sentence = text
+            words = []
+            sourceMode = .pick
+            showToast(L10n.importShareSentence)
+        case .image:
+            guard let relativePath = inbox.relativePath,
+                  let url = ShareImportStore.inboxFileURL(relativePath: relativePath) else {
+                errorMessage = L10n.extensionNoContent
+                return
+            }
+            AppLog.info("inbox OCR file=\(relativePath)", category: "Share")
+            guard let image = CardSourceImageStore.imageForOCR(at: url) else {
+                ShareImportStore.removeInboxFile(relativePath)
+                errorMessage = L10n.ocrEmpty
+                return
+            }
+            AppLog.info(
+                "inbox OCR image \(Int(image.size.width))x\(Int(image.size.height))",
+                category: "Share"
+            )
+            defer {
+                ShareImportStore.removeInboxFile(relativePath)
+            }
+            await importCapturedImage(image, successBanner: L10n.importShareSentence)
+        }
     }
 
     private func performGeneration() {
@@ -665,6 +917,13 @@ struct CreateCardsView: View {
 
     private func enqueueGeneration() {
         errorMessage = nil
+        Task {
+            await aiQuota.refresh(force: true)
+            enqueueGenerationNow()
+        }
+    }
+
+    private func enqueueGenerationNow() {
         SharedDedupeSync.rebuild(in: modelContext)
         let deck = DeckService.resolvedDeck(id: selectedDeckID, in: modelContext)
         if selectedDeckID == nil {
@@ -678,9 +937,10 @@ struct CreateCardsView: View {
                 deckID: deck.id,
                 deckName: deck.name,
                 sourceHint: sourceHint,
-                sourceImagePath: sourceImagePath
+                sourceImagePath: sourceImagePath,
+                imageOnlySource: imageOnlySource
             )
-            words = []
+            resetCreateWorkspace()
             showToast(L10n.createQueuedToast)
         } catch {
             errorMessage = error.localizedDescription
@@ -700,18 +960,18 @@ struct CreateCardsView: View {
             ? (ocrSource.isEmpty ? nil : ocrSource)
             : manualSource
 
-        let reflection = DailyReflection(
-            sentence: trimmedSentence,
-            translation: nil,
-            source: resolvedSource,
-            occasion: nil,
-            isAI: true
-        )
-
         do {
-            var draft = try await LiteraryAppreciationGenerator.generate(from: reflection)
+            let quotes = Preprocess.quotes(from: trimmedSentence)
+            guard !quotes.isEmpty else { return }
+            var drafts = try await LiteraryAppreciationGenerator.generate(
+                quotes: quotes,
+                source: resolvedSource,
+                allowFallback: false
+            )
             if let path = sourceImagePath?.trimmingCharacters(in: .whitespacesAndNewlines), !path.isEmpty {
-                draft.sourceImagePath = path
+                for index in drafts.indices {
+                    drafts[index].sourceImagePath = path
+                }
             }
 
             let deck: Deck
@@ -721,7 +981,8 @@ struct CreateCardsView: View {
                 deck = DeckService.fetchOrCreateDailyReflectionDeck(in: modelContext)
             }
             selectedDeckID = deck.id
-            drafts = [draft]
+            generationQueue.enqueueTriage(drafts: drafts, deckID: deck.id)
+            resetCreateWorkspace()
             showPreview = true
         } catch {
             errorMessage = error.localizedDescription
@@ -733,24 +994,15 @@ private struct CreateCardsAlertsModifier: ViewModifier {
     @Binding var errorMessage: String?
 
     func body(content: Content) -> some View {
-        content.alert(L10n.generateFailedTitle, isPresented: Binding(
-            get: { errorMessage != nil },
-            set: { if !$0 { errorMessage = nil } }
-        )) {
-            Button(L10n.ok, role: .cancel) {}
-        } message: {
-            Text(errorMessage ?? "")
+        content.onChange(of: errorMessage) { _, message in
+            guard let message, !message.isEmpty else { return }
+            ToastCenter.shared.show(message)
+            errorMessage = nil
         }
     }
 }
 
 private struct CreateCardsLifecycleModifier: ViewModifier {
-    @Binding var sentence: String
-    @Binding var pendingLongText: String
-    @Binding var showLongTextPrompt: Bool
-    @Binding var showPreview: Bool
-    @Binding var drafts: [GeneratedCardDraft]
-
     let shareImport: ShareImportCoordinator
     let onAppearImport: () -> Void
 
@@ -763,16 +1015,8 @@ private struct CreateCardsLifecycleModifier: ViewModifier {
             .onChange(of: shareImport.pendingPayload) { _, _ in
                 onAppearImport()
             }
-            .onChange(of: showPreview) { _, isShowing in
-                guard !isShowing else { return }
-                DispatchQueue.main.async {
-                    drafts.removeAll()
-                }
-            }
-            .onChange(of: sentence) { oldValue, newValue in
-                guard oldValue.count <= 800, newValue.count > 800, pendingLongText != newValue else { return }
-                pendingLongText = newValue
-                showLongTextPrompt = true
+            .onChange(of: shareImport.pendingDrafts) { _, _ in
+                onAppearImport()
             }
     }
 }
@@ -780,4 +1024,5 @@ private struct CreateCardsLifecycleModifier: ViewModifier {
 #Preview {
     CreateCardsView()
         .environmentObject(ShareImportCoordinator())
+        .environment(CloudAIQuotaStore.shared)
 }

@@ -8,7 +8,7 @@
 	</array>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.knowell.app1</string>
+		<string>group.com.knowellcards.app</string>
 	</array>
 </dict>
 </plist>

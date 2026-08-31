@@ -1,4 +1,5 @@
 import Foundation
+
 #if canImport(UIKit)
 import UIKit
 #endif
@@ -15,7 +16,7 @@ enum ShareCardGenerationRunner {
         SharedDeckStore.lastSelectedDeckID = targetDeckID
         SharedDeckStore.pendingTargetDeckID = targetDeckID
 
-        let prepared = try KimiCardGenerator.prepareGeneration(
+        let prepared = try CardGenerator.prepareGeneration(
             sentence: sentence,
             words: words,
             skipExistingInDeckID: targetDeckID
@@ -25,8 +26,10 @@ enum ShareCardGenerationRunner {
             sentence: sentence,
             words: keptWords,
             sourceHint: sourceHint,
-            sourceImagePath: sourceImagePath
+            sourceImagePath: sourceImagePath,
+            deckID: targetDeckID
         )
+        ShareImportStore.clear()
         #if canImport(UIKit)
         UIPasteboard.general.string = sentence
         #endif
@@ -58,6 +61,7 @@ enum ShareCardGenerationRunner {
         }
 
         ShareExtensionNotifier.scheduleNoticeNotification(body: L10n.createQueuedToast)
+        AppLog.info("submitFromShareExtension deck=\(targetDeckID) words=\(words.count)", category: "Share")
         exitExtension()
     }
 }

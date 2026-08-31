@@ -24,9 +24,14 @@ struct DeckPickerSection: View {
                 Text(L10n.deckEmpty)
                     .foregroundStyle(.secondary)
             } else {
-                Picker(L10n.deckTarget, selection: deckSelection) {
-                    ForEach(decks) { deck in
-                        Text(deckLabel(deck)).tag(deck.id)
+                AppSpinner(
+                    title: L10n.deckTarget,
+                    value: decks.first(where: { $0.id == deckSelection.wrappedValue })?.name ?? L10n.deckDefaultName,
+                    options: decks.map { AppSelectionOption(id: $0.id, title: deckLabel($0)) },
+                    selectedID: deckSelection.wrappedValue.uuidString
+                ) { raw in
+                    if let id = UUID(uuidString: raw) {
+                        deckSelection.wrappedValue = id
                     }
                 }
             }
@@ -106,7 +111,6 @@ struct CreateDeckPickerCard: View {
 
     @State private var cachedDecks: [Deck] = []
     @State private var hasAttemptedLoad = false
-    @State private var showDeckPicker = false
 
     private var decks: [Deck] {
         queriedDecks.isEmpty ? cachedDecks : queriedDecks
@@ -129,20 +133,17 @@ struct CreateDeckPickerCard: View {
                     .foregroundStyle(.secondary)
             } else {
                 HStack(spacing: AppSpacing.sm) {
-                    Button {
-                        showDeckPicker = true
-                    } label: {
-                        HStack(spacing: 6) {
-                            Text(selectedDeckName)
-                                .font(AppFont.secondary().weight(.medium))
-                                .foregroundStyle(AppColor.textPrimary)
-                                .lineLimit(1)
-                            Image(systemName: "chevron.down")
-                                .font(.caption2.weight(.semibold))
-                                .foregroundStyle(AppColor.textTertiary)
+                    AppSpinner(
+                        title: L10n.deckTarget,
+                        titlePlacement: .hidden,
+                        value: selectedDeckName,
+                        options: decks.map { AppSelectionOption(id: $0.id, title: deckLabel($0)) },
+                        selectedID: selectedDeckID?.uuidString ?? decks.first?.id.uuidString
+                    ) { raw in
+                        if let id = UUID(uuidString: raw) {
+                            deckSelection.wrappedValue = id
                         }
                     }
-                    .buttonStyle(.plain)
 
                     Spacer(minLength: 0)
 
@@ -155,14 +156,6 @@ struct CreateDeckPickerCard: View {
                     }
                 }
             }
-        }
-        .appSelectionSheet(
-            isPresented: $showDeckPicker,
-            title: L10n.deckTarget,
-            options: decks.map { AppSelectionOption(id: $0.id, title: deckLabel($0)) },
-            selectedID: selectedDeckID ?? decks.first?.id
-        ) { newValue in
-            deckSelection.wrappedValue = newValue
         }
         .task {
             await reloadDecks()

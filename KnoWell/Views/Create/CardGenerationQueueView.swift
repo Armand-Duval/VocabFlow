@@ -53,7 +53,11 @@ struct CardGenerationQueueView: View {
                 Text(statusTitle(job.status))
                     .font(.caption.weight(.semibold))
                 Spacer()
-                if job.totalBatches > 0, job.isActive {
+                if !job.words.isEmpty, job.isActive {
+                    Text("\(job.completedWordCount)/\(job.words.count)")
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                } else if job.totalBatches > 0, job.isActive {
                     Text("\(job.completedBatches)/\(job.totalBatches)")
                         .font(.caption.monospacedDigit())
                         .foregroundStyle(.secondary)
@@ -63,7 +67,7 @@ struct CardGenerationQueueView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
-            if job.isActive, job.totalBatches > 0 {
+            if job.isActive, (!job.words.isEmpty || job.totalBatches > 0) {
                 ProgressView(value: job.progressFraction)
                     .tint(AppColor.accent)
             }

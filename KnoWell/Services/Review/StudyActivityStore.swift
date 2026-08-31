@@ -50,6 +50,10 @@ enum StudyActivityStore {
         saveBuckets(buckets)
     }
 
+    static func recordedDayCount() -> Int {
+        loadBuckets().values.filter { !$0.words.isEmpty || !$0.sentences.isEmpty }.count
+    }
+
     static func recentSummary(now: Date = .now) -> Summary? {
         let buckets = loadBuckets()
         let todayStart = calendar.startOfDay(for: now)

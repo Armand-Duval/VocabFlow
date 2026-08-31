@@ -100,6 +100,10 @@ enum ApkgImportService {
     ) async throws -> ImportResult {
         guard !parsed.isEmpty else { throw ApkgImportError.emptyImport }
 
+        let previousAutosave = context.autosaveEnabled
+        context.autosaveEnabled = false
+        defer { context.autosaveEnabled = previousAutosave }
+
         var imported = 0
         var primaryDeckName: String?
         var deckCount = 0
@@ -166,6 +170,10 @@ enum ApkgImportService {
         context: ModelContext
     ) throws -> ImportResult {
         guard !parsed.isEmpty else { throw ApkgImportError.emptyImport }
+
+        let previousAutosave = context.autosaveEnabled
+        context.autosaveEnabled = false
+        defer { context.autosaveEnabled = previousAutosave }
 
         var imported = 0
         var primaryDeckName: String?
@@ -337,7 +345,13 @@ enum ApkgImportService {
     }
 
     private static func makeFlashCard(from note: ImportedNote, deck: Deck) -> FlashCard {
-        FlashCard(
+        if let backup = note.backup {
+            let card = backup.makeFlashCard(deckLookup: [:], defaultDeck: deck)
+            card.id = UUID()
+            card.deck = deck
+            return card
+        }
+        return FlashCard(
             word: note.word,
             sentence: note.sentence,
             cardType: .definition,
@@ -399,8 +413,7 @@ enum ApkgImportService {
         }
 
         let decksJSON = String(cString: decksCString)
-        guard let data = decksJSON.data(using: .utf8),
-              let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+        guard let root = parseDeckDictionary(from: decksJSON) else {
             return [:]
         }
 
@@ -424,6 +437,27 @@ enum ApkgImportService {
             names = try readDeckNamesFromTable(from: db)
         }
         return names
+    }
+
+    /// Valid Anki JSON, plus the broken concatenated objects older KnoWell exports wrote.
+    static func parseDeckDictionary(from raw: String) -> [String: Any]? {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, let data = trimmed.data(using: .utf8) else { return nil }
+        if let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            return root
+        }
+        let wrapped = "[" + trimmed.replacingOccurrences(of: "}{", with: "},{") + "]"
+        guard let wrappedData = wrapped.data(using: .utf8),
+              let array = try? JSONSerialization.jsonObject(with: wrappedData) as? [[String: Any]] else {
+            return nil
+        }
+        var merged: [String: Any] = [:]
+        for item in array {
+            for (key, value) in item {
+                merged[key] = value
+            }
+        }
+        return merged.isEmpty ? nil : merged
     }
 
     private static func readDeckNamesFromTable(from db: OpaquePointer) throws -> [Int64: String] {
@@ -450,7 +484,7 @@ enum ApkgImportService {
         var statement: OpaquePointer?
         let sql = """
         SELECT CASE WHEN cards.odid != 0 THEN cards.odid ELSE cards.did END,
-               notes.flds, notes.tags
+               notes.flds, notes.tags, notes.data
         FROM cards
         JOIN notes ON cards.nid = notes.id
         ORDER BY 1, cards.id
@@ -470,7 +504,8 @@ enum ApkgImportService {
             guard let fldsCString = sqlite3_column_text(statement, 1) else { continue }
             let flds = String(cString: fldsCString)
             let tags = sqlite3_column_text(statement, 2).map { String(cString: $0) } ?? ""
-            let parsed = ImportedNote.parse(flds: flds, tags: tags)
+            let dataJSON = sqlite3_column_text(statement, 3).map { String(cString: $0) } ?? ""
+            let parsed = ImportedNote.parse(flds: flds, tags: tags, dataJSON: dataJSON)
 
             if !parsed.isComplete {
                 incompleteNotes.append(parsed.note)
@@ -511,8 +546,22 @@ private struct ImportedNote {
     let sentence: String
     let front: String
     let back: String
+    let backup: FlashCardBackup?
 
-    static func parse(flds: String, tags: String) -> ParsedImportedNote {
+    static func parse(flds: String, tags: String, dataJSON: String = "") -> ParsedImportedNote {
+        if let backup = decodeKnowellBackup(from: dataJSON) {
+            let note = ImportedNote(
+                word: backup.word,
+                sentence: backup.sentence,
+                front: backup.front,
+                back: backup.back,
+                backup: backup
+            )
+            let complete = !backup.word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                && !backup.front.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            return ParsedImportedNote(note: note, isComplete: complete)
+        }
+
         let parts = flds
             .split(separator: "\u{1f}", omittingEmptySubsequences: false)
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -529,7 +578,8 @@ private struct ImportedNote {
                 word: fallback,
                 sentence: fallback,
                 front: fallback,
-                back: L10n.deckImportMissingBackPlaceholder
+                back: L10n.deckImportMissingBackPlaceholder,
+                backup: nil
             )
             return ParsedImportedNote(note: note, isComplete: false)
         }
@@ -544,9 +594,23 @@ private struct ImportedNote {
             word: word,
             sentence: front,
             front: front,
-            back: resolvedBack
+            back: resolvedBack,
+            backup: nil
         )
         return ParsedImportedNote(note: note, isComplete: isComplete)
+    }
+
+    private static func decodeKnowellBackup(from dataJSON: String) -> FlashCardBackup? {
+        let trimmed = dataJSON.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed != "{}", let data = trimmed.data(using: .utf8) else {
+            return nil
+        }
+        struct Wrapper: Decodable {
+            let knowell: FlashCardBackup
+        }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try? decoder.decode(Wrapper.self, from: data).knowell
     }
 }
 

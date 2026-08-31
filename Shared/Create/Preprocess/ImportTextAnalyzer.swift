@@ -1,12 +1,17 @@
 import Foundation
 
-struct ParsedImportText: Equatable {
-    let sentence: String
-    let prefilledWords: [String]
+public struct ParsedImportText: Equatable, Sendable {
+    public let sentence: String
+    public let prefilledWords: [String]
+
+    public init(sentence: String, prefilledWords: [String]) {
+        self.sentence = sentence
+        self.prefilledWords = prefilledWords
+    }
 }
 
-enum ImportTextAnalyzer {
-    static func parse(_ text: String) -> ParsedImportText {
+public enum ImportTextAnalyzer {
+    public static func parse(_ text: String) -> ParsedImportText {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
             return ParsedImportText(sentence: "", prefilledWords: [])
@@ -19,7 +24,7 @@ enum ImportTextAnalyzer {
         return ParsedImportText(sentence: trimmed, prefilledWords: [])
     }
 
-    static func isLikelySingleVocabularyItem(_ text: String) -> Bool {
+    public static func isLikelySingleVocabularyItem(_ text: String) -> Bool {
         guard !text.contains("\n") else { return false }
 
         let sentenceEnders = CharacterSet(charactersIn: ".!?。！？")

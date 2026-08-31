@@ -2,6 +2,7 @@ import Foundation
 import UniformTypeIdentifiers
 #if canImport(UIKit)
 import UIKit
+import ImageIO
 #endif
 
 enum ShareTextExtractor {
@@ -197,65 +198,45 @@ enum ShareTextExtractor {
 
     #if canImport(UIKit)
     private static let imageTypePriority: [String] = [
-        UTType.image.identifier,
-        UTType.png.identifier,
+        "public.heic",
         UTType.jpeg.identifier,
+        UTType.png.identifier,
+        UTType.image.identifier,
         "public.image"
     ]
 
-    static func loadTextFromImages(from extensionItems: [NSExtensionItem]) async -> String? {
-        await loadOCRFromImages(from: extensionItems)?.fullText
+    static func hasImageAttachment(in extensionItems: [NSExtensionItem]) -> Bool {
+        let providers = extensionItems.flatMap { $0.attachments ?? [] }
+        return providers.contains { provider in
+            imageTypePriority.contains { provider.hasItemConformingToTypeIdentifier($0) }
+        }
     }
 
-    static func loadOCRFromImages(from extensionItems: [NSExtensionItem]) async -> OCRResult? {
+    /// Copy the shared file into the App Group. Never decode pixels here.
+    static func ingestFirstImage(from extensionItems: [NSExtensionItem]) async -> String? {
         let providers = extensionItems.flatMap { $0.attachments ?? [] }
         for provider in providers {
-            guard let image = await loadUIImage(from: provider) else { continue }
-            let sourceImagePath = CardSourceImageStore.saveJPEG(image)
-            guard let result = try? await ImageOCRService.recognize(in: image) else { continue }
-            guard let cleanedText = cleaned(result.fullText) else { continue }
-            return OCRResult(
-                fullText: cleanedText,
-                highlightedWords: result.highlightedWords,
-                importUnits: result.importUnits.isEmpty
-                    ? OCRContextExtractor.importUnits(
-                        fullText: cleanedText,
-                        highlightedWords: result.highlightedWords
-                    )
-                    : result.importUnits,
-                sourceImagePath: sourceImagePath
+            AppLog.info(
+                "image types=\(provider.registeredTypeIdentifiers.joined(separator: ","))",
+                category: "Share"
             )
+            guard let typeIdentifier = imageTypePriority.first(where: {
+                provider.hasItemConformingToTypeIdentifier($0)
+            }) else {
+                continue
+            }
+            if let relativePath = await ingestFile(from: provider, typeIdentifier: typeIdentifier) {
+                return relativePath
+            }
+            AppLog.warn("ingest file missed type=\(typeIdentifier)", category: "Share")
         }
         return nil
     }
 
-    static func loadUIImage(from provider: NSItemProvider) async -> UIImage? {
-        if provider.canLoadObject(ofClass: UIImage.self),
-           let image = await loadUIImageObject(from: provider) {
-            return image
-        }
-
-        for typeIdentifier in imageTypePriority where provider.hasItemConformingToTypeIdentifier(typeIdentifier) {
-            if let data = await loadDataRepresentation(from: provider, typeIdentifier: typeIdentifier),
-               let image = UIImage(data: data) {
-                return image
-            }
-            if let image = await loadFileImage(from: provider, typeIdentifier: typeIdentifier) {
-                return image
-            }
-        }
-        return nil
-    }
-
-    private static func loadUIImageObject(from provider: NSItemProvider) async -> UIImage? {
-        await withCheckedContinuation { continuation in
-            _ = provider.loadObject(ofClass: UIImage.self) { object, _ in
-                continuation.resume(returning: object as? UIImage)
-            }
-        }
-    }
-
-    private static func loadFileImage(from provider: NSItemProvider, typeIdentifier: String) async -> UIImage? {
+    private static func ingestFile(
+        from provider: NSItemProvider,
+        typeIdentifier: String
+    ) async -> String? {
         await withCheckedContinuation { continuation in
             _ = provider.loadFileRepresentation(forTypeIdentifier: typeIdentifier) { url, _ in
                 guard let url else {
@@ -268,12 +249,50 @@ enum ShareTextExtractor {
                         url.stopAccessingSecurityScopedResource()
                     }
                 }
-                if let data = try? Data(contentsOf: url), let image = UIImage(data: data) {
-                    continuation.resume(returning: image)
-                } else {
-                    continuation.resume(returning: nil)
-                }
+                continuation.resume(returning: ingestLocalFile(url, typeIdentifier: typeIdentifier))
             }
+        }
+    }
+
+    private static func ingestLocalFile(_ url: URL, typeIdentifier: String) -> String? {
+        if let size = pixelSize(at: url) {
+            AppLog.info("image \(size.width)x\(size.height) → inbox", category: "Share")
+        } else {
+            AppLog.info("image size unknown → inbox", category: "Share")
+        }
+        let ext = preferredExtension(for: typeIdentifier, url: url)
+        do {
+            return try ShareImportStore.importInboxFile(from: url, fileExtension: ext)
+        } catch {
+            AppLog.warn("inbox copy file failed: \(error.localizedDescription)", category: "Share")
+            return nil
+        }
+    }
+
+    private static func pixelSize(at url: URL) -> (width: Int, height: Int)? {
+        let options: [CFString: Any] = [kCGImageSourceShouldCache: false]
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, options as CFDictionary) else {
+            return nil
+        }
+        let propsOptions: [CFString: Any] = [kCGImageSourceShouldCache: false]
+        guard let props = CGImageSourceCopyPropertiesAtIndex(source, 0, propsOptions as CFDictionary) as? [CFString: Any] else {
+            return nil
+        }
+        let width = (props[kCGImagePropertyPixelWidth] as? NSNumber)?.intValue ?? 0
+        let height = (props[kCGImagePropertyPixelHeight] as? NSNumber)?.intValue ?? 0
+        guard width > 0, height > 0 else { return nil }
+        return (width, height)
+    }
+
+    private static func preferredExtension(for typeIdentifier: String, url: URL?) -> String {
+        if let ext = url?.pathExtension, !ext.isEmpty {
+            return ext
+        }
+        switch typeIdentifier {
+        case "public.heic": return "heic"
+        case UTType.jpeg.identifier: return "jpg"
+        case UTType.png.identifier: return "png"
+        default: return "img"
         }
     }
     #endif

@@ -42,24 +42,28 @@ struct CardContentMigrationPlan: Equatable, Sendable {
     let scanned: Int
 }
 
-/// Upgrades existing cards by re-running the **same** `KimiCardGenerator` rules used for new cards,
+/// Upgrades existing cards by re-running the **same** `CardGenerator` rules used for new cards,
 /// then merging content fields via `CardContentSync`. SRS / deck / id are preserved.
 ///
 /// When card format gains new fields: update generator + `GeneratedCardDraft` + `FlashCard` +
 /// `CardContentSync.applyGeneratedContent` — this button needs no special-case logic.
 enum CardContentMigrationService {
     private static let localMigrationKey = "knowell.cardContent.localMigration.v1"
+    private static let thinPackRepairKey = "knowell.cardContent.thinPackRepair.v1"
     private static let wordsPerGenerateCall = 4
 
     @MainActor
     @discardableResult
     static func migrateLocallyIfNeeded(in context: ModelContext) -> CardContentMigrationReport {
-        guard !UserDefaults.standard.bool(forKey: localMigrationKey) else {
-            return CardContentMigrationReport()
+        if !UserDefaults.standard.bool(forKey: localMigrationKey) {
+            _ = migrateLocally(in: context)
+            UserDefaults.standard.set(true, forKey: localMigrationKey)
         }
-        let report = migrateLocally(in: context)
-        UserDefaults.standard.set(true, forKey: localMigrationKey)
-        return report
+        if !UserDefaults.standard.bool(forKey: thinPackRepairKey) {
+            repairThinDownloadedPacks(in: context)
+            UserDefaults.standard.set(true, forKey: thinPackRepairKey)
+        }
+        return CardContentMigrationReport()
     }
 
     @MainActor
@@ -163,12 +167,11 @@ enum CardContentMigrationService {
 
             for wordBatch in words.chunked(into: wordsPerGenerateCall) {
                 do {
-                    let drafts = try await KimiCardGenerator.generate(
+                    let drafts = try await CardGenerator.generate(
                         sentence: group[0].sentence,
                         words: wordBatch,
                         sourceHint: sourceHint,
-                        deckName: deckName,
-                        mode: .full
+                        deckName: deckName
                     )
                     let applied = applyDrafts(drafts, to: group)
                     report.contentRefreshed += applied.refreshed
@@ -226,6 +229,76 @@ enum CardContentMigrationService {
         }
 
         return change
+    }
+
+    /// Downloaded NGSL/NAWL packs used the definition / a stub as the "example sentence".
+    @MainActor
+    private static func repairThinDownloadedPacks(in context: ModelContext) {
+        let cards = (try? context.fetch(FetchDescriptor<FlashCard>())) ?? []
+        var changed = false
+
+        for card in cards {
+            let slug = card.deck?.slug ?? ""
+            let sentence = card.sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+            let back = card.back.trimmingCharacters(in: .whitespacesAndNewlines)
+
+            if slug == "nawl-1.2" || sentence.hasPrefix("Academic vocabulary (NAWL") {
+                let related = relatedWords(fromNAWLStub: sentence) ?? relatedWords(fromNAWLStub: back)
+                if let related, card.synonyms?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty != false {
+                    card.synonyms = related
+                }
+                card.sentence = ""
+                card.front = card.word
+                if back.hasPrefix("Academic vocabulary") || back.contains("Academic vocabulary (NAWL") {
+                    card.back = related ?? card.word
+                }
+                if card.sourceAttribution?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty != false {
+                    card.sourceAttribution = card.deck?.name
+                }
+                changed = true
+                continue
+            }
+
+            if slug == "ngsl-1.2", !sentence.isEmpty {
+                let definition = definitionFromBack(back, word: card.word)
+                if sentence.caseInsensitiveCompare(definition) == .orderedSame
+                    || back.hasSuffix(sentence) {
+                    card.sentence = ""
+                    card.front = card.word
+                    if !definition.isEmpty {
+                        card.back = definition
+                    }
+                    if card.sourceAttribution?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty != false {
+                        card.sourceAttribution = card.deck?.name
+                    }
+                    changed = true
+                }
+            }
+        }
+
+        if changed {
+            try? context.save()
+            DeckCardCountService.notifyDataMaintenance()
+        }
+    }
+
+    private static func definitionFromBack(_ back: String, word: String) -> String {
+        let parts = back.components(separatedBy: "\n\n")
+        if parts.count >= 2 {
+            return parts.dropFirst().joined(separator: "\n\n").trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        let trimmedWord = word.trimmingCharacters(in: .whitespacesAndNewlines)
+        if back.lowercased().hasPrefix(trimmedWord.lowercased()) {
+            return back.dropFirst(trimmedWord.count).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        return back
+    }
+
+    private static func relatedWords(fromNAWLStub text: String) -> String? {
+        guard let range = text.range(of: "Related:", options: .caseInsensitive) else { return nil }
+        let related = text[range.upperBound...]
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return related.isEmpty ? nil : related
     }
 
     // MARK: - Apply latest generator output

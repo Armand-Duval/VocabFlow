@@ -9,13 +9,16 @@ struct ReviewView: View {
     @State private var hasAnyCards = false
     @State private var isLoading = true
     @State private var showQuotaDetail = false
+    @State private var quotaSheetPlan: ReviewQueuePlan?
+    @State private var showReflectionHistory = false
+    @State private var showReflectionPreferences = false
     @State private var isSessionActive = false
     @State private var sessionEpoch = 0
     @State private var dailyReflection: DailyReflection?
-    @State private var totalCardCount = 0
     @State private var lifetimeStudiedCount = 0
     @State private var isRefreshingReflection = false
     @State private var isCollectingReflection = false
+    @State private var todayCapture: CaptureStatsStore.Summary?
 
     private var activeDeckID: UUID? {
         DeckSettings.lastSelectedDeckID
@@ -39,8 +42,7 @@ struct ReviewView: View {
                         ReviewHomeView(
                             plan: plan,
                             hasAnyCards: hasAnyCards,
-                            totalCardCount: totalCardCount,
-                            lifetimeStudiedCount: lifetimeStudiedCount,
+                            todayCapture: todayCapture,
                             dailyReflection: dailyReflection,
                             isRefreshingReflection: isRefreshingReflection,
                             isCollectingReflection: isCollectingReflection,
@@ -48,11 +50,13 @@ struct ReviewView: View {
                                 sessionEpoch &+= 1
                                 isSessionActive = true
                             },
-                            onShowQuota: { showQuotaDetail = true },
-                            onRefreshReflection: {
-                                Task { await refreshDailyReflection(force: true) }
+                            onShowQuota: {
+                                quotaSheetPlan = plan
+                                showQuotaDetail = true
                             },
-                            onPreferencesSaved: {
+                            onShowReflectionHistory: { showReflectionHistory = true },
+                            onShowReflectionPreferences: { showReflectionPreferences = true },
+                            onRefreshReflection: {
                                 Task { await refreshDailyReflection(force: true) }
                             },
                             onCollectReflection: { reflection in
@@ -66,9 +70,28 @@ struct ReviewView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(isSessionActive ? .hidden : .automatic, for: .navigationBar)
             .sheet(isPresented: $showQuotaDetail) {
-                if let plan {
-                    ReviewQuotaDetailSheet(plan: plan)
-                }
+                ReviewQuotaDetailSheet(
+                    plan: quotaSheetPlan ?? plan ?? ReviewQueuePlan(
+                        sessionCards: [],
+                        newStudiedToday: 0,
+                        reviewStudiedToday: 0,
+                        newLimit: 0,
+                        reviewLimit: 0,
+                        deferredNewCount: 0,
+                        deferredReviewCount: 0
+                    ),
+                    lifetimeStudiedCount: lifetimeStudiedCount
+                )
+            }
+            .sheet(isPresented: $showReflectionHistory) {
+                DailyReflectionHistoryView(onCollect: { reflection in
+                    Task { await collectReflection(reflection) }
+                })
+            }
+            .sheet(isPresented: $showReflectionPreferences) {
+                DailyReflectionPreferencesSheet(onSaved: {
+                    Task { await refreshDailyReflection(force: true) }
+                })
             }
         }
         .task(id: refreshToken) {
@@ -123,14 +146,19 @@ struct ReviewView: View {
         emptyDescriptor.fetchLimit = 1
         hasAnyCards = !((try? modelContext.fetch(emptyDescriptor)) ?? []).isEmpty
 
-        let allLibrary = (try? modelContext.fetch(FetchDescriptor<FlashCard>())) ?? []
-        totalCardCount = allLibrary.count
-        lifetimeStudiedCount = allLibrary.filter { $0.reviewCount > 0 }.count
+        var studiedDescriptor = FetchDescriptor<FlashCard>(
+            predicate: #Predicate<FlashCard> { card in
+                card.reviewCount > 0
+            }
+        )
+        lifetimeStudiedCount = (try? modelContext.fetchCount(studiedDescriptor)) ?? 0
+        todayCapture = CaptureStatsStore.todaySummary(in: modelContext)
+        StudyStreakStore.reconcileTotalDays(StudyActivityStore.recordedDayCount())
 
         let dueDate = Date.now
         let descriptor = FetchDescriptor<FlashCard>(
             predicate: #Predicate<FlashCard> { card in
-                card.nextReviewDate <= dueDate
+                card.isSuspended == false && card.nextReviewDate <= dueDate
             },
             sortBy: [SortDescriptor(\FlashCard.nextReviewDate)]
         )
@@ -198,104 +226,98 @@ struct ReviewView: View {
 private struct ReviewHomeView: View {
     let plan: ReviewQueuePlan
     let hasAnyCards: Bool
-    let totalCardCount: Int
-    let lifetimeStudiedCount: Int
+    let todayCapture: CaptureStatsStore.Summary?
     let dailyReflection: DailyReflection?
     let isRefreshingReflection: Bool
     let isCollectingReflection: Bool
     let onStartReview: () -> Void
     let onShowQuota: () -> Void
+    let onShowReflectionHistory: () -> Void
+    let onShowReflectionPreferences: () -> Void
     let onRefreshReflection: () -> Void
-    let onPreferencesSaved: () -> Void
     let onCollectReflection: (DailyReflection) -> Void
 
-    @State private var showReflectionHistory = false
-    @State private var showReflectionPreferences = false
+    @State private var appeared = false
 
     private var dueCount: Int { plan.sessionCards.count }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppSpacing.section) {
-                AppSurfaceCard(padding: AppSpacing.md) {
-                    dueZone
-                }
-
-                if hasAnyCards {
-                    libraryStatsRow
-                }
+                dueComposition
+                    .opacity(appeared ? 1 : 0)
+                    .offset(y: appeared ? 0 : 8)
 
                 if let dailyReflection {
-                    AppSurfaceCard(padding: AppSpacing.sm) {
-                        literaryReflection(dailyReflection)
-                    }
+                    literaryZone(dailyReflection)
+                        .opacity(appeared ? 1 : 0)
+                        .offset(y: appeared ? 0 : 18)
                 }
             }
             .padding(.horizontal, AppSpacing.md)
-            .padding(.top, AppSpacing.md)
-            .padding(.bottom, AppSpacing.lg)
+            .padding(.top, AppSpacing.sm)
+            .padding(.bottom, AppSpacing.xl)
         }
-        .sheet(isPresented: $showReflectionHistory) {
-            DailyReflectionHistoryView(onCollect: onCollectReflection)
-        }
-        .sheet(isPresented: $showReflectionPreferences) {
-            DailyReflectionPreferencesSheet(onSaved: onPreferencesSaved)
+        .appVerticalBounce()
+        .onAppear {
+            withAnimation(.spring(response: 0.55, dampingFraction: 0.86)) {
+                appeared = true
+            }
         }
     }
 
-    private var dueZone: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+    private var dueComposition: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
             dueHero
 
-            if hasAnyCards, let metaLine = compactMetaLine {
-                Button(action: onShowQuota) {
-                    Text(metaLine)
-                        .font(AppFont.weak())
-                        .foregroundStyle(AppColor.textMuted)
-                        .lineLimit(2)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .buttonStyle(SoftPressButtonStyle(pressedScale: 0.99, pressedOpacity: 0.9))
-                .accessibilityLabel(metaLine)
+            if hasAnyCards {
+                compactStatsLine
             }
 
             if !hasAnyCards {
                 emptyCTA
-                    .padding(.top, AppSpacing.xs)
             } else if dueCount > 0 {
                 startReviewButton
-                    .padding(.top, AppSpacing.xs)
+            } else {
+                Text(L10n.reviewHomeDoneToday)
+                    .font(AppFont.secondary())
+                    .foregroundStyle(AppColor.textSecondary)
             }
         }
-    }
-
-    private var libraryStatsRow: some View {
-        HStack(spacing: 0) {
-            libraryStat(value: "\(lifetimeStudiedCount)", label: L10n.reviewHomeLifetimeStudied)
-            libraryStat(value: "\(totalCardCount)", label: L10n.reviewHomeTotalCards)
-        }
-        .padding(.vertical, AppSpacing.sm)
+        .padding(AppSpacing.lg)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(AppColor.surface, in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
+        .appSoftShadow()
     }
 
-    private func libraryStat(value: String, label: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+    private var compactStatsLine: some View {
+        Button(action: onShowQuota) {
+            HStack(spacing: AppSpacing.lg) {
+                miniStat(value: "\(plan.newStudiedToday)", label: L10n.reviewHomeStatsNew)
+                miniStat(value: "\(plan.reviewStudiedToday)", label: L10n.reviewHomeStatsReview)
+                miniStat(value: "\(todayCapture?.cardCount ?? 0)", label: L10n.reviewHomeStatsCaptured)
+                Spacer(minLength: 0)
+            }
+        }
+        .buttonStyle(SoftPressButtonStyle(pressedScale: 0.99, pressedOpacity: 0.92))
+        .accessibilityLabel(L10n.reviewHomeQuotaLink)
+    }
+
+    private func miniStat(value: String, label: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
             Text(value)
                 .font(AppFont.statValue())
                 .foregroundStyle(AppColor.textPrimary)
                 .monospacedDigit()
+                .contentTransition(.numericText())
             Text(label)
-                .font(AppFont.weak())
+                .font(AppFont.statLabel())
                 .foregroundStyle(AppColor.textMuted)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, AppSpacing.md)
     }
 
     private var dueHero: some View {
-        HStack(alignment: .firstTextBaseline, spacing: AppSpacing.sm) {
+        HStack(alignment: .lastTextBaseline, spacing: AppSpacing.sm) {
             Text("\(dueCount)")
                 .font(AppFont.heroValue())
                 .foregroundStyle(AppColor.textPrimary)
@@ -303,10 +325,18 @@ private struct ReviewHomeView: View {
                 .accessibilityLabel(L10n.reviewHomeDueCount(dueCount))
 
             Text(L10n.homeStatDue)
-                .font(AppFont.caption())
-                .foregroundStyle(AppColor.textTertiary.opacity(0.85))
+                .font(AppFont.secondary().weight(.medium))
+                .foregroundStyle(AppColor.textTertiary)
+                .padding(.bottom, 8)
 
             Spacer(minLength: 0)
+
+            if hasAnyCards, StudyStreakStore.totalStudyDays > 0 {
+                Text(L10n.homeStatTotalDays(StudyStreakStore.totalStudyDays))
+                    .font(AppFont.helper())
+                    .foregroundStyle(AppColor.textMuted)
+                    .padding(.bottom, 6)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -321,49 +351,34 @@ private struct ReviewHomeView: View {
         .accessibilityLabel(dueCount > 0 ? L10n.reviewHomeStart : L10n.reviewHomeStartDone)
     }
 
-    private var studiedToday: Int {
-        plan.newStudiedToday + plan.reviewStudiedToday
-    }
-
-    private var compactMetaLine: String? {
-        guard hasAnyCards else { return nil }
-        return [
-            L10n.reviewHomeStudiedToday(studiedToday),
-            "\(L10n.homeStatStreak) \(L10n.homeStatStreakValue(StudyStreakStore.currentStreak))"
-        ].joined(separator: " · ")
-    }
-
     private var emptyCTA: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            Button {
-                AppTab.request(.create)
-            } label: {
-                Text(L10n.reviewEmptyStartCreate)
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(PrimaryButtonStyle(prominent: true))
+        Button {
+            AppTab.request(.create)
+        } label: {
+            Text(L10n.reviewEmptyStartCreate)
+                .frame(maxWidth: .infinity)
         }
+        .buttonStyle(PrimaryButtonStyle(prominent: true))
     }
 
-    private func literaryReflection(_ reflection: DailyReflection) -> some View {
-        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+    private func literaryZone(_ reflection: DailyReflection) -> some View {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
             HStack(spacing: 6) {
                 Text(L10n.reviewDailyTitle)
-                    .font(AppFont.weak())
-                    .foregroundStyle(AppColor.textMuted.opacity(0.75))
-                if let occasion = reflection.occasion?.trimmingCharacters(in: .whitespacesAndNewlines),
-                   !occasion.isEmpty {
+                    .font(AppFont.helper())
+                    .foregroundStyle(AppColor.textMuted)
+                if let preferenceLabel = DailyReflectionPreferences.promptSnippet {
                     Text("·")
-                        .font(AppFont.weak())
-                        .foregroundStyle(AppColor.textMuted.opacity(0.35))
-                    Text(occasion)
-                        .font(AppFont.weak())
-                        .foregroundStyle(AppColor.textMuted.opacity(0.55))
+                        .font(AppFont.helper())
+                        .foregroundStyle(AppColor.textMuted.opacity(0.45))
+                    Text(preferenceLabel)
+                        .font(AppFont.helper())
+                        .foregroundStyle(AppColor.accent.opacity(0.8))
                         .lineLimit(1)
                 }
                 Spacer(minLength: 0)
                 Button {
-                    showReflectionPreferences = true
+                    onShowReflectionPreferences()
                 } label: {
                     Image(systemName: "slider.horizontal.3")
                         .font(.system(size: 12, weight: .medium))
@@ -396,33 +411,26 @@ private struct ReviewHomeView: View {
                 .accessibilityLabel(L10n.reviewDailyRefresh)
             }
 
-            if DailyReflectionPreferences.hasKeywords {
-                Text(L10n.reviewDailyPreferencesActive + "：" + DailyReflectionPreferences.keywords.joined(separator: " · "))
-                    .font(AppFont.weak())
-                    .foregroundStyle(AppColor.textMuted.opacity(0.7))
-                    .lineLimit(1)
-            }
-
             LiteraryQuoteLines(text: reflection.displaySentence)
 
             if let quoteSource = reflection.quoteSourceAttribution {
                 Text("— \(quoteSource)")
-                    .font(AppFont.weak())
+                    .font(AppFont.helper())
                     .foregroundStyle(AppColor.textMuted)
             }
 
             if let translation = reflection.displayTranslation {
                 LiteraryQuoteLines(
                     text: translation,
-                    font: AppFont.helper(),
-                    foreground: AppColor.textSecondary.opacity(0.9),
-                    lineSpacing: 3
+                    font: AppFont.secondary(),
+                    foreground: AppColor.textSecondary,
+                    lineSpacing: 4
                 )
             }
 
             if let translationSource = reflection.translationSourceAttribution {
-                Text("—— \(translationSource)")
-                    .font(AppFont.weak())
+                Text("— \(translationSource)")
+                    .font(AppFont.helper())
                     .foregroundStyle(AppColor.textMuted)
             }
 
@@ -433,22 +441,21 @@ private struct ReviewHomeView: View {
                 }
                 .opacity(isCollectingReflection ? 0.6 : 1)
                 TextLinkAction(title: L10n.reviewDailyHistoryLink, tone: .muted) {
-                    showReflectionHistory = true
+                    onShowReflectionHistory()
                 }
                 Spacer(minLength: 0)
-                Text(L10n.brandName)
-                    .font(AppFont.weak())
-                    .foregroundStyle(AppColor.textMuted.opacity(0.4))
-                    .accessibilityHidden(true)
             }
             .padding(.top, 2)
         }
+        .padding(.horizontal, 4)
+        .padding(.vertical, AppSpacing.sm)
     }
 }
 
 private struct ReviewQuotaDetailSheet: View {
     @Environment(\.dismiss) private var dismiss
     let plan: ReviewQueuePlan
+    let lifetimeStudiedCount: Int
 
     var body: some View {
         NavigationStack {
@@ -478,6 +485,19 @@ private struct ReviewQuotaDetailSheet: View {
                         }
                     }
 
+                    AppSurfaceCard {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(L10n.reviewHomeLifetimeStudied)
+                                .font(AppFont.caption())
+                                .foregroundStyle(AppColor.textSecondary)
+                            Text("\(lifetimeStudiedCount)")
+                                .font(AppFont.statValue())
+                                .foregroundStyle(AppColor.textPrimary)
+                                .monospacedDigit()
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+
                     if plan.hasDeferredCards {
                         AppSurfaceCard {
                             Text(L10n.reviewQuotaDetailDeferredMessage(plan.deferredTotalCount))
@@ -503,7 +523,9 @@ private struct ReviewQuotaDetailSheet: View {
                 }
             }
         }
-        .presentationDetents([.medium])
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
+        .presentationContentInteraction(.scrolls)
     }
 
     private func quotaRow(title: String, studied: Int, limit: Int, deferred: Int) -> some View {

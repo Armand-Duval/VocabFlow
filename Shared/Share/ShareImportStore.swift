@@ -1,4 +1,5 @@
 import Foundation
+
 import UserNotifications
 
 struct ShareImportPayload: Equatable {
@@ -23,9 +24,29 @@ struct ShareImportPayload: Equatable {
     }
 }
 
+struct ShareInboxPayload: Equatable, Codable {
+    enum Kind: String, Codable, Equatable {
+        case text
+        case image
+    }
+
+    let kind: Kind
+    let text: String?
+    /// App Group relative path, e.g. `share-inbox/{uuid}.heic`. Not a decoded bitmap.
+    let relativePath: String?
+}
+
 enum ImportSource: Equatable {
     case shareExtension
     case clipboard
+}
+
+struct PendingShareGenerationJob: Equatable {
+    let sentence: String
+    let words: [String]
+    let sourceHint: String?
+    let sourceImagePath: String?
+    let deckID: UUID?
 }
 
 extension ShareImportPayload {
@@ -46,11 +67,15 @@ extension ShareImportPayload {
 }
 
 enum ShareImportStore {
-    static let appGroupID = "group.com.knowell.app1"
+    static let appGroupID = "group.com.knowellcards.app"
     static let createURLString = "knowell://create"
+    static let inboxFolderName = "share-inbox"
     private static let payloadFileName = "share-import.json"
+    private static let inboxManifestName = "share-inbox.json"
     private static let draftsFileName = "share-drafts.json"
     private static let generationJobFileName = "share-generation-job.json"
+    private static let generationJobsDirectoryName = "share-generation-jobs"
+    private static let triageFileName = "pending-triage.json"
 
     private struct StoredPayload: Codable {
         let sentence: String
@@ -102,6 +127,7 @@ enum ShareImportStore {
         let paraphrases: String?
         let sourceAttribution: String?
         let sourceImagePath: String?
+        let isSelected: Bool
 
         init(from draft: GeneratedCardDraft) {
             word = draft.word
@@ -118,12 +144,13 @@ enum ShareImportStore {
             paraphrases = draft.paraphrases
             sourceAttribution = draft.sourceAttribution
             sourceImagePath = draft.sourceImagePath
+            isSelected = draft.isSelected
         }
 
         enum CodingKeys: String, CodingKey {
             case word, phonetic, sentence, cardTypeRaw, front, back, contextNote
             case usageNote, etymology, synonyms, antonyms, paraphrases
-            case sourceAttribution, sourceImagePath
+            case sourceAttribution, sourceImagePath, isSelected
         }
 
         init(from decoder: Decoder) throws {
@@ -142,6 +169,7 @@ enum ShareImportStore {
             paraphrases = try container.decodeIfPresent(String.self, forKey: .paraphrases)
             sourceAttribution = try container.decodeIfPresent(String.self, forKey: .sourceAttribution)
             sourceImagePath = try container.decodeIfPresent(String.self, forKey: .sourceImagePath)
+            isSelected = try container.decodeIfPresent(Bool.self, forKey: .isSelected) ?? true
         }
 
         func encode(to encoder: Encoder) throws {
@@ -160,6 +188,63 @@ enum ShareImportStore {
             try container.encodeIfPresent(paraphrases, forKey: .paraphrases)
             try container.encodeIfPresent(sourceAttribution, forKey: .sourceAttribution)
             try container.encodeIfPresent(sourceImagePath, forKey: .sourceImagePath)
+            try container.encode(isSelected, forKey: .isSelected)
+        }
+
+        func makeDraft() -> GeneratedCardDraft? {
+            guard let type = CardType(rawValue: cardTypeRaw) else { return nil }
+            return GeneratedCardDraft(
+                word: word,
+                phonetic: phonetic,
+                sentence: sentence,
+                cardType: type,
+                front: front,
+                back: back,
+                contextNote: contextNote,
+                usageNote: usageNote,
+                etymology: etymology,
+                synonyms: synonyms,
+                antonyms: antonyms,
+                paraphrases: paraphrases,
+                sourceAttribution: sourceAttribution,
+                sourceImagePath: sourceImagePath,
+                isSelected: isSelected
+            )
+        }
+    }
+
+    struct PersistedTriageBatch: Codable, Equatable {
+        let id: UUID
+        let deckID: UUID
+        let drafts: [GeneratedCardDraft]
+        let cursor: Int
+
+        init(id: UUID, deckID: UUID, drafts: [GeneratedCardDraft], cursor: Int = 0) {
+            self.id = id
+            self.deckID = deckID
+            self.drafts = drafts
+            self.cursor = cursor
+        }
+
+        private enum CodingKeys: String, CodingKey {
+            case id, deckID, drafts, cursor
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(UUID.self, forKey: .id)
+            deckID = try container.decode(UUID.self, forKey: .deckID)
+            let stored = try container.decode([StoredCardDraft].self, forKey: .drafts)
+            drafts = stored.compactMap { $0.makeDraft() }
+            cursor = try container.decodeIfPresent(Int.self, forKey: .cursor) ?? 0
+        }
+
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(id, forKey: .id)
+            try container.encode(deckID, forKey: .deckID)
+            try container.encode(drafts.map { StoredCardDraft(from: $0) }, forKey: .drafts)
+            try container.encode(cursor, forKey: .cursor)
         }
     }
 
@@ -174,37 +259,71 @@ enum ShareImportStore {
     }
 
     private struct StoredGenerationJob: Codable {
+        let id: UUID
         let sentence: String
         let words: [String]
         let sourceHint: String?
         let sourceImagePath: String?
+        let deckID: UUID?
         var status: GenerationJobStatus
 
         enum CodingKeys: String, CodingKey {
-            case sentence, words, sourceHint, sourceImagePath, status
+            case id, sentence, words, sourceHint, sourceImagePath, deckID, status
         }
 
         init(
+            id: UUID = UUID(),
             sentence: String,
             words: [String],
             sourceHint: String? = nil,
             sourceImagePath: String? = nil,
+            deckID: UUID? = nil,
             status: GenerationJobStatus
         ) {
+            self.id = id
             self.sentence = sentence
             self.words = words
             self.sourceHint = sourceHint
             self.sourceImagePath = sourceImagePath
+            self.deckID = deckID
             self.status = status
         }
 
         init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
             sentence = try container.decode(String.self, forKey: .sentence)
             words = try container.decode([String].self, forKey: .words)
             sourceHint = try container.decodeIfPresent(String.self, forKey: .sourceHint)
             sourceImagePath = try container.decodeIfPresent(String.self, forKey: .sourceImagePath)
-            status = try container.decode(GenerationJobStatus.self, forKey: .status)
+            deckID = try container.decodeIfPresent(UUID.self, forKey: .deckID)
+            status = try container.decodeIfPresent(GenerationJobStatus.self, forKey: .status) ?? .pending
+        }
+
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(id, forKey: .id)
+            try container.encode(sentence, forKey: .sentence)
+            try container.encode(words, forKey: .words)
+            try container.encodeIfPresent(sourceHint, forKey: .sourceHint)
+            try container.encodeIfPresent(sourceImagePath, forKey: .sourceImagePath)
+            try container.encodeIfPresent(deckID, forKey: .deckID)
+            try container.encode(status, forKey: .status)
+        }
+
+        func makePending() -> PendingShareGenerationJob? {
+            let sentence = sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+            let words = words
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+            guard !sentence.isEmpty, !words.isEmpty else { return nil }
+            return PendingShareGenerationJob(
+                sentence: sentence,
+                words: words,
+                sourceHint: sourceHint,
+                sourceImagePath: sourceImagePath,
+                deckID: deckID
+            )
         }
     }
 
@@ -224,6 +343,83 @@ enum ShareImportStore {
         FileManager.default
             .containerURL(forSecurityApplicationGroupIdentifier: appGroupID)?
             .appendingPathComponent(generationJobFileName)
+    }
+
+    static func inboxDirectory() throws -> URL {
+        guard let group = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: appGroupID
+        ) else {
+            throw CocoaError(.fileNoSuchFile)
+        }
+        let folder = group.appendingPathComponent(inboxFolderName, isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        return folder
+    }
+
+    static func inboxFileURL(relativePath: String) -> URL? {
+        let trimmed = relativePath.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty,
+              !trimmed.contains(".."),
+              trimmed.hasPrefix(inboxFolderName + "/") else {
+            return nil
+        }
+        return FileManager.default
+            .containerURL(forSecurityApplicationGroupIdentifier: appGroupID)?
+            .appendingPathComponent(trimmed)
+    }
+
+    /// Copy bytes on disk. Do not decode the image in the extension.
+    static func importInboxFile(from sourceURL: URL, fileExtension: String) throws -> String {
+        let ext = fileExtension.trimmingCharacters(in: CharacterSet(charactersIn: ".")).lowercased()
+        let safeExt = ext.isEmpty ? "img" : ext
+        let name = "\(UUID().uuidString).\(safeExt)"
+        let destination = try inboxDirectory().appendingPathComponent(name)
+        if FileManager.default.fileExists(atPath: destination.path) {
+            try FileManager.default.removeItem(at: destination)
+        }
+        try FileManager.default.copyItem(at: sourceURL, to: destination)
+        return "\(inboxFolderName)/\(name)"
+    }
+
+    static func importInboxData(_ data: Data, fileExtension: String) throws -> String {
+        let ext = fileExtension.trimmingCharacters(in: CharacterSet(charactersIn: ".")).lowercased()
+        let safeExt = ext.isEmpty ? "img" : ext
+        let name = "\(UUID().uuidString).\(safeExt)"
+        let destination = try inboxDirectory().appendingPathComponent(name)
+        try data.write(to: destination, options: .atomic)
+        return "\(inboxFolderName)/\(name)"
+    }
+
+    static func saveInbox(_ payload: ShareInboxPayload) {
+        guard let group = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: appGroupID
+        ),
+              let data = try? JSONEncoder().encode(payload) else {
+            return
+        }
+        let url = group.appendingPathComponent(inboxManifestName)
+        try? data.write(to: url, options: .atomic)
+    }
+
+    static func consumeInbox() -> ShareInboxPayload? {
+        guard let group = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: appGroupID
+        ) else {
+            return nil
+        }
+        let url = group.appendingPathComponent(inboxManifestName)
+        guard let data = try? Data(contentsOf: url),
+              let payload = try? JSONDecoder().decode(ShareInboxPayload.self, from: data) else {
+            return nil
+        }
+        try? FileManager.default.removeItem(at: url)
+        return payload
+    }
+
+    static func removeInboxFile(_ relativePath: String?) {
+        guard let relativePath,
+              let url = inboxFileURL(relativePath: relativePath) else { return }
+        try? FileManager.default.removeItem(at: url)
     }
 
     static func save(
@@ -297,25 +493,7 @@ enum ShareImportStore {
         }
 
         clearDrafts()
-        return payload.drafts.compactMap { stored in
-            guard let type = CardType(rawValue: stored.cardTypeRaw) else { return nil }
-            return GeneratedCardDraft(
-                word: stored.word,
-                phonetic: stored.phonetic,
-                sentence: stored.sentence,
-                cardType: type,
-                front: stored.front,
-                back: stored.back,
-                contextNote: stored.contextNote,
-                usageNote: stored.usageNote,
-                etymology: stored.etymology,
-                synonyms: stored.synonyms,
-                antonyms: stored.antonyms,
-                paraphrases: stored.paraphrases,
-                sourceAttribution: stored.sourceAttribution,
-                sourceImagePath: stored.sourceImagePath
-            )
-        }
+        return payload.drafts.compactMap { $0.makeDraft() }
     }
 
     static func clearDrafts() {
@@ -323,62 +501,72 @@ enum ShareImportStore {
         try? FileManager.default.removeItem(at: url)
     }
 
+    private static var triageURL: URL? {
+        FileManager.default
+            .containerURL(forSecurityApplicationGroupIdentifier: appGroupID)?
+            .appendingPathComponent(triageFileName)
+    }
+
+    static func saveTriageBatches(_ batches: [PersistedTriageBatch]) {
+        guard let url = triageURL else { return }
+        if batches.isEmpty {
+            try? FileManager.default.removeItem(at: url)
+            return
+        }
+        guard let data = try? JSONEncoder().encode(batches) else { return }
+        try? data.write(to: url, options: .atomic)
+    }
+
+    static func loadTriageBatches() -> [PersistedTriageBatch] {
+        guard let url = triageURL,
+              let data = try? Data(contentsOf: url),
+              let batches = try? JSONDecoder().decode([PersistedTriageBatch].self, from: data) else {
+            return []
+        }
+        return batches.filter { !$0.drafts.isEmpty }
+    }
+
     static func savePendingGenerationJob(
         sentence: String,
         words: [String],
         sourceHint: String? = nil,
-        sourceImagePath: String? = nil
+        sourceImagePath: String? = nil,
+        deckID: UUID? = nil
     ) {
         let job = StoredGenerationJob(
             sentence: sentence,
             words: words,
             sourceHint: sourceHint,
             sourceImagePath: sourceImagePath,
+            deckID: deckID,
             status: .pending
         )
-        guard let url = generationJobURL,
-              let data = try? JSONEncoder().encode(job) else {
+        guard let directory = generationJobsDirectoryURL else { return }
+        do {
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        } catch {
             return
         }
+        let url = directory.appendingPathComponent("\(job.id.uuidString).json")
+        guard let data = try? JSONEncoder().encode(job) else { return }
         try? data.write(to: url, options: .atomic)
     }
 
-    static func claimPendingGenerationJob() -> (
-        sentence: String,
-        words: [String],
-        sourceHint: String?,
-        sourceImagePath: String?
-    )? {
-        guard let url = generationJobURL,
-              let data = try? Data(contentsOf: url),
-              var job = try? JSONDecoder().decode(StoredGenerationJob.self, from: data) else {
-            return nil
-        }
-
-        guard job.status == .pending else {
-            return nil
-        }
-
-        job.status = .processing
-        guard let updated = try? JSONEncoder().encode(job) else { return nil }
-        try? updated.write(to: url, options: .atomic)
-
-        let sentence = job.sentence.trimmingCharacters(in: .whitespacesAndNewlines)
-        let words = job.words
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-
-        guard !sentence.isEmpty, !words.isEmpty else {
-            clearGenerationJob()
-            return nil
-        }
-
-        return (sentence, words, job.sourceHint, job.sourceImagePath)
+    /// Drain every queued share job (new directory + legacy single file).
+    static func takeAllPendingGenerationJobs() -> [PendingShareGenerationJob] {
+        var jobs: [PendingShareGenerationJob] = []
+        jobs.append(contentsOf: takeLegacyGenerationJob())
+        jobs.append(contentsOf: takeQueuedGenerationJobs())
+        return jobs
     }
 
     static func clearGenerationJob() {
-        guard let url = generationJobURL else { return }
-        try? FileManager.default.removeItem(at: url)
+        if let url = generationJobURL {
+            try? FileManager.default.removeItem(at: url)
+        }
+        if let directory = generationJobsDirectoryURL {
+            try? FileManager.default.removeItem(at: directory)
+        }
     }
 
     static func resetStaleProcessingJob() {
@@ -395,12 +583,63 @@ enum ShareImportStore {
     }
 
     static var hasPendingGenerationJob: Bool {
+        if let url = generationJobURL,
+           let data = try? Data(contentsOf: url),
+           let job = try? JSONDecoder().decode(StoredGenerationJob.self, from: data),
+           job.status == .pending || job.status == .processing {
+            return true
+        }
+        guard let directory = generationJobsDirectoryURL else { return false }
+        let urls = (try? FileManager.default.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: nil,
+            options: [.skipsHiddenFiles]
+        )) ?? []
+        return urls.contains { $0.pathExtension.lowercased() == "json" }
+    }
+
+    private static var generationJobsDirectoryURL: URL? {
+        FileManager.default
+            .containerURL(forSecurityApplicationGroupIdentifier: appGroupID)?
+            .appendingPathComponent(generationJobsDirectoryName, isDirectory: true)
+    }
+
+    private static func takeLegacyGenerationJob() -> [PendingShareGenerationJob] {
         guard let url = generationJobURL,
               let data = try? Data(contentsOf: url),
-              let job = try? JSONDecoder().decode(StoredGenerationJob.self, from: data) else {
-            return false
+              let stored = try? JSONDecoder().decode(StoredGenerationJob.self, from: data) else {
+            return []
         }
-        return job.status == .pending || job.status == .processing
+        try? FileManager.default.removeItem(at: url)
+        guard let job = stored.makePending() else { return [] }
+        return [job]
+    }
+
+    private static func takeQueuedGenerationJobs() -> [PendingShareGenerationJob] {
+        guard let directory = generationJobsDirectoryURL else { return [] }
+        let urls = ((try? FileManager.default.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: [.creationDateKey],
+            options: [.skipsHiddenFiles]
+        )) ?? [])
+        .filter { $0.pathExtension.lowercased() == "json" }
+        .sorted { lhs, rhs in
+            let left = (try? lhs.resourceValues(forKeys: [.creationDateKey]).creationDate) ?? .distantPast
+            let right = (try? rhs.resourceValues(forKeys: [.creationDateKey]).creationDate) ?? .distantPast
+            return left < right
+        }
+
+        var jobs: [PendingShareGenerationJob] = []
+        for url in urls {
+            defer { try? FileManager.default.removeItem(at: url) }
+            guard let data = try? Data(contentsOf: url),
+                  let stored = try? JSONDecoder().decode(StoredGenerationJob.self, from: data),
+                  let job = stored.makePending() else {
+                continue
+            }
+            jobs.append(job)
+        }
+        return jobs
     }
 }
 
@@ -471,6 +710,43 @@ enum ShareExtensionNotifier {
         )
     }
 
+    static func scheduleInboxHandoffNotification(completion: ((Bool) -> Void)? = nil) {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            switch settings.authorizationStatus {
+            case .authorized, .provisional, .ephemeral:
+                break
+            default:
+                DispatchQueue.main.async {
+                    completion?(false)
+                }
+                return
+            }
+
+            let content = UNMutableNotificationContent()
+            content.title = L10n.brandName
+            content.body = L10n.notificationShareInbox
+            content.sound = .default
+            content.userInfo = [
+                "open": "create",
+                "knowell": "share-inbox"
+            ]
+            content.interruptionLevel = .timeSensitive
+            content.relevanceScore = 1
+
+            let request = UNNotificationRequest(
+                identifier: "\(notificationPrefix).inbox",
+                content: content,
+                trigger: UNTimeIntervalNotificationTrigger(timeInterval: 0.15, repeats: false)
+            )
+
+            UNUserNotificationCenter.current().add(request) { error in
+                DispatchQueue.main.async {
+                    completion?(error == nil)
+                }
+            }
+        }
+    }
+
     /// Soft notice (no "failed" prefix) — e.g. all words already in deck.
     static func scheduleNoticeNotification(
         body: String,
@@ -486,10 +762,14 @@ enum ShareExtensionNotifier {
     private static func scheduleNotification(
         identifier: String,
         body: String,
+        delay: TimeInterval = 0.5,
         completion: ((Bool) -> Void)? = nil
     ) {
         UNUserNotificationCenter.current().getNotificationSettings { settings in
-            guard settings.authorizationStatus == .authorized else {
+            switch settings.authorizationStatus {
+            case .authorized, .provisional, .ephemeral:
+                break
+            default:
                 DispatchQueue.main.async {
                     completion?(false)
                 }
@@ -500,8 +780,9 @@ enum ShareExtensionNotifier {
             content.title = L10n.brandName
             content.body = body
             content.sound = .default
+            content.userInfo = ["open": "create"]
 
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.5, repeats: false)
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: max(delay, 0.1), repeats: false)
             let request = UNNotificationRequest(
                 identifier: identifier,
                 content: content,

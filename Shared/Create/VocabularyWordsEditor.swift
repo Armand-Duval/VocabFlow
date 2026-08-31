@@ -1,35 +1,5 @@
 import SwiftUI
 
-enum VocabularyWordAddResult: Equatable {
-    case added(String)
-    case duplicate(String)
-    case existsInDeck(String)
-    case empty
-}
-
-enum VocabularyWords {
-    static func parse(from text: String) -> [String] {
-        text
-            .split(separator: ",")
-            .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-    }
-
-    static func join(_ words: [String]) -> String {
-        words.joined(separator: ", ")
-    }
-
-    static func append(_ word: String, to words: inout [String]) -> VocabularyWordAddResult {
-        let trimmed = word.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return .empty }
-        if words.contains(where: { $0.caseInsensitiveCompare(trimmed) == .orderedSame }) {
-            return .duplicate(trimmed)
-        }
-        words.append(trimmed)
-        return .added(trimmed)
-    }
-}
-
 struct VocabularyWordsEditor: View {
     @Binding var words: [String]
     @Binding var feedbackMessage: String?
@@ -43,6 +13,14 @@ struct VocabularyWordsEditor: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             if !words.isEmpty {
+                HStack {
+                    Spacer(minLength: 0)
+                    Button(L10n.clear) {
+                        words.removeAll()
+                    }
+                    .font(AppFont.helper())
+                    .foregroundStyle(AppColor.accent)
+                }
                 VocabularyWordFlowLayout(spacing: 8) {
                     ForEach(Array(words.enumerated()), id: \.offset) { index, word in
                         VocabularyWordChip(word: word) {
@@ -89,7 +67,7 @@ struct VocabularyWordsEditor: View {
     }
 
     func addWord(_ word: String) -> VocabularyWordAddResult {
-        let trimmed = word.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = VocabularyWords.normalized(word)
         let result: VocabularyWordAddResult
         if trimmed.isEmpty {
             result = .empty

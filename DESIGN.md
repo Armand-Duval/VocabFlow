@@ -29,7 +29,7 @@
 | **中文显示名** | 致知 |
 | **英文** | KnoWell |
 | **副标题** | 文本精读闪卡 · 兼容 Anki |
-| **工程 Bundle** | `com.knowell.app1` |
+| **工程 Bundle** | `com.knowellcards.app` |
 
 ### 1.4 Daily Tone
 
@@ -42,7 +42,7 @@
 | 1 | 复习 | 默认首页 |
 | 2 | 词库 | 卡组与检索 |
 | 3 | 制卡 | AI 制卡 |
-| — | 设置 | 右上角 ⚙️ Sheet |
+| 4 | 设置 | 账号 / API / 备份（底栏第四 Tab） |
 
 ### 1.6 竞品调研
 
@@ -99,12 +99,14 @@ AppRadius:  card=16  button=12  chip=999(capsule)
 
 | 角色 | 样式 |
 |------|------|
-| 复习单词 | `studyWord()` — 34pt semibold rounded |
-| Section 标题 | `sectionTitle()` — title3 semibold |
-| 统计数字 | `statValue()` — title2 semibold |
+| 复习单词 | `studyWord()` — 32pt semibold rounded |
+| 品牌 | `brand()` — 28pt semibold serif |
+| Section 标题 | `sectionTitle()` — title3 semibold rounded |
+| 统计数字 | `statValue()` — 20pt semibold rounded |
 | 正文 | `body()` |
-| 辅助 | `secondary()` / `caption()` |
-| 导航标题 | `navTitle()` — callout medium, `#666` 风格 |
+| 辅助 | `secondary()` / `caption()` / `helper()` |
+| 导航标题 | `navTitle()` — callout medium |
+| 今日一句 | `literaryQuote()` — 20pt serif |
 
 ---
 
@@ -128,7 +130,8 @@ AppRadius:  card=16  button=12  chip=999(capsule)
 ### 复习（Review）
 - 顶部：进度 `2/10` + 可选 deck 名
 - 中部：Teal 大号单词 + 音标 + 白卡片（正面/背面）
-- 底部：「查看答案」→ 三档评分：不会 / 良好 / 简单（带间隔预览）
+- 底部：「查看答案」→ 三档评分：不会 / 良好 / 简单（带间隔预览；Hard 并入不会）
+- 调度：FSRS-4.5（赏析卡略高保留率）
 
 ### 列表（Library / DeckStore）
 - `ScrollView` + `AppSurfaceCard` 分区（避免纯系统 List 设置风）
@@ -151,7 +154,7 @@ AppRadius:  card=16  button=12  chip=999(capsule)
 | 1 | 复习 | clock |
 | 2 | 词库 | books.vertical.fill |
 | 3 | 创建 | plus.circle |
-| 4 | 我的 | person.crop.circle |
+| 4 | 设置 | person.crop.circle |
 
 ---
 

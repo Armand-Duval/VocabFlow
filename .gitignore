@@ -1,10 +1,11 @@
 .DS_Store
 xcuserdata/
 DerivedData/
+.swiftpm/
 *.xcuserstate
+**/__pycache__/
+*.pyc
 
-# API Keys — 切勿提交
-KnoWell/Services/Settings/DefaultAPIKey.swift
-**/DefaultAPIKey.swift
+# Local secrets
 moonshot API key.json
 *API*key*.json

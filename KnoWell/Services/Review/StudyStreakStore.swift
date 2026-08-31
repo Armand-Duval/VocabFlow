@@ -1,9 +1,10 @@
 import Foundation
 
-/// Lightweight local study streak (days with at least one review rating).
+/// Lightweight local study days: total days studied (never resets) plus current streak.
 enum StudyStreakStore {
     private static let streakKey = "com.knowell.study.streak"
     private static let lastDayKey = "com.knowell.study.lastDay"
+    private static let totalDaysKey = "com.knowell.study.totalDays"
 
     private static var calendar: Calendar { Calendar.current }
 
@@ -20,10 +21,29 @@ enum StudyStreakStore {
         return UserDefaults.standard.integer(forKey: streakKey)
     }
 
+    /// Calendar days with at least one review. Does not reset after a missed day.
+    static var totalStudyDays: Int {
+        UserDefaults.standard.integer(forKey: totalDaysKey)
+    }
+
+    /// Raise the stored total if we discover more unique study days (activity log / card dates).
+    static func reconcileTotalDays(_ discoveredDays: Int) {
+        guard discoveredDays > 0 else { return }
+        let current = UserDefaults.standard.integer(forKey: totalDaysKey)
+        if discoveredDays > current {
+            UserDefaults.standard.set(discoveredDays, forKey: totalDaysKey)
+        }
+    }
+
     /// Call when the user rates a card.
     static func recordStudy(now: Date = .now) {
         let today = dayFormatter.string(from: now)
         let last = UserDefaults.standard.string(forKey: lastDayKey)
+
+        if last != today {
+            let total = UserDefaults.standard.integer(forKey: totalDaysKey)
+            UserDefaults.standard.set(total + 1, forKey: totalDaysKey)
+        }
 
         if last == today {
             return

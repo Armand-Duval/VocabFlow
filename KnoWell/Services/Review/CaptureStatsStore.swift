@@ -1,9 +1,10 @@
 import Foundation
 import SwiftData
 
-/// Today’s capture counts for the review-home soft tip (unique words / sentences).
+/// Today’s capture counts for the review-home stat row.
 enum CaptureStatsStore {
     struct Summary: Equatable {
+        let cardCount: Int
         let uniqueWords: Int
         let uniqueSentences: Int
     }
@@ -32,6 +33,6 @@ enum CaptureStatsStore {
         }
 
         guard !words.isEmpty || !sentences.isEmpty else { return nil }
-        return Summary(uniqueWords: words.count, uniqueSentences: sentences.count)
+        return Summary(cardCount: cards.count, uniqueWords: words.count, uniqueSentences: sentences.count)
     }
 }

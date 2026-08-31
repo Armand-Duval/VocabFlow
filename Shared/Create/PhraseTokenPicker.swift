@@ -21,6 +21,29 @@ enum PhraseTokenizer {
         return result
     }
 
+    /// Group word chips by newline so multi-sentence imports stay visually split.
+    static func paragraphs(from tokens: [PhraseToken], in sentence: String) -> [[PhraseToken]] {
+        guard !tokens.isEmpty else { return [] }
+        var paragraphs: [[PhraseToken]] = []
+        var current: [PhraseToken] = []
+        for (index, token) in tokens.enumerated() {
+            if index > 0 {
+                let gap = tokens[index - 1].range.upperBound..<token.range.lowerBound
+                if sentence[gap].contains(where: \.isNewline) {
+                    if !current.isEmpty {
+                        paragraphs.append(current)
+                        current = []
+                    }
+                }
+            }
+            current.append(token)
+        }
+        if !current.isEmpty {
+            paragraphs.append(current)
+        }
+        return paragraphs
+    }
+
     static func phrase(in sentence: String, tokens: [PhraseToken], tokenRange: Range<Int>) -> String {
         guard !tokens.isEmpty,
               tokenRange.lowerBound >= 0,
@@ -54,9 +77,7 @@ enum PhraseTokenizer {
             guard !needle.isEmpty else { continue }
 
             if let range = firstMatch(of: needle, in: tokens, sentence: sentence, avoiding: occupied) {
-                for index in range {
-                    occupied.insert(index)
-                }
+                occupied.formUnion(range)
                 matches.append((candidate.wordIndex, range))
             }
         }
@@ -70,22 +91,42 @@ enum PhraseTokenizer {
         sentence: String,
         avoiding occupied: Set<Int>
     ) -> Range<Int>? {
-        guard !tokens.isEmpty else { return nil }
+        guard !tokens.isEmpty, !needle.isEmpty else { return nil }
 
-        for start in 0..<tokens.count {
-            if occupied.contains(start) { continue }
-            for end in (start + 1)...tokens.count {
-                let span = start..<end
-                if span.contains(where: { occupied.contains($0) }) { break }
-                let phrase = phrase(in: sentence, tokens: tokens, tokenRange: span)
-                if phrase.caseInsensitiveCompare(needle) == .orderedSame {
-                    return span
-                }
-                // Stop expanding once the joined phrase already overshoots length.
-                if phrase.count > needle.count + 8 { break }
+        var searchStart = sentence.startIndex
+        while searchStart < sentence.endIndex,
+              let found = sentence.range(
+                of: needle,
+                options: .caseInsensitive,
+                range: searchStart..<sentence.endIndex
+              ) {
+            if let span = tokenSpan(covering: found, in: tokens),
+               span.allSatisfy({ !occupied.contains($0) }),
+               phrase(in: sentence, tokens: tokens, tokenRange: span)
+                .caseInsensitiveCompare(needle) == .orderedSame {
+                return span
             }
+            searchStart = sentence.index(after: found.lowerBound)
         }
         return nil
+    }
+
+    private static func tokenSpan(
+        covering charRange: Range<String.Index>,
+        in tokens: [PhraseToken]
+    ) -> Range<Int>? {
+        var start: Int?
+        var end: Int?
+        for (index, token) in tokens.enumerated() {
+            if token.range.overlaps(charRange) {
+                if start == nil { start = index }
+                end = index
+            } else if start != nil {
+                break
+            }
+        }
+        guard let start, let end else { return nil }
+        return start..<(end + 1)
     }
 }
 
@@ -103,14 +144,12 @@ struct PhraseTokenPicker: View {
     @State private var adjustingRange: Range<Int>?
     @State private var adjustEdge: AdjustEdge?
     @State private var tokenFrames: [Int: CGRect] = [:]
+    @State private var matchedRanges: [(wordIndex: Int, tokenRange: Range<Int>)] = []
+    @State private var committedTokenIDs: Set<Int> = []
 
     private enum AdjustEdge {
         case leading
         case trailing
-    }
-
-    private var matchedRanges: [(wordIndex: Int, tokenRange: Range<Int>)] {
-        PhraseTokenizer.matchedRanges(words: words, tokens: tokens, sentence: sentence)
     }
 
     private var activeRange: Range<Int>? {
@@ -135,32 +174,51 @@ struct PhraseTokenPicker: View {
                     tokenFlow
                 }
             }
-            .onPreferenceChange(TokenFramePreferenceKey.self) { tokenFrames = $0 }
+            .onPreferenceChange(TokenFramePreferenceKey.self) { frames in
+                if frames != tokenFrames {
+                    tokenFrames = frames
+                }
+            }
             .simultaneousGesture(selectionDragGesture)
 
             if let range = activeRange {
                 boundaryToolbar(for: range)
             }
         }
-        .onAppear { rebuildTokens() }
+        .onAppear {
+            rebuildTokens()
+            refreshMatches()
+        }
         .onChange(of: sentence) { _, _ in
             rebuildTokens()
             clearTransientSelection()
+            refreshMatches()
+        }
+        .onChange(of: words) { _, _ in
+            refreshMatches()
         }
     }
 
+    private var tokenParagraphs: [[PhraseToken]] {
+        PhraseTokenizer.paragraphs(from: tokens, in: sentence)
+    }
+
     private var tokenFlow: some View {
-        PhraseTokenFlowLayout(spacing: 6, lineSpacing: 8) {
-            ForEach(tokens) { token in
-                tokenChip(token)
-                    .background(
-                        GeometryReader { geo in
-                            Color.clear.preference(
-                                key: TokenFramePreferenceKey.self,
-                                value: [token.id: geo.frame(in: .global)]
+        VStack(alignment: .leading, spacing: 12) {
+            ForEach(Array(tokenParagraphs.enumerated()), id: \.offset) { _, paragraph in
+                PhraseTokenFlowLayout(spacing: 6, lineSpacing: 8) {
+                    ForEach(paragraph) { token in
+                        tokenChip(token)
+                            .background(
+                                GeometryReader { geo in
+                                    Color.clear.preference(
+                                        key: TokenFramePreferenceKey.self,
+                                        value: [token.id: geo.frame(in: .global)]
+                                    )
+                                }
                             )
-                        }
-                    )
+                    }
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -171,7 +229,7 @@ struct PhraseTokenPicker: View {
     @ViewBuilder
     private func tokenChip(_ token: PhraseToken) -> some View {
         let inActive = activeRange?.contains(token.id) == true
-        let inCommitted = matchedRanges.contains { $0.tokenRange.contains(token.id) }
+        let inCommitted = committedTokenIDs.contains(token.id)
         let showingHandles = activeRange != nil
         let isLeadingHandle = showingHandles && activeRange?.lowerBound == token.id
         let isTrailingHandle = showingHandles && activeRange.map { $0.upperBound - 1 == token.id } == true
@@ -377,6 +435,17 @@ struct PhraseTokenPicker: View {
 
     private func rebuildTokens() {
         tokens = PhraseTokenizer.tokens(in: sentence)
+    }
+
+    private func refreshMatches() {
+        let matches = PhraseTokenizer.matchedRanges(words: words, tokens: tokens, sentence: sentence)
+        matchedRanges = matches
+        var ids = Set<Int>()
+        ids.reserveCapacity(matches.reduce(0) { $0 + $1.tokenRange.count })
+        for match in matches {
+            ids.formUnion(match.tokenRange)
+        }
+        committedTokenIDs = ids
     }
 
     private func clearTransientSelection() {
