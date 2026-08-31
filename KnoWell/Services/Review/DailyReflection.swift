@@ -114,7 +114,7 @@ struct ArchivedDailyReflection: Identifiable, Equatable, Codable {
 
 /// Timely line of the day: AI once per day (cached), curated fallback — never from the user's deck.
 enum DailyReflectionService {
-    private static let cacheDefaultsKey = "knowell.dailyReflection.v4"
+    private static let cacheDefaultsKey = "knowell.dailyReflection.v5"
     private static let historyDefaultsKey = "knowell.dailyReflection.history.v1"
     private static let restoreSummerFlowerKey = "knowell.dailyReflection.restore.summerFlower.v1"
     private static var inFlight: Task<DailyReflection, Never>?
@@ -674,102 +674,205 @@ enum DailyReflectionService {
 
     private static func curated(for day: Date, variantOffset: Int = 0) -> DailyReflection {
         let comps = Calendar.current.dateComponents([.year, .month, .day], from: day)
+        let season = DailyReflectionPrompt.literarySeason(for: day)
+        let pool = curatedBySeason[season] ?? curatedBySeason[.spring] ?? []
+        precondition(!pool.isEmpty, "seasonal curated pool must not be empty")
         let base = abs((comps.year ?? 0) * 372 + (comps.month ?? 0) * 31 + (comps.day ?? 0))
-        let index = (base + max(0, variantOffset)) % curatedReflections.count
-        let item = curatedReflections[index]
+        let index = (base + max(0, variantOffset)) % pool.count
+        let item = pool[index]
         return DailyReflection(
             sentence: item.sentence,
             translation: item.translation,
             source: item.source,
-            occasion: item.occasion,
+            occasion: DailyReflectionPrompt.occasionLabel(for: day),
             isAI: false
         )
     }
 
-    private static let curatedReflections: [DailyReflection] = [
-        DailyReflection(
-            sentence: "知之为知之，不知为不知，是知也。",
-            translation: "知道就是知道，不知道就是不知道，这才是真正的知。",
-            source: "《论语·为政》",
-            occasion: nil,
-            isAI: false
-        ),
-        DailyReflection(
-            sentence: "吾生也有涯，而知也无涯。",
-            translation: "生命有尽头，而求知没有尽头。",
-            source: "《庄子·养生主》",
-            occasion: nil,
-            isAI: false
-        ),
-        DailyReflection(
-            sentence: "路漫漫其修远兮，吾将上下而求索。",
-            translation: "道路漫长又遥远，我将上上下下地追寻。",
-            source: "屈原《离骚》",
-            occasion: nil,
-            isAI: false
-        ),
-        DailyReflection(
-            sentence: "博学之，审问之，慎思之，明辨之，笃行之。",
-            translation: "广泛地学习，详细地询问，慎重地思考，清楚地辨别，切实地实行。",
-            source: "《中庸》",
-            occasion: nil,
-            isAI: false
-        ),
-        DailyReflection(
-            sentence: "学而不思则罔，思而不学则殆。",
-            translation: "只学习不思考会迷茫，只思考不学习会危险。",
-            source: "《论语·为政》",
-            occasion: nil,
-            isAI: false
-        ),
-        DailyReflection(
-            sentence: "静以修身，俭以养德。",
-            translation: "以宁静修养自身，以节俭涵养品德。",
-            source: "诸葛亮《诫子书》",
-            occasion: nil,
-            isAI: false
-        ),
-        DailyReflection(
-            sentence: "The only true wisdom is in knowing you know nothing.",
-            translation: "真正的智慧，在于知道自己一无所知。",
-            source: "Socrates",
-            occasion: nil,
-            isAI: false
-        ),
-        DailyReflection(
-            sentence: "We are what we repeatedly do. Excellence, then, is not an act, but a habit.",
-            translation: "我们反复做的事成就了我们。因此卓越不是一次举动，而是一种习惯。",
-            source: "Will Durant (on Aristotle)",
-            occasion: nil,
-            isAI: false
-        ),
-        DailyReflection(
-            sentence: "The unexamined life is not worth living.",
-            translation: "未经省察的人生不值得过。",
-            source: "Plato, Apology",
-            occasion: nil,
-            isAI: false
-        ),
-        DailyReflection(
-            sentence: "The important thing is not to stop questioning.",
-            translation: "重要的是不要停止提问。",
-            source: "Albert Einstein",
-            occasion: nil,
-            isAI: false
-        ),
-        DailyReflection(
-            sentence: "Reading is to the mind what exercise is to the body.",
-            translation: "阅读之于心灵，犹如运动之于身体。",
-            source: "Joseph Addison",
-            occasion: nil,
-            isAI: false
-        ),
-        DailyReflection(
-            sentence: "Someone's sitting in the shade today because someone planted a tree a long time ago.",
-            translation: "有人今天能坐在树荫下，是因为很久以前有人栽下了一棵树。",
-            source: "Warren Buffett",
-            occasion: nil,
-            isAI: false
-        )
+    /// Seasonal literary lines — Chinese majority, world literature as a minority, never slogan quotes.
+    private static let curatedBySeason: [DailyReflectionPrompt.LiterarySeason: [DailyReflection]] = [
+        .spring: [
+            DailyReflection(
+                sentence: "自在飞花轻似梦，无边丝雨细如愁。",
+                translation: "自在的飞花轻得像梦，无边的丝雨细得像愁。",
+                source: "秦观《浣溪沙》",
+                occasion: nil,
+                isAI: false
+            ),
+            DailyReflection(
+                sentence: "无可奈何花落去，似曾相识燕归来。",
+                translation: "花落了，留不住；燕子回来了，像见过。",
+                source: "晏殊《浣溪沙》",
+                occasion: nil,
+                isAI: false
+            ),
+            DailyReflection(
+                sentence: "相见时难别亦难，东风无力百花残。",
+                translation: "相见难，分别也难；东风软了，花也残了。",
+                source: "李商隐《无题》",
+                occasion: nil,
+                isAI: false
+            ),
+            DailyReflection(
+                sentence: "木欣欣以向荣，泉涓涓而始流。",
+                translation: "树木欣欣向荣，泉水细细开始流。",
+                source: "陶渊明《归去来兮辞》",
+                occasion: nil,
+                isAI: false
+            ),
+            DailyReflection(
+                sentence: "竹外桃花三两枝，春江水暖鸭先知。",
+                translation: "竹外桃花刚开三两枝，江水暖了，鸭子先知道。",
+                source: "苏轼《惠崇春江晚景》",
+                occasion: nil,
+                isAI: false
+            ),
+            DailyReflection(
+                sentence: "古池や 蛙飛びこむ 水の音",
+                translation: "古池塘——青蛙跳入，水声。",
+                source: "松尾芭蕉《古池》 | 松尾芭蕉",
+                occasion: nil,
+                isAI: false
+            )
+        ],
+        .summer: [
+            DailyReflection(
+                sentence: "天意怜幽草，人间重晚晴。",
+                translation: "天意怜惜僻处的草，人间珍惜傍晚那一阵放晴。",
+                source: "李商隐《晚晴》",
+                occasion: nil,
+                isAI: false
+            ),
+            DailyReflection(
+                sentence: "叶上初阳干宿雨，水面清圆，一一风荷举。",
+                translation: "初阳晒干叶上隔夜的雨，水面清圆，荷叶被风一一举起。",
+                source: "周邦彦《苏幕遮》",
+                occasion: nil,
+                isAI: false
+            ),
+            DailyReflection(
+                sentence: "红藕香残玉簟秋，轻解罗裳，独上兰舟。",
+                translation: "荷香已残，竹席也凉了；解开罗衣，独自登上小船。",
+                source: "李清照《一剪梅》",
+                occasion: nil,
+                isAI: false
+            ),
+            DailyReflection(
+                sentence: "漠漠水田飞白鹭，阴阴夏木啭黄鹂。",
+                translation: "漠漠水田上白鹭飞过，浓荫的夏木里黄鹂在叫。",
+                source: "王维《积雨辋川庄作》",
+                occasion: nil,
+                isAI: false
+            ),
+            DailyReflection(
+                sentence: "稻花香里说丰年，听取蛙声一片。",
+                translation: "稻花香里说着丰年，蛙声连成一片。",
+                source: "辛弃疾《西江月·夜行黄沙道中》",
+                occasion: nil,
+                isAI: false
+            ),
+            DailyReflection(
+                sentence: "閑さや 岩にしみ入る 蝉の声",
+                translation: "寂静啊——蝉声渗进了岩石。",
+                source: "松尾芭蕉 | 松尾芭蕉",
+                occasion: nil,
+                isAI: false
+            ),
+            DailyReflection(
+                sentence: "The summer's flower is to the summer sweet,\nThough to itself it only live and die.",
+                translation: "夏日的花对夏日总是甜蜜，尽管对它自己，它只自生自灭。",
+                source: "William Shakespeare, Sonnet 94 | 莎士比亚《十四行诗》第94首",
+                occasion: nil,
+                isAI: false
+            )
+        ],
+        .autumn: [
+            DailyReflection(
+                sentence: "多情自古伤离别，更那堪冷落清秋节。",
+                translation: "多情的人自古就伤于离别，更何况在这冷落的清秋。",
+                source: "柳永《雨霖铃》",
+                occasion: nil,
+                isAI: false
+            ),
+            DailyReflection(
+                sentence: "自古逢秋悲寂寥，我言秋日胜春朝。",
+                translation: "人逢秋就悲凉，我说秋日胜过春天的早晨。",
+                source: "刘禹锡《秋词》",
+                occasion: nil,
+                isAI: false
+            ),
+            DailyReflection(
+                sentence: "碧云天，黄花地，西风紧，北雁南飞。",
+                translation: "碧云的天，黄花的地，西风急，北雁向南飞。",
+                source: "王实甫《西厢记》",
+                occasion: nil,
+                isAI: false
+            ),
+            DailyReflection(
+                sentence: "君问归期未有期，巴山夜雨涨秋池。",
+                translation: "你问归期，还没有日期；巴山夜雨，秋池已经涨了。",
+                source: "李商隐《夜雨寄北》",
+                occasion: nil,
+                isAI: false
+            ),
+            DailyReflection(
+                sentence: "满地黄花堆积，憔悴损，如今有谁堪摘。",
+                translation: "满地黄花堆积，憔悴了，如今还有谁配去摘。",
+                source: "李清照《声声慢》",
+                occasion: nil,
+                isAI: false
+            ),
+            DailyReflection(
+                sentence: "Herr: es ist Zeit. Der Sommer war sehr groß.",
+                translation: "主啊，时候到了。夏天曾经那样盛大。",
+                source: "Rainer Maria Rilke, Herbsttag | 里尔克《秋日》",
+                occasion: nil,
+                isAI: false
+            )
+        ],
+        .winter: [
+            DailyReflection(
+                sentence: "晚来天欲雪，能饮一杯无？",
+                translation: "夜里天要下雪了，能来喝一杯吗？",
+                source: "白居易《问刘十九》",
+                occasion: nil,
+                isAI: false
+            ),
+            DailyReflection(
+                sentence: "雾凇沆砀，天与云与山与水，上下一白。",
+                translation: "霜雪弥漫，天和云和山和水，上下一片白。",
+                source: "张岱《湖心亭看雪》",
+                occasion: nil,
+                isAI: false
+            ),
+            DailyReflection(
+                sentence: "忽如一夜春风来，千树万树梨花开。",
+                translation: "仿佛一夜春风来了，千树万树都开成梨花。",
+                source: "岑参《白雪歌送武判官归京》",
+                occasion: nil,
+                isAI: false
+            ),
+            DailyReflection(
+                sentence: "千山鸟飞绝，万径人踪灭。",
+                translation: "千山没有飞鸟，万径没有人踪。",
+                source: "柳宗元《江雪》",
+                occasion: nil,
+                isAI: false
+            ),
+            DailyReflection(
+                sentence: "墙角数枝梅，凌寒独自开。",
+                translation: "墙角几枝梅，冒着寒独自开。",
+                source: "王安石《梅花》",
+                occasion: nil,
+                isAI: false
+            ),
+            DailyReflection(
+                sentence: "There's a certain Slant of light,\nWinter Afternoons —",
+                translation: "冬日午后，有一种特定斜角的光——",
+                source: "Emily Dickinson | 狄金森",
+                occasion: nil,
+                isAI: false
+            )
+        ]
     ]
 }

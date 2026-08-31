@@ -1,11 +1,11 @@
 import Foundation
 
 enum DailyReflectionPreset: String, CaseIterable, Identifiable {
-    case philosophy = "哲理"
+    case depth = "深度"
     case romantic = "浪漫"
-    case englishPoetry = "英文诗"
     case classical = "文言"
-    case wisdom = "智慧"
+    case verse = "诗词"
+    case letters = "书信"
 
     var id: String { rawValue }
 }

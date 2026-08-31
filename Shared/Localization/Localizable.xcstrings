@@ -9570,13 +9570,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Up to 3 keywords as a soft hint for AI. After saving, today's line regenerates automatically; your keywords appear next to 今日一句."
+            "value" : "Default: a deep or romantic historical line for this season — not limited to Western verse. Keywords only narrow language or form. After saving, today's line regenerates."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "最多 3 个关键词，作为 AI 选句的软偏好。保存后会自动重生成今日一句，并在标题旁显示你的偏好。"
+            "value" : "默认是有深度或浪漫的历史原文，按时令推送，不限定西诗。关键词只用来收窄语言或文体。保存后会重生成今日一句。"
           }
         }
       }

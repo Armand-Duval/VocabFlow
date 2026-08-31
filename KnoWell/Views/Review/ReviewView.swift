@@ -367,7 +367,13 @@ private struct ReviewHomeView: View {
                 Text(L10n.reviewDailyTitle)
                     .font(AppFont.helper())
                     .foregroundStyle(AppColor.textMuted)
-                // Prefer showing the user's keywords — AI "occasion" is not the preference they set.
+                Text("·")
+                    .font(AppFont.helper())
+                    .foregroundStyle(AppColor.textMuted.opacity(0.45))
+                Text(seasonLabel(for: reflection))
+                    .font(AppFont.helper())
+                    .foregroundStyle(AppColor.textMuted.opacity(0.7))
+                    .lineLimit(1)
                 if let preferenceLabel = DailyReflectionPreferences.promptSnippet {
                     Text("·")
                         .font(AppFont.helper())
@@ -375,15 +381,6 @@ private struct ReviewHomeView: View {
                     Text(preferenceLabel)
                         .font(AppFont.helper())
                         .foregroundStyle(AppColor.accent.opacity(0.8))
-                        .lineLimit(1)
-                } else if let occasion = reflection.occasion?.trimmingCharacters(in: .whitespacesAndNewlines),
-                          !occasion.isEmpty {
-                    Text("·")
-                        .font(AppFont.helper())
-                        .foregroundStyle(AppColor.textMuted.opacity(0.45))
-                    Text(occasion)
-                        .font(AppFont.helper())
-                        .foregroundStyle(AppColor.textMuted.opacity(0.7))
                         .lineLimit(1)
                 }
                 Spacer(minLength: 0)
@@ -459,6 +456,12 @@ private struct ReviewHomeView: View {
         }
         .padding(.horizontal, 4)
         .padding(.vertical, AppSpacing.sm)
+    }
+
+    private func seasonLabel(for reflection: DailyReflection) -> String {
+        let occasion = reflection.occasion?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !occasion.isEmpty { return occasion }
+        return DailyReflectionPrompt.occasionLabel(for: .now)
     }
 }
 
