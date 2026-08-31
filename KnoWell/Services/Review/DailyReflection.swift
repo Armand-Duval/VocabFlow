@@ -114,7 +114,7 @@ struct ArchivedDailyReflection: Identifiable, Equatable, Codable {
 
 /// Timely line of the day: AI once per day (cached), curated fallback — never from the user's deck.
 enum DailyReflectionService {
-    private static let cacheDefaultsKey = "knowell.dailyReflection.v5"
+    private static let cacheDefaultsKey = "knowell.dailyReflection.v6"
     private static let historyDefaultsKey = "knowell.dailyReflection.history.v1"
     private static let restoreSummerFlowerKey = "knowell.dailyReflection.restore.summerFlower.v1"
     private static var inFlight: Task<DailyReflection, Never>?
@@ -684,7 +684,7 @@ enum DailyReflectionService {
             sentence: item.sentence,
             translation: item.translation,
             source: item.source,
-            occasion: DailyReflectionPrompt.occasionLabel(for: day),
+            occasion: item.occasion,
             isAI: false
         )
     }
